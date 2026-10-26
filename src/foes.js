@@ -264,16 +264,21 @@ drawProjs = function () {
     }
   }
 };
-// ---------------- sombras de contacto suaves (integran los sprites en los fondos pintados) ----------------
-function softShadow(cx, gy, w, a) { if (a <= 0.02) return; bx.globalAlpha = a; bx.drawImage(glowSpr('rgba(0,0,0,.85)'), Math.round(cx - w / 2), Math.round(gy - 4), Math.round(w), 8); bx.globalAlpha = 1; }
-function castShadow(cx, footY, w) {
-  const g = groundBelow(cx, footY - 2, 220); if (!g) return;
-  const h = g.y - footY, k = clamp(1 - h / 220, 0, 1); softShadow(cx, g.y, w * (0.55 + 0.45 * k), 0.55 * k);
-}
-const _drawEnemyS = drawEnemy;
+// (las sombras de contacto las dibuja drawContactShadows en hdrender.js)
+// ---------------- vida en las animaciones de los enemigos (v2.4) ----------------
+// balanceo al andar, aplastamiento al recibir un golpe y al aterrizar; no cambia sus cajas de colisión
+const SQ_B = { walker: 1, chaser: 1, rammer: 1, shield: 1, riser: 1, jumper: 1, bomber: 1, shooter: 1, burrower: 1 };
+const _drawEnemyQ = drawEnemy;
 drawEnemy = function (e) {
-  if (!(e.b === 'burrower' && e.st !== 'surface' && e.st !== 'up') && e.b !== 'revive' && e.b !== 'ghost') castShadow(e.x + e.w / 2, e.y + e.h, Math.max(18, e.w * 1.25));
-  _drawEnemyS(e);
+  if (!SQ_B[e.b] || e.d.stat || e.mini || (e.b === 'riser' && e.st !== 'walk') || (e.b === 'burrower' && e.st !== 'surface' && e.st !== 'up')) return _drawEnemyQ(e);
+  const cx = e.x + e.w / 2, by = e.y + e.h;
+  let sx = 1, sy = 1, oy = 0;
+  const moving = e.b !== 'shooter' || !e.d.still;
+  if (moving && !e.air && e.b !== 'jumper') { const ph = e.t * (e.b === 'rammer' && e.st === 'run' ? 22 : 11); oy = Math.abs(Math.sin(ph)) > 0.7 ? -1 : 0; }
+  if (e.air) { sy = e.vy < 0 ? 1.1 : 0.96; sx = 1 / sy; }
+  if (e.wasAir && !e.air) e.landT = 0.14; e.wasAir = !!e.air;
+  if (e.landT > 0) { e.landT -= 1 / 60; const k = e.landT / 0.14; sy *= 1 - 0.2 * k; sx *= 1 + 0.16 * k; }
+  if (e.hit > 0) { const k = e.hit / 0.15; sx *= 1 + 0.14 * k; sy *= 1 - 0.1 * k; }
+  if (sx === 1 && sy === 1 && oy === 0) return _drawEnemyQ(e);
+  bx.save(); bx.translate(cx, by + oy); bx.scale(sx, sy); bx.translate(-cx, -by); _drawEnemyQ(e); bx.restore();
 };
-const _drawPlayerS = drawPlayer;
-drawPlayer = function () { if (p && !p.dead) castShadow(p.x + p.w / 2, p.y + p.h, 34); _drawPlayerS(); };

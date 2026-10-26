@@ -472,7 +472,7 @@ function draw() {
     if (fade > 0) { ctx.fillStyle = 'rgba(0,0,0,' + fade + ')'; ctx.fillRect(0, 0, W, H); }
     return;
   }
-  const sk = OPT.shake ? shake : 0, sx = sk > 0 ? Math.round((Math.random() - .5) * sk) : 0, sy = sk > 0 ? Math.round((Math.random() - .5) * sk) : 0;
+  const sk = OPT.shake ? shake : 0, sx = sk > 0 ? Math.round((Math.sin(time * 71) * .6 + Math.sin(time * 43 + 1.3) * .4) * sk * .5) : 0, sy = sk > 0 ? Math.round((Math.sin(time * 59 + .7) * .6 + Math.sin(time * 37 + 2.1) * .4) * sk * .5) : 0;
   camR.x = Math.floor(cam.x) - 1 + sx; camR.y = Math.floor(cam.y) - 1 + sy; lastShake.x = sx; lastShake.y = sy;
   setupLight();
   bx.setTransform(1, 0, 0, 1, 0, 0);

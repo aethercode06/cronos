@@ -74,15 +74,15 @@ function contactShadow(x, y, w, a) {
   const g = glowSpr('rgba(0,0,0,1)');
   bx.globalAlpha = clamp(a, 0, 1); bx.drawImage(g, Math.round(x - w), Math.round(y - w * 0.18), Math.round(w * 2), Math.max(2, Math.round(w * 0.36))); bx.globalAlpha = 1;
 }
-// suelo bajo un punto (para proyectar sombras)
-function groundBelow(x, y, maxd) {
+// suelo bajo un punto (para proyectar sombras); devuelve la altura del suelo
+function groundYBelow(x, y, maxd) {
   let best = null;
   for (const s of level.plats) { if (!(s.k === 'solid' || s.k === 'move' || s.k === 'break' || s.k === 'bounce')) continue; if (x < s.x || x > s.x + s.w) continue; if (s.y >= y - 2 && s.y - y < (maxd || 160) && (!best || s.y < best)) best = s.y; }
   return best;
 }
 function drawContactShadows() {
   if (!level) return;
-  const sh = (x, y, w, a) => { const gy = groundBelow(x, y, 200); if (gy === null) return; const d = gy - y; contactShadow(x, gy + 1, w * (1 + d / 260), a * clamp(1 - d / 200, 0, 1)); };
+  const sh = (x, y, w, a) => { const gy = groundYBelow(x, y, 200); if (gy === null) return; const d = gy - y; contactShadow(x, gy + 1, w * (1 + d / 260), a * clamp(1 - d / 200, 0, 1)); };
   if (p && !p.dead) sh(p.x + p.w / 2, p.y + p.h, 13, 0.55);
   for (const e of level.enemies) if (!e.dead && onScreen(e.x, e.w)) sh(e.x + e.w / 2, e.y + e.h, e.w * 0.45, 0.45);
   if (level.live) {
