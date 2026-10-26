@@ -8,7 +8,9 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
     polish (continuar en checkpoint, furia de jefes, Cámaras del Desafío, logros, mando, calidad, Android),
     modes (estrellas por fase, Torre del Tiempo), i18n_data + i18n_extra + i18n (9 idiomas).
   - `src/*assets.js` — arte embebido (no editar a mano). `src/head.html` — cabecera del HTML.
-- `i18n/*.json` — traducciones por id (`es.json` es el original). Textos nuevos: añadirlos en `src/i18n_extra.js` en los 9 idiomas.
+- Mundos 14-17 (v1.9: Minas de Cristal, Bosque de Huesos, Biblioteca Prohibida, Torre de las Tormentas) usan arte recoloreado de otros mundos en `src/hf16assets.js` (fondos, terreno, decorado, guardianes `boss_golemc`, `boss_stag`, `boss_dragon`, `WZB_*`). `WBASE`/`VWI()` en data.js dice a qué mundo se parecen para pasos y partículas. Orden de juego en `ORDER` (flow.js); el guardado v5 desplaza las fases ≥36.
+- Criaturas gigantes del cielo por mundo en `GIANT_OF` (live2.js): las marinas (ballena, mantarraya, medusa) solo en el Arrecife y el Nexo.
+- `i18n/*.json` — traducciones por id (`es.json` es el original). Textos nuevos: añadirlos en `src/i18n_extra.js` o `src/i18n_extra2.js` en los 9 idiomas.
 - `www/` — juego listo + PWA (manifest, sw.js: subir VERSION en cada publicación) + privacidad.html.
 - `assets/` — icono y splash para @capacitor/assets. `keys/debug.keystore` — firma fija del APK (no cambiar: permite actualizar sin desinstalar).
 - `.github/workflows/android.yml` — compila el APK y lo publica en la release `ultima-version` (Chronos-The-Shift.apk).
@@ -17,7 +19,7 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
 
 ## Al cambiar el juego
 1. Editar `src/`, ejecutar `python3 src/build.py`, subir VERSION en `www/sw.js`.
-2. Probar con Playwright (Chromium headless con `--headless=new`): sin errores de página, 42 fases alcanzables, 14 jefes vencibles.
+2. Probar con Playwright (Chromium headless con `--headless=new`): sin errores de página, 54 fases alcanzables, 18 jefes vencibles.
 3. Commit y push a main: GitHub compila el APK solo.
 
 ## Pendiente

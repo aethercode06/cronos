@@ -128,8 +128,36 @@ const WORLDS = [
     pool: ['crumble', 'spikes', 'firejets', 'shiftwall', 'shiftgap', 'mover', 'stairs', 'gap', 'graves', 'anchors'], sig: ['shiftwall', 'firejets', 'crumble'],
     deco: [['gvf_pillar', 2], ['gvf_pillar-broken', 2], ['gvf_statue', 1], ['d_torch', 2]],
     boss: { type: 8, skin: 'boss_king', name: 'EL REY CAÍDO', hint: 'Cuando clave su espada en el suelo y quede atrapado, ¡golpéalo!' },
-    lore: 'El último reino antes del Nexo. Su rey juró proteger el tiempo y acabó encadenado a él. Su trono vacío aún arde con fuego de almas.' }
+    lore: 'El último reino antes del Nexo. Su rey juró proteger el tiempo y acabó encadenado a él. Su trono vacío aún arde con fuego de almas.' },
+  // --- Mundos 15-18 (v1.9): arte recoloreado a partir de mundos existentes ---
+  { name: 'MINAS DE CRISTAL', sub: 'Cristales y vagonetas', c: '#c48cff', tiles: 'T_ice', music: 'w5', rate: 0.95, bg: 14, weather: 'fireflies', critter: null,
+    g: ['golem', 'iceskel'], a: ['iceeye'], spk: 'spk_ice', mplat: 'gv_mplat',
+    pool: ['icicles', 'mover', 'elevator', 'conveyor', 'crumble', 'gap', 'spikes', 'shiftgap', 'stairs'], sig: ['mover', 'icicles', 'conveyor'],
+    deco: [['gvi_stone-1', 3], ['gvi_stone-2', 2], ['gvi_pillar-broken', 2]],
+    boss: { type: 9, skin: 'boss_golemc', sfl: 1, name: 'GÓLEM DE CRISTAL', hint: 'Pisa las dos placas a la vez (tú y tu ECO) para romper su coraza' },
+    lore: 'Bajo las montañas, un fragmento cayó en las Minas de Cristal y cada piedra empezó a recordar. Las vagonetas aún ruedan solas por raíles que nadie vigila.' },
+  { name: 'BOSQUE DE HUESOS', sub: 'Osarios y espectros', c: '#a8e0c8', tiles: 'T_cemetery', music: 'w4', rate: 0.92, bg: 15, weather: 'fog', critter: 'crow',
+    g: ['gskel', 'hound'], a: ['ghost', 'eye'], spk: 'spk_cem', mplat: 'gv_mplat',
+    pool: ['graves', 'ghosts', 'bouncefield', 'spring', 'crumble', 'gap', 'stairs', 'mover', 'spikes', 'shiftwall'], sig: ['graves', 'bouncefield', 'ghosts'],
+    deco: [['gv_tree-1', 2], ['gv_stone-1', 3], ['gv_stone-2', 2], ['gv_bush-small', 2]],
+    boss: { type: 8, skin: 'boss_stag', sfl: 1, name: 'CIERVO ESPECTRAL', hint: 'Cuando clave sus astas en el suelo y quede atrapado, ¡golpéalo!' },
+    lore: 'Un bosque cuyos árboles crecieron de los huesos de un ejército olvidado. Entre las raíces vaga un ciervo de luz pálida que perdió el camino… y la razón.' },
+  { name: 'BIBLIOTECA PROHIBIDA', sub: 'Libros y dimensiones', c: '#ffc070', tiles: 'T_cemetery', music: 'w1', rate: 0.9, bg: 16, weather: 'embers', critter: null,
+    g: ['shieldskel', 'gskel'], a: ['ghost', 'eye'], spk: 'spk_cem', mplat: 'gv_mplat',
+    pool: ['shiftwall', 'shiftgap', 'echo', 'crumble', 'mover', 'elevator', 'stairs', 'gap', 'spikes', 'firejets'], sig: ['shiftwall', 'echo', 'shiftgap'],
+    deco: [['gv_statue', 1], ['gv_pillar-broken', 2], ['gv_stone-1', 2], ['d_torch', 2]],
+    boss: { type: 2, skin: 'WZB_idle_s2', name: 'EL ARCHIVERO SIN ROSTRO', hint: 'Golpea las 3 palancas para romper su escudo' },
+    lore: 'La Biblioteca Prohibida guarda cada instante que la Orden quiso olvidar. Los libros vuelan solos y su guardián ya no recuerda su propio rostro.' },
+  { name: 'TORRE DE LAS TORMENTAS', sub: 'Rayos y vendavales', c: '#8fa8ff', tiles: 'T_marble', music: 'w6', rate: 0.95, bg: 17, weather: 'rain', critter: null,
+    g: ['golem'], a: ['seraph', 'eye'], spk: 'spk_ice', mplat: 'w_platform',
+    pool: ['anchors', 'anchors2', 'clouds', 'updraft', 'gust', 'gap', 'stairs', 'mover', 'lowgrav'], sig: ['gust', 'anchors', 'updraft'],
+    deco: [['gvi_pillar', 2], ['gvi_statue', 1], ['gvi_pillar-broken', 2], ['gvi_stone-1', 2]],
+    boss: { type: 10, skin: 'boss_dragon', sfl: 1, name: 'DRAGÓN DE LA TORMENTA', hint: 'Esquiva sus picados y golpéalo cuando quede aturdido en el suelo' },
+    lore: 'La última torre antes del reino caído se alza en el ojo de una tormenta eterna. Allí arriba, un dragón ruge con la voz del trueno.' }
 ];
+// Mundo "parecido" para detalles de ambiente (pasos, nubes, partículas)
+const WBASE = { 14: 5, 15: 4, 16: 1, 17: 10 };
+function VWI(w) { return WBASE[w] ?? w; }
 const HINTS = {
   move: 'Muévete con las flechas y salta los huecos con SALTO',
   sword: 'Pulsa ESPADA para atacar. Encadena golpes para hacer COMBOS',
@@ -370,7 +398,9 @@ function buildStage(wi, act) {
   if (L.arena) L.width = L.arena.x2 + 200;
   if (!L.width) L.width = x;
   if (WD.boss.type === 9 && L.arena) { const A = L.arena; L.plates.push({ x: A.x1 + 110, y: A.floor - 6, w: 52, h: 6, on: false, boss: true }, { x: A.x2 - 170, y: A.floor - 6, w: 52, h: 6, on: false, boss: true }); }
-  if (WD.boss.type === 2 && act === 2) { const A = L.arena; P(3952, -640, 160); P(4208, -780, 144); P(4448, -640, 160); L.levers.push({ x: 3830, y: -510, w: 40, h: 30, on: false }, { x: 4260, y: -810, w: 40, h: 30, on: false }, { x: 4510, y: -670, w: 40, h: 30, on: false }); }
+  if (WD.boss.type === 2 && act === 2 && wi !== 2 && L.arena) { const A = L.arena, cx = (A.x1 + A.x2) / 2; P(A.x1 + 150, A.floor - 140, 144); P(cx - 72, A.floor - 250, 144); P(A.x2 - 294, A.floor - 140, 144);
+    L.levers.push({ x: A.x1 + 70, y: A.floor - 30, w: 40, h: 30, on: false }, { x: cx - 20, y: A.floor - 280, w: 40, h: 30, on: false }, { x: A.x2 - 242, y: A.floor - 170, w: 40, h: 30, on: false }); }
+  else if (WD.boss.type === 2 && act === 2) { const A = L.arena; P(3952, -640, 160); P(4208, -780, 144); P(4448, -640, 160); L.levers.push({ x: 3830, y: -510, w: 40, h: 30, on: false }, { x: 4260, y: -810, w: 40, h: 30, on: false }, { x: 4510, y: -670, w: 40, h: 30, on: false }); }
   // Reliquia secreta (reloj de arena)
   if (relicSpots.length) { const s = relicSpots[Math.floor(r() * relicSpots.length)]; L.relic = { x: s.x, y: s.y, taken: false }; }
   else L.relic = { x: (L.goal ? L.goal.x - 120 : 600), y: 300, taken: false };

@@ -282,21 +282,24 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
   return contact;
 }
 function warnLine(x) { if (Math.random() < .15) parts.push({ x: x + rnd(-40, 40), y: level.arena.floor - 2, vx: 0, vy: -60, life: .4, max: .4, c: '#ff5470', s: 2, g: 0 }); }
+// el arte nuevo de algunos guardianes mira a la derecha
+function SFL(b) { return !!(b.skin && WORLDS[curWorld] && WORLDS[curWorld].boss.sfl && b.skin === WORLDS[curWorld].boss.skin); }
 const BOSSX = { 8: 'boss_lev', 9: 'boss_sph', 10: 'boss_ser', 11: 'boss_devo' };
 function drawBossX(b, wh, blink) {
   const ak = 'an_' + BOSSX[b.type], k = b.skin && SPR[b.skin] && SPR[b.skin].width ? b.skin : SPR[ak] && SPR[ak].width ? ak : BOSSX[b.type]; if (!SPR[k]) return;
   const m = meta(k), cx = b.x + b.w / 2, by = b.y + b.h, src = wh || blink ? whiteOf(k, false) : SPR[k], bf = (m.n || 1) > 1 ? Math.floor(time * 9) % m.n : 0;
   let sx = 1, sy = 1, rot = 0, oy = 0, flip = false;
   if (b.type === 8) {
-    flip = b.face > 0; rot = b.st === 'lunge' ? Math.sin(time * 10) * 0.06 : b.st === 'bite' ? -0.5 * (flip ? -1 : 1) : b.st === 'stuck' ? -0.35 * (flip ? -1 : 1) : Math.sin(time * 2) * 0.05;
+    flip = SFL(b) ? b.face < 0 : b.face > 0; rot = b.st === 'lunge' ? Math.sin(time * 10) * 0.06 : b.st === 'bite' ? -0.5 * (flip ? -1 : 1) : b.st === 'stuck' ? -0.35 * (flip ? -1 : 1) : Math.sin(time * 2) * 0.05;
     sy = 1 + Math.sin(time * 3) * 0.03; glowAt(cx, b.y + b.h / 2, 120, 'rgba(60,220,255,.25)', .7);
     if (b.st === 'lungeT') { bx.globalAlpha = .35 + .35 * Math.sin(time * 30); bx.fillStyle = '#ff3d5a'; for (let x = level.arena.x1; x < level.arena.x2; x += 18) bx.fillRect(x, Math.round(b.y + b.h / 2), 10, 2); bx.globalAlpha = 1; }
     if (b.st === 'stuck') { glowAt(cx - (flip ? -1 : 1) * 70, b.y + 20, 30, 'rgba(120,250,255,.9)', .9); for (let i = 0; i < 3; i++) { const a = time * 5 + i * 2.1; bx.fillStyle = '#ffe066'; bx.fillRect(Math.round(cx + Math.cos(a) * 40), Math.round(b.y - 10 + Math.sin(a) * 6), 3, 3); } }
   } else if (b.type === 9) {
-    flip = b.face > 0; sy = 1 + Math.sin(time * 2) * 0.015; glowAt(cx, b.y + 30, 110, 'rgba(255,200,90,.3)', .7);
+    flip = SFL(b) ? b.face < 0 : b.face > 0; sy = 1 + Math.sin(time * 2) * 0.015; glowAt(cx, b.y + 30, 110, 'rgba(255,200,90,.3)', .7);
     if (b.st === 'tp') { const k2 = b.t < 0.4 ? 1 - b.t / 0.4 : (b.t - 0.4) / 0.4; sx = k2; sy = 1 + (1 - k2) * 0.5; }
     if (b.st === 'beamT') { glowAt(cx + b.face * 40, b.y + 30, 30, 'rgba(255,90,60,.9)', .9); bx.globalAlpha = .4 + .4 * Math.sin(time * 30); bx.fillStyle = '#ff3d5a'; for (let x = level.arena.x1; x < level.arena.x2; x += 16) bx.fillRect(x, Math.round(b.beamY) - 1, 10, 2); bx.globalAlpha = 1; }
   } else if (b.type === 10) {
+    if (SFL(b)) flip = p.x + p.w / 2 < cx;
     oy = b.st === 'float' ? Math.sin(time * 2.5) * 4 : 0; sy = 1 + Math.sin(time * 5) * 0.03; glowAt(cx, b.y + 40, 120, 'rgba(255,240,190,.35)', .8);
     if (b.st === 'diveT') glowAt(cx, b.y + 40, 60, 'rgba(255,80,80,.7)', .8);
     if (b.st === 'stun') for (let i = 0; i < 3; i++) { const a = time * 5 + i * 2.1; bx.fillStyle = '#ffe066'; bx.fillRect(Math.round(cx + Math.cos(a) * 34), Math.round(b.y - 10 + Math.sin(a) * 6), 3, 3); }
@@ -341,6 +344,7 @@ function paintBG(n, par) {
 }
 function drawBGNew(n) {
   paintBG(n, 0.06);
+  if (lightning > 0 && Math.floor(lightning * 20) % 2 === 0 && n >= 12) { bx.fillStyle = n === 17 ? 'rgba(200,215,255,.3)' : 'rgba(220,200,255,.2)'; bx.fillRect(0, 0, VW + 2, VH + 2); }
   if (n === 8) {
     // rayos de luz y peces
     bx.globalCompositeOperation = 'lighter';
@@ -513,7 +517,7 @@ function drawMap2() {
   }
   for (const b of uiButtons()) drawButton(b);
 }
-function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king']; return P[w]; }
+function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'WZB_idle_s2', 'boss_dragon']; return P[w]; }
 function mapButtons(B) {
   B.push({ x: 18, y: 16, w: 118, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', fn: toTitle });
   B.push({ x: W - 506, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });

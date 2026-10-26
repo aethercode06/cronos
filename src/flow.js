@@ -9,17 +9,22 @@ try {
 } catch (e) {}
 try { migrateSave(); } catch (e) {}
 function migrateSave() {
-  if ((SAVE.v || 0) >= 4) return;
+  if ((SAVE.v || 0) >= 5) return;
+  if ((SAVE.v || 0) < 4) {
   const st = {}; for (const k in SAVE.st) { const n = +k, w = Math.floor(n / 3), a = n % 3; if (w === 11) st[39 + a] = SAVE.st[k]; else st[n] = SAVE.st[k]; }
   SAVE.st = st; if (SAVE.unl > 33) SAVE.unl = 33; SAVE.v = 4;
+  }
+  // v5: cuatro mundos nuevos entre el Pantano y el Rey Caído (las fases desde la 36 se desplazan 12)
+  const s5 = {}; for (const k in SAVE.st) { const n = +k; s5[n >= 36 ? n + 12 : n] = SAVE.st[k]; }
+  SAVE.st = s5; if (SAVE.unl > 36) SAVE.unl = 36; SAVE.v = 5;
 }
 function persist() { migrateSave(); try { localStorage.setItem('chronos_save3', JSON.stringify(SAVE)); } catch (e) {} }
 let best = SAVE.best || 0;
 function saveBest() { if (score > best) { best = score; SAVE.best = best; persist(); } }
-const ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 11];
+const ORDER = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 13, 11];
 const WPOS = w => ORDER.indexOf(w);
 const sIdx = (w, a) => WPOS(w) * 3 + a;
-const LAST = 41;
+const LAST = ORDER.length * 3 - 1;
 
 function startStage(wi, act, fresh) {
   curWorld = wi; curAct = act;

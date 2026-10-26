@@ -5,7 +5,7 @@
 // 4) Rayos de luz, focos, cáusticas y resplandores para cada mundo.
 let LIGHTS = [];
 let liveSeed = 0;
-const WCOL = ['255,210,90', '255,170,90', '255,140,50', '255,150,200', '150,160,255', '190,235,255', '110,160,255', '255,200,110', '110,255,240', '255,200,120', '255,250,220', '255,120,255', '150,255,130', '140,180,255'];
+const WCOL = ['255,210,90', '255,170,90', '255,140,50', '255,150,200', '150,160,255', '190,235,255', '110,160,255', '255,200,110', '110,255,240', '255,200,120', '255,250,220', '255,120,255', '150,255,130', '140,180,255', '210,150,255', '170,255,220', '255,200,120', '160,180,255'];
 const _lightAtBase = lightAt;
 lightAt = function (x, y, r, color, a) {
   if (!glOK || r <= 0) return;
@@ -57,7 +57,7 @@ function drawHDLit(k, f, x, y, fl, sc, sh, alpha) {
 
 // ---------------- enjambres de luz ----------------
 let swarms = [];
-const SWARM_C = ['255,220,110', '255,190,110', '255,150,60', '255,170,220', '170,140,255', '220,245,255', '255,90,60', '255,210,120', '120,255,230', '255,220,150', '255,255,235', '255,130,255', '170,255,140', '150,190,255'];
+const SWARM_C = ['255,220,110', '255,190,110', '255,150,60', '255,170,220', '170,140,255', '220,245,255', '255,90,60', '255,210,120', '120,255,230', '255,220,150', '255,255,235', '255,130,255', '170,255,140', '150,190,255', '210,160,255', '190,255,220', '255,210,140', '170,190,255'];
 function spawnSwarms() {
   swarms = [];
   if (!level || !level.plats) return;
@@ -101,7 +101,7 @@ function drawSwarms() {
 }
 
 // ---------------- gigantes del cielo ----------------
-const GIANT_OF = [[2, 0], [1, 5], [1, 7], [3, 0], [5], [0, 3], [7, 1], [6], [2, 3], [1], [0, 2], [3, 0], [5, 3], [1]];
+const GIANT_OF = [[1], [5], [7, 1], [7], [5], [1], [7, 1], [1], [2, 3, 0], [7], [1, 7], [3, 0, 1], [5], [1], [], [5], [], [1]];
 let giants = [], giantEvent = null;
 function spawnGiants() {
   giants = [];
@@ -130,7 +130,7 @@ function drawGiants() {
 
 // ---------------- eventos ambientales ----------------
 let ambEvT = 12, ambEv = null, stars = [];
-const EV_OF = [['flock', 'gust', 'giant'], ['flock', 'lightning', 'ghosts', 'giant'], ['embers', 'giant', 'quake'], ['stars', 'flock', 'giant'], ['ghosts', 'lightning', 'giant'], ['stars', 'gust', 'giant'], ['embers', 'quake', 'giant'], ['chime', 'flock', 'giant'], ['bubbles', 'giant', 'flock'], ['gust', 'stars', 'giant'], ['stars', 'flock', 'giant'], ['stars', 'chime', 'giant'], ['ghosts', 'lightning', 'giant'], ['embers', 'lightning', 'quake', 'giant']];
+const EV_OF = [['flock', 'gust', 'giant'], ['flock', 'lightning', 'ghosts', 'giant'], ['embers', 'giant', 'quake'], ['stars', 'flock', 'giant'], ['ghosts', 'lightning', 'giant'], ['stars', 'gust', 'giant'], ['embers', 'quake', 'giant'], ['chime', 'flock', 'giant'], ['bubbles', 'giant', 'flock'], ['gust', 'stars', 'giant'], ['stars', 'flock', 'giant'], ['stars', 'chime', 'giant'], ['ghosts', 'lightning', 'giant'], ['embers', 'lightning', 'quake', 'giant'], ['chime', 'quake', 'embers'], ['ghosts', 'flock', 'giant'], ['chime', 'ghosts', 'blackout'], ['lightning', 'gust', 'giant', 'lightning']];
 function startAmbEvent() {
   const list = EV_OF[curWorld] || ['flock'], k = list[Math.floor(Math.random() * list.length)];
   ambEv = { k, t: 0, d: 6 };
@@ -155,7 +155,7 @@ function updateAmbEvents(dt) {
   for (const s of stars) { s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; } stars = stars.filter(s => s.life > 0);
   if (E.k === 'embers' && Math.random() < dt * 30) parts.push({ x: cam.x + Math.random() * VW, y: cam.y + VH + 4, vx: rnd(-20, 20), vy: -rnd(40, 90), life: 3, max: 3, c: Math.random() < .5 ? '#ffb040' : '#ff5a20', s: 1, g: -6 });
   if (E.k === 'bubbles' && Math.random() < dt * 25) parts.push({ x: cam.x + rnd(0, VW), y: cam.y + VH + 4, vx: rnd(-6, 6), vy: -rnd(50, 90), life: 4, max: 4, c: '#cfffff', s: Math.random() < .3 ? 2 : 1, g: -4 });
-  if (E.k === 'gust' && Math.random() < dt * 40) { const lc = ['#7dea5a', '#8a7a60', '#ff9040', '#ffb0d0', '#a090b0', '#ffffff', '#ff8a30', '#ffd34d', '#bff4ff', '#e8c890', '#ffffff', '#ff9ad8', '#6a8a50', '#a0a8c8'][curWorld] || '#9be35a'; parts.push({ x: cam.x - 4, y: cam.y + rnd(0, VH * .8), vx: rnd(160, 260), vy: rnd(-20, 30), life: 2.5, max: 2.5, c: lc, s: 2, g: 10, lf: [0, 3, 2, 9].includes(curWorld) ? 1 : 0 }); }
+  if (E.k === 'gust' && Math.random() < dt * 40) { const lc = ['#7dea5a', '#8a7a60', '#ff9040', '#ffb0d0', '#a090b0', '#ffffff', '#ff8a30', '#ffd34d', '#bff4ff', '#e8c890', '#ffffff', '#ff9ad8', '#6a8a50', '#a0a8c8', '#d0a0ff', '#c8e0d0', '#e0c090', '#a8b8e8'][curWorld] || '#9be35a'; parts.push({ x: cam.x - 4, y: cam.y + rnd(0, VH * .8), vx: rnd(160, 260), vy: rnd(-20, 30), life: 2.5, max: 2.5, c: lc, s: 2, g: 10, lf: [0, 3, 2, 9].includes(curWorld) ? 1 : 0 }); }
   if (E.k === 'ghosts') for (const g of E.g) g.x -= 28 * dt;
   if (E.k === 'giant' && giantEvent) giantEvent.x += 0;
   if (E.t > E.d) { if (E.k === 'giant') giantEvent = null; ambEv = null; }
@@ -213,7 +213,7 @@ const _godRaysBase = drawGodRays;
 drawGodRays = function () {
   _godRaysBase(); drawWorldLight();
   const w = curWorld; if ([0, 3, 8, 9, 10].includes(w)) return;
-  const col = { 12: '170,220,150', 13: '170,190,255', 1: '170,190,230', 2: '255,150,80', 4: '200,180,255', 5: '210,240,255', 6: '255,90,60', 7: '255,210,140', 11: '255,140,255' }[w]; if (!col) return;
+  const col = { 12: '170,220,150', 13: '170,190,255', 14: '200,150,255', 15: '180,230,210', 16: '255,200,120', 17: '150,170,255', 1: '170,190,230', 2: '255,150,80', 4: '200,180,255', 5: '210,240,255', 6: '255,90,60', 7: '255,210,140', 11: '255,140,255' }[w]; if (!col) return;
   bx.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 3; i++) {
     const x = ((i * 420 - cam.x * 0.3) % (VW + 400) + VW + 400) % (VW + 400) - 200, a = 0.035 + Math.sin(time * .45 + i * 2) * 0.02;

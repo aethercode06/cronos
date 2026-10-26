@@ -19,6 +19,7 @@ function ambLayer(type, freq, q, gain, lfo) {
 }
 function ambTone(freq, gain) { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = freq; g.gain.value = gain; o.connect(g); g.connect(ambBus); o.start(); ambNodes.push(o); }
 function startAmbience(wi) {
+  wi = ({ 14: 5, 15: 4, 16: 1, 17: 9 })[wi] ?? wi;
   if (!AC) { ambWorld = -2 - wi; return; }
   stopAmbience(); ambWorld = wi;
   ambBus = AC.createGain(); ambBus.gain.value = 0; ambBus.connect(master);

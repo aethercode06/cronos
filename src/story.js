@@ -19,13 +19,13 @@ const CUTS = {
       ['KAEL', '¡No! Todavía puedo llegar… ¡solo necesito un segundo más!'],
       ['NARR', 'Kael usó el poder prohibido de la Orden: el SHIFT. Quiso volver atrás en el tiempo para salvarla.']] },
     { img: 'cs_shatter', pan: [0.05, 0.05, 1.15, 1.02], lines: [
-      ['NARR', 'Pero el tiempo no se deja reescribir. El Corazón estalló en catorce fragmentos que cayeron en catorce mundos distintos.'],
+      ['NARR', 'Pero el tiempo no se deja reescribir. El Corazón estalló en dieciocho fragmentos que cayeron en dieciocho mundos distintos.'],
       ['NARR', 'Cada fragmento corrompió a la criatura que lo encontró. Y de la grieta nació una sombra con el rostro de Kael.']] },
     { img: 'cs_wake', pan: [0.08, 0.1, 1.0, 1.12], lines: [
       ['TIC', '¡Eh! ¡Despierta, chaval! Soy Tic, búho mecánico oficial de la Orden. Modelo 3000. Bueno… el único modelo.'],
       ['TIC', 'Tengo una noticia mala y una buena. La mala: has roto el universo. La buena: ¡se puede arreglar!'],
       ['KAEL', '¿Y Lyra? ¿Dónde está Lyra?'],
-      ['TIC', 'Su eco quedó atrapado entre dos segundos. Si reunimos los catorce fragmentos… quizá podamos encontrarla.'],
+      ['TIC', 'Su eco quedó atrapado entre dos segundos. Si reunimos los dieciocho fragmentos… quizá podamos encontrarla.'],
       ['KAEL', 'Entonces no hay tiempo que perder.'],
       ['TIC', 'Técnicamente, ahora mismo hay MUCHO tiempo perdido. Pero sí, vamos.']] }
   ],
@@ -36,12 +36,12 @@ const CUTS = {
     { img: 'cs_devourer', pan: [0.0, 0.1, 1.0, 1.15], lines: [
       ['NARR', 'EL DEVORADOR DE HORAS. Con cada segundo perdido, crece. Con cada fragmento que reúnes… despierta.'],
       ['TIC', 'Vale. Eso no venía en el manual.'],
-      ['SOMBRIO', 'Los seis últimos fragmentos están más allá del tiempo. Ve, Kael. Haz lo que yo no fui capaz de hacer.'],
+      ['SOMBRIO', 'Los diez últimos fragmentos están más allá del tiempo. Ve, Kael. Haz lo que yo no fui capaz de hacer.'],
       ['KAEL', 'Lo haré. Por los dos.']] }
   ],
   ending: [
     { img: 'cs_final', pan: [0.05, 0.05, 1.15, 1.0], lines: [
-      ['NARR', 'En el Nexo, la luz de los catorce fragmentos atravesó al Devorador de Horas.'],
+      ['NARR', 'En el Nexo, la luz de los dieciocho fragmentos atravesó al Devorador de Horas.'],
       ['NARR', 'Y por primera vez en mil años, el Corazón del Tiempo volvió a latir.']] },
     { img: 'cs_lyra', pan: [0.0, 0.08, 1.0, 1.12], lines: [
       ['LYRA', 'Lo lograste, hermanito. Escucha… el tiempo vuelve a correr.'],
@@ -49,7 +49,7 @@ const CUTS = {
       ['LYRA', 'Y volverías a romperlo todo. El tiempo no se arregla, Kael. Se vive.'],
       ['LYRA', 'Estaré en cada amanecer. Te lo prometo.']] },
     { img: 'cs_dawn', pan: [0.1, 0.05, 1.0, 1.1], lines: [
-      ['NARR', 'Los catorce mundos volvieron a girar. Y cada mañana, en la Jungla Flotante, el sol sale un segundo antes.'],
+      ['NARR', 'Los dieciocho mundos volvieron a girar. Y cada mañana, en la Jungla Flotante, el sol sale un segundo antes.'],
       ['NARR', 'Dicen que es Lyra, saludando.'],
       ['TIC', 'Para ser un chaval que rompió el universo, no lo has hecho nada mal.'],
       ['KAEL', 'Gracias, Tic. ¿Y ahora qué?'],
@@ -59,7 +59,7 @@ const CUTS = {
 // Recuerdos de Lyra al recuperar cada fragmento
 const FRAGL = [
   [['LYRA', 'Kael… ¿recuerdas cuando me enseñaste a trepar los árboles de la jungla? Siempre llegabas primero.'], ['TIC', '¡El fragmento ha despertado tu SHIFT! Cambia de dimensión y verás plataformas que antes no estaban.']],
-  [['LYRA', 'En Velmora tocaban las campanas cada vez que alguien se perdía. Hace siglos que ya no suenan.'], ['TIC', 'Uno menos. Doce más y te invito a un aceite de engranajes.']],
+  [['LYRA', 'En Velmora tocaban las campanas cada vez que alguien se perdía. Hace siglos que ya no suenan.'], ['TIC', 'Uno menos. Dieciséis más y te invito a un aceite de engranajes.']],
   [['LYRA', 'El fuego no fue culpa tuya. Nunca lo fue.'], ['KAEL', '…'], ['TIC', 'Bueno. Eso ha sido intenso. Sigamos.']],
   [['LYRA', 'En el bosque del crepúsculo el sol nunca se pone. Así querías que fuera aquel día, ¿verdad?']],
   [['LYRA', 'Los muertos no deberían volver, Kael. Ni siquiera yo.'], ['TIC', '¿Ha dicho lo que creo que ha dicho?']],
@@ -71,7 +71,11 @@ const FRAGL = [
   [['LYRA', 'Ya casi, hermanito. Pero prométeme algo: cuando llegue el final… déjame ir.'], ['KAEL', 'No puedo prometer eso.'], ['LYRA', 'Lo harás. Te conozco.']],
   [],
   [['LYRA', 'Las brujas decían que el tiempo se puede embotellar. Mintieron. Solo se puede compartir.'], ['TIC', 'Puaj. Tengo barro hasta en los engranajes.']],
-  [['LYRA', 'Él también quiso detener el tiempo para no perder a nadie. Mira cómo acabó, hermanito.'], ['KAEL', 'No seré como él.'], ['LYRA', 'Lo sé.']]
+  [['LYRA', 'Él también quiso detener el tiempo para no perder a nadie. Mira cómo acabó, hermanito.'], ['KAEL', 'No seré como él.'], ['LYRA', 'Lo sé.']],
+  [['LYRA', 'De pequeños buscábamos cristales en el río. Tú siempre me regalabas el más bonito… aunque fuera un trozo de botella.'], ['TIC', 'Eso explica mucho sobre tus regalos, chaval.']],
+  [['LYRA', 'El ciervo de luz guiaba a los perdidos de vuelta a casa. Ahora vuelve a ser libre… gracias a ti.'], ['KAEL', '¿Y a ti quién te guía, Lyra?'], ['LYRA', 'Tú, hermanito. Siempre tú.']],
+  [['LYRA', 'En esa biblioteca estaba escrito el día del incendio. Lo sabían, Kael. La Orden lo sabía.'], ['KAEL', '¿Y no hicieron nada?'], ['TIC', '…Creo que ese libro mejor lo dejamos cerrado. Sigamos.']],
+  [['LYRA', 'Cuando había tormenta te metías en mi cama y contábamos los segundos entre el rayo y el trueno.'], ['LYRA', 'Ya no tienes que contar solo, hermanito.']]
 ];
 // Tic comenta cada fase (mundo x fase)
 const TICL = [
@@ -88,7 +92,11 @@ const TICL = [
   ['El Templo Celeste. Los anillos dorados son ANCLAS: acércate en el aire y te engancharás.', 'Balancéate y suelta con SALTO en el momento justo. ¡Wiii!', 'El Serafín invierte el cielo y la tierra. Mantén la cabeza fría… y del revés.'],
   ['El Nexo. Aquí están todos los mundos a la vez. Y todo lo que has aprendido.', 'Ya casi. Puedo sentir a Lyra. Y algo enorme que respira entre los segundos.', 'El Devorador de Horas. Este es el final, Kael. Hagámoslo bien.'],
   ['El Pantano de las Brujas. Si oyes risitas en la niebla, no eran mías.', 'El agua está turbia y los espectros solo se tocan en la dimensión violeta. ¡SHIFT!', 'La Bruja Madre. Cuando caiga aturdida tras sus picados… ¡a por ella!'],
-  ['La Ciudadela del Rey Caído. Todo aquí está encadenado. Hasta el tiempo.', 'Los caballeros siguen defendiendo un reino que ya no existe. Atácalos por la espalda.', 'El Rey Caído. Embiste como una tormenta. Cuando clave la espada en el suelo, ¡golpéalo!']
+  ['La Ciudadela del Rey Caído. Todo aquí está encadenado. Hasta el tiempo.', 'Los caballeros siguen defendiendo un reino que ya no existe. Atácalos por la espalda.', 'El Rey Caído. Embiste como una tormenta. Cuando clave la espada en el suelo, ¡golpéalo!'],
+  ['Las Minas de Cristal. Todo brilla… y casi todo lo que brilla aquí quiere morderte.', 'Las vagonetas siguen rodando sin mineros. Súbete y no mires abajo. Ah, y los cristales del techo caen.', 'El Gólem de Cristal. Su coraza solo se rompe si pisas las dos placas a la vez. Tu ECO, Kael.'],
+  ['El Bosque de Huesos. Estos árboles no son de madera. No preguntes de qué son. Bueno… ya lo sabes.', 'Las tumbas se abren al pasar y los espectros solo se tocan en la dimensión violeta. ¡SHIFT!', 'El Ciervo Espectral. Antes guiaba a los viajeros perdidos. Cuando clave las astas en el suelo, ¡golpéalo!'],
+  ['La Biblioteca Prohibida. Silencio, por favor. Bueno, los esqueletos no lo respetan, así que nosotros tampoco.', 'Las estanterías de otra dimensión se atraviesan con SHIFT. Y las placas… ya sabes: ECO.', 'El Archivero Sin Rostro. Rompe las tres palancas para quitarle el escudo. Y no le preguntes por su cara.'],
+  ['La Torre de las Tormentas. Agárrate fuerte: aquí el viento sopla con ganas de tirarnos.', 'Los anillos dorados son tu salvación. Engánchate y deja que el vendaval haga el resto.', 'El Dragón de la Tormenta. Cuando caiga aturdido tras sus picados… ¡a por él!']
 ];
 // Palabras de cada guardián antes del combate
 const BOSSL = [
@@ -103,9 +111,13 @@ const BOSSL = [
   [['BOSS', 'Las mareas del tiempo me obedecen. Hundiré tu luz en el abismo.']],
   [['BOSS', 'Responde, viajero: ¿qué se pierde al recuperarlo?'], ['KAEL', '…'], ['BOSS', 'Demasiado tarde.']],
   [['BOSS', 'Aquí arriba el cielo es suelo y el suelo es cielo. Tú no perteneces a ningún lugar.']],
-  [['DEVO', 'CATORCE INSTANTES. CATORCE MUNDOS. TODO EL TIEMPO… SERÁ MÍO.'], ['KAEL', 'El tiempo no es de nadie.']],
+  [['DEVO', 'DIECIOCHO INSTANTES. DIECIOCHO MUNDOS. TODO EL TIEMPO… SERÁ MÍO.'], ['KAEL', 'El tiempo no es de nadie.']],
   [['BOSS', 'Hueles a tiempo robado, niño. Mi caldero lleva siglos esperándote.'], ['TIC', 'Esquiva sus picados. ¡Y no aceptes nada que te ofrezca!']],
-  [['BOSS', 'Yo también tuve a alguien a quien salvar. Mi reino entero. Y fracasé.'], ['KAEL', 'Entonces déjame terminar lo que tú no pudiste.']]
+  [['BOSS', 'Yo también tuve a alguien a quien salvar. Mi reino entero. Y fracasé.'], ['KAEL', 'Entonces déjame terminar lo que tú no pudiste.']],
+  [['BOSS', 'PIEDRA… RECUERDA… TODO. TÚ… ROMPISTE… EL TIEMPO.'], ['TIC', 'Pisa las dos placas con tu ECO. ¡Su coraza no aguanta eso!']],
+  [['BOSS', '…'], ['TIC', 'No habla. Pero mira cómo baja las astas. ¡Prepárate para la embestida!']],
+  [['BOSS', 'Cada vida es un libro, niño. La tuya ya tiene el final escrito. Déjame leértelo.'], ['KAEL', 'Prefiero escribirlo yo.']],
+  [['BOSS', 'EL CIELO ES MÍO. EL TRUENO ES MÍO. TU ÚLTIMO SEGUNDO… TAMBIÉN.'], ['TIC', 'Esquiva sus picados. ¡Y no te quedes debajo cuando ruja!']]
 ];
 
 // ---------------- Motor de escenas ----------------

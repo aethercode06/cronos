@@ -70,7 +70,7 @@ function fgKeys(w) { const a = worldProps(w); if (!a) return null; return a.slic
 let life = [];
 function spawnLife() {
   life = [];
-  const w = curWorld, kinds = [['butterfly', 'bird'], ['bat', 'ember'], ['ember', 'ash'], ['firefly', 'petal'], ['bat', 'wisp'], ['flake', 'flake'], ['ember', 'soul'], ['spark', 'gearbit'], ['fish', 'bubble'], ['dust', 'beetle'], ['feather', 'bird'], ['shard', 'wisp'], ['firefly', 'wisp'], ['ember', 'soul']][w] || ['firefly', 'firefly'];
+  const w = curWorld, kinds = [['butterfly', 'bird'], ['bat', 'ember'], ['ember', 'ash'], ['firefly', 'petal'], ['bat', 'wisp'], ['flake', 'flake'], ['ember', 'soul'], ['spark', 'gearbit'], ['fish', 'bubble'], ['dust', 'beetle'], ['feather', 'bird'], ['shard', 'wisp'], ['firefly', 'wisp'], ['ember', 'soul'], ['shard', 'wisp'], ['wisp', 'bat'], ['dust', 'wisp'], ['spark', 'bird']][w] || ['firefly', 'firefly'];
   for (let i = 0; i < 28; i++) life.push({ k: kinds[i % 2], x: Math.random() * level.width, y: 120 + Math.random() * 340, t: Math.random() * 10, vx: rnd(-30, 30), vy: 0, ph: Math.random() * 6 });
 }
 function updateLife(dt) {

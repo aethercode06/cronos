@@ -82,6 +82,7 @@ function loadAssets() {
   if (typeof IMG8 !== 'undefined') { Object.assign(IMG, IMG8); Object.assign(META, META8); }
   if (typeof IMG9 !== 'undefined') { Object.assign(IMG, IMG9); Object.assign(META, META9); }
   if (typeof IMG10 !== 'undefined') { Object.assign(IMG, IMG10); Object.assign(META, META10); }
+  if (typeof IMG11 !== 'undefined') { Object.assign(IMG, IMG11); Object.assign(META, META11); }
   const ks = Object.keys(IMG); totalN = ks.length + 1;
   for (const k of ks) {
     const im = new Image();

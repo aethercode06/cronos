@@ -287,7 +287,7 @@ function drawOverlay() {
     lines = ['Fragmentos de Realidad: ' + clearInfo.g + ' / ' + clearInfo.t + (clearInfo.relic ? '   ·   ¡Reloj secreto!' : ''), 'Tiempo ' + Math.floor(clearInfo.time / 60) + ':' + String(Math.floor(clearInfo.time % 60)).padStart(2, '0') + '   ·   Bonus +' + (clearInfo.bonus + clearInfo.hpB), 'Puntos totales: ' + score];
   } else if (state === 'victory') {
     title = 'EL RELOJ ESTÁ COMPLETO'; col = '#ffd34d'; pose = 'win';
-    lines = ['El Devorador de Horas ha caído y el Corazón vuelve a latir.', 'Los catorce mundos giran de nuevo. Gracias por jugar.', DIFFS[diffIdx].name + '   ·   Puntos: ' + score + '   ·   Récord: ' + best];
+    lines = ['El Devorador de Horas ha caído y el Corazón vuelve a latir.', 'Los dieciocho mundos giran de nuevo. Gracias por jugar.', DIFFS[diffIdx].name + '   ·   Puntos: ' + score + '   ·   Récord: ' + best];
   }
   const ph = state === 'paused' ? 400 : 410, py = Math.round((H - ph) / 2);
   ctx.save(); ctx.translate(Math.round((W - 960) / 2), 0);
@@ -356,7 +356,7 @@ function drawTitle() {
   txt('& THE SHIFT', 486, ly + 66, 22, '#ffcf6a', null, 0, 'center', LOGOF, 700);
   try { ctx.letterSpacing = '0px'; } catch (e) {}
   ctx.fillStyle = 'rgba(255,207,106,.7)'; ctx.fillRect(330, ly + 84, 300, 1.5);
-  shadowTxt('14 MUNDOS  ·  42 FASES  ·  14 GUARDIANES  ·  11 HABILIDADES', 480, 290, 14, 'rgba(255,255,255,.9)', 'center', UIF, 700);
+  shadowTxt('18 MUNDOS  ·  54 FASES  ·  18 GUARDIANES  ·  11 HABILIDADES', 480, 290, 14, 'rgba(255,255,255,.9)', 'center', UIF, 700);
   ctx.restore();
   for (const b of uiButtons()) drawButton(b);
   txt(padActive ? 'MANDO:  A saltar · X espada · B/RT dash · LB/LT guardia · Y dimensión · RB tiempo · SELECT eco · START pausa' : touchMode ? 'Mover · Salto (doble y en pared) · Dash · Espada · Shift · Tiempo' : '← → mover · ESPACIO saltar · SHIFT dash · Z espada · X dimensión · C tiempo · E eco · P pausa', W / 2, 488, 12, 'rgba(255,255,255,.75)', null, 0, 'center', UIF, 500);
@@ -414,7 +414,7 @@ function drawLoading() {
   ctx.save(); ctx.translate(Math.round((W - 960) / 2), 0);
   txt('CHRONOS & THE SHIFT', 480, 232, 34, '#ffffff', null, 0, 'center', fontsReady ? LOGOF : UIF, 900);
   bar(330, 290, 300, 8, totalN ? loadedN / totalN : 0, 0, '#35e2ff', '#7a5cff');
-  txt('Cargando 14 mundos…', 480, 324, 13, 'rgba(255,255,255,.6)', null, 0, 'center', UIF, 600);
+  txt('Cargando 18 mundos…', 480, 324, 13, 'rgba(255,255,255,.6)', null, 0, 'center', UIF, 600);
   ctx.restore();
 }
 function drawOptions() {
@@ -453,7 +453,7 @@ function setupLight() {
   if (!glOK) return;
   lx.setTransform(1, 0, 0, 1, 0, 0); lx.globalCompositeOperation = 'source-over'; lx.globalAlpha = 1;
   lx.fillStyle = LOOK[curWorld].amb; lx.fillRect(0, 0, lightBuf.width, lightBuf.height);
-  if (curWorld === 4 && lightning > 0 && Math.floor(lightning * 20) % 2 === 0) { lx.fillStyle = 'rgba(200,190,255,.35)'; lx.fillRect(0, 0, lightBuf.width, lightBuf.height); }
+  if ((curWorld === 4 || curWorld === 15 || curWorld === 17) && lightning > 0 && Math.floor(lightning * 20) % 2 === 0) { lx.fillStyle = 'rgba(200,190,255,.35)'; lx.fillRect(0, 0, lightBuf.width, lightBuf.height); }
 }
 function draw() {
   if (state === 'loading') { drawLoading(); return; }

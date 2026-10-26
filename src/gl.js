@@ -16,7 +16,11 @@ const LOOK = [
   { amb: '#97a1ba', sun: [0.55, 0.92], rays: 0.3, thr: 0.9, bloom: 0.4, sat: 1.1, con: 1.1, gain: [1.0, 0.99, 1.04], lift: [0.0, 0.01, 0.03], haze: 0, vig: 0.3, ca: 0.5, pl: 0.1, plc: 'rgba(255,250,230,1)', fog: '255,255,255', fogA: 0.14 },
   { amb: '#5d487e', sun: [0.5, 0.5], rays: 0.2, thr: 0.6, bloom: 1.1, sat: 1.22, con: 1.1, gain: [1.04, 0.94, 1.1], lift: [0.03, 0.0, 0.05], haze: 0.3, vig: 0.55, ca: 1.4, pl: 0.24, plc: 'rgba(255,190,255,1)', fog: '220,90,255', fogA: 0.22 }
   ,{ amb: '#76727a', sun: [0.66, 0.22], rays: 0.16, thr: 0.7, bloom: 0.7, sat: 1.08, con: 1.1, gain: [0.98, 1.0, 0.98], lift: [0.01, 0.02, 0.02], haze: 0.3, vig: 0.55, ca: 0.6, pl: 0.2, plc: 'rgba(200,255,190,1)', fog: '110,130,120', fogA: 0.2 },
-  { amb: '#666e88', sun: [0.5, 0.1], rays: 0.2, thr: 0.65, bloom: 0.85, sat: 1.0, con: 1.1, gain: [0.95, 0.98, 1.08], lift: [0.0, 0.01, 0.04], haze: 0, vig: 0.58, ca: 0.7, pl: 0.22, plc: 'rgba(170,200,255,1)', fog: '120,140,200', fogA: 0.24 }
+  { amb: '#666e88', sun: [0.5, 0.1], rays: 0.2, thr: 0.65, bloom: 0.85, sat: 1.0, con: 1.1, gain: [0.95, 0.98, 1.08], lift: [0.0, 0.01, 0.04], haze: 0, vig: 0.58, ca: 0.7, pl: 0.22, plc: 'rgba(170,200,255,1)', fog: '120,140,200', fogA: 0.24 },
+  { amb: '#5e5578', sun: [0.5, 0.2], rays: 0.12, thr: 0.72, bloom: 0.55, sat: 0.98, con: 1.08, gain: [1.0, 0.96, 1.05], lift: [0.02, 0.0, 0.05], haze: 0, vig: 0.55, ca: 0.8, pl: 0.24, plc: 'rgba(220,180,255,1)', fog: '100,70,150', fogA: 0.2 },
+  { amb: '#6c7672', sun: [0.62, 0.2], rays: 0.18, thr: 0.7, bloom: 0.6, sat: 0.92, con: 1.1, gain: [0.97, 1.0, 1.0], lift: [0.01, 0.02, 0.02], haze: 0, vig: 0.58, ca: 0.6, pl: 0.22, plc: 'rgba(200,255,230,1)', fog: '150,190,175', fogA: 0.26 },
+  { amb: '#86705a', sun: [0.5, 0.15], rays: 0.2, thr: 0.68, bloom: 0.8, sat: 1.08, con: 1.08, gain: [1.08, 0.99, 0.88], lift: [0.03, 0.01, 0.0], haze: 0.2, vig: 0.52, ca: 0.6, pl: 0.22, plc: 'rgba(255,210,150,1)', fog: '255,190,110', fogA: 0.18 },
+  { amb: '#555b7a', sun: [0.7, 0.15], rays: 0.1, thr: 0.7, bloom: 0.6, sat: 0.95, con: 1.12, gain: [0.94, 0.98, 1.1], lift: [0.0, 0.01, 0.04], haze: 0, vig: 0.6, ca: 0.7, pl: 0.22, plc: 'rgba(190,210,255,1)', fog: '70,80,130', fogA: 0.22 }
 ];
 const lightBuf = document.createElement('canvas');
 const lx = lightBuf.getContext('2d');

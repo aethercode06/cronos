@@ -132,7 +132,7 @@ const ACH = [
   ['p11', 'Primeros pasos', 'Completa la fase 1-1'],
   ['g1', 'Rompeguardianes', 'Derrota a tu primer guardián'],
   ['g7', 'Medio Reloj', 'Derrota a 7 guardianes'],
-  ['g14', 'Corazón del Tiempo', 'Derrota a los 14 guardianes'],
+  ['g14', 'Corazón del Tiempo', 'Derrota a los 18 guardianes'],
   ['intacto', 'Intocable', 'Derrota a un guardián sin recibir daño'],
   ['dificil', 'Sin piedad', 'Derrota a un guardián en DIFÍCIL'],
   ['c25', 'Ritmo letal', 'Consigue un combo x25'],
@@ -154,12 +154,12 @@ function achGive(id) {
   SAVE.ach[id] = Date.now(); persist();
   const a = ACH.find(q => q[0] === id); if (a) { toasts.push({ a, t: 0 }); sfx('relic', .45, 1.2); }
 }
-function bossesDone() { let n = 0; for (let w = 0; w < 14; w++) { const st = SAVE.st[w * 3 + 2]; if (st && st.done) n++; } return n; }
+function bossesDone() { let n = 0; for (let w = 0; w < ORDER.length; w++) { const st = SAVE.st[w * 3 + 2]; if (st && st.done) n++; } return n; }
 function relicsFound() { let n = 0; for (const k in SAVE.st) if (SAVE.st[k] && SAVE.st[k].relic) n++; return n; }
 function achCheck() {
   const S = SAVE.stats;
   if (SAVE.st[0] && SAVE.st[0].done) achGive('p11');
-  const b = bossesDone(); if (b >= 1) achGive('g1'); if (b >= 7) achGive('g7'); if (b >= 14) achGive('g14');
+  const b = bossesDone(); if (b >= 1) achGive('g1'); if (b >= 7) achGive('g7'); if (b >= ORDER.length) achGive('g14');
   const r = relicsFound(); if (r >= 1) achGive('rel1'); if (r >= 10) achGive('rel10');
   if (S.gems >= 300) achGive('gem300');
   if (S.trials >= 1) achGive('tr1'); if (S.trials >= 10) achGive('tr10');
@@ -237,7 +237,7 @@ function drawAch() {
     txt(a[2], x + 42, y + 28, 11, on ? 'rgba(255,230,180,.85)' : 'rgba(255,255,255,.4)', null, 0, 'left', UIF, 500);
   });
   const S = SAVE.stats;
-  txt('Guardianes: ' + bossesDone() + '/14   ·   Cámaras: ' + S.trials + '   ·   Caídas: ' + S.deaths + '   ·   Paradas: ' + S.parries + '   ·   Tiempo de juego: ' + fmtTime(S.play), 480, 492, 12, 'rgba(255,255,255,.7)', null, 0, 'center', UIF, 600);
+  txt('Guardianes: ' + bossesDone() + '/18   ·   Cámaras: ' + S.trials + '   ·   Caídas: ' + S.deaths + '   ·   Paradas: ' + S.parries + '   ·   Tiempo de juego: ' + fmtTime(S.play), 480, 492, 12, 'rgba(255,255,255,.7)', null, 0, 'center', UIF, 600);
   txt('Toca la pantalla o pulsa ESC para volver', 480, 518, 11, 'rgba(255,220,150,.6)', null, 0, 'center', UIF, 600);
   ctx.restore();
 }

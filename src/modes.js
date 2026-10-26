@@ -20,7 +20,7 @@ stageClear = function () {
   st.starMask = mask; st.stars = (mask & 1 ? 1 : 0) + (mask & 2 ? 1 : 0) + (mask & 4 ? 1 : 0);
   lastStars = { got: [true, c2, c3], par, t, act, newBest: mask !== prev, t0: performance.now() };
   persist(); achCheck();
-  const n = starsTotal(); if (n >= 42) achGive('est42'); if (n >= 126) achGive('est126');
+  const n = starsTotal(); if (n >= 42) achGive('est42'); if (n >= ORDER.length * 9) achGive('est126');
 };
 function drawStar5(cx, cy, r, fill, stroke) {
   ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); }
@@ -140,5 +140,5 @@ draw = function () {
   if (TOWER && state === 'playing') txt('PISO ' + TOWER.floor, W / 2, 22, 13, '#d8c8ff', null, 0, 'center', UIF, 900);
 };
 // la Torre se guarda en los logros
-ACH.push(['est42', 'Coleccionista de estrellas', 'Consigue 42 estrellas'], ['est126', 'Perfección temporal', 'Consigue las 126 estrellas'],
+ACH.push(['est42', 'Coleccionista de estrellas', 'Consigue 42 estrellas'], ['est126', 'Perfección temporal', 'Consigue las 162 estrellas'],
   ['torre10', 'Escalador del tiempo', 'Llega al piso 10 de la Torre'], ['torre25', 'Señor de la Torre', 'Llega al piso 25 de la Torre']);

@@ -218,7 +218,7 @@ function updateMagic(dt) {
   if ((Math.abs(p.vx) > 260 || p.dashT > 0) && Math.random() < .5) parts.push({ x: p.x + p.w / 2 - p.face * 6 + rnd(-3, 3), y: p.y + rnd(10, 36), vx: -p.face * rnd(10, 40), vy: rnd(-20, 5), life: .5, max: .5, c: Math.random() < .5 ? '#ffd34d' : '#fff4c0', s: 1, g: -20 });
   // al atravesar plantas, saltan hojas, pétalos o burbujas
   if (p.onGround && Math.abs(p.vx) > 120 && Math.random() < .12 && level.decor.some(d => d.k.startsWith('pr') && !d.big && Math.abs(d.x - (p.x + p.w / 2)) < 18)) {
-    const c = [['#7dea5a', '#c9ff9a'], ['#5a6a50', '#8a7a60'], ['#ffb040', '#ff6a1a'], ['#ffb0d0', '#ffd0a0'], ['#a090b0', '#c8bca8'], ['#ffffff', '#cfefff'], ['#ff8a30', '#704040'], ['#ffd34d', '#d0a0ff'], ['#bff4ff', '#ff9ad8'], ['#ffe0a0', '#e0b060'], ['#ffffff', '#ffe9a0'], ['#ff6ad5', '#7fe9ff'], ['#6a8a50', '#b0d070'], ['#a0a8c8', '#7fb0ff']][curWorld] || ['#9be35a', '#5fb04a'];
+    const c = [['#7dea5a', '#c9ff9a'], ['#5a6a50', '#8a7a60'], ['#ffb040', '#ff6a1a'], ['#ffb0d0', '#ffd0a0'], ['#a090b0', '#c8bca8'], ['#ffffff', '#cfefff'], ['#ff8a30', '#704040'], ['#ffd34d', '#d0a0ff'], ['#bff4ff', '#ff9ad8'], ['#ffe0a0', '#e0b060'], ['#ffffff', '#ffe9a0'], ['#ff6ad5', '#7fe9ff'], ['#6a8a50', '#b0d070'], ['#a0a8c8', '#7fb0ff'], ['#d0a0ff', '#f0d0ff'], ['#c8d8d0', '#90a8a0'], ['#e0c090', '#a08060'], ['#c0c8e8', '#8090c0']][curWorld] || ['#9be35a', '#5fb04a'];
     for (let i = 0; i < 4; i++) parts.push({ x: p.x + p.w / 2 + rnd(-8, 8), y: p.y + p.h - rnd(4, 20), vx: rnd(-60, 60), vy: rnd(-120, -40), life: rnd(.6, 1.1), max: 1.1, c: c[i % 2], s: 2, g: 160, lf: 1 });
   }
   if (p.landT > 0) p.landT -= dt;

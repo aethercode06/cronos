@@ -21,14 +21,14 @@ function burst(x, y, c, n, sp, g, life, size) {
   }
   if (parts.length > 800) parts.splice(0, parts.length - 800);
 }
-const DUSTC = ['#e8dcc0', '#9a9aaa', '#8a6a60', '#d8b0a0', '#a090b0', '#e0f0ff', '#806060', '#c0a0ff', '#9fe8ff', '#f0d090', '#ffffff', '#e0a0ff', '#8aa080', '#9aa4c0'];
+const DUSTC = ['#e8dcc0', '#9a9aaa', '#8a6a60', '#d8b0a0', '#a090b0', '#e0f0ff', '#806060', '#c0a0ff', '#9fe8ff', '#f0d090', '#ffffff', '#e0a0ff', '#8aa080', '#9aa4c0', '#c0a0ff', '#b0c0b8', '#c8a878', '#a0a8d0'];
 function dust(x, y, n, dir) {
   for (let i = 0; i < (n || 6); i++) parts.push({ x: x + rnd(-6, 6), y: y - rnd(0, 3), vx: (dir || 0) * rnd(20, 80) + rnd(-50, 50), vy: rnd(-60, -10), life: rnd(.25, .45), max: .45, c: DUSTC[curWorld], s: Math.random() < .5 ? 3 : 2, g: -20, dust: true });
 }
-const STEPC = [['#9be35a', '#5fb04a'], ['#b0b8c8', '#ffb060'], ['#ffb040', '#ff6a1a'], ['#ffb0c8', '#ffd0a0'], ['#c8bca8', '#a090b0'], ['#ffffff', '#cfefff'], ['#ff8a30', '#704040'], ['#ffd34d', '#d0a0ff'], ['#9ff8ff', '#ff8ad8'], ['#ffe0a0', '#e0b060'], ['#ffffff', '#ffe9a0'], ['#ff6ad5', '#7fe9ff'], ['#6a8a50', '#a0c070'], ['#a0a8c8', '#7fb0ff']];
+const STEPC = [['#9be35a', '#5fb04a'], ['#b0b8c8', '#ffb060'], ['#ffb040', '#ff6a1a'], ['#ffb0c8', '#ffd0a0'], ['#c8bca8', '#a090b0'], ['#ffffff', '#cfefff'], ['#ff8a30', '#704040'], ['#ffd34d', '#d0a0ff'], ['#9ff8ff', '#ff8ad8'], ['#ffe0a0', '#e0b060'], ['#ffffff', '#ffe9a0'], ['#ff6ad5', '#7fe9ff'], ['#6a8a50', '#a0c070'], ['#a0a8c8', '#7fb0ff'], ['#d0a0ff', '#a080ff'], ['#c8d8d0', '#90a8a0'], ['#e0c090', '#a08060'], ['#c0c8e8', '#8090c0']];
 function stepFx(x, y) {
   const c = STEPC[curWorld];
-  for (let i = 0; i < 3; i++) parts.push({ x: x + rnd(-4, 4), y: y - 1, vx: -p.face * rnd(20, 70) + rnd(-20, 20), vy: rnd(-90, -30), life: rnd(.25, .5), max: .5, c: c[i % 2], s: curWorld === 0 || curWorld === 3 ? 2 : 1, g: curWorld === 5 ? 60 : 300 });
+  for (let i = 0; i < 3; i++) parts.push({ x: x + rnd(-4, 4), y: y - 1, vx: -p.face * rnd(20, 70) + rnd(-20, 20), vy: rnd(-90, -30), life: rnd(.25, .5), max: .5, c: c[i % 2], s: curWorld === 0 || curWorld === 3 ? 2 : 1, g: VWI(curWorld) === 5 ? 60 : 300 });
   if (curWorld === 7) glowAt(x, y - 2, 6, 'rgba(255,211,77,.5)', .5);
 }
 function addFx(k, x, y, fps, flip, scale) { fx.push({ k, x, y, t: 0, fps: fps || 14, flip: !!flip, s: scale || 1 }); }
@@ -293,7 +293,7 @@ function updatePlayer(dt) {
       if (!near && cx > land.x + 12 && cx < land.x + land.w - 12) p.safe = { x: p.x, y: p.y };
     }
   } else p.ground = null;
-  if (p.onGround && Math.abs(p.vx) > 60) { p.stepT -= dt; if (p.stepT <= 0) { p.stepT = 0.26; sfx('step', .14, curWorld === 5 ? 1.3 : curWorld === 1 || curWorld === 7 ? 1.15 : 1); stepFx(p.x + p.w / 2 - p.face * 6, p.y + p.h); } } else p.stepT = 0;
+  if (p.onGround && Math.abs(p.vx) > 60) { p.stepT -= dt; if (p.stepT <= 0) { p.stepT = 0.26; sfx('step', .14, VWI(curWorld) === 5 ? 1.3 : VWI(curWorld) === 1 || curWorld === 7 ? 1.15 : 1); stepFx(p.x + p.w / 2 - p.face * 6, p.y + p.h); } } else p.stepT = 0;
   if (p.onGround) for (const b of level.plats) {
     if (b.k === 'boost' && p.x + p.w > b.x && p.x < b.x + b.w && Math.abs(p.y + p.h - (b.y + b.h)) < 3) {
       if (p.boostT <= 0.05) sfx('dash', .8, 1.3);
@@ -763,7 +763,7 @@ function updateCamera(dt, snap) {
 
 // ---------------- Vida ambiental ----------------
 function updateAmbient(dt) {
-  const wi = curWorld;
+  const wi = ({ 14: 3, 15: 4, 16: 6, 17: 1 })[curWorld] ?? curWorld;
   for (const a of amb) {
     if (wi === 0 || wi === 3) { a.x += (Math.sin(time + a.ph) * 10 + (wi === 0 ? 14 : -6)) * dt; a.y += (wi === 0 ? 18 : Math.cos(time * 0.7 + a.ph) * 8) * dt; }
     else if (wi === 1) { a.y += a.v * 12 * dt; a.x -= a.v * 3 * dt; }
@@ -785,11 +785,12 @@ function updateAmbient(dt) {
     else if (Math.random() < dt * 1.5) { c.x += rnd(-6, 6); c.face = Math.random() < .5 ? -1 : 1; c.hop = 0.15; }
     if (c.hop > 0) c.hop -= dt;
   }
-  if (wi === 1) {
+  if (curWorld === 1) {
     if (Math.random() < dt * 0.5 && cars.length < 4) cars.push({ k: Math.random() < .5 ? 'car_v-police' : 'car_v-red', x: Math.random() < .5 ? -200 : VW + 200, y: rnd(40, 160), sc: rnd(.25, .45) });
     for (let i = cars.length - 1; i >= 0; i--) { const c = cars[i]; if (c.vx === undefined) c.vx = (c.x < 0 ? 1 : -1) * rnd(60, 140); c.x += c.vx * dt; if (c.x < -300 || c.x > VW + 300) cars.splice(i, 1); }
   }
   if (wi === 4 && Math.random() < dt * 0.08) { lightning = 0.25; sfx('stomp', .25, .5); }
+  if (curWorld === 17 && Math.random() < dt * 0.14) { lightning = 0.35; sfx('boom', .22, .45); shake = Math.max(shake, 2); }
   if (wi === 1 && Math.random() < 0.7) {
     const x = cam.x + Math.random() * VW;
     for (const s of level.plats) if (s.k === 'solid' && x >= s.x && x <= s.x + s.w && s.y > cam.y && s.y < cam.y + VH) {

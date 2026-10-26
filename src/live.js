@@ -13,9 +13,13 @@ const LIVE_CRE = [
   ['frog', 'spirit', 'fish'],                 // 8 océano
   ['fox', 'sala', 'bird'],                    // 9 desierto
   ['bird', 'bunny', 'moth', 'spirit'],        // 10 cielo
-  ['spirit', 'moth', 'fox']                   // 11 núcleo,
+  ['spirit', 'moth', 'fox'],                   // 11 núcleo
   ['frog', 'spirit', 'moth'],                 // 12 pantano
-  ['spirit', 'moth', 'mouse']                 // 13 ciudadela del rey caído
+  ['spirit', 'moth', 'mouse'],                // 13 ciudadela del rey caído
+  ['mouse', 'spirit', 'moth'],                // 14 minas de cristal
+  ['spirit', 'moth', 'fox'],                  // 15 bosque de huesos
+  ['mouse', 'moth', 'spirit'],                // 16 biblioteca prohibida
+  ['bird', 'spirit']                          // 17 torre de las tormentas
 ];
 const LIVE_STAG = [0, 3, 5, 10, 11];
 const LIVE_AIR = { moth: 1, spirit: 1, fish: 1 };
@@ -154,7 +158,7 @@ function hitWBreak(o) {
 function reactW(o) {
   if (o.reacted) return; o.reacted = 1; addScore(25);
   const c = 'rgb(' + WCOL[curWorld] + ')', hh = liveHH(o); burst(o.x, o.y - hh * 0.7, c, 14, 120, -30, .9, 2);
-  sfx(['heal', 'ghost', 'fire', 'gem', 'ghost', 'ice', 'fire', 'clang', 'bounce', 'gem', 'gem', 'shift', 'ghost', 'clang'][curWorld] || 'gem', .3, 1.4);
+  sfx(['heal', 'ghost', 'fire', 'gem', 'ghost', 'ice', 'fire', 'clang', 'bounce', 'gem', 'gem', 'shift', 'ghost', 'clang', 'gem', 'ghost', 'shift', 'shift'][curWorld] || 'gem', .3, 1.4);
 }
 function hitLive(hb) {
   const L = level.live; if (!L) return;

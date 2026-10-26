@@ -210,7 +210,7 @@ function drawPlat(s) {
     return;
   }
   if (s.k === 'door') { drawDoor(s); return; }
-  if (s.k === 'break' && curWorld === 10) {
+  if (s.k === 'break' && VWI(curWorld) === 10) {
     if (s.st === 2 && s.oy > 300) return;
     const ox = s.st === 1 ? Math.round(Math.sin(time * 80) * 1.5) : 0, oy = s.st === 2 ? Math.round(s.oy) : 0;
     bx.globalAlpha = s.st === 2 ? Math.max(0, 1 - s.oy / 200) : s.st === 1 ? .75 : 1;
@@ -443,7 +443,8 @@ function drawBoss() {
     const vul = b.vulnT > 0;
     let k = 'WZ_idle', f = Math.floor(b.anim * 10);
     if (b.dying) { k = 'WZ_death'; f = Math.min(4, Math.floor((2.8 - b.dieT) * 3)); } else if (b.throwA > 0) { k = 'WZ_atk'; f = Math.min(7, Math.floor((0.6 - b.throwA) / 0.6 * 8)); } else if (wh) { k = 'WZ_hit'; f = 1; }
-    glowAt(cx, by - 50, 90, 'rgba(255,100,30,.35)', .8);
+    const arc = b.skin && b.skin.startsWith('WZB'); if (arc) k = k.replace('WZ_', 'WZB_');
+    glowAt(cx, by - 50, 90, arc ? 'rgba(80,200,255,.38)' : 'rgba(255,100,30,.35)', .8);
     spr(k + '_s2', f, cx, by + 2, b.face < 0, 1, wh || blink);
     if (!vul && !b.dying) shieldBubble(cx, by - 56, 74);
   } else if (b.type === 3) {
