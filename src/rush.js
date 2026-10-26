@@ -99,7 +99,7 @@ draw = function () {
   const now = performance.now(), dt = Math.min(.05, (now - lastDrawR) / 1000); lastDrawR = now;
   _drawR();
   if (RUSH && dlg && dlg.hold) dlg.hold = false;
-  if (RUSH && state === 'playing') { RUSH.t += dt; txt('BOSS RUSH  ' + (RUSH.i + 1) + '/' + ORDER.length + '   ·   ' + fmtMS(RUSH.t), W / 2, 22, 13, '#ffc0a0', null, 0, 'center', UIF, 900); }
+  if (RUSH && state === 'playing') { RUSH.t += dt; txt('BOSS RUSH  ' + (RUSH.i + 1) + '/' + ORDER.length + '   ·   ' + fmtMS(RUSH.t), W / 2, 94, 13, '#ffc0a0', null, 0, 'center', UIF, 900); }
   if (state === 'title') {
     if (SAVE.rushMax) txt('Boss Rush: ' + SAVE.rushMax + ' guardianes' + (SAVE.rushBest ? ' · ' + fmtMS(SAVE.rushBest) : ''), W / 2, 476, 11, 'rgba(255,200,170,.9)', null, 0, 'center', UIF, 700);
     if (rushMsgT > 0) { rushMsgT -= dt; const ox = Math.round((W - 960) / 2); pill(ox + 250, 456, 460, 30, '#5a2a1a', '#8a3a2a'); txt('Vence a 3 guardianes para abrir el Boss Rush', W / 2, 471, 13, '#ffffff', null, 0, 'center', UIF, 700); }

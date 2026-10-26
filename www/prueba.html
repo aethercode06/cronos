@@ -6402,7 +6402,7 @@ draw = function () {
   const now = performance.now(), dt = Math.min(.05, (now - lastDrawR) / 1000); lastDrawR = now;
   _drawR();
   if (RUSH && dlg && dlg.hold) dlg.hold = false;
-  if (RUSH && state === 'playing') { RUSH.t += dt; txt('BOSS RUSH  ' + (RUSH.i + 1) + '/' + ORDER.length + '   ·   ' + fmtMS(RUSH.t), W / 2, 22, 13, '#ffc0a0', null, 0, 'center', UIF, 900); }
+  if (RUSH && state === 'playing') { RUSH.t += dt; txt('BOSS RUSH  ' + (RUSH.i + 1) + '/' + ORDER.length + '   ·   ' + fmtMS(RUSH.t), W / 2, 94, 13, '#ffc0a0', null, 0, 'center', UIF, 900); }
   if (state === 'title') {
     if (SAVE.rushMax) txt('Boss Rush: ' + SAVE.rushMax + ' guardianes' + (SAVE.rushBest ? ' · ' + fmtMS(SAVE.rushBest) : ''), W / 2, 476, 11, 'rgba(255,200,170,.9)', null, 0, 'center', UIF, 700);
     if (rushMsgT > 0) { rushMsgT -= dt; const ox = Math.round((W - 960) / 2); pill(ox + 250, 456, 460, 30, '#5a2a1a', '#8a3a2a'); txt('Vence a 3 guardianes para abrir el Boss Rush', W / 2, 471, 13, '#ffffff', null, 0, 'center', UIF, 700); }
@@ -6653,6 +6653,92 @@ initAudio = function () { _initAudioG(); if (AC && OPT.ost === 'orig') { genSong
 // al entrar en una fase, preparar también el tema del guardián
 const _startStageG = startStage;
 startStage = function (wi, act, fresh) { _startStageG(wi, act, fresh); if (AC && OPT.ost === 'orig') { genSong('g' + wi); genSong(wi >= 6 ? 'gfinal' : 'gboss'); } };
+
+// =====================================================================
+//  GRIETAS DEL TIEMPO: una fase secreta por mundo (v2.3)
+//  En la FASE 2 de cada mundo hay una grieta escondida en lo alto.
+//  Se ve tenue; en la dimensión violeta brilla. Al tocarla entras en
+//  una fase corta llena de gemas. Al salir vuelves donde estabas.
+// =====================================================================
+let SECRET = null, secHinted = false;
+ACH.push(['secreto1', 'Viajero de grietas', 'Supera tu primera Grieta del Tiempo'], ['secreto18', 'Cartógrafo del tiempo', 'Supera las 18 Grietas del Tiempo']);
+function secCount() { return SAVE.sec ? Object.keys(SAVE.sec).length : 0; }
+const _buildStageSec = buildStage;
+buildStage = function (wi, act) {
+  const L = _buildStageSec(wi, act);
+  if (act !== 1 || (typeof TOWER_ON !== 'undefined' && TOWER_ON) || !L.goal) return L;
+  const W = L.width || 4000; let best = null;
+  for (const s of L.plats) if (s.float && s.k === 'solid' && s.x > W * .3 && s.x < W * .78 && s.w >= 32 && (!best || s.y < best.y)) best = s;
+  if (!best) for (const s of L.plats) if (s.ground && s.x > W * .4 && s.w > 120) { best = s; break; }
+  if (best) L.rift = { x: best.x + best.w / 2 - 18, y: best.y - 56, w: 36, h: 52, ph: 0 };
+  return L;
+};
+function enterRift() {
+  const w = curWorld;
+  SECRET = { w, ret: { level, p: Object.assign({}, p), act: curAct, score, stageScore0, levelTime, tRun: typeof tRun !== 'undefined' ? tRun : null, dim, cam: { x: cam.x, y: cam.y } } };
+  sfx('portal', .8); flash = .5; flashCol = '200,120,255';
+  TOWER_ON = true; TOWER_SEED = 90001 + w * 977; TOWER_N = 5; TOWER_TRIAL = false;
+  try { startStage(w, 1, false); } finally { TOWER_ON = false; }
+  // fase llena de gemas: una fila sobre cada plataforma flotante
+  const L = level; L.secret = true; L.rift = null;
+  for (const s of L.plats) if (s.float && s.w >= 48) for (let x = s.x + 14; x < s.x + s.w - 10; x += 30) L.gems.push({ x, y: s.y - 26, taken: false, ph: Math.random() * 6 });
+  for (const e of L.enemies) e.hp = Math.max(1, e.hp - 1);
+  dlg = null; loreT = 0; score = SECRET.ret.score; stageScore0 = score;
+  banner('GRIETA DEL TIEMPO', WORLDS[w].name + '  ·  ¡recoge todo lo que puedas!', '#c890ff', 2.6);
+}
+function leaveRift(won) {
+  const S = SECRET; if (!S) return; SECRET = null;
+  const R = S.ret, got = level.gems.filter(g => g.taken).length;
+  if (won) {
+    SAVE.sec = SAVE.sec || {}; const first = !SAVE.sec[S.w]; SAVE.sec[S.w] = 1;
+    SAVE.bank = (SAVE.bank || 0) + got + (first ? 30 : 0); achGive('secreto1'); if (secCount() >= 18) achGive('secreto18'); persist();
+  }
+  level = R.level; Object.assign(p, R.p); curAct = R.act; levelTime = R.levelTime; stageScore0 = R.stageScore0;
+  if (won) score += got * 10; else score = R.score;
+  dim = R.dim; boss = null; arenaLock = false; bossIntro = 0; projs = []; waves = []; warns = []; fx = []; parts = []; echo = null; dlg = null;
+  if (typeof tRun !== 'undefined') tRun = R.tRun;
+  p.dead = false; p.deadT = 0; p.inv = 1.5; p.vx = 0; p.vy = 0; if (!won) p.hp = Math.max(25, Math.round(R.p.hp * .6));
+  if (level.rift) level.rift.used = true;
+  setView(EXW(), EXH); try { resetLive(); spawnLife(); spawnSwarms(); spawnGiants(); } catch (e) {}
+  updateCamera(0, true); state = 'playing'; fade = 1; playMusic(WORLDS[curWorld].music); try { startAmbience(curWorld); } catch (e) {}
+  if (won) { banner('¡GRIETA SUPERADA!', '+' + got + ' gemas' + (SAVE.sec && secCount() ? '   ·   Grietas: ' + secCount() + ' / 18' : ''), '#c890ff', 2.6); sfx('relic', .8); }
+  else banner('LA GRIETA SE CERRÓ', 'Vuelves a la fase con menos vida', '#ff7a9a', 2.2);
+}
+const _stageClearSec = stageClear;
+stageClear = function () { if (SECRET) { if (state === 'playing') leaveRift(true); return; } _stageClearSec(); };
+const _updEnemiesSec = updateEnemies;
+updateEnemies = function (dt) {
+  _updEnemiesSec(dt);
+  const R = level.rift;
+  if (R && !R.used && !SECRET && !p.dead) {
+    R.ph += dt; const cx = R.x + R.w / 2, d = Math.hypot(p.x + p.w / 2 - cx, p.y + p.h / 2 - (R.y + R.h / 2));
+    if (d < 320 && !secHinted && !(SAVE.fh && SAVE.fh.rift) && !ticSay && !dlg) { secHinted = true; SAVE.fh = SAVE.fh || {}; SAVE.fh.rift = 1; persist(); tSay('Siento una grieta del tiempo cerca… en la dimensión violeta brilla más. ¡Búscala arriba!', 4.5); }
+    if (overlap(p, R)) enterRift();
+  }
+};
+// salir de la fase (mapa, título, reintentar) cierra la grieta sin restaurar nada
+const _toMapSec = toMap; toMap = function () { SECRET = null; _toMapSec(); };
+const _toTitleSec = toTitle; toTitle = function () { SECRET = null; _toTitleSec(); };
+const _retrySec = retry; retry = function () { if (SECRET) { leaveRift(false); return; } _retrySec(); };
+const _drawProjsSec = drawProjs;
+drawProjs = function () {
+  _drawProjsSec();
+  const R = level && level.rift; if (!R || R.used || SECRET || !onScreen(R.x, R.w)) return;
+  const cx = R.x + R.w / 2, cy = R.y + R.h / 2, on = dim === 1, a = on ? 1 : 0.32 + Math.sin(time * 2) * 0.06;
+  glowAt(cx, cy, on ? 60 : 34, 'rgba(190,110,255,.8)', a * .9);
+  bx.save(); bx.globalAlpha = a; bx.translate(Math.round(cx), Math.round(cy));
+  for (let i = 0; i < 3; i++) { bx.strokeStyle = i === 1 ? '#ffffff' : '#c890ff'; bx.lineWidth = i === 1 ? 1.5 : 2.5; bx.beginPath(); bx.ellipse(0, 0, 9 + i * 4 + Math.sin(time * 3 + i) * 1.5, 20 + i * 4, Math.sin(time + i) * .2, time * (1 + i * .5), time * (1 + i * .5) + 4.6); bx.stroke(); }
+  bx.restore();
+  if (on && Math.random() < .3) parts.push({ x: cx + rnd(-14, 14), y: cy + rnd(-20, 20), vx: rnd(-20, 20), vy: rnd(-40, -10), life: .6, max: .6, c: '#d8b0ff', s: 2, g: -40 });
+};
+// contador de grietas en el mapa
+const _drawSec = draw;
+draw = function () {
+  if (SECRET && p && p.dead && (state === 'gameover' || p.deadT < 0.8)) leaveRift(false);
+  _drawSec();
+  if (state === 'map') { const n = secCount(); pill(18, H - 40, 168, 26, 'rgba(60,30,100,.85)', 'rgba(110,50,170,.85)'); txt('✦ Grietas del Tiempo: ' + n + '/18', 102, H - 27, 11, '#ecd8ff', null, 0, 'center', UIF, 800); }
+  if (SECRET && state === 'playing') txt('✦ GRIETA DEL TIEMPO ✦', W / 2, 94, 13, '#e0c0ff', null, 0, 'center', UIF, 900);
+};
 
 // =====================================================================
 //  MEDICIÓN DE PARTIDAS (solo en el teléfono, nada sale del dispositivo
@@ -6976,6 +7062,21 @@ const I18N = {
 (function () {
   const ES = ["Banda sonora", "Original", "Clásica"];
   const X = { en: ["Soundtrack", "Original", "Classic"], pt: ["Trilha sonora", "Original", "Clássica"], fr: ["Bande-son", "Originale", "Classique"], de: ["Soundtrack", "Original", "Klassisch"], it: ["Colonna sonora", "Originale", "Classica"], ja: ["サウンドトラック", "オリジナル", "クラシック"], ko: ["사운드트랙", "오리지널", "클래식"], zh: ["配乐", "原创", "经典"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.3: Grietas del Tiempo (fases secretas)
+(function () {
+  const ES = ["Viajero de grietas", "Supera tu primera Grieta del Tiempo", "Cartógrafo del tiempo", "Supera las 18 Grietas del Tiempo", "GRIETA DEL TIEMPO", "  ·  ¡recoge todo lo que puedas!", "¡GRIETA SUPERADA!", " gemas", "   ·   Grietas: ", "LA GRIETA SE CERRÓ", "Vuelves a la fase con menos vida", "Siento una grieta del tiempo cerca… en la dimensión violeta brilla más. ¡Búscala arriba!", "✦ Grietas del Tiempo: ", "✦ GRIETA DEL TIEMPO ✦"];
+  const X = {
+    en: ["Rift traveler", "Clear your first Time Rift", "Cartographer of time", "Clear all 18 Time Rifts", "TIME RIFT", "  ·  grab everything you can!", "RIFT CLEARED!", " gems", "   ·   Rifts: ", "THE RIFT CLOSED", "You return to the stage with less health", "I sense a time rift nearby… it glows brighter in the violet dimension. Look up high!", "✦ Time Rifts: ", "✦ TIME RIFT ✦"],
+    pt: ["Viajante de fendas", "Supere sua primeira Fenda do Tempo", "Cartógrafo do tempo", "Supere as 18 Fendas do Tempo", "FENDA DO TEMPO", "  ·  pegue tudo o que puder!", "FENDA SUPERADA!", " gemas", "   ·   Fendas: ", "A FENDA SE FECHOU", "Você volta à fase com menos vida", "Sinto uma fenda do tempo por perto… na dimensão violeta ela brilha mais. Procure lá em cima!", "✦ Fendas do Tempo: ", "✦ FENDA DO TEMPO ✦"],
+    fr: ["Voyageur des failles", "Termine ta première Faille du Temps", "Cartographe du temps", "Termine les 18 Failles du Temps", "FAILLE DU TEMPS", "  ·  ramasse tout ce que tu peux !", "FAILLE TERMINÉE !", " gemmes", "   ·   Failles : ", "LA FAILLE S'EST REFERMÉE", "Tu reviens au niveau avec moins de vie", "Je sens une faille du temps tout près… elle brille davantage dans la dimension violette. Cherche en hauteur !", "✦ Failles du Temps : ", "✦ FAILLE DU TEMPS ✦"],
+    de: ["Rissreisender", "Schaffe deinen ersten Zeitriss", "Kartograf der Zeit", "Schaffe alle 18 Zeitrisse", "ZEITRISS", "  ·  sammle alles, was du kannst!", "RISS GESCHAFFT!", " Edelsteine", "   ·   Risse: ", "DER RISS HAT SICH GESCHLOSSEN", "Du kehrst mit weniger Leben in die Stufe zurück", "Ich spüre einen Zeitriss in der Nähe… in der violetten Dimension leuchtet er heller. Such weiter oben!", "✦ Zeitrisse: ", "✦ ZEITRISS ✦"],
+    it: ["Viaggiatore delle fenditure", "Supera la tua prima Fenditura del Tempo", "Cartografo del tempo", "Supera tutte le 18 Fenditure del Tempo", "FENDITURA DEL TEMPO", "  ·  raccogli tutto quello che puoi!", "FENDITURA SUPERATA!", " gemme", "   ·   Fenditure: ", "LA FENDITURA SI È CHIUSA", "Torni al livello con meno vita", "Sento una fenditura del tempo qui vicino… nella dimensione viola brilla di più. Cercala in alto!", "✦ Fenditure del Tempo: ", "✦ FENDITURA DEL TEMPO ✦"],
+    ja: ["裂け目の旅人", "初めての「時の裂け目」をクリア", "時の地図職人", "18の「時の裂け目」をすべてクリア", "時の裂け目", "  ·  できるだけ集めよう！", "裂け目クリア！", "個の宝石", "   ·   裂け目：", "裂け目が閉じた", "体力が減った状態でステージに戻ります", "近くに時の裂け目を感じる…紫の次元だともっと光るよ。上を探して！", "✦ 時の裂け目：", "✦ 時の裂け目 ✦"],
+    ko: ["균열 여행자", "첫 번째 시간의 균열 클리어", "시간의 지도 제작자", "시간의 균열 18개 모두 클리어", "시간의 균열", "  ·  최대한 많이 모아!", "균열 클리어!", "개의 보석", "   ·   균열: ", "균열이 닫혔다", "체력이 줄어든 채로 스테이지로 돌아갑니다", "근처에서 시간의 균열이 느껴져… 보라색 차원에서 더 밝게 빛나. 위쪽을 찾아봐!", "✦ 시간의 균열: ", "✦ 시간의 균열 ✦"],
+    zh: ["裂隙旅人", "通过你的第一道时间裂隙", "时间制图师", "通过全部18道时间裂隙", "时间裂隙", "  ·  尽量全部收集！", "裂隙通过！", "颗宝石", "   ·   裂隙：", "裂隙关闭了", "你带着较少的生命回到关卡", "我感觉附近有一道时间裂隙……在紫色维度里它更亮。往高处找！", "✦ 时间裂隙：", "✦ 时间裂隙 ✦"]
+  };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
 

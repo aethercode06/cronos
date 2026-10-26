@@ -14,6 +14,7 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
 - v2.1: `src/tele.js` — medición local de partidas (intentos, muertes con posición y causa, abandonos, reinicios, tiempos) en `chronos_stats`; pantalla ESTADÍSTICAS (botón arriba a la derecha del título) con mapa de calor y botón COMPARTIR (informe de texto).
 - v2.2: `src/rush.js` — Modo PESADILLA (4.ª dificultad, DIFFS[3].nm; se abre al terminar la historia; +1 vida a enemigos, gemas x2; las ramas `diffIdx >= 2` cubren Difícil y Pesadilla) y BOSS RUSH (18 guardianes en orden ORDER, vida entre jefes +30; se abre con 3 guardianes; récord SAVE.rushMax/rushBest). Logros nuevos pesadilla1/18, rush6/18.
 - v2.2: `src/music.js` — banda sonora original generada por código (SONGS: un tema por mundo + gmenu/gboss/gfinal), sintetizador propio SYNTH() en un Worker → WAV en memoria (máx. 8 temas). Opción «Banda sonora: Original/Clásica» (OPT.ost). Sombras de contacto suaves para jugador y enemigos al final de foes.js.
+- v2.3: `src/secret.js` — Grietas del Tiempo: en la FASE 2 de cada mundo `level.rift` en la plataforma flotante más alta del tramo central; entrar guarda el estado (level, p…) y genera una fase corta llena de gemas (TOWER_ON con semilla propia); al llegar a la meta o morir se restaura la fase original. SAVE.sec[w], logros secreto1/18, contador en el mapa.
 - Criaturas gigantes del cielo por mundo en `GIANT_OF` (live2.js): las marinas (ballena, mantarraya, medusa) solo en el Arrecife y el Nexo.
 - `i18n/*.json` — traducciones por id (`es.json` es el original). Textos nuevos: añadirlos en `src/i18n_extra.js` o `src/i18n_extra2.js` en los 9 idiomas.
 - `www/prueba.html` — versión de prueba (window.CHRONOS_PRUEBA: todo abierto, guardado aparte `chronos_prueba`); el workflow la compila como APK aparte `Chronos-PRUEBA.apk` (com.aethercode.chronos.prueba).
@@ -31,5 +32,5 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
 ## Pendiente
 - PRÓXIMO (pedido por el usuario): mundo nuevo de bosque medieval fantástico con duendes y elfos como enemigos/personajes. Arte de concepto ya hecho en `store/concepto/bosque_medieval.jpg` y `store/concepto/duendes_elfos.jpg` (duende, duende chamán, elfa arquera, caballero elfo): usarlo como guía de estilo. Faltan hojas de animación, fondo final, terreno y decorados (necesita créditos de Higgsfield).
 - Música: la original (music.js) es sintetizada; si el usuario quiere más calidad, mejorar instrumentos o componer temas a mano en SONGS.
-- Fases secretas por mundo. AAB firmado y API 36 para Google Play.
+- AAB firmado y API 36 para Google Play (necesita una clave de subida que el usuario guarde; no generarla sin hablarlo).
 - El usuario habla español y trabaja desde un Samsung S23 Ultra (sin computadora).
