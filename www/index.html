@@ -1170,6 +1170,11 @@ function buildStage(wi, act) {
       row(x + 300, 370, 3, 40); row(x + 764, 370, 3, 40);
       return 1152;
     },
+    ambush(x) {
+      // zona de emboscada (v2.7): suelo amplio y una barrera al final; la lógica está en gates.js
+      G(x, 768); P(x + 300, 372, 112); arc(x + 160, 440, 4, 40, 25);
+      (L.sealSpots = L.sealSpots || []).push({ x, w: 768 }); return 768;
+    },
     gears(x) { G(x, 128); M(x + 150, 450, 64, x + 150, 300, 1.3); M(x + 260, 300, 96, x + 400, 300, 1.0); M(x + 520, 300, 64, x + 520, 450, 1.3); G(x + 640, 128); row(x + 280, 260, 4, 40); E('a', x + 380, 220); return 768; }
   };
 
@@ -1231,6 +1236,15 @@ function buildStage(wi, act) {
     seq.length = 0; seq.push(...keyed);
     seq.unshift('flat');
     if (act < 2 && seq.length > 5 && (!TOWER_ON || TOWER_TRIAL)) seq.splice(Math.floor(seq.length * 0.62), 0, 'trial');
+    // barreras de emboscada: más cuanto más avanzado el mundo (gates.js)
+    if (!TOWER_ON && typeof sealPlan === 'function' && !(wi === 2 && act === 2)) {
+      const nS = sealPlan(wi, act).n, F = act === 2 ? [0.5] : nS === 1 ? [0.35] : nS === 2 ? [0.3, 0.88] : [0.22, 0.45, 0.88];
+      for (let k = F.length - 1; k >= 0; k--) {
+        let i = Math.max(2, Math.round(seq.length * F[k]));
+        while (i < seq.length && (seq[i] === 'trial' || seq[i - 1] === 'trial')) i++;
+        seq.splice(Math.min(i, seq.length), 0, 'ambush');
+      }
+    }
     for (let i = 0; i < seq.length; i++) {
       if (i > 0 && (i % 2 === 0 || seq[i] === 'trial') && !L.checks.some(c => c.x === x + 40)) L.checks.push({ x: x + 40, y: GY - 40, w: 24, h: 40, on: false });
       x += CH_[seq[i]](x);
@@ -7226,6 +7240,113 @@ buildStage = function (wi, act) {
 };
 
 // =====================================================================
+//  BARRERAS DE EMBOSCADA (v2.7)
+//  Antes se podía llegar a la meta corriendo y saltando sin pelear.
+//  Ahora cada fase tiene barreras de energía que se cierran al llegar:
+//  aparecen enemigos y el paso solo se abre al derrotarlos a todos.
+//  Su número y el de enemigos crecen del primer mundo al último.
+//  Las barreras de las Cámaras del Desafío ya no se pueden saltar.
+// =====================================================================
+const SEAL_TXT = 'Una barrera te cierra el paso: derrota a todos los enemigos para abrirla.';
+function sealPlan(wi, act) {
+  const g = clamp(WPOS(wi) / (ORDER.length - 1), 0, 1), D = DIFFS[diffIdx];
+  const n = act === 2 ? 1 : 1 + (g >= 0.25 ? 1 : 0) + (g >= 0.6 ? 1 : 0);
+  const foes = Math.min(6, 2 + Math.floor(g * 3.2) + (D.extra ? 1 : 0) + (act === 1 ? 1 : 0));
+  return { n, foes, g };
+}
+function sealSpots(L, n) {
+  const W = L.goal ? L.goal.x : L.arena ? L.arena.x1 - 200 : L.width;
+  const bad = (a, b) =>
+    (L.trials || []).some(t => b > t.x1 - 220 && a < t.x2 + 220) ||
+    L.doors.some(d => b > d.x - 260 && a < d.x + 260) ||
+    L.zones.some(z => b > z.x - 60 && a < z.x + z.w + 60) ||
+    L.hazards.some(h => b > h.x - 40 && a < h.x + h.w + 40) ||
+    L.lavaStrips.some(s => b > s.x - 40 && a < s.x + s.w + 40) ||
+    (L.arena && b > L.arena.x1 - 300);
+  // solo importa que la zona de pelea (los ~460 px antes de la barrera) esté libre de trampas, agua o viento
+  const cands = L.plats.filter(s => s.k === 'solid' && s.ground && !s.pillar && !s.conv && !s.sand && !s.ceil && s.y === GY && s.w >= 352 &&
+    s.x > 700 && s.x + s.w < W - 60 && !bad(Math.max(s.x, s.x + s.w - 540), s.x + s.w)).map(s => ({ s, c: s.x + s.w / 2 }));
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const tx = 600 + (W - 600) * (n === 1 ? 0.55 : 0.22 + 0.68 * i / (n - 1));
+    let best = null, bd = 1e9;
+    for (const q of cands) { if (out.some(o => Math.abs(o.c - q.c) < 1000)) continue; const d = Math.abs(q.c - tx); if (d < bd) { bd = d; best = q; } }
+    if (best) out.push(best);
+  }
+  return out.sort((a, b) => a.c - b.c);
+}
+function sealFoe(id, x, y) {
+  const d = ENEMY[id];
+  return { id, d, b: d.b, x, y: d.b === 'flyer' || d.b === 'diver' || d.b === 'ghost' || d.b === 'dropper' ? y : GY - d.h, w: d.w, h: d.h, hp: d.hp, hit: 0, t: Math.random() * 5,
+    dir: -1, minX: x - 140, maxX: x + 140 - d.w, cd: 1 + Math.random(), dead: false, st: d.b === 'riser' ? 'buried' : 0, x0: x, y0: y, fire: 0, alert: 1, vy: 0, rise: 0 };
+}
+function addSeals(L, wi, act) {
+  if (TOWER_ON || (typeof RUSH !== 'undefined' && RUSH) || (wi === 2 && act === 2)) return;
+  const P = sealPlan(wi, act), WD = WORLDS[wi], r = seeded(4242 + wi * 131 + act * 17);
+  L.seals = [];
+  const spots = L.sealSpots ? L.sealSpots.map(q => ({ s: { x: q.x, w: q.w } })) : sealSpots(L, 1);
+  for (const { s } of spots) {
+    const bar = s.x + s.w - 72;
+    const plate = { on: true };
+    const door = { k: 'door', x: bar, y: GY - 1700, w: 28, h: 1700, open: 1, tg: 1, plate, trial: true, seal: true };
+    L.plats.push(door); L.doors.push(door);
+    const foes = [];
+    const gl = (WD.g || []).filter(id => ENEMY[id] && ENEMY[id].b !== 'shooter'), al = (WD.a || []).filter(id => ENEMY[id]);
+    for (let i = 0; i < P.foes; i++) {
+      const air = al.length && i % 3 === 2;
+      const list = air ? al : gl.length ? gl : WD.g;
+      foes.push({ id: list[Math.floor(r() * list.length)], x: bar - 50 - ((i * 67) % 170), y: 300 - (i % 2) * 50 });
+    }
+    L.seals.push({ x1: Math.max(s.x + 20, bar - 250), bar, door, plate, foes, live: [], st: 0, left: 0 });
+    if (!L.checks.some(c => c.x > s.x - 700 && c.x < bar)) L.checks.push({ x: s.x + 24, y: GY - 40, w: 24, h: 40, on: false });
+  }
+  L.checks.sort((a, b) => a.x - b.x);
+}
+const _buildStageS = buildStage;
+buildStage = function (wi, act) {
+  const L = _buildStageS(wi, act);
+  // las Cámaras del Desafío ya no se pueden saltar por encima
+  for (const d of L.doors) if (d.trial && !d.seal && d.h < 1000) { d.y -= 1300; d.h += 1300; }
+  try { addSeals(L, wi, act); } catch (e) { L.seals = []; }
+  return L;
+};
+function updateSeals(dt) {
+  if (!level || !level.seals || p.dead) return;
+  for (const z of level.seals) {
+    if (z.st === 0 && p.x + p.w > z.x1 && p.x + p.w < z.bar - 4) {
+      z.st = 1; z.plate.on = false; z.live = [];
+      for (const f of z.foes) {
+        const e = sealFoe(f.id, f.x, f.y); level.enemies.push(e); z.live.push(e);
+        addFx('poof', e.x + e.w / 2, e.y + e.h / 2, 16); ring(e.x + e.w / 2, e.y + e.h / 2, 4, 40, .4, 'rgba(255,90,70,.9)', 2);
+      }
+      z.left = z.live.length;
+      banner('¡EMBOSCADA!', 'Derrota a los enemigos para abrir el paso', '#ff6a4a', 1.8);
+      sfx('clang', .6, .7); sfx('alert', .5); shake = Math.max(shake, 6);
+      SAVE.fh = SAVE.fh || {}; if (!SAVE.fh.seal) { SAVE.fh.seal = 1; try { persist(); } catch (e) {} tSay(SEAL_TXT, 4); }
+    }
+    if (z.st !== 1) continue;
+    // si un enemigo se cae del mapa o queda muy lejos, cuenta como derrotado
+    for (const e of z.live) if (!e.dead && (e.y > level.deathY || Math.abs(e.x - z.bar) > 1400)) e.dead = true;
+    const left = z.live.filter(e => !e.dead).length;
+    if (left < z.left && left > 0) addFloat(z.bar + 14, GY - 120, '⚔ ' + left, '#ff8a5a', 18);
+    z.left = left;
+    if (!left) {
+      z.st = 2; z.plate.on = true; addScore(600); p.hp = Math.min(p.maxHp, p.hp + 15); addTime(10);
+      for (let i = 0; i < 5; i++) level.gems.push({ x: z.bar - 200 + i * 40, y: 420 - Math.sin(i / 4 * Math.PI) * 50, taken: false, ph: i });
+      banner('¡PASO ABIERTO!', '+600 puntos · +15 vida', '#ffd34d', 1.6);
+      sfx('relic', .5); ring(z.bar + 14, GY - 120, 10, 200, .6, 'rgba(255,220,120,.9)', 3);
+    }
+  }
+}
+const _updateTrialsS = updateTrials;
+updateTrials = function (dt) { _updateTrialsS(dt); updateSeals(dt); };
+const _resetTrialsS = resetTrials;
+resetTrials = function () {
+  _resetTrialsS();
+  if (level && level.seals) for (const z of level.seals) if (z.st === 1) { z.st = 0; for (const e of z.live) e.dead = true; z.live = []; z.plate.on = true; }
+};
+
+// =====================================================================
 //  FLUIDEZ (v2.4)
 //  1) Ritmo de fotogramas estable: el reloj del juego avanza en pasos
 //     exactos de la frecuencia de la pantalla (quita los tirones de
@@ -7434,6 +7555,21 @@ const I18N = {
     ja: ["クリティカル！", "硬い", "霊体", "振り落とされた！", "頭の上で跳ね続けてもダメ。弱る瞬間を狙って！", "これじゃほとんど効いてない。気絶するか隙ができるまで待って。", "それだ！そこが弱点！", "あれは霊体。紫の次元（SHIFT）からしか傷つけられない。"],
     ko: ["치명타!", "단단함", "영체", "떨쳐냈다!", "머리 위에서 계속 튀어도 소용없어. 약해지는 순간을 노려!", "이렇게는 거의 피해가 없어. 기절하거나 빈틈이 생길 때까지 기다려.", "바로 그거야! 거기가 약점이야.", "영혼이야: 보라색 차원(SHIFT)에서만 상처를 입힐 수 있어."],
     zh: ["暴击！", "坚硬", "灵体", "被甩开了！", "一直在它头上弹跳是没用的：找它的弱点时机。", "这样几乎打不痛它。等它晕眩或露出破绽。", "就是这样！那是它的弱点。", "它是灵体：只能在紫色维度（SHIFT）中伤到它。"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.7: barreras de emboscada
+(function () {
+  const ES = ["¡EMBOSCADA!", "Derrota a los enemigos para abrir el paso", "¡PASO ABIERTO!", "+600 puntos · +15 vida", "Una barrera te cierra el paso: derrota a todos los enemigos para abrirla."];
+  const X = {
+    en: ["AMBUSH!", "Defeat the enemies to open the way", "WAY OPEN!", "+600 points · +15 health", "A barrier blocks your way: defeat every enemy to open it."],
+    pt: ["EMBOSCADA!", "Derrote os inimigos para abrir o caminho", "CAMINHO ABERTO!", "+600 pontos · +15 vida", "Uma barreira bloqueia o caminho: derrote todos os inimigos para abri-la."],
+    fr: ["EMBUSCADE !", "Bats les ennemis pour ouvrir le passage", "PASSAGE OUVERT !", "+600 points · +15 vie", "Une barrière te bloque : bats tous les ennemis pour l'ouvrir."],
+    de: ["HINTERHALT!", "Besiege die Gegner, um den Weg zu öffnen", "WEG FREI!", "+600 Punkte · +15 Leben", "Eine Barriere versperrt den Weg: Besiege alle Gegner, um sie zu öffnen."],
+    it: ["IMBOSCATA!", "Sconfiggi i nemici per aprire il passaggio", "PASSAGGIO APERTO!", "+600 punti · +15 vita", "Una barriera ti blocca: sconfiggi tutti i nemici per aprirla."],
+    ja: ["待ち伏せ！", "敵を倒して道を開こう", "道が開いた！", "+600点 · 体力+15", "障壁が道をふさいでいる。敵を全員倒せば開くよ。"],
+    ko: ["매복!", "적을 물리쳐 길을 열어라", "길이 열렸다!", "+600점 · 체력 +15", "장벽이 길을 막고 있어: 적을 모두 쓰러뜨리면 열려."],
+    zh: ["伏击！", "击败敌人以打开通路", "通路已开！", "+600分 · 生命+15", "屏障挡住了去路：击败所有敌人才能打开。"]
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();

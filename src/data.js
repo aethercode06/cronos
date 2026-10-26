@@ -315,6 +315,11 @@ function buildStage(wi, act) {
       row(x + 300, 370, 3, 40); row(x + 764, 370, 3, 40);
       return 1152;
     },
+    ambush(x) {
+      // zona de emboscada (v2.7): suelo amplio y una barrera al final; la lógica está en gates.js
+      G(x, 768); P(x + 300, 372, 112); arc(x + 160, 440, 4, 40, 25);
+      (L.sealSpots = L.sealSpots || []).push({ x, w: 768 }); return 768;
+    },
     gears(x) { G(x, 128); M(x + 150, 450, 64, x + 150, 300, 1.3); M(x + 260, 300, 96, x + 400, 300, 1.0); M(x + 520, 300, 64, x + 520, 450, 1.3); G(x + 640, 128); row(x + 280, 260, 4, 40); E('a', x + 380, 220); return 768; }
   };
 
@@ -376,6 +381,15 @@ function buildStage(wi, act) {
     seq.length = 0; seq.push(...keyed);
     seq.unshift('flat');
     if (act < 2 && seq.length > 5 && (!TOWER_ON || TOWER_TRIAL)) seq.splice(Math.floor(seq.length * 0.62), 0, 'trial');
+    // barreras de emboscada: más cuanto más avanzado el mundo (gates.js)
+    if (!TOWER_ON && typeof sealPlan === 'function' && !(wi === 2 && act === 2)) {
+      const nS = sealPlan(wi, act).n, F = act === 2 ? [0.5] : nS === 1 ? [0.35] : nS === 2 ? [0.3, 0.88] : [0.22, 0.45, 0.88];
+      for (let k = F.length - 1; k >= 0; k--) {
+        let i = Math.max(2, Math.round(seq.length * F[k]));
+        while (i < seq.length && (seq[i] === 'trial' || seq[i - 1] === 'trial')) i++;
+        seq.splice(Math.min(i, seq.length), 0, 'ambush');
+      }
+    }
     for (let i = 0; i < seq.length; i++) {
       if (i > 0 && (i % 2 === 0 || seq[i] === 'trial') && !L.checks.some(c => c.x === x + 40)) L.checks.push({ x: x + 40, y: GY - 40, w: 24, h: 40, on: false });
       x += CH_[seq[i]](x);

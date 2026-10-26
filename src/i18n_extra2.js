@@ -109,3 +109,18 @@
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v2.7: barreras de emboscada
+(function () {
+  const ES = ["¡EMBOSCADA!", "Derrota a los enemigos para abrir el paso", "¡PASO ABIERTO!", "+600 puntos · +15 vida", "Una barrera te cierra el paso: derrota a todos los enemigos para abrirla."];
+  const X = {
+    en: ["AMBUSH!", "Defeat the enemies to open the way", "WAY OPEN!", "+600 points · +15 health", "A barrier blocks your way: defeat every enemy to open it."],
+    pt: ["EMBOSCADA!", "Derrote os inimigos para abrir o caminho", "CAMINHO ABERTO!", "+600 pontos · +15 vida", "Uma barreira bloqueia o caminho: derrote todos os inimigos para abri-la."],
+    fr: ["EMBUSCADE !", "Bats les ennemis pour ouvrir le passage", "PASSAGE OUVERT !", "+600 points · +15 vie", "Une barrière te bloque : bats tous les ennemis pour l'ouvrir."],
+    de: ["HINTERHALT!", "Besiege die Gegner, um den Weg zu öffnen", "WEG FREI!", "+600 Punkte · +15 Leben", "Eine Barriere versperrt den Weg: Besiege alle Gegner, um sie zu öffnen."],
+    it: ["IMBOSCATA!", "Sconfiggi i nemici per aprire il passaggio", "PASSAGGIO APERTO!", "+600 punti · +15 vita", "Una barriera ti blocca: sconfiggi tutti i nemici per aprirla."],
+    ja: ["待ち伏せ！", "敵を倒して道を開こう", "道が開いた！", "+600点 · 体力+15", "障壁が道をふさいでいる。敵を全員倒せば開くよ。"],
+    ko: ["매복!", "적을 물리쳐 길을 열어라", "길이 열렸다!", "+600점 · 체력 +15", "장벽이 길을 막고 있어: 적을 모두 쓰러뜨리면 열려."],
+    zh: ["伏击！", "击败敌人以打开通路", "通路已开！", "+600分 · 生命+15", "屏障挡住了去路：击败所有敌人才能打开。"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
