@@ -90,3 +90,22 @@
   const X = { en: ["Synthesized", "Composed"], pt: ["Sintetizada", "Composta"], fr: ["Synthétisée", "Composée"], de: ["Synthetisiert", "Komponiert"], it: ["Sintetizzata", "Composta"], ja: ["シンセ", "作曲版"], ko: ["신시사이저", "작곡판"], zh: ["合成", "作曲"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v2.6: combate contra jefes
+(function () {
+  const ES = ["¡CRÍTICO!", "DURO", "ESPECTRAL", "¡TE SACUDE!",
+    "Saltarle encima sin parar no funciona: busca su momento débil.",
+    "Así apenas le haces daño. Espera a que quede aturdido o expuesto.",
+    "¡Eso es! Ese es su punto débil.",
+    "Es un espíritu: solo puedes herirlo desde la dimensión violeta (SHIFT)."];
+  const X = {
+    en: ["CRITICAL!", "TOUGH", "SPECTRAL", "SHAKEN OFF!", "Bouncing on its head nonstop won't work: look for its weak moment.", "You're barely hurting it like this. Wait until it's stunned or exposed.", "That's it! That's its weak spot.", "It's a spirit: you can only hurt it from the violet dimension (SHIFT)."],
+    pt: ["CRÍTICO!", "DURO", "ESPECTRAL", "TE SACUDIU!", "Pular na cabeça dele sem parar não funciona: procure o momento fraco.", "Assim você quase não causa dano. Espere ele ficar atordoado ou exposto.", "Isso! Esse é o ponto fraco.", "É um espírito: só pode feri-lo pela dimensão violeta (SHIFT)."],
+    fr: ["CRITIQUE !", "COSTAUD", "SPECTRAL", "IL TE SECOUE !", "Rebondir sur sa tête sans arrêt ne marche pas : cherche son moment faible.", "Comme ça, tu le blesses à peine. Attends qu'il soit étourdi ou exposé.", "C'est ça ! C'est son point faible.", "C'est un esprit : tu ne peux le blesser que depuis la dimension violette (SHIFT)."],
+    de: ["KRITISCH!", "ZÄH", "GEISTERHAFT", "ABGESCHÜTTELT!", "Ständig auf seinen Kopf springen bringt nichts: such seinen schwachen Moment.", "So richtest du kaum Schaden an. Warte, bis er betäubt oder ungeschützt ist.", "Genau! Das ist sein Schwachpunkt.", "Es ist ein Geist: Du kannst ihn nur aus der violetten Dimension (SHIFT) verletzen."],
+    it: ["CRITICO!", "DURO", "SPETTRALE", "TI SCROLLA VIA!", "Saltargli in testa di continuo non funziona: cerca il suo momento debole.", "Così gli fai pochissimo danno. Aspetta che sia stordito o scoperto.", "Ecco! Quello è il suo punto debole.", "È uno spirito: puoi ferirlo solo dalla dimensione viola (SHIFT)."],
+    ja: ["クリティカル！", "硬い", "霊体", "振り落とされた！", "頭の上で跳ね続けてもダメ。弱る瞬間を狙って！", "これじゃほとんど効いてない。気絶するか隙ができるまで待って。", "それだ！そこが弱点！", "あれは霊体。紫の次元（SHIFT）からしか傷つけられない。"],
+    ko: ["치명타!", "단단함", "영체", "떨쳐냈다!", "머리 위에서 계속 튀어도 소용없어. 약해지는 순간을 노려!", "이렇게는 거의 피해가 없어. 기절하거나 빈틈이 생길 때까지 기다려.", "바로 그거야! 거기가 약점이야.", "영혼이야: 보라색 차원(SHIFT)에서만 상처를 입힐 수 있어."],
+    zh: ["暴击！", "坚硬", "灵体", "被甩开了！", "一直在它头上弹跳是没用的：找它的弱点时机。", "这样几乎打不痛它。等它晕眩或露出破绽。", "就是这样！那是它的弱点。", "它是灵体：只能在紫色维度（SHIFT）中伤到它。"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
