@@ -19,6 +19,7 @@ jobs:
         run: npm install
       - name: Crear el proyecto Android
         run: |
+          mkdir -p ../extra && mv www/prueba.html ../extra/prueba.html || true
           npx cap add android
           npx cap sync android
       - name: Icono y pantalla de carga del juego
@@ -42,6 +43,17 @@ jobs:
         run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
       - name: Preparar archivo
         run: cp android/app/build/outputs/apk/debug/app-debug.apk Chronos-The-Shift.apk
+      - name: Versión de prueba (todos los mundos abiertos, se instala aparte)
+        run: |
+          cp ../extra/prueba.html www/index.html
+          npx cap sync android
+          G=android/app/build.gradle
+          sed -i 's/applicationId "com.aethercode.chronos"/applicationId "com.aethercode.chronos.prueba"/' $G
+          R=android/app/src/main/res/values/strings.xml
+          sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Chronos PRUEBA</string>#; s#<string name="title_activity_main">[^<]*</string>#<string name="title_activity_main">Chronos PRUEBA</string>#' $R
+          grep -n applicationId $G
+          cd android && ./gradlew assembleDebug --no-daemon && cd ..
+          cp android/app/build/outputs/apk/debug/app-debug.apk Chronos-PRUEBA.apk
       - uses: actions/upload-artifact@v4
         with:
           name: chronos-apk
@@ -51,7 +63,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete ultima-version -y --cleanup-tag || true
-          gh release create ultima-version Chronos-The-Shift.apk \
-            --title "Chronos & The Shift · versión 1.9.${{ github.run_number }}" \
-            --notes "Toca **Chronos-The-Shift.apk** para descargarlo e instalarlo en Android. Si el teléfono lo pide, permite instalar apps de origen desconocido para tu navegador." \
+          gh release create ultima-version Chronos-The-Shift.apk Chronos-PRUEBA.apk \
+            --title "Chronos & The Shift · versión 2.0.${{ github.run_number }}" \
+            --notes "Toca **Chronos-The-Shift.apk** para descargarlo e instalarlo en Android. **Chronos-PRUEBA.apk** es la versión de prueba con todos los mundos abiertos: se instala aparte y no toca tu partida. Si el teléfono lo pide, permite instalar apps de origen desconocido para tu navegador." \
             --latest

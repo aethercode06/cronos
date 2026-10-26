@@ -33,4 +33,7 @@ sw = ("<script>if('serviceWorker' in navigator && location.protocol==='https:' &
 html = (head + '<body>\n<canvas id="gl"></canvas>\n<canvas id="c"></canvas>\n<script>\n' + assets + '\n' + hf + '\n' + fonts +
         '\n</script>\n<script>\n' + game + '\n</script>\n' + sw + '</body>\n</html>\n')
 open(OUT, 'w').write(html)
+# Versión de prueba (todos los mundos abiertos, guardado aparte): www/prueba.html y el APK «Chronos PRUEBA»
+prueba = html.replace('<body>\n', '<body>\n<script>window.CHRONOS_PRUEBA=1</script>\n', 1).replace('<title>', '<title>PRUEBA · ', 1)
+open(OUT.replace('index.html', 'prueba.html'), 'w').write(prueba)
 print('www/index.html', len(html) // 1024, 'KB')

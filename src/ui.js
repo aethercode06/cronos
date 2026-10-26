@@ -361,6 +361,7 @@ function drawTitle() {
   for (const b of uiButtons()) drawButton(b);
   txt(padActive ? 'MANDO:  A saltar · X espada · B/RT dash · LB/LT guardia · Y dimensión · RB tiempo · SELECT eco · START pausa' : touchMode ? 'Mover · Salto (doble y en pared) · Dash · Espada · Shift · Tiempo' : '← → mover · ESPACIO saltar · SHIFT dash · Z espada · X dimensión · C tiempo · E eco · P pausa', W / 2, 488, 12, 'rgba(255,255,255,.75)', null, 0, 'center', UIF, 500);
   glass(14, 14, 150, 34, 17); txt('RÉCORD  ' + best, 89, 31.5, 12, '#ffe27a', null, 0, 'center', UIF, 800);
+  if (PRUEBA) { pill(174, 14, 250, 34, 'rgba(255,80,60,.85)', 'rgba(255,150,40,.85)'); txt('MODO PRUEBA · TODO ABIERTO', 299, 31.5, 12, '#ffffff', null, 0, 'center', UIF, 900); }
   ctx.beginPath(); ctx.arc(musicBtn.x + 21, musicBtn.y + 21, 21, 0, 6.3); ctx.fillStyle = 'rgba(20,18,44,.72)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1.2; ctx.stroke();
   icon('music', musicBtn.x + 21, musicBtn.y + 21, 22, musicOn ? '#3df5a0' : 'rgba(255,255,255,.3)');
   txt('AETHER CODE', W - 16, 524, 11, 'rgba(255,255,255,.6)', null, 0, 'right', LOGOF, 700);

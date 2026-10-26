@@ -12,6 +12,7 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
 - v2.0: guardianes clásicos pintados `hdb_frog`, `hdb_wizard`, `hdb_eye`, `hdb_knight`, `hdb_beast`, `hdb_demon` (HDB en render.js) y `boss_dragon` pintado; decorados propios `pr12_*` y `pr14_*`-`pr17_*`; escenas nuevas `veil` (tras el mundo 10) y `late` (tras el 17) con `cs_veil`, `cs_swamp`, `cs_storm`, `cs_echo`, `cs_citadel`; todo en `src/hf16assets.js` (originales en `store/fondos_higgsfield/hf_guardian_*`). Recortes de fondo con rembg en local.
 - Criaturas gigantes del cielo por mundo en `GIANT_OF` (live2.js): las marinas (ballena, mantarraya, medusa) solo en el Arrecife y el Nexo.
 - `i18n/*.json` — traducciones por id (`es.json` es el original). Textos nuevos: añadirlos en `src/i18n_extra.js` o `src/i18n_extra2.js` en los 9 idiomas.
+- `www/prueba.html` — versión de prueba (window.CHRONOS_PRUEBA: todo abierto, guardado aparte `chronos_prueba`); el workflow la compila como APK aparte `Chronos-PRUEBA.apk` (com.aethercode.chronos.prueba).
 - `www/` — juego listo + PWA (manifest, sw.js: subir VERSION en cada publicación) + privacidad.html.
 - `assets/` — icono y splash para @capacitor/assets. `keys/debug.keystore` — firma fija del APK (no cambiar: permite actualizar sin desinstalar).
 - `.github/workflows/android.yml` — compila el APK y lo publica en la release `ultima-version` (Chronos-The-Shift.apk).
