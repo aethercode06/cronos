@@ -57,8 +57,8 @@ updateBoss = function (dt) {
     if (diffIdx > 0 && !b.dying && !b.done) {
       b.burstCD -= dt;
       if (b.burstCD <= 0) {
-        b.burstCD = diffIdx === 2 ? 4.2 : 5.6;
-        const cx = b.x + b.w / 2, cy = b.y + b.h * .45, n = diffIdx === 2 ? 12 : 9, off = Math.random() * 6.283, sp = 170 * DIFFS[diffIdx].spd;
+        b.burstCD = diffIdx >= 2 ? 4.2 : 5.6;
+        const cx = b.x + b.w / 2, cy = b.y + b.h * .45, n = diffIdx >= 2 ? 12 : 9, off = Math.random() * 6.283, sp = 170 * DIFFS[diffIdx].spd;
         for (let i = 0; i < n; i++) { const a = off + i / n * 6.283; projs.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, hw: 5, hh: 5, type: 'orb', dmg: 10, life: 3.2 }); }
         ring(cx, cy, 8, 90, .4, 'rgba(255,80,100,.9)', 3); sfx('shoot', .5, .7);
       }
@@ -175,7 +175,7 @@ stageClear = function () {
   const bossWin = curAct === 2 && boss && boss.done, flaw = boss && boss.flawless, t = levelTime;
   _stageClear17();
   if (bossWin && flaw) achGive('intacto');
-  if (bossWin && diffIdx === 2) achGive('dificil');
+  if (bossWin && diffIdx >= 2) achGive('dificil');
   if (curAct < 2 && t < 75) achGive('fast');
   achCheck();
 };
@@ -228,13 +228,15 @@ function drawAch() {
   ctx.save(); ctx.shadowColor = 'rgba(255,190,90,.7)'; ctx.shadowBlur = 18; txt('LOGROS', 480, 44, 30, '#ffd88a', null, 0, 'center', LOGOF, 900); ctx.restore();
   txt(got + ' / ' + ACH.length + ' desbloqueados', 480, 74, 13, 'rgba(255,255,255,.75)', null, 0, 'center', UIF, 700);
   ACH.forEach((a, i) => {
-    const col = i % 2, rw = i >> 1, x = 70 + col * 420, y = 92 + rw * 43, on = !!SAVE.ach[a[0]];
-    rrect(x, y, 400, 38, 10); ctx.fillStyle = on ? 'rgba(255,200,100,.12)' : 'rgba(255,255,255,.04)'; ctx.fill();
+    const rows = Math.ceil(ACH.length / 2), rh = Math.min(43, Math.floor(392 / rows)), k = rh / 43;
+    const col = i % 2, rw = i >> 1, x = 70 + col * 420, y = 92 + rw * rh, on = !!SAVE.ach[a[0]], bh = rh - 5;
+    rrect(x, y, 400, bh, 10); ctx.fillStyle = on ? 'rgba(255,200,100,.12)' : 'rgba(255,255,255,.04)'; ctx.fill();
     ctx.strokeStyle = on ? 'rgba(255,200,110,.55)' : 'rgba(255,255,255,.1)'; ctx.lineWidth = 1; ctx.stroke();
-    if (on) { ctx.fillStyle = '#ffb840'; ctx.beginPath(); ctx.arc(x + 20, y + 19, 12, 0, 6.283); ctx.fill(); starShape(x + 20, y + 19, 7.5, 5, '#4a2a06'); }
-    else icon('lock', x + 20, y + 19, 14, 'rgba(255,255,255,.35)');
-    txt(a[1], x + 42, y + 13, 13, on ? '#ffffff' : 'rgba(255,255,255,.6)', null, 0, 'left', UIF, 800);
-    txt(a[2], x + 42, y + 28, 11, on ? 'rgba(255,230,180,.85)' : 'rgba(255,255,255,.4)', null, 0, 'left', UIF, 500);
+    const my = y + bh / 2;
+    if (on) { ctx.fillStyle = '#ffb840'; ctx.beginPath(); ctx.arc(x + 20, my, 12 * Math.max(.75, k), 0, 6.283); ctx.fill(); starShape(x + 20, my, 7.5 * Math.max(.75, k), 5, '#4a2a06'); }
+    else icon('lock', x + 20, my, 14 * Math.max(.75, k), 'rgba(255,255,255,.35)');
+    txt(a[1], x + 42, y + bh * 0.34, Math.max(11, 13 * k), on ? '#ffffff' : 'rgba(255,255,255,.6)', null, 0, 'left', UIF, 800);
+    txt(a[2], x + 42, y + bh * 0.76, Math.max(9.5, 11 * k), on ? 'rgba(255,230,180,.85)' : 'rgba(255,255,255,.4)', null, 0, 'left', UIF, 500);
   });
   const S = SAVE.stats;
   txt('Guardianes: ' + bossesDone() + '/18   ·   Cámaras: ' + S.trials + '   ·   Caídas: ' + S.deaths + '   ·   Paradas: ' + S.parries + '   ·   Tiempo de juego: ' + fmtTime(S.play), 480, 492, 12, 'rgba(255,255,255,.7)', null, 0, 'center', UIF, 600);

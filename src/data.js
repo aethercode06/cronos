@@ -4,7 +4,8 @@
 const DIFFS = [
   { name: 'FÁCIL',   hp: 150, dmg: .45, spd: .78, boss: .65,  aggr: .8,  lava: 8,  c: '#5ef08a', extra: 0 },
   { name: 'NORMAL',  hp: 110, dmg: .72, spd: .9,  boss: .85,   aggr: 1,   lava: 12, c: '#ffd34d', extra: 0 },
-  { name: 'DIFÍCIL', hp: 80,  dmg: 1.4, spd: 1.3, boss: 1.25,aggr: 1.35,lava: 16, c: '#ff5470', extra: 1 }
+  { name: 'DIFÍCIL', hp: 80,  dmg: 1.4, spd: 1.3, boss: 1.25,aggr: 1.35,lava: 16, c: '#ff5470', extra: 1 },
+  { name: 'PESADILLA', hp: 70, dmg: 1.75, spd: 1.42, boss: 1.45, aggr: 1.55, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
 ];
 // Tipos de enemigo: b = comportamiento, face = hacia dónde mira el sprite original
 const ENEMY = {

@@ -43,3 +43,24 @@
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v2.2: Modo Pesadilla y Boss Rush
+(function () {
+  const ES = ["PESADILLA", "Sueño intranquilo", "Vence a un guardián en Pesadilla", "Señor de las pesadillas", "Vence a los 18 guardianes en Pesadilla", "Sin respiro", "Vence a 6 guardianes seguidos en el Boss Rush", "Leyenda del tiempo", "Completa el Boss Rush entero", "JUGAR OTRA VEZ", "REINTENTAR BOSS RUSH", "¡BOSS RUSH COMPLETADO!", "Guardianes vencidos: ", "   ·   Mejor tiempo: ", " guardianes   ·   Puntos: ", "+30 vida", "Vence a 3 guardianes para abrir el Boss Rush", "Termina la historia para desbloquear el Modo Pesadilla"];
+  const X = {
+    en: ["NIGHTMARE", "Restless sleep", "Defeat a guardian on Nightmare", "Lord of nightmares", "Defeat all 18 guardians on Nightmare", "No rest", "Defeat 6 guardians in a row in Boss Rush", "Legend of time", "Complete the whole Boss Rush", "PLAY AGAIN", "RETRY BOSS RUSH", "BOSS RUSH COMPLETE!", "Guardians defeated: ", "   ·   Best time: ", " guardians   ·   Score: ", "+30 health", "Defeat 3 guardians to unlock Boss Rush", "Finish the story to unlock Nightmare Mode"],
+    pt: ["PESADELO", "Sono agitado", "Vença um guardião no Pesadelo", "Senhor dos pesadelos", "Vença os 18 guardiões no Pesadelo", "Sem descanso", "Vença 6 guardiões seguidos no Boss Rush", "Lenda do tempo", "Complete o Boss Rush inteiro", "JOGAR DE NOVO", "TENTAR BOSS RUSH DE NOVO", "BOSS RUSH COMPLETO!", "Guardiões vencidos: ", "   ·   Melhor tempo: ", " guardiões   ·   Pontos: ", "+30 vida", "Vença 3 guardiões para abrir o Boss Rush", "Termine a história para desbloquear o Modo Pesadelo"],
+    fr: ["CAUCHEMAR", "Sommeil agité", "Bats un gardien en Cauchemar", "Seigneur des cauchemars", "Bats les 18 gardiens en Cauchemar", "Sans répit", "Bats 6 gardiens d'affilée dans le Boss Rush", "Légende du temps", "Termine tout le Boss Rush", "REJOUER", "RÉESSAYER LE BOSS RUSH", "BOSS RUSH TERMINÉ !", "Gardiens vaincus : ", "   ·   Meilleur temps : ", " gardiens   ·   Points : ", "+30 vie", "Bats 3 gardiens pour débloquer le Boss Rush", "Termine l'histoire pour débloquer le Mode Cauchemar"],
+    de: ["ALBTRAUM", "Unruhiger Schlaf", "Besiege einen Wächter im Albtraum", "Herr der Albträume", "Besiege alle 18 Wächter im Albtraum", "Keine Pause", "Besiege 6 Wächter in Folge im Boss Rush", "Legende der Zeit", "Schaffe den ganzen Boss Rush", "NOCHMAL SPIELEN", "BOSS RUSH WIEDERHOLEN", "BOSS RUSH GESCHAFFT!", "Besiegte Wächter: ", "   ·   Bestzeit: ", " Wächter   ·   Punkte: ", "+30 Leben", "Besiege 3 Wächter, um den Boss Rush freizuschalten", "Beende die Geschichte, um den Albtraum-Modus freizuschalten"],
+    it: ["INCUBO", "Sonno agitato", "Sconfiggi un guardiano in Incubo", "Signore degli incubi", "Sconfiggi tutti i 18 guardiani in Incubo", "Senza tregua", "Sconfiggi 6 guardiani di fila nel Boss Rush", "Leggenda del tempo", "Completa tutto il Boss Rush", "GIOCA ANCORA", "RIPROVA IL BOSS RUSH", "BOSS RUSH COMPLETATO!", "Guardiani sconfitti: ", "   ·   Miglior tempo: ", " guardiani   ·   Punti: ", "+30 vita", "Sconfiggi 3 guardiani per sbloccare il Boss Rush", "Finisci la storia per sbloccare la Modalità Incubo"],
+    ja: ["悪夢", "眠れぬ夜", "悪夢で守護者を1体倒す", "悪夢の支配者", "悪夢で18体の守護者をすべて倒す", "休む暇なし", "ボスラッシュで守護者を6体連続で倒す", "時の伝説", "ボスラッシュを完走する", "もう一度", "ボスラッシュに再挑戦", "ボスラッシュ完走！", "倒した守護者：", "   ·   ベストタイム：", "体   ·   スコア：", "体力+30", "守護者を3体倒すとボスラッシュが解放されます", "物語をクリアすると悪夢モードが解放されます"],
+    ko: ["악몽", "뒤척이는 밤", "악몽 난이도에서 수호자 1명 처치", "악몽의 군주", "악몽 난이도에서 수호자 18명 모두 처치", "숨 돌릴 틈 없이", "보스 러시에서 수호자 6명 연속 처치", "시간의 전설", "보스 러시 완주", "다시 하기", "보스 러시 재도전", "보스 러시 완료!", "처치한 수호자: ", "   ·   최고 기록: ", "명   ·   점수: ", "체력 +30", "수호자 3명을 처치하면 보스 러시가 열려요", "스토리를 끝내면 악몽 모드가 열려요"],
+    zh: ["噩梦", "不安的睡眠", "在噩梦难度下击败一位守护者", "噩梦之主", "在噩梦难度下击败全部18位守护者", "毫无喘息", "在首领连战中连续击败6位守护者", "时间传奇", "完成整个首领连战", "再玩一次", "重试首领连战", "首领连战完成！", "已击败守护者：", "   ·   最佳用时：", "位   ·   分数：", "生命+30", "击败3位守护者后开启首领连战", "完成故事后解锁噩梦模式"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.2: banda sonora original
+(function () {
+  const ES = ["Banda sonora", "Original", "Clásica"];
+  const X = { en: ["Soundtrack", "Original", "Classic"], pt: ["Trilha sonora", "Original", "Clássica"], fr: ["Bande-son", "Originale", "Classique"], de: ["Soundtrack", "Original", "Klassisch"], it: ["Colonna sonora", "Originale", "Classica"], ja: ["サウンドトラック", "オリジナル", "クラシック"], ko: ["사운드트랙", "오리지널", "클래식"], zh: ["配乐", "原创", "经典"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();

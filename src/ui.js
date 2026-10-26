@@ -60,10 +60,11 @@ function optRows() {
 function uiButtons() {
   const B = [], ox = Math.round((W - 960) / 2);
   if (state === 'options') {
-    optRows().forEach((r, i) => {
-      const y = 110 + i * 34;
-      B.push({ x: ox + 560, y, w: 34, h: 30, t: '', ic: 'left', c: '#35e2ff', small: true, fn: () => { r[2](); applyOpts(); } });
-      B.push({ x: ox + 716, y, w: 34, h: 30, t: '', ic: 'right', c: '#35e2ff', small: true, fn: () => { r[3](); applyOpts(); } });
+    const OR = optRows(), sp = Math.min(34, Math.floor(340 / OR.length));
+    OR.forEach((r, i) => {
+      const y = 108 + i * sp;
+      B.push({ x: ox + 560, y, w: 34, h: sp - 4, t: '', ic: 'left', c: '#35e2ff', small: true, fn: () => { r[2](); applyOpts(); } });
+      B.push({ x: ox + 716, y, w: 34, h: sp - 4, t: '', ic: 'right', c: '#35e2ff', small: true, fn: () => { r[3](); applyOpts(); } });
     });
     B.push({ x: ox + 380, y: 456, w: 200, h: 44, t: 'LISTO', ic: 'right', c: '#ffcf4a', c2: '#ff8a3d', sel: true, fn: closeOptions });
   } else if (state === 'title') {
@@ -424,11 +425,12 @@ function drawOptions() {
   ctx.save(); ctx.translate(ox, 0);
   glass(190, 40, 580, 470, 24, '#35e2ff', true);
   ctx.save(); ctx.shadowColor = 'rgba(80,200,255,.7)'; ctx.shadowBlur = 18; txt('OPCIONES', 480, 82, 26, '#ffffff', null, 0, 'center', LOGOF, 900); ctx.restore();
-  optRows().forEach((r, i) => {
-    const y = 110 + i * 34;
-    if (i % 2 === 0) { rrect(212, y - 2, 536, 31, 10); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fill(); }
-    txt(r[0], 230, y + 15, 15, '#ffffff', null, 0, 'left', UIF, 600);
-    txt(r[1], 655, y + 15, 15, '#7fe9ff', null, 0, 'center', UIF, 800);
+  const OR = optRows(), sp = Math.min(34, Math.floor(340 / OR.length));
+  OR.forEach((r, i) => {
+    const y = 108 + i * sp, fz = sp < 32 ? 14 : 15;
+    if (i % 2 === 0) { rrect(212, y - 2, 536, sp - 3, 10); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fill(); }
+    txt(r[0], 230, y + (sp - 4) / 2, fz, '#ffffff', null, 0, 'left', UIF, 600);
+    txt(r[1], 655, y + (sp - 4) / 2, fz, '#7fe9ff', null, 0, 'center', UIF, 800);
   });
   ctx.restore();
   for (const b of uiButtons()) drawButton(b);

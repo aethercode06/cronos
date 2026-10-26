@@ -235,7 +235,7 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
     if (b.st === 'idle' && b.cd <= 0) {
       b.n++; b.cd = (b.vulnT > 0 ? 2.4 : 1.7) / ag; b.atkA = 0.6; const m = b.n % 4;
       if (m === 1) { waves.push({ x: bcx - 60, y: A.floor, dir: -1, spd: 320 * ag, t: 0, col: '#ffd890' }); waves.push({ x: bcx + 60, y: A.floor, dir: 1, spd: 320 * ag, t: 0, col: '#ffd890' }); sfx('stomp'); shake = 10; }
-      else if (m === 2) { const c = diffIdx === 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.16, kind: 'sand' }); sfx('alert', .6); }
+      else if (m === 2) { const c = diffIdx >= 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.16, kind: 'sand' }); sfx('alert', .6); }
       else if (m === 3) { const y = clamp(pcy, A.floor - 200, A.floor - 20); b.beamY = y; b.st = 'beamT'; b.t = 0; sfx('alert', .7); }
       else { b.st = 'tp'; b.t = 0; }
     } else if (b.st === 'beamT') { if (b.t > 0.7 / Math.sqrt(ag)) { b.st = 'idle'; for (let i = 0; i < 3; i++) projs.push({ x: bcx + b.face * 40, y: b.beamY, vx: b.face * (520 + i * 60) * ag, vy: 0, hw: 26, hh: 4, type: 'laser', dmg: 14, life: 3 }); sfx('shoot', .7, .7); } }
@@ -255,7 +255,7 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
       if (b.cd <= 0) {
         b.n++; b.cd = 1.5 / ag; const m = b.n % 3;
         if (m === 1) { for (const s of [-1, 1]) projs.push({ x: bcx, y: b.y + 50, vx: s * 420 * D.spd, vy: 40 * s, hw: 10, hh: 10, type: 'ring', dmg: 14, life: 3.2, ox: bcx, back: false }); sfx('swing', .8, .7); }
-        else if (m === 2) { const c = diffIdx === 2 ? 7 : 5; for (let i = 0; i < c; i++) warns.push({ x: rnd(A.x1 + 30, A.x2 - 30), t: 0.6 + i * 0.12, kind: 'feather' }); if (Math.random() < .5) warns.push({ x: pcx, t: 0.7, kind: 'feather' }); sfx('alert', .5); }
+        else if (m === 2) { const c = diffIdx >= 2 ? 7 : 5; for (let i = 0; i < c; i++) warns.push({ x: rnd(A.x1 + 30, A.x2 - 30), t: 0.6 + i * 0.12, kind: 'feather' }); if (Math.random() < .5) warns.push({ x: pcx, t: 0.7, kind: 'feather' }); sfx('alert', .5); }
         else { b.st = 'diveT'; b.t = 0; sfx('alert', .7, 1.3); }
       }
     } else if (b.st === 'diveT') { b.x += Math.sin(b.t * 60) * 1.4; if (b.t > 0.55 / Math.sqrt(ag)) { b.st = 'dive'; b.t = 0; b.tx = clamp(pcx - b.w / 2, A.x1 + 10, A.x2 - b.w - 10); sfx('dash', .9, .7); } }
@@ -272,8 +272,8 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
         b.n++; b.cd = 1.6 / ag; b.atkA = 0.5; const m = b.n % 5;
         if (m === 1) { waves.push({ x: A.x1 + 20, y: A.floor, dir: 1, spd: 330 * ag, t: 0, col: '#d070ff' }); waves.push({ x: A.x2 - 20, y: A.floor, dir: -1, spd: 330 * ag, t: 0, col: '#d070ff' }); sfx('stomp'); shake = 10; }
         else if (m === 2) { for (let i = 0; i < 3; i++) projs.push({ x: bcx, y: clamp(pcy, A.floor - 220, A.floor - 20) - 40 + i * 40, vx: b.face * (380 + i * 70) * ag, vy: 0, hw: 26, hh: 4, type: 'laser', dmg: 14, life: 4 }); sfx('shoot', .8, .6); }
-        else if (m === 3) { const c = diffIdx === 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.15 }); sfx('alert', .6); }
-        else if (m === 4) { const n = diffIdx === 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + b.h - 20, vx: (i - (n - 1) / 2) * 160, vy: -200, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .6, 1.4); }
+        else if (m === 3) { const c = diffIdx >= 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.15 }); sfx('alert', .6); }
+        else if (m === 4) { const n = diffIdx >= 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + b.h - 20, vx: (i - (n - 1) / 2) * 160, vy: -200, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .6, 1.4); }
         else { b.st = 'tiredT'; b.t = 0; sfx('roar', 1, .4); addFloat(bcx, b.y + b.h + 10, '¡SE AGOTA!', '#ffd34d', 20); }
       }
     } else if (b.st === 'tiredT') { b.y = Math.min(A.floor - b.h, b.y + 260 * dt); if (b.y >= A.floor - b.h) { b.st = 'tired'; b.t = 0; shake = 14; sfx('stomp'); dust(bcx, A.floor, 18); } }
@@ -521,8 +521,8 @@ function drawMap2() {
 function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'boss_archi', 'boss_dragon']; const B = WORLDS[w] && WORLDS[w].boss; return (B && !B.skin && hdbKey(B.type)) || P[w]; }
 function mapButtons(B) {
   B.push({ x: 18, y: 16, w: 118, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', fn: toTitle });
-  B.push({ x: W - 506, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });
-  DIFFS.forEach((d, i) => B.push({ x: W - 368 + i * 118, y: 18, w: 110, h: 36, t: d.name, c: d.c, sel: diffIdx === i, small: true, seg: true, fn: () => { diffIdx = i; } }));
+  B.push({ x: W - 624, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });
+  DIFFS.forEach((d, i) => { const lk = d.nm && !nmUnlocked(); B.push({ x: W - 486 + i * 118, y: 18, w: 110, h: 36, t: lk ? '' : d.name, ic: lk ? 'lock' : undefined, c: d.c, sel: diffIdx === i, small: true, seg: true, fn: () => { if (lk) { sfx('clang', .4); nmMsgT = 2.8; return; } diffIdx = i; } }); });
   const ox = Math.round((W - 960) / 2);
   B.push({ x: Math.max(4, ox - 40), y: 250, w: 40, h: 60, t: '', ic: 'left', c: '#35e2ff', lock: mapPage === 0, fn: () => { if (mapPage > 0) mapPage--; } });
   B.push({ x: Math.min(W - 44, ox + 960), y: 250, w: 40, h: 60, t: '', ic: 'right', c: '#35e2ff', lock: mapPage === 2, fn: () => { if (mapPage < 2) mapPage++; } });

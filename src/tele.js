@@ -10,7 +10,7 @@ try { const o = JSON.parse(localStorage.getItem(TKEY) || 'null'); if (o && o.s) 
 let tRun = null, tCause = 'trampa', tSaveT = 0;
 function tSave() { try { localStorage.setItem(TKEY, JSON.stringify(TSTAT)); } catch (e) {} }
 function tRec(s) { return TSTAT.s[s] || (TSTAT.s[s] = { a: 0, c: 0, q: 0, r: 0, d: 0, tt: 0, tb: 0, cz: {}, p: [] }); }
-function tOn() { return !(typeof TOWER_ON !== 'undefined' && TOWER_ON) && !(typeof TOWER !== 'undefined' && TOWER); }
+function tOn() { return !(typeof RUSH !== 'undefined' && RUSH) && !(typeof TOWER_ON !== 'undefined' && TOWER_ON) && !(typeof TOWER !== 'undefined' && TOWER); }
 function tClose(kind) {
   if (!tRun) return; const R = tRec(tRun.s);
   if (kind === 'q') R.q++; else if (kind === 'r') R.r++;

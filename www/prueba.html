@@ -850,7 +850,8 @@ function updateDlg(dt) {
 const DIFFS = [
   { name: 'FÁCIL',   hp: 150, dmg: .45, spd: .78, boss: .65,  aggr: .8,  lava: 8,  c: '#5ef08a', extra: 0 },
   { name: 'NORMAL',  hp: 110, dmg: .72, spd: .9,  boss: .85,   aggr: 1,   lava: 12, c: '#ffd34d', extra: 0 },
-  { name: 'DIFÍCIL', hp: 80,  dmg: 1.4, spd: 1.3, boss: 1.25,aggr: 1.35,lava: 16, c: '#ff5470', extra: 1 }
+  { name: 'DIFÍCIL', hp: 80,  dmg: 1.4, spd: 1.3, boss: 1.25,aggr: 1.35,lava: 16, c: '#ff5470', extra: 1 },
+  { name: 'PESADILLA', hp: 70, dmg: 1.75, spd: 1.42, boss: 1.45, aggr: 1.55, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
 ];
 // Tipos de enemigo: b = comportamiento, face = hacia dónde mira el sprite original
 const ENEMY = {
@@ -1940,7 +1941,7 @@ function updateBoss(dt) {
       if (b.t >= 0.22) {
         b.t = 0; b.shots++;
         projs.push({ x: bcx - b.side * 50, y: b.aimY, vx: -b.side * 560 * ag, vy: 0, hw: 26, hh: 4, type: 'laser', dmg: 14, life: 4 }); sfx('shoot', .6);
-        if (b.shots >= (diffIdx === 2 ? 4 : 3)) { b.cycle++; b.st = b.cycle % 2 === 0 ? 'drop' : 'move'; b.t = 0; }
+        if (b.shots >= (diffIdx >= 2 ? 4 : 3)) { b.cycle++; b.st = b.cycle % 2 === 0 ? 'drop' : 'move'; b.t = 0; }
       }
     } else if (b.st === 'drop') { b.y = Math.min(A.floor - b.h, b.y + 520 * dt); if (b.y >= A.floor - b.h) { b.st = 'down'; b.t = 0; shake = 12; sfx('stomp'); dust(bcx, A.floor, 14); } }
     else if (b.st === 'down') { contact = false; if (b.t > 2.4 / Math.sqrt(ag)) { b.st = 'move'; b.t = 0; b.side *= -1; } }
@@ -1950,7 +1951,7 @@ function updateBoss(dt) {
     b.throwA = Math.max(0, b.throwA - dt); b.cd -= dt;
     if (b.cd <= 0) {
       b.atk++; b.cd = (b.vulnT > 0 ? 2.6 : 1.8) / ag; b.throwA = 0.6; b.anim = 0;
-      if (b.atk % 3 === 0) { const cnt = diffIdx === 2 ? 5 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.9 + i * 0.15 }); sfx('alert', .6); shake = Math.max(shake, 6); }
+      if (b.atk % 3 === 0) { const cnt = diffIdx >= 2 ? 5 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.9 + i * 0.15 }); sfx('alert', .6); shake = Math.max(shake, 6); }
       else {
         const sx = bcx + b.face * 40, sy = b.y + 30, tg = [[pcx, pcy]];
         if (diffIdx > 0 && b.hp <= b.max / 2) { tg.push([pcx - 120, pcy]); tg.push([pcx + 120, pcy]); }
@@ -1967,7 +1968,7 @@ function updateBoss(dt) {
       b.cd -= dt;
       if (b.cd <= 0) {
         b.cd = 1.3 / ag; b.volleys++; b.atkA = 0.4; sfx('shoot', .5, .7);
-        const n = diffIdx === 2 ? 5 : 3;
+        const n = diffIdx >= 2 ? 5 : 3;
         for (let i = 0; i < n; i++) { const a = Math.atan2(pcy - (b.y + b.h / 2), pcx - bcx) + (i - (n - 1) / 2) * 0.25; projs.push({ x: bcx, y: b.y + b.h / 2, vx: Math.cos(a) * 230 * D.spd, vy: Math.sin(a) * 230 * D.spd, hw: 7, hh: 7, type: 'eyeball', dmg: 12, life: 4 }); }
         if (b.volleys >= 3) { b.volleys = 0; b.st = 'tele'; b.t = 0; sfx('alert', .6); }
       }
@@ -1999,7 +2000,7 @@ function updateBoss(dt) {
       b.x += b.vx * dt; if (Math.random() < .6) dust(b.face > 0 ? b.x : b.x + b.w, A.floor, 2, -b.face);
       if (b.x <= A.x1 + 4 || b.x + b.w >= A.x2 - 4) {
         b.x = clamp(b.x, A.x1 + 4, A.x2 - b.w - 4); b.st = 'stagger'; b.t = 0; shake = 16; sfx('stomp'); sfx('ice', .8);
-        const cnt = diffIdx === 2 ? 6 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.5 + i * 0.18, kind: 'ice' });
+        const cnt = diffIdx >= 2 ? 6 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.5 + i * 0.18, kind: 'ice' });
       }
     } else if (b.st === 'stagger') { contact = false; if (b.t > 1.3) { b.st = 'idle'; b.cd = 0.8 / ag; } }
     else if (b.st === 'leapT') { b.face = pcx < bcx ? -1 : 1; if (b.t > 0.4) { b.st = 'leap'; b.t = 0; const tx = clamp(pcx - b.w / 2, A.x1 + 10, A.x2 - b.w - 10); b.vx = (tx - b.x) / 0.9; b.vy = -820; sfx('jump', .8, .5); } }
@@ -2050,7 +2051,7 @@ function updateBoss(dt) {
         waves.push({ x: bcx - 30, y: A.floor, dir: -1, spd: 320 * ag, t: 0, col: '#d070ff' }); waves.push({ x: bcx + 30, y: A.floor, dir: 1, spd: 320 * ag, t: 0, col: '#d070ff' }); }
       if (!p.dead && b.vy > 0 && overlap(p, b)) hurt(20, bcx);
     } else if (b.st === 'clocks') {
-      if (b.t > 0.3 && !b.thrown) { b.thrown = true; const n = diffIdx === 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + 10, vx: (i - (n - 1) / 2) * 140, vy: -260, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .5, 1.5); }
+      if (b.t > 0.3 && !b.thrown) { b.thrown = true; const n = diffIdx >= 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + 10, vx: (i - (n - 1) / 2) * 140, vy: -260, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .5, 1.5); }
       if (b.t > 0.8) { b.thrown = false; b.st = 'recover'; b.t = 0; }
     } else if (b.st === 'recover') { contact = false; if (b.t > 0.9 / Math.sqrt(ag)) { b.st = 'idle'; b.cd = 0.5; } }
   }
@@ -2380,7 +2381,7 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
     if (b.st === 'idle' && b.cd <= 0) {
       b.n++; b.cd = (b.vulnT > 0 ? 2.4 : 1.7) / ag; b.atkA = 0.6; const m = b.n % 4;
       if (m === 1) { waves.push({ x: bcx - 60, y: A.floor, dir: -1, spd: 320 * ag, t: 0, col: '#ffd890' }); waves.push({ x: bcx + 60, y: A.floor, dir: 1, spd: 320 * ag, t: 0, col: '#ffd890' }); sfx('stomp'); shake = 10; }
-      else if (m === 2) { const c = diffIdx === 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.16, kind: 'sand' }); sfx('alert', .6); }
+      else if (m === 2) { const c = diffIdx >= 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.16, kind: 'sand' }); sfx('alert', .6); }
       else if (m === 3) { const y = clamp(pcy, A.floor - 200, A.floor - 20); b.beamY = y; b.st = 'beamT'; b.t = 0; sfx('alert', .7); }
       else { b.st = 'tp'; b.t = 0; }
     } else if (b.st === 'beamT') { if (b.t > 0.7 / Math.sqrt(ag)) { b.st = 'idle'; for (let i = 0; i < 3; i++) projs.push({ x: bcx + b.face * 40, y: b.beamY, vx: b.face * (520 + i * 60) * ag, vy: 0, hw: 26, hh: 4, type: 'laser', dmg: 14, life: 3 }); sfx('shoot', .7, .7); } }
@@ -2400,7 +2401,7 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
       if (b.cd <= 0) {
         b.n++; b.cd = 1.5 / ag; const m = b.n % 3;
         if (m === 1) { for (const s of [-1, 1]) projs.push({ x: bcx, y: b.y + 50, vx: s * 420 * D.spd, vy: 40 * s, hw: 10, hh: 10, type: 'ring', dmg: 14, life: 3.2, ox: bcx, back: false }); sfx('swing', .8, .7); }
-        else if (m === 2) { const c = diffIdx === 2 ? 7 : 5; for (let i = 0; i < c; i++) warns.push({ x: rnd(A.x1 + 30, A.x2 - 30), t: 0.6 + i * 0.12, kind: 'feather' }); if (Math.random() < .5) warns.push({ x: pcx, t: 0.7, kind: 'feather' }); sfx('alert', .5); }
+        else if (m === 2) { const c = diffIdx >= 2 ? 7 : 5; for (let i = 0; i < c; i++) warns.push({ x: rnd(A.x1 + 30, A.x2 - 30), t: 0.6 + i * 0.12, kind: 'feather' }); if (Math.random() < .5) warns.push({ x: pcx, t: 0.7, kind: 'feather' }); sfx('alert', .5); }
         else { b.st = 'diveT'; b.t = 0; sfx('alert', .7, 1.3); }
       }
     } else if (b.st === 'diveT') { b.x += Math.sin(b.t * 60) * 1.4; if (b.t > 0.55 / Math.sqrt(ag)) { b.st = 'dive'; b.t = 0; b.tx = clamp(pcx - b.w / 2, A.x1 + 10, A.x2 - b.w - 10); sfx('dash', .9, .7); } }
@@ -2417,8 +2418,8 @@ function updateBossX(b, dt, A, ag, pcx, pcy, bcx) {
         b.n++; b.cd = 1.6 / ag; b.atkA = 0.5; const m = b.n % 5;
         if (m === 1) { waves.push({ x: A.x1 + 20, y: A.floor, dir: 1, spd: 330 * ag, t: 0, col: '#d070ff' }); waves.push({ x: A.x2 - 20, y: A.floor, dir: -1, spd: 330 * ag, t: 0, col: '#d070ff' }); sfx('stomp'); shake = 10; }
         else if (m === 2) { for (let i = 0; i < 3; i++) projs.push({ x: bcx, y: clamp(pcy, A.floor - 220, A.floor - 20) - 40 + i * 40, vx: b.face * (380 + i * 70) * ag, vy: 0, hw: 26, hh: 4, type: 'laser', dmg: 14, life: 4 }); sfx('shoot', .8, .6); }
-        else if (m === 3) { const c = diffIdx === 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.15 }); sfx('alert', .6); }
-        else if (m === 4) { const n = diffIdx === 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + b.h - 20, vx: (i - (n - 1) / 2) * 160, vy: -200, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .6, 1.4); }
+        else if (m === 3) { const c = diffIdx >= 2 ? 6 : 4; for (let i = 0; i < c; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.8 + i * 0.15 }); sfx('alert', .6); }
+        else if (m === 4) { const n = diffIdx >= 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + b.h - 20, vx: (i - (n - 1) / 2) * 160, vy: -200, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .6, 1.4); }
         else { b.st = 'tiredT'; b.t = 0; sfx('roar', 1, .4); addFloat(bcx, b.y + b.h + 10, '¡SE AGOTA!', '#ffd34d', 20); }
       }
     } else if (b.st === 'tiredT') { b.y = Math.min(A.floor - b.h, b.y + 260 * dt); if (b.y >= A.floor - b.h) { b.st = 'tired'; b.t = 0; shake = 14; sfx('stomp'); dust(bcx, A.floor, 18); } }
@@ -2666,8 +2667,8 @@ function drawMap2() {
 function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'boss_archi', 'boss_dragon']; const B = WORLDS[w] && WORLDS[w].boss; return (B && !B.skin && hdbKey(B.type)) || P[w]; }
 function mapButtons(B) {
   B.push({ x: 18, y: 16, w: 118, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', fn: toTitle });
-  B.push({ x: W - 506, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });
-  DIFFS.forEach((d, i) => B.push({ x: W - 368 + i * 118, y: 18, w: 110, h: 36, t: d.name, c: d.c, sel: diffIdx === i, small: true, seg: true, fn: () => { diffIdx = i; } }));
+  B.push({ x: W - 624, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });
+  DIFFS.forEach((d, i) => { const lk = d.nm && !nmUnlocked(); B.push({ x: W - 486 + i * 118, y: 18, w: 110, h: 36, t: lk ? '' : d.name, ic: lk ? 'lock' : undefined, c: d.c, sel: diffIdx === i, small: true, seg: true, fn: () => { if (lk) { sfx('clang', .4); nmMsgT = 2.8; return; } diffIdx = i; } }); });
   const ox = Math.round((W - 960) / 2);
   B.push({ x: Math.max(4, ox - 40), y: 250, w: 40, h: 60, t: '', ic: 'left', c: '#35e2ff', lock: mapPage === 0, fn: () => { if (mapPage > 0) mapPage--; } });
   B.push({ x: Math.min(W - 44, ox + 960), y: 250, w: 40, h: 60, t: '', ic: 'right', c: '#35e2ff', lock: mapPage === 2, fn: () => { if (mapPage < 2) mapPage++; } });
@@ -4974,10 +4975,11 @@ function optRows() {
 function uiButtons() {
   const B = [], ox = Math.round((W - 960) / 2);
   if (state === 'options') {
-    optRows().forEach((r, i) => {
-      const y = 110 + i * 34;
-      B.push({ x: ox + 560, y, w: 34, h: 30, t: '', ic: 'left', c: '#35e2ff', small: true, fn: () => { r[2](); applyOpts(); } });
-      B.push({ x: ox + 716, y, w: 34, h: 30, t: '', ic: 'right', c: '#35e2ff', small: true, fn: () => { r[3](); applyOpts(); } });
+    const OR = optRows(), sp = Math.min(34, Math.floor(340 / OR.length));
+    OR.forEach((r, i) => {
+      const y = 108 + i * sp;
+      B.push({ x: ox + 560, y, w: 34, h: sp - 4, t: '', ic: 'left', c: '#35e2ff', small: true, fn: () => { r[2](); applyOpts(); } });
+      B.push({ x: ox + 716, y, w: 34, h: sp - 4, t: '', ic: 'right', c: '#35e2ff', small: true, fn: () => { r[3](); applyOpts(); } });
     });
     B.push({ x: ox + 380, y: 456, w: 200, h: 44, t: 'LISTO', ic: 'right', c: '#ffcf4a', c2: '#ff8a3d', sel: true, fn: closeOptions });
   } else if (state === 'title') {
@@ -5338,11 +5340,12 @@ function drawOptions() {
   ctx.save(); ctx.translate(ox, 0);
   glass(190, 40, 580, 470, 24, '#35e2ff', true);
   ctx.save(); ctx.shadowColor = 'rgba(80,200,255,.7)'; ctx.shadowBlur = 18; txt('OPCIONES', 480, 82, 26, '#ffffff', null, 0, 'center', LOGOF, 900); ctx.restore();
-  optRows().forEach((r, i) => {
-    const y = 110 + i * 34;
-    if (i % 2 === 0) { rrect(212, y - 2, 536, 31, 10); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fill(); }
-    txt(r[0], 230, y + 15, 15, '#ffffff', null, 0, 'left', UIF, 600);
-    txt(r[1], 655, y + 15, 15, '#7fe9ff', null, 0, 'center', UIF, 800);
+  const OR = optRows(), sp = Math.min(34, Math.floor(340 / OR.length));
+  OR.forEach((r, i) => {
+    const y = 108 + i * sp, fz = sp < 32 ? 14 : 15;
+    if (i % 2 === 0) { rrect(212, y - 2, 536, sp - 3, 10); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fill(); }
+    txt(r[0], 230, y + (sp - 4) / 2, fz, '#ffffff', null, 0, 'left', UIF, 600);
+    txt(r[1], 655, y + (sp - 4) / 2, fz, '#7fe9ff', null, 0, 'center', UIF, 800);
   });
   ctx.restore();
   for (const b of uiButtons()) drawButton(b);
@@ -5493,8 +5496,8 @@ updateBoss = function (dt) {
     if (diffIdx > 0 && !b.dying && !b.done) {
       b.burstCD -= dt;
       if (b.burstCD <= 0) {
-        b.burstCD = diffIdx === 2 ? 4.2 : 5.6;
-        const cx = b.x + b.w / 2, cy = b.y + b.h * .45, n = diffIdx === 2 ? 12 : 9, off = Math.random() * 6.283, sp = 170 * DIFFS[diffIdx].spd;
+        b.burstCD = diffIdx >= 2 ? 4.2 : 5.6;
+        const cx = b.x + b.w / 2, cy = b.y + b.h * .45, n = diffIdx >= 2 ? 12 : 9, off = Math.random() * 6.283, sp = 170 * DIFFS[diffIdx].spd;
         for (let i = 0; i < n; i++) { const a = off + i / n * 6.283; projs.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, hw: 5, hh: 5, type: 'orb', dmg: 10, life: 3.2 }); }
         ring(cx, cy, 8, 90, .4, 'rgba(255,80,100,.9)', 3); sfx('shoot', .5, .7);
       }
@@ -5611,7 +5614,7 @@ stageClear = function () {
   const bossWin = curAct === 2 && boss && boss.done, flaw = boss && boss.flawless, t = levelTime;
   _stageClear17();
   if (bossWin && flaw) achGive('intacto');
-  if (bossWin && diffIdx === 2) achGive('dificil');
+  if (bossWin && diffIdx >= 2) achGive('dificil');
   if (curAct < 2 && t < 75) achGive('fast');
   achCheck();
 };
@@ -5664,13 +5667,15 @@ function drawAch() {
   ctx.save(); ctx.shadowColor = 'rgba(255,190,90,.7)'; ctx.shadowBlur = 18; txt('LOGROS', 480, 44, 30, '#ffd88a', null, 0, 'center', LOGOF, 900); ctx.restore();
   txt(got + ' / ' + ACH.length + ' desbloqueados', 480, 74, 13, 'rgba(255,255,255,.75)', null, 0, 'center', UIF, 700);
   ACH.forEach((a, i) => {
-    const col = i % 2, rw = i >> 1, x = 70 + col * 420, y = 92 + rw * 43, on = !!SAVE.ach[a[0]];
-    rrect(x, y, 400, 38, 10); ctx.fillStyle = on ? 'rgba(255,200,100,.12)' : 'rgba(255,255,255,.04)'; ctx.fill();
+    const rows = Math.ceil(ACH.length / 2), rh = Math.min(43, Math.floor(392 / rows)), k = rh / 43;
+    const col = i % 2, rw = i >> 1, x = 70 + col * 420, y = 92 + rw * rh, on = !!SAVE.ach[a[0]], bh = rh - 5;
+    rrect(x, y, 400, bh, 10); ctx.fillStyle = on ? 'rgba(255,200,100,.12)' : 'rgba(255,255,255,.04)'; ctx.fill();
     ctx.strokeStyle = on ? 'rgba(255,200,110,.55)' : 'rgba(255,255,255,.1)'; ctx.lineWidth = 1; ctx.stroke();
-    if (on) { ctx.fillStyle = '#ffb840'; ctx.beginPath(); ctx.arc(x + 20, y + 19, 12, 0, 6.283); ctx.fill(); starShape(x + 20, y + 19, 7.5, 5, '#4a2a06'); }
-    else icon('lock', x + 20, y + 19, 14, 'rgba(255,255,255,.35)');
-    txt(a[1], x + 42, y + 13, 13, on ? '#ffffff' : 'rgba(255,255,255,.6)', null, 0, 'left', UIF, 800);
-    txt(a[2], x + 42, y + 28, 11, on ? 'rgba(255,230,180,.85)' : 'rgba(255,255,255,.4)', null, 0, 'left', UIF, 500);
+    const my = y + bh / 2;
+    if (on) { ctx.fillStyle = '#ffb840'; ctx.beginPath(); ctx.arc(x + 20, my, 12 * Math.max(.75, k), 0, 6.283); ctx.fill(); starShape(x + 20, my, 7.5 * Math.max(.75, k), 5, '#4a2a06'); }
+    else icon('lock', x + 20, my, 14 * Math.max(.75, k), 'rgba(255,255,255,.35)');
+    txt(a[1], x + 42, y + bh * 0.34, Math.max(11, 13 * k), on ? '#ffffff' : 'rgba(255,255,255,.6)', null, 0, 'left', UIF, 800);
+    txt(a[2], x + 42, y + bh * 0.76, Math.max(9.5, 11 * k), on ? 'rgba(255,230,180,.85)' : 'rgba(255,255,255,.4)', null, 0, 'left', UIF, 500);
   });
   const S = SAVE.stats;
   txt('Guardianes: ' + bossesDone() + '/18   ·   Cámaras: ' + S.trials + '   ·   Caídas: ' + S.deaths + '   ·   Paradas: ' + S.parries + '   ·   Tiempo de juego: ' + fmtTime(S.play), 480, 492, 12, 'rgba(255,255,255,.7)', null, 0, 'center', UIF, 600);
@@ -6282,6 +6287,372 @@ drawProjs = function () {
     }
   }
 };
+// ---------------- sombras de contacto suaves (integran los sprites en los fondos pintados) ----------------
+function softShadow(cx, gy, w, a) { if (a <= 0.02) return; bx.globalAlpha = a; bx.drawImage(glowSpr('rgba(0,0,0,.85)'), Math.round(cx - w / 2), Math.round(gy - 4), Math.round(w), 8); bx.globalAlpha = 1; }
+function castShadow(cx, footY, w) {
+  const g = groundBelow(cx, footY - 2, 220); if (!g) return;
+  const h = g.y - footY, k = clamp(1 - h / 220, 0, 1); softShadow(cx, g.y, w * (0.55 + 0.45 * k), 0.55 * k);
+}
+const _drawEnemyS = drawEnemy;
+drawEnemy = function (e) {
+  if (!(e.b === 'burrower' && e.st !== 'surface' && e.st !== 'up') && e.b !== 'revive' && e.b !== 'ghost') castShadow(e.x + e.w / 2, e.y + e.h, Math.max(18, e.w * 1.25));
+  _drawEnemyS(e);
+};
+const _drawPlayerS = drawPlayer;
+drawPlayer = function () { if (p && !p.dead) castShadow(p.x + p.w / 2, p.y + p.h, 34); _drawPlayerS(); };
+
+// =====================================================================
+//  MODO PESADILLA (dificultad extra con premios) y BOSS RUSH
+//  (los 18 guardianes seguidos, con la vida que te quede de uno a otro)
+// =====================================================================
+let nmMsgT = 0;
+function nmUnlocked() { return PRUEBA || !!SAVE.done || bossesDoneR() >= 18; }
+function bossesDoneR() { let n = 0; for (let i = 0; i < ORDER.length; i++) { const st = SAVE.st[i * 3 + 2]; if (st && st.done) n++; } return n; }
+ACH.push(['pesadilla1', 'Sueño intranquilo', 'Vence a un guardián en Pesadilla'], ['pesadilla18', 'Señor de las pesadillas', 'Vence a los 18 guardianes en Pesadilla'],
+  ['rush6', 'Sin respiro', 'Vence a 6 guardianes seguidos en el Boss Rush'], ['rush18', 'Leyenda del tiempo', 'Completa el Boss Rush entero']);
+// en Pesadilla los enemigos aguantan un golpe más y las gemas valen el doble
+const _buildStageN = buildStage;
+buildStage = function (wi, act) {
+  const L = _buildStageN(wi, act);
+  if (DIFFS[diffIdx] && DIFFS[diffIdx].nm) for (const e of L.enemies) e.hp += 1;
+  return L;
+};
+const _stageClearN = stageClear;
+stageClear = function () {
+  if (RUSH) { if (state === 'playing') rushNext(); return; }
+  const nm = DIFFS[diffIdx] && DIFFS[diffIdx].nm, was = state === 'playing', w = curWorld, a = curAct;
+  const g = was && level ? level.gems.filter(x => x.taken).length : 0;
+  _stageClearN();
+  if (nm && was && state !== 'playing') {
+    SAVE.bank = (SAVE.bank || 0) + g; // el doble de gemas
+    if (a === 2) { SAVE.nm = SAVE.nm || {}; SAVE.nm[w] = 1; achGive('pesadilla1'); if (Object.keys(SAVE.nm).length >= 18) achGive('pesadilla18'); }
+    persist();
+  }
+};
+// ---------------- Boss Rush ----------------
+let RUSH = null, rushMsgT = 0;
+function rushUnlocked() { return PRUEBA || bossesDoneR() >= 3; }
+function startRush() {
+  RUSH = { i: 0, hp: null, t: 0, beaten: 0 };
+  score = 0; stageScore0 = 0; rushStage();
+}
+function rushStage() {
+  const R = RUSH, w = ORDER[R.i];
+  startStage(w, 2, false);
+  stageScore0 = score; dlg = null; loreT = 0; p.rewindUsed = true;
+  const A = level.arena;
+  if (A) { p.x = A.x1 + 24; p.y = A.floor - p.h - 1; p.respawn = { x: p.x, y: p.y }; p.safe = p.respawn; updateCamera(0, true); }
+  if (R.hp !== null) { p.hp = Math.min(p.maxHp, R.hp + 30); addFloat(p.x + p.w / 2, p.y - 24, '+30 vida', '#ff7ab0', 15); }
+  banner('BOSS RUSH  ·  ' + (R.i + 1) + ' / ' + ORDER.length, WORLDS[w].boss.name, '#ff7a5a', 2.4);
+}
+function rushNext() {
+  const R = RUSH; if (!R) return;
+  R.beaten++; R.hp = p.hp; addScore(1000 + R.beaten * 150);
+  if (R.beaten > (SAVE.rushMax || 0)) SAVE.rushMax = R.beaten;
+  if (R.beaten >= 6) achGive('rush6');
+  sfx('portal', .7); sfx('win', .5); flash = .3; flashCol = '255,150,110';
+  if (R.i >= ORDER.length - 1) {
+    achGive('rush18'); if (!SAVE.rushBest || R.t < SAVE.rushBest) SAVE.rushBest = R.t;
+    saveBest(); persist(); R.done = true; boss = null; state = 'gameover'; fade = 0.6; playMusic('menu'); return;
+  }
+  saveBest(); persist(); if (boss && boss.done) boss = null;
+  R.i++; rushStage();
+}
+function endRush() { RUSH = null; }
+const _toMapR = toMap; toMap = function () { endRush(); _toMapR(); };
+const _toTitleR = toTitle; toTitle = function () { endRush(); _toTitleR(); };
+const _beginStageR = beginStage; beginStage = function (w, a) { endRush(); _beginStageR(w, a); };
+const _retryR = retry; retry = function () { if (RUSH) { startRush(); return; } _retryR(); };
+const _startTowerR = startTower; startTower = function () { endRush(); _startTowerR(); };
+const _uiButtonsR = uiButtons;
+uiButtons = function () {
+  const B = _uiButtonsR(), ox = Math.round((W - 960) / 2);
+  if (state === 'gameover' && RUSH) {
+    return [{ x: ox + 350, y: 340, w: 260, h: 48, t: RUSH.done ? 'JUGAR OTRA VEZ' : 'REINTENTAR BOSS RUSH', ic: 'time', c: '#ff9a6a', c2: '#ff5a5a', sel: true, fn: startRush },
+            { x: ox + 350, y: 400, w: 260, h: 48, t: 'TÍTULO', ic: 'left', c: '#35e2ff', c2: '#7a5cff', fn: toTitle }];
+  }
+  if (state === 'title') {
+    const row = B.filter(q => q.y === 406), ok = rushUnlocked();
+    row.push({ x: 0, y: 406, w: 150, h: 40, t: 'BOSS RUSH', ic: ok ? 'skull' : 'lock', c: '#ff9a6a', small: true,
+      fn: ok ? () => { goFull(); sfx('select'); startRush(); } : () => { sfx('clang', .4); rushMsgT = 2.6; } });
+    if (row.length) { const w = 146, gap = 8, x0 = ox + 480 - (row.length * w + (row.length - 1) * gap) / 2; row.forEach((q, i) => { q.x = Math.round(x0 + i * (w + gap)); q.w = w; }); }
+    B.push(row[row.length - 1]);
+  }
+  return B;
+};
+const _drawOverlayR = drawOverlay;
+drawOverlay = function () {
+  if (state === 'gameover' && RUSH) {
+    ctx.fillStyle = 'rgba(6,4,16,.62)'; ctx.fillRect(0, 0, W, H);
+    const ox = Math.round((W - 960) / 2), py = Math.round((H - 410) / 2);
+    ctx.save(); ctx.translate(ox, 0); glass(220, py, 520, 410, 24, '#ff9a6a', true);
+    ctx.save(); ctx.shadowColor = 'rgba(255,140,100,.7)'; ctx.shadowBlur = 22; txt(RUSH.done ? '¡BOSS RUSH COMPLETADO!' : 'BOSS RUSH', 480, py + 52, 26, '#ffd0b0', null, 0, 'center', LOGOF, 900); ctx.restore();
+    txt('Guardianes vencidos: ' + RUSH.beaten + ' / ' + ORDER.length, 480, py + 108, 20, '#ffffff', null, 0, 'center', UIF, 800);
+    txt('Tiempo: ' + fmtMS(RUSH.t) + (SAVE.rushBest ? '   ·   Mejor tiempo: ' + fmtMS(SAVE.rushBest) : ''), 480, py + 140, 14, '#ffe27a', null, 0, 'center', UIF, 700);
+    txt('Récord: ' + (SAVE.rushMax || 0) + ' guardianes   ·   Puntos: ' + score, 480, py + 166, 13, 'rgba(255,255,255,.85)', null, 0, 'center', UIF, 600);
+    ctx.restore();
+    for (const b of uiButtons()) drawButton(b);
+    return;
+  }
+  _drawOverlayR();
+};
+let lastDrawR = performance.now();
+const _drawR = draw;
+draw = function () {
+  const now = performance.now(), dt = Math.min(.05, (now - lastDrawR) / 1000); lastDrawR = now;
+  _drawR();
+  if (RUSH && dlg && dlg.hold) dlg.hold = false;
+  if (RUSH && state === 'playing') { RUSH.t += dt; txt('BOSS RUSH  ' + (RUSH.i + 1) + '/' + ORDER.length + '   ·   ' + fmtMS(RUSH.t), W / 2, 22, 13, '#ffc0a0', null, 0, 'center', UIF, 900); }
+  if (state === 'title') {
+    if (SAVE.rushMax) txt('Boss Rush: ' + SAVE.rushMax + ' guardianes' + (SAVE.rushBest ? ' · ' + fmtMS(SAVE.rushBest) : ''), W / 2, 476, 11, 'rgba(255,200,170,.9)', null, 0, 'center', UIF, 700);
+    if (rushMsgT > 0) { rushMsgT -= dt; const ox = Math.round((W - 960) / 2); pill(ox + 250, 456, 460, 30, '#5a2a1a', '#8a3a2a'); txt('Vence a 3 guardianes para abrir el Boss Rush', W / 2, 471, 13, '#ffffff', null, 0, 'center', UIF, 700); }
+  }
+  if (state === 'map' && nmMsgT > 0) { nmMsgT -= dt; pill(W / 2 - 250, 64, 500, 30, '#3a1a5a', '#6a2a9a'); txt('Termina la historia para desbloquear el Modo Pesadilla', W / 2, 79, 13, '#ffffff', null, 0, 'center', UIF, 700); }
+};
+
+// =====================================================================
+//  BANDA SONORA ORIGINAL DE AETHER CODE, COMPUESTA POR CÓDIGO
+//  Cada mundo tiene su tema (tonalidad, tempo, instrumentos y melodía
+//  propios). Se genera en el teléfono la primera vez que suena y se
+//  guarda en memoria. Opciones > Banda sonora: Original / Clásica.
+// =====================================================================
+if (OPT.ost === undefined) OPT.ost = 'orig';
+const SC = { aeolian: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], harm: [0, 2, 3, 5, 7, 8, 11], hijaz: [0, 1, 4, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], ionian: [0, 2, 4, 5, 7, 9, 11], penta: [0, 3, 5, 7, 10, 12, 15] };
+// tema por mundo: r = nota base (MIDI), s = escala, bpm, p/pB = grados de los acordes (8 compases), lead/arp/bass/drums = estilos
+const SONGS = {
+  g0: { r: 50, s: 'dorian', bpm: 112, p: [0, 3, 4, 0, 5, 3, 4, 4], pB: [5, 3, 0, 4, 5, 6, 4, 4], lead: 'flute', arp: 'marimba', bass: 'bounce', drums: 'jungle', pad: 'warm', seed: 11 },
+  g1: { r: 48, s: 'harm', bpm: 92, p: [0, 5, 3, 4, 0, 5, 1, 4], pB: [5, 3, 0, 4, 5, 3, 4, 4], lead: 'violin', arp: 'harpsi', bass: 'pulse', drums: 'toll', pad: 'choir', seed: 23 },
+  g2: { r: 52, s: 'phrygian', bpm: 124, p: [0, 1, 0, 6, 0, 1, 5, 6], pB: [3, 1, 0, 6, 3, 4, 1, 0], lead: 'brass', arp: 'saw', bass: 'drive', drums: 'war', pad: 'dark', seed: 37 },
+  g3: { r: 45, s: 'aeolian', bpm: 96, p: [0, 5, 2, 6, 0, 5, 3, 4], pB: [3, 0, 5, 6, 3, 4, 6, 4], lead: 'flute', arp: 'harp', bass: 'soft', drums: 'soft', pad: 'warm', seed: 41 },
+  g4: { r: 50, s: 'harm', bpm: 84, p: [0, 3, 4, 0, 5, 3, 1, 4], pB: [3, 0, 5, 4, 3, 1, 4, 4], lead: 'musicbox', arp: 'bell', bass: 'soft', drums: 'ghost', pad: 'choir', seed: 53 },
+  g5: { r: 54, s: 'aeolian', bpm: 90, p: [0, 5, 3, 4, 0, 5, 6, 4], pB: [5, 6, 0, 4, 3, 5, 6, 4], lead: 'glass', arp: 'bell', bass: 'soft', drums: 'ice', pad: 'cold', seed: 67 },
+  g6: { r: 48, s: 'hijaz', bpm: 132, p: [0, 1, 0, 6, 0, 1, 3, 1], pB: [3, 1, 0, 6, 5, 1, 0, 1], lead: 'brass', arp: 'saw', bass: 'drive', drums: 'war', pad: 'dark', seed: 71 },
+  g7: { r: 55, s: 'lydian', bpm: 108, p: [0, 1, 4, 0, 5, 1, 3, 4], pB: [3, 4, 0, 5, 3, 1, 4, 4], lead: 'violin', arp: 'clock', bass: 'pulse', drums: 'clock', pad: 'warm', seed: 83 },
+  g8: { r: 51, s: 'dorian', bpm: 88, p: [0, 3, 0, 4, 5, 3, 6, 4], pB: [3, 4, 5, 0, 3, 6, 4, 4], lead: 'glass', arp: 'water', bass: 'soft', drums: 'soft', pad: 'cold', seed: 97 },
+  g9: { r: 50, s: 'hijaz', bpm: 104, p: [0, 1, 0, 6, 3, 1, 0, 1], pB: [3, 4, 1, 0, 6, 1, 0, 1], lead: 'oud', arp: 'pluck', bass: 'bounce', drums: 'darbuka', pad: 'warm', seed: 101 },
+  g10: { r: 53, s: 'lydian', bpm: 100, p: [0, 1, 4, 5, 0, 1, 3, 4], pB: [5, 3, 1, 4, 5, 3, 4, 4], lead: 'glass', arp: 'harp', bass: 'soft', drums: 'none', pad: 'choir', seed: 113 },
+  g11: { r: 47, s: 'aeolian', bpm: 120, p: [0, 5, 6, 4, 0, 5, 3, 4], pB: [5, 6, 0, 4, 3, 1, 4, 4], lead: 'brass', arp: 'saw', bass: 'drive', drums: 'epic', pad: 'dark', seed: 127 },
+  g12: { r: 43, s: 'harm', bpm: 92, p: [0, 3, 0, 4, 5, 3, 1, 4], pB: [3, 0, 4, 0, 5, 1, 4, 4], lead: 'reed', arp: 'pluck', bass: 'wonky', drums: 'ghost', pad: 'dark', seed: 131 },
+  g13: { r: 48, s: 'aeolian', bpm: 80, p: [0, 5, 3, 4, 0, 5, 6, 4], pB: [3, 0, 5, 4, 3, 6, 4, 4], lead: 'brass', arp: 'harpsi', bass: 'pulse', drums: 'march', pad: 'choir', seed: 139 },
+  g14: { r: 45, s: 'penta', bpm: 110, p: [0, 3, 4, 0, 0, 3, 2, 4], pB: [3, 4, 0, 2, 3, 4, 2, 4], lead: 'oud', arp: 'anvil', bass: 'bounce', drums: 'mine', pad: 'cold', seed: 149 },
+  g15: { r: 52, s: 'aeolian', bpm: 86, p: [0, 5, 3, 6, 0, 5, 3, 4], pB: [5, 3, 0, 6, 5, 6, 4, 4], lead: 'violin', arp: 'xylo', bass: 'soft', drums: 'bones', pad: 'choir', seed: 157 },
+  g16: { r: 46, s: 'dorian', bpm: 96, p: [0, 3, 6, 4, 0, 3, 1, 4], pB: [3, 6, 0, 4, 5, 3, 4, 4], lead: 'musicbox', arp: 'harpsi', bass: 'pulse', drums: 'soft', pad: 'warm', seed: 163 },
+  g17: { r: 50, s: 'aeolian', bpm: 128, p: [0, 5, 6, 4, 0, 5, 3, 6], pB: [5, 6, 0, 4, 3, 6, 4, 4], lead: 'violin', arp: 'saw', bass: 'drive', drums: 'epic', pad: 'dark', seed: 173 },
+  gmenu: { r: 45, s: 'aeolian', bpm: 88, p: [0, 5, 2, 6, 0, 5, 3, 4], pB: [5, 3, 0, 6, 5, 6, 4, 4], lead: 'violin', arp: 'harp', bass: 'soft', drums: 'soft', pad: 'choir', seed: 7 },
+  gboss: { r: 52, s: 'harm', bpm: 144, p: [0, 0, 5, 4, 0, 0, 1, 4], pB: [5, 3, 1, 4, 5, 6, 4, 4], lead: 'brass', arp: 'saw', bass: 'drive', drums: 'boss', pad: 'dark', seed: 211 },
+  gfinal: { r: 49, s: 'phrygian', bpm: 152, p: [0, 1, 0, 6, 0, 1, 5, 4], pB: [3, 1, 0, 6, 5, 1, 6, 4], lead: 'brass', arp: 'saw', bass: 'drive', drums: 'boss', pad: 'choir', seed: 223 }
+};
+const GEN = {}, GEN_BUSY = {}, GEN_ORDER = [];
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+// sintetizador propio: genera las muestras directamente (rápido) dentro de un Worker para no frenar el juego
+function SYNTH(S, SC, seedv) {
+  const SR = 22050, spb = 60 / S.bpm, bar = spb * 4, bars = 16, L = bar * bars, T = 2.6, N = Math.ceil((L + T) * SR), NL = Math.floor(L * SR);
+  const DRY = new Float32Array(N), REV = new Float32Array(N), DEL = new Float32Array(N);
+  let sv = seedv % 2147483647; if (sv <= 0) sv += 2147483646; const r = () => { sv = sv * 16807 % 2147483647; return (sv - 1) / 2147483646; };
+  const clamp = (v, a, b) => v < a ? a : v > b ? b : v, mtof = m => 440 * Math.pow(2, (m - 69) / 12), scale = SC[S.s];
+  const deg = (d, oct) => { const n = scale.length, o = Math.floor(d / n), i = ((d % n) + n) % n; return S.r + scale[i] + 12 * (o + (oct || 0)); };
+  const TAU = Math.PI * 2;
+  function biq(type, f, q) {
+    const w = TAU * Math.min(f, SR * .45) / SR, cs = Math.cos(w), al = Math.sin(w) / (2 * (q || .707)); let b0, b1, b2, a0, a1, a2;
+    if (type === 'lowpass') { b0 = (1 - cs) / 2; b1 = 1 - cs; b2 = b0; } else if (type === 'highpass') { b0 = (1 + cs) / 2; b1 = -(1 + cs); b2 = b0; } else { b0 = al; b1 = 0; b2 = -al; }
+    a0 = 1 + al; a1 = -2 * cs; a2 = 1 - al; return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+  }
+  function tone(t, dur, f, o) {
+    o = o || {};
+    const a = o.a || .005, rl = o.rl || .08, v = o.v || .2, dec = o.dec || 0, svl = Math.max(.0005, v * (o.sus || .001));
+    const hold = dec ? Math.max(dur, a + dec) : Math.max(a, dur), end = hold + rl;
+    const i0 = Math.floor(t * SR), n = Math.floor(end * SR); if (i0 >= N) return;
+    const waves = o.w || ['triangle'], nw = waves.length, ph = new Float64Array(nw), mul = [], mix = [], dt = [];
+    for (let k = 0; k < nw; k++) { mul[k] = o.mul && o.mul[k] ? o.mul[k] : 1; mix[k] = o.mix && o.mix[k] !== undefined ? o.mix[k] : 1 / nw; dt[k] = Math.pow(2, ((k - (nw - 1) / 2) * (o.det || 0)) / 1200); ph[k] = r(); }
+    let co = o.lp ? biq('lowpass', o.lp, o.q) : o.hp ? biq('highpass', o.hp, .7) : null, x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    const dry = o.dry === undefined ? 1 : o.dry, rv = o.rev || 0, de = o.del || 0, relStart = hold * SR;
+    let env = 0, relFrom = 0;
+    const lnDec = dec ? Math.log(svl / v) / (dec * SR) : 0, lnRel = Math.log(.0005) / (rl * SR);
+    for (let j = 0; j < n && i0 + j < N; j++) {
+      const tt = j / SR;
+      if (j < a * SR) env = v * j / (a * SR);
+      else if (j < relStart) env = dec ? (j < (a + dec) * SR ? v * Math.exp(lnDec * (j - a * SR)) : svl) : v;
+      else { if (relFrom === 0) relFrom = env || .0001; env = relFrom * Math.exp(lnRel * (j - relStart)); }
+      let fr = f; if (o.slide) fr *= Math.pow(o.slide, Math.min(tt, o.slideT || .1) / (o.slideT || .1));
+      if (o.vib) fr *= 1 + Math.sin(TAU * 5.2 * tt) * o.vib * Math.min(1, tt / Math.min(dur || .35, .35));
+      let x = 0;
+      for (let k = 0; k < nw; k++) {
+        ph[k] += fr * mul[k] * dt[k] / SR; ph[k] -= Math.floor(ph[k]); const p = ph[k], w = waves[k];
+        x += mix[k] * (w === 'sine' ? Math.sin(TAU * p) : w === 'triangle' ? 4 * Math.abs(p - .5) - 1 : w === 'sawtooth' ? 2 * p - 1 : (p < .5 ? 1 : -1));
+      }
+      if (co) {
+        if (o.lpEnv && (j & 31) === 0) co = biq('lowpass', o.lp * Math.pow(o.lpEnv, Math.min(1, tt / (o.lpT || .3))), o.q);
+        const y = co[0] * x + co[1] * x1 + co[2] * x2 - co[3] * y1 - co[4] * y2; x2 = x1; x1 = x; y2 = y1; y1 = y; x = y;
+      }
+      x *= env; const i = i0 + j; DRY[i] += x * dry; if (rv) REV[i] += x * rv; if (de) DEL[i] += x * de;
+    }
+  }
+  function hit(t, o) {
+    const i0 = Math.floor(t * SR), d = o.d || .05, n = Math.floor((d + .02) * SR), co = biq(o.type || 'highpass', o.f || 7000, o.q || .8), v = o.v || .1, ln = Math.log(.0005 / v) / (d * SR), rv = o.rev || 0;
+    let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+    for (let j = 0; j < n && i0 + j < N; j++) { const x = Math.random() * 2 - 1, y = co[0] * x + co[1] * x1 + co[2] * x2 - co[3] * y1 - co[4] * y2; x2 = x1; x1 = x; y2 = y1; y1 = y; const s = y * v * Math.exp(ln * j); DRY[i0 + j] += s; if (rv) REV[i0 + j] += s * rv; }
+  }
+  const kick = (t, v) => tone(t, .02, 120, { w: ['sine'], v: (v || .55) * 1.3, slide: .3, slideT: .12, dec: .28, rl: .05 });
+  const snare = (t, v) => { hit(t, { type: 'bandpass', f: 1800, q: .6, v: (v || .3) * 1.4, d: .16, rev: .25 }); tone(t, .02, 190, { w: ['triangle'], v: (v || .3) * .5, slide: .6, dec: .1, rl: .03 }); };
+  const hat = (t, v, open) => hit(t, { f: 8000, v: (v || .05) * 1.3, d: open ? .14 : .035 });
+  const tom = (t, f, v) => tone(t, .02, f, { w: ['sine'], v: v || .35, slide: .55, slideT: .2, dec: .3, rl: .05, rev: .15 });
+  const INST = {
+    flute: (t, d, f) => tone(t, d, f, { w: ['sine', 'triangle'], mix: [.7, .3], a: .04, v: .16, vib: .006, rl: .2, rev: .35, del: .25 }),
+    violin: (t, d, f) => tone(t, d, f, { w: ['sawtooth', 'sawtooth'], det: 8, a: .07, v: .11, vib: .008, lp: 2600, rl: .25, rev: .45, del: .15 }),
+    brass: (t, d, f) => tone(t, d, f, { w: ['sawtooth', 'square'], mix: [.6, .4], det: 5, a: .03, v: .12, lp: 1400, lpEnv: 2.2, lpT: .12, q: 1.5, rl: .15, rev: .3, del: .1 }),
+    musicbox: (t, d, f) => tone(t, .02, f * 2, { w: ['sine', 'sine'], mul: [1, 4.01], mix: [.8, .2], v: .16, dec: 1.1, rl: .3, rev: .5, del: .3 }),
+    glass: (t, d, f) => tone(t, d, f * 2, { w: ['sine', 'sine'], mul: [1, 2.76], mix: [.75, .25], a: .01, v: .13, dec: 1.4, sus: .2, rl: .4, rev: .6, del: .35 }),
+    oud: (t, d, f) => tone(t, .02, f, { w: ['sawtooth', 'triangle'], v: .15, lp: 3000, lpEnv: .25, lpT: .3, dec: .5, rl: .1, rev: .3, del: .2 }),
+    reed: (t, d, f) => tone(t, d, f, { w: ['square', 'sawtooth'], mix: [.6, .4], a: .03, v: .09, vib: .01, lp: 1100, q: 2, rl: .12, rev: .3 }),
+    marimba: (t, d, f) => tone(t, .02, f, { w: ['sine', 'sine'], mul: [1, 3.9], mix: [.85, .15], v: .15, dec: .3, rl: .05, rev: .2, del: .15 }),
+    harpsi: (t, d, f) => tone(t, .02, f, { w: ['sawtooth', 'square'], v: .07, hp: 400, dec: .45, rl: .05, rev: .25, del: .2 }),
+    saw: (t, d, f) => tone(t, .02, f, { w: ['sawtooth', 'sawtooth'], det: 12, v: .07, lp: 2400, lpEnv: .2, lpT: .18, q: 3, dec: .25, rl: .05, rev: .2, del: .3 }),
+    harp: (t, d, f) => tone(t, .02, f, { w: ['triangle', 'sine'], mul: [1, 2], mix: [.8, .2], v: .12, dec: .9, rl: .2, rev: .4, del: .25 }),
+    bell: (t, d, f) => tone(t, .02, f * 2, { w: ['sine', 'sine'], mul: [1, 3.5], mix: [.7, .3], v: .09, dec: 1.2, rl: .3, rev: .55, del: .3 }),
+    clock: (t, d, f) => tone(t, .01, f * 2, { w: ['square'], v: .05, hp: 1200, dec: .08, rl: .02, rev: .2, del: .4 }),
+    water: (t, d, f) => tone(t, .02, f * 2, { w: ['sine'], v: .1, slide: 1.06, slideT: .05, dec: .5, rl: .2, rev: .5, del: .45 }),
+    pluck: (t, d, f) => tone(t, .02, f, { w: ['triangle', 'sawtooth'], mix: [.7, .3], v: .1, lp: 2200, lpEnv: .2, lpT: .2, dec: .35, rl: .05, rev: .2, del: .2 }),
+    anvil: (t, d, f) => tone(t, .01, f * 2, { w: ['square', 'sine'], mul: [1, 2.7], v: .06, dec: .35, rl: .05, rev: .3, del: .2 }),
+    xylo: (t, d, f) => { tone(t, .01, f * 2, { w: ['sine'], v: .13, dec: .18, rl: .03, rev: .2, del: .15 }); hit(t, { f: 3000, v: .02, d: .02 }); }
+  };
+  const PADS = {
+    warm: (t, d, fs) => fs.forEach(f => tone(t, d, f, { w: ['sawtooth', 'triangle'], det: 10, a: .6, v: .035, lp: 900, rl: .8, rev: .5, dry: .7 })),
+    choir: (t, d, fs) => fs.forEach(f => tone(t, d, f, { w: ['sawtooth', 'sawtooth', 'triangle'], det: 14, a: .8, v: .03, vib: .004, lp: 1300, q: 2.5, rl: 1, rev: .7, dry: .6 })),
+    dark: (t, d, fs) => fs.forEach(f => tone(t, d, f, { w: ['sawtooth', 'sawtooth'], det: 18, a: .5, v: .035, lp: 650, q: 1.5, rl: .8, rev: .5, dry: .7 })),
+    cold: (t, d, fs) => fs.forEach(f => tone(t, d, f * 2, { w: ['triangle', 'sine'], det: 6, a: 1, v: .03, rl: 1.2, rev: .8, dry: .5 }))
+  };
+  const chordOf = (dg, oct) => [deg(dg, oct), deg(dg + 2, oct), deg(dg + 4, oct)];
+  const RH = [[0, 4, 6, 8, 12], [0, 3, 6, 8, 10, 12], [0, 2, 4, 8, 11, 12, 14], [0, 6, 8, 12, 14], [0, 4, 8, 10, 12], [0, 2, 3, 4, 8, 12]];
+  function motif() {
+    const rh1 = RH[Math.floor(r() * RH.length)], rh2 = RH[Math.floor(r() * RH.length)], steps = [];
+    let d = Math.floor(r() * 3) * 2;
+    for (const [bi, rh] of [[0, rh1], [1, rh2]]) rh.forEach((s, i) => { const mv = r(); d += mv < .35 ? 1 : mv < .7 ? -1 : mv < .82 ? 2 : mv < .92 ? -2 : 0; d = clamp(d, -2, 9); const nx = i + 1 < rh.length ? rh[i + 1] : 16; steps.push({ s: bi * 16 + s, len: nx - s, d }); });
+    steps[steps.length - 1].len = Math.max(steps[steps.length - 1].len, 4);
+    return steps;
+  }
+  const mA = motif(), mB = motif(), mC = motif();
+  const sixteenth = spb / 4, swing = S.drums === 'jungle' || S.drums === 'darbuka' ? .12 : 0;
+  const at = (barI, st) => barI * bar + st * sixteenth + (st % 2 ? sixteenth * swing : 0);
+  const playMotif = (m, b0, prog, shift, sparse) => {
+    for (const n of m) {
+      if (sparse && n.len < 2 && r() < .4) continue;
+      const bi = b0 + Math.floor(n.s / 16), st = n.s % 16, chord = prog[bi % 8];
+      let dd = n.d + shift;
+      if (st === 0) { const tones = [chord, chord + 2, chord + 4, chord + 7]; dd = tones.reduce((a, b) => Math.abs(b - dd) < Math.abs(a - dd) ? b : a, tones[0]); }
+      INST[S.lead](at(bi, st), n.len * sixteenth * .92, mtof(deg(dd, 1)));
+    }
+  };
+  for (let sec = 0; sec < 2; sec++) {
+    const prog = sec ? S.pB : S.p, b0 = sec * 8;
+    for (let b = 0; b < 8; b++) PADS[S.pad](at(b0 + b, 0), bar * .98, chordOf(prog[b], -1).map(mtof));
+    const ms = sec ? [mC, mC, mA, mB] : [mA, mA, mB, mA], sh = sec ? [2, 3, 0, 1] : [0, 1, 0, -1];
+    ms.forEach((m, i) => playMotif(m, b0 + i * 2, prog, sh[i], i === 1));
+    for (let b = 0; b < 8; b++) {
+      const bi = b0 + b, ch = prog[b];
+      const arpN = S.arp === 'bell' || S.arp === 'water' || S.arp === 'harp' ? 8 : 16, tones = [ch, ch + 2, ch + 4, ch + 7, ch + 4, ch + 2];
+      for (let k = 0; k < arpN; k++) { if (S.arp === 'clock' && k % 2) continue; INST[S.arp](at(bi, k * (16 / arpN)), sixteenth * (16 / arpN), mtof(deg(tones[k % tones.length], 0))); }
+      const bf = mtof(deg(ch, -2)), bpat = { bounce: [0, 6, 8, 14], pulse: [0, 4, 8, 12], drive: [0, 2, 4, 6, 8, 10, 12, 14], soft: [0, 8], wonky: [0, 3, 8, 11] }[S.bass];
+      for (const st of bpat) tone(at(bi, st), sixteenth * (S.bass === 'soft' ? 7 : S.bass === 'drive' ? 1.6 : 3), st === 8 && S.bass === 'bounce' ? bf * 1.5 : bf * (S.bass === 'wonky' && st === 11 ? 1.059 : 1),
+        { w: S.bass === 'drive' ? ['sawtooth', 'square'] : ['triangle', 'sine'], v: S.bass === 'drive' ? .14 : .22, lp: S.bass === 'drive' ? 900 : 700, lpEnv: .5, lpT: .15, dec: .25, sus: .4, rl: .06 });
+      const D = S.drums, last = b === 7;
+      for (let st = 0; st < 16; st++) {
+        const t = at(bi, st);
+        if (D === 'none') { if (st === 0 && b % 2 === 0) hit(t, { type: 'bandpass', f: 600, v: .05, d: .5, rev: .6 }); continue; }
+        if (D === 'jungle') { if (st === 0 || st === 10) kick(t, .45); if (st === 4 || st === 12) snare(t, .18); if (st % 2 === 0) hat(t, .035 + (st % 4 ? 0 : .015)); if (st === 7 || st === 15) hit(t, { type: 'bandpass', f: 2500, v: .05, d: .06 }); }
+        else if (D === 'war' || D === 'epic' || D === 'boss') { if (st % 4 === 0 || (D !== 'epic' && st === 10)) kick(t, .55); if (st === 4 || st === 12) snare(t, .32); if (D === 'boss' ? true : st % 2 === 0) hat(t, .04); if (last && st >= 12) tom(t, 140 - (st - 12) * 18, .4); if (D === 'war' && (st === 6 || st === 14)) tom(t, 90, .3); }
+        else if (D === 'soft') { if (st === 0 || st === 8) kick(t, .3); if (st === 12) snare(t, .1); if (st % 4 === 2) hat(t, .025); }
+        else if (D === 'ghost') { if (st === 0) kick(t, .35); if (st === 10) hit(t, { type: 'bandpass', f: 900, v: .08, d: .3, rev: .5 }); if (st % 4 === 2) hat(t, .02); }
+        else if (D === 'ice') { if (st === 0 || st === 9) kick(t, .3); if (st % 4 === 2) hit(t, { f: 9000, v: .03, d: .02, rev: .4 }); if (st === 12) snare(t, .12); }
+        else if (D === 'toll') { if (st === 0) { kick(t, .35); if (b % 2 === 0) tone(t, .02, mtof(deg(0, -1)), { w: ['sine', 'sine'], mul: [1, 2.4], v: .12, dec: 2.2, rl: .5, rev: .7 }); } if (st === 8) snare(t, .14); if (st % 4 === 2) hat(t, .025); }
+        else if (D === 'clock') { if (st % 4 === 0) hit(t, { type: 'bandpass', f: 3500, q: 4, v: .09, d: .03 }); if (st % 4 === 2) hit(t, { type: 'bandpass', f: 2400, q: 4, v: .06, d: .03 }); if (st === 0 || st === 8) kick(t, .35); if (st === 12) snare(t, .16); }
+        else if (D === 'darbuka') { if (st === 0 || st === 6) tom(t, 110, .45); if (st === 4 || st === 10 || st === 12) hit(t, { type: 'bandpass', f: 1500, q: 2, v: .12, d: .08 }); if (st % 2) hit(t, { f: 6000, v: .02, d: .02 }); }
+        else if (D === 'march') { if (st === 0 || st === 8) kick(t, .45); if (st === 4 || st === 12 || st === 14) snare(t, st === 14 ? .12 : .22); }
+        else if (D === 'mine') { if (st === 0 || st === 8) kick(t, .4); if (st === 4 || st === 12) tone(t, .01, 1800, { w: ['square', 'sine'], mul: [1, 2.7], v: .05, dec: .25, rl: .05, rev: .3 }); if (st % 2 === 0) hat(t, .03); }
+        else if (D === 'bones') { if (st === 0 || st === 10) kick(t, .35); if (st === 4 || st === 7 || st === 12) tone(t, .01, 900 + (st * 37 % 5) * 120, { w: ['sine'], v: .08, dec: .08, rl: .02 }); if (st % 4 === 2) hat(t, .02); }
+      }
+    }
+  }
+  // eco con realimentación (también alimenta la reverb)
+  const Dn = Math.floor(spb * .75 * SR), dly = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const y = DEL[i] + (i >= Dn ? dly[i - Dn] * .32 : 0); dly[i] = y; }
+  for (let i = 0; i < N; i++) { DRY[i] += dly[i] * .25; REV[i] += dly[i] * .25; }
+  // reverb tipo Freeverb
+  const sc = SR / 44100, combs = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617].map(n => ({ b: new Float32Array(Math.floor(n * sc)), i: 0, f: 0 })), aps = [556, 441, 341, 225].map(n => ({ b: new Float32Array(Math.floor(n * sc)), i: 0 }));
+  const out = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    const x = REV[i] * .015; let s = 0;
+    for (const c of combs) { const y = c.b[c.i]; c.f = y * .75 + c.f * .25; c.b[c.i] = x + c.f * .84; if (++c.i >= c.b.length) c.i = 0; s += y; }
+    for (const a of aps) { const bo = a.b[a.i]; const y = -s + bo; a.b[a.i] = s + bo * .5; if (++a.i >= a.b.length) a.i = 0; s = y; }
+    out[i] = DRY[i] * .9 + s * .32 * 3;
+  }
+  // bucle sin corte: la cola del final se suma al principio
+  const o = new Float32Array(NL); for (let i = 0; i < NL; i++) o[i] = out[i] + (i + NL < N ? out[i + NL] : 0);
+  let pk = 0; for (let i = 0; i < NL; i++) pk = Math.max(pk, Math.abs(o[i]));
+  const k = pk > 0 ? 1.25 / pk : 1, nrm = Math.tanh(1.25);
+  const buf = new ArrayBuffer(44 + NL * 2), wav = new DataView(buf);
+  const ws = (p, s) => { for (let i = 0; i < s.length; i++) wav.setUint8(p + i, s.charCodeAt(i)); };
+  ws(0, 'RIFF'); wav.setUint32(4, 36 + NL * 2, true); ws(8, 'WAVEfmt '); wav.setUint32(16, 16, true); wav.setUint16(20, 1, true); wav.setUint16(22, 1, true);
+  wav.setUint32(24, SR, true); wav.setUint32(28, SR * 2, true); wav.setUint16(32, 2, true); wav.setUint16(34, 16, true); ws(36, 'data'); wav.setUint32(40, NL * 2, true);
+  for (let i = 0; i < NL; i++) wav.setInt16(44 + i * 2, Math.tanh(o[i] * k) / nrm * .9 * 32767, true);
+  return buf;
+}
+let synthWorker = null, synthCB = {};
+function getWorker() {
+  if (synthWorker !== null) return synthWorker;
+  try {
+    const src = SYNTH.toString() + '\nonmessage=e=>{const b=SYNTH(e.data.S,e.data.SC,e.data.seed);postMessage({id:e.data.id,b},[b]);};';
+    synthWorker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+    synthWorker.onmessage = e => { const f = synthCB[e.data.id]; delete synthCB[e.data.id]; if (f) f(e.data.b); };
+    synthWorker.onerror = () => { synthWorker = false; for (const id in synthCB) { const f = synthCB[id]; delete synthCB[id]; const S = SONGS[id]; f(SYNTH(S, SC, S.seed * 7919 + 13)); } };
+  } catch (e) { synthWorker = false; }
+  return synthWorker;
+}
+function genSong(id) {
+  const S = SONGS[id]; if (!S || GEN[id] || GEN_BUSY[id]) return;
+  GEN_BUSY[id] = 1;
+  const done = buf => {
+    GEN[id] = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })); MUS[id] = GEN[id]; GEN_ORDER.push(id); delete GEN_BUSY[id];
+    while (GEN_ORDER.length > 8) { const old = GEN_ORDER.shift(); if (old !== curMusicId && old !== musicWanted) { try { URL.revokeObjectURL(GEN[old]); } catch (e) {} delete GEN[old]; delete MUS[old]; delete MUSIC[old]; } else { GEN_ORDER.push(old); break; } }
+    if (musicWanted === id) { musicWanted = null; _playMusicG(id); }
+  };
+  const w = getWorker();
+  if (w) { synthCB[id] = done; w.postMessage({ id, S, SC, seed: S.seed * 7919 + 13 }); }
+  else setTimeout(() => { try { done(SYNTH(S, SC, S.seed * 7919 + 13)); } catch (e) { delete GEN_BUSY[id]; } }, 0);
+}
+function genIdFor(id) {
+  if (!id || OPT.ost !== 'orig') return null;
+  if (SONGS[id]) return id;
+  if (id === 'menu') return 'gmenu';
+  if (id === 'boss') return 'gboss';
+  if (id === 'final') return 'gfinal';
+  if (/^w\d$/.test(id) && typeof curWorld === 'number') return 'g' + curWorld;
+  return null;
+}
+let musicWanted = null;
+const _playMusicG = playMusic;
+playMusic = function (id) {
+  const g = genIdFor(id);
+  if (!g || !SONGS[g]) { musicWanted = null; if (id && SONGS[id]) id = id === 'gboss' ? 'boss' : id === 'gfinal' ? 'final' : /^g\d+$/.test(id) ? WORLDS[+id.slice(1)].music : 'menu'; return _playMusicG(id); }
+  if (GEN[g]) { musicWanted = null; return _playMusicG(g); }
+  // mientras se compone, silencio breve; en cuanto esté, empieza
+  wantMusic = id; musicWanted = g;
+  if (curMusic) { curMusic.pause(); curMusic = null; curMusicId = null; }
+  if (AC && musicOn) genSong(g);
+};
+// opción en el menú
+const _optRowsG = optRows;
+optRows = function () {
+  const R = _optRowsG();
+  const sw = () => { OPT.ost = OPT.ost === 'orig' ? 'clasica' : 'orig'; const w = wantMusic; curMusicId = null; playMusic(w); };
+  R.splice(2, 0, ['Banda sonora', OPT.ost === 'orig' ? 'Original' : 'Clásica', sw, sw]);
+  return R;
+};
+// componer de antemano el tema del menú y del mundo siguiente cuando el audio arranca
+const _initAudioG = initAudio;
+initAudio = function () { _initAudioG(); if (AC && OPT.ost === 'orig') { genSong('gmenu'); try { genSong('g' + ORDER[Math.min(ORDER.length - 1, Math.floor(SAVE.unl / 3))]); } catch (e) {} } };
+// al entrar en una fase, preparar también el tema del guardián
+const _startStageG = startStage;
+startStage = function (wi, act, fresh) { _startStageG(wi, act, fresh); if (AC && OPT.ost === 'orig') { genSong('g' + wi); genSong(wi >= 6 ? 'gfinal' : 'gboss'); } };
 
 // =====================================================================
 //  MEDICIÓN DE PARTIDAS (solo en el teléfono, nada sale del dispositivo
@@ -6295,7 +6666,7 @@ try { const o = JSON.parse(localStorage.getItem(TKEY) || 'null'); if (o && o.s) 
 let tRun = null, tCause = 'trampa', tSaveT = 0;
 function tSave() { try { localStorage.setItem(TKEY, JSON.stringify(TSTAT)); } catch (e) {} }
 function tRec(s) { return TSTAT.s[s] || (TSTAT.s[s] = { a: 0, c: 0, q: 0, r: 0, d: 0, tt: 0, tb: 0, cz: {}, p: [] }); }
-function tOn() { return !(typeof TOWER_ON !== 'undefined' && TOWER_ON) && !(typeof TOWER !== 'undefined' && TOWER); }
+function tOn() { return !(typeof RUSH !== 'undefined' && RUSH) && !(typeof TOWER_ON !== 'undefined' && TOWER_ON) && !(typeof TOWER !== 'undefined' && TOWER); }
 function tClose(kind) {
   if (!tRun) return; const R = tRec(tRun.s);
   if (kind === 'q') R.q++; else if (kind === 'r') R.r++;
@@ -6584,6 +6955,27 @@ const I18N = {
     ko: ["저 사냥개는 돌진하기 전에 몸을 웅크려. 뛰어넘고 회복하는 동안 공격해.", "조준경 달린 포탑이야. 빨간 선이 보이면 움직여!", "바닥의 그림자를 봐. 떨어뜨리는 건 거기로 떨어져.", "모래 밑에서 뭔가 움직여. 땅이 흔들리면 점프!", "조심해. 여기선 장식처럼 보인다고 다 장식은 아니야.", "이 뼈들은 다시 맞춰져. 보라색 차원(SHIFT)에서 끝내면 돌아오지 않아.", "여기 책들은 물어. 한 대면 영원히 닫혀.", "바닥에 빛기둥이 보이면 피해. 번개가 바로 거기 떨어져.", "해파리는 전기를 내뿜기 전에 빛나. 빛이 꺼질 때까지 기다려.", "불쥐는 죽으면 둘로 갈라져. 방심하지 마.", "세라핌은 부채꼴로 쏴. 위나 아래로 피해.", "파괴!", "재조립 중…", "통계", "공유", "데이터 삭제", "정말? 탭", "스테이지 플레이", "스테이지", "시도", "클리어", "사망", "포기", "평균 시간", "주요 원인", "데이터가 삭제됐어요", "아직 잠긴 스테이지예요", "보고서 복사됨: 메시지에 붙여 넣으세요", "텍스트를 복사해서 보내세요", "스테이지를 탭하면 플레이어가 죽는 위치를 지도에서 볼 수 있어요", "스테이지를 몇 개 플레이하면 어디서 죽는지, 얼마나 걸리는지, 어디서 포기하는지 여기 나와요.", "사망 기록 없음", "● 사망   ● 추락   ▪ 적   ▪ 함정   ▭ 수호자 아레나"],
     zh: ["那只猎犬冲撞前会先蹲下。跳过去，趁它恢复时攻击它。", "带瞄准镜的炮塔：看到红线就快动！", "看地上的影子：它丢下的东西会落在那里。", "沙子底下有东西在动。地面一震动就跳！", "小心：这里看起来像布景的东西不一定是布景。", "这些骨头会重新拼合。在紫色维度（SHIFT）里消灭它们，它们就不会回来。", "这里的书会咬人。一击就能让它们永远合上。", "看到地上有光柱就躲开：闪电会正好落在那里。", "水母放电前会发光。等它们暗下来。", "火鼠死时会分裂成两只。别大意。", "炽天使会扇形射击。从上方或下方闪避。", "已摧毁！", "正在重组……", "统计", "分享", "删除数据", "确定？点击", "进入关卡", "关卡", "尝试", "通关", "死亡", "放弃", "平均用时", "主要原因", "数据已删除", "关卡尚未解锁", "报告已复制：粘贴到消息里", "复制文本并发送", "点击关卡，在地图上查看玩家死亡的位置", "玩几关后，这里会显示你在哪里死亡、用时多久以及在哪里放弃。", "暂无死亡记录", "● 死亡   ● 坠落   ▪ 敌人   ▪ 陷阱   ▭ 守护者竞技场"]
   };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.2: Modo Pesadilla y Boss Rush
+(function () {
+  const ES = ["PESADILLA", "Sueño intranquilo", "Vence a un guardián en Pesadilla", "Señor de las pesadillas", "Vence a los 18 guardianes en Pesadilla", "Sin respiro", "Vence a 6 guardianes seguidos en el Boss Rush", "Leyenda del tiempo", "Completa el Boss Rush entero", "JUGAR OTRA VEZ", "REINTENTAR BOSS RUSH", "¡BOSS RUSH COMPLETADO!", "Guardianes vencidos: ", "   ·   Mejor tiempo: ", " guardianes   ·   Puntos: ", "+30 vida", "Vence a 3 guardianes para abrir el Boss Rush", "Termina la historia para desbloquear el Modo Pesadilla"];
+  const X = {
+    en: ["NIGHTMARE", "Restless sleep", "Defeat a guardian on Nightmare", "Lord of nightmares", "Defeat all 18 guardians on Nightmare", "No rest", "Defeat 6 guardians in a row in Boss Rush", "Legend of time", "Complete the whole Boss Rush", "PLAY AGAIN", "RETRY BOSS RUSH", "BOSS RUSH COMPLETE!", "Guardians defeated: ", "   ·   Best time: ", " guardians   ·   Score: ", "+30 health", "Defeat 3 guardians to unlock Boss Rush", "Finish the story to unlock Nightmare Mode"],
+    pt: ["PESADELO", "Sono agitado", "Vença um guardião no Pesadelo", "Senhor dos pesadelos", "Vença os 18 guardiões no Pesadelo", "Sem descanso", "Vença 6 guardiões seguidos no Boss Rush", "Lenda do tempo", "Complete o Boss Rush inteiro", "JOGAR DE NOVO", "TENTAR BOSS RUSH DE NOVO", "BOSS RUSH COMPLETO!", "Guardiões vencidos: ", "   ·   Melhor tempo: ", " guardiões   ·   Pontos: ", "+30 vida", "Vença 3 guardiões para abrir o Boss Rush", "Termine a história para desbloquear o Modo Pesadelo"],
+    fr: ["CAUCHEMAR", "Sommeil agité", "Bats un gardien en Cauchemar", "Seigneur des cauchemars", "Bats les 18 gardiens en Cauchemar", "Sans répit", "Bats 6 gardiens d'affilée dans le Boss Rush", "Légende du temps", "Termine tout le Boss Rush", "REJOUER", "RÉESSAYER LE BOSS RUSH", "BOSS RUSH TERMINÉ !", "Gardiens vaincus : ", "   ·   Meilleur temps : ", " gardiens   ·   Points : ", "+30 vie", "Bats 3 gardiens pour débloquer le Boss Rush", "Termine l'histoire pour débloquer le Mode Cauchemar"],
+    de: ["ALBTRAUM", "Unruhiger Schlaf", "Besiege einen Wächter im Albtraum", "Herr der Albträume", "Besiege alle 18 Wächter im Albtraum", "Keine Pause", "Besiege 6 Wächter in Folge im Boss Rush", "Legende der Zeit", "Schaffe den ganzen Boss Rush", "NOCHMAL SPIELEN", "BOSS RUSH WIEDERHOLEN", "BOSS RUSH GESCHAFFT!", "Besiegte Wächter: ", "   ·   Bestzeit: ", " Wächter   ·   Punkte: ", "+30 Leben", "Besiege 3 Wächter, um den Boss Rush freizuschalten", "Beende die Geschichte, um den Albtraum-Modus freizuschalten"],
+    it: ["INCUBO", "Sonno agitato", "Sconfiggi un guardiano in Incubo", "Signore degli incubi", "Sconfiggi tutti i 18 guardiani in Incubo", "Senza tregua", "Sconfiggi 6 guardiani di fila nel Boss Rush", "Leggenda del tempo", "Completa tutto il Boss Rush", "GIOCA ANCORA", "RIPROVA IL BOSS RUSH", "BOSS RUSH COMPLETATO!", "Guardiani sconfitti: ", "   ·   Miglior tempo: ", " guardiani   ·   Punti: ", "+30 vita", "Sconfiggi 3 guardiani per sbloccare il Boss Rush", "Finisci la storia per sbloccare la Modalità Incubo"],
+    ja: ["悪夢", "眠れぬ夜", "悪夢で守護者を1体倒す", "悪夢の支配者", "悪夢で18体の守護者をすべて倒す", "休む暇なし", "ボスラッシュで守護者を6体連続で倒す", "時の伝説", "ボスラッシュを完走する", "もう一度", "ボスラッシュに再挑戦", "ボスラッシュ完走！", "倒した守護者：", "   ·   ベストタイム：", "体   ·   スコア：", "体力+30", "守護者を3体倒すとボスラッシュが解放されます", "物語をクリアすると悪夢モードが解放されます"],
+    ko: ["악몽", "뒤척이는 밤", "악몽 난이도에서 수호자 1명 처치", "악몽의 군주", "악몽 난이도에서 수호자 18명 모두 처치", "숨 돌릴 틈 없이", "보스 러시에서 수호자 6명 연속 처치", "시간의 전설", "보스 러시 완주", "다시 하기", "보스 러시 재도전", "보스 러시 완료!", "처치한 수호자: ", "   ·   최고 기록: ", "명   ·   점수: ", "체력 +30", "수호자 3명을 처치하면 보스 러시가 열려요", "스토리를 끝내면 악몽 모드가 열려요"],
+    zh: ["噩梦", "不安的睡眠", "在噩梦难度下击败一位守护者", "噩梦之主", "在噩梦难度下击败全部18位守护者", "毫无喘息", "在首领连战中连续击败6位守护者", "时间传奇", "完成整个首领连战", "再玩一次", "重试首领连战", "首领连战完成！", "已击败守护者：", "   ·   最佳用时：", "位   ·   分数：", "生命+30", "击败3位守护者后开启首领连战", "完成故事后解锁噩梦模式"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.2: banda sonora original
+(function () {
+  const ES = ["Banda sonora", "Original", "Clásica"];
+  const X = { en: ["Soundtrack", "Original", "Classic"], pt: ["Trilha sonora", "Original", "Clássica"], fr: ["Bande-son", "Originale", "Classique"], de: ["Soundtrack", "Original", "Klassisch"], it: ["Colonna sonora", "Originale", "Classica"], ja: ["サウンドトラック", "オリジナル", "クラシック"], ko: ["사운드트랙", "오리지널", "클래식"], zh: ["配乐", "原创", "经典"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
 

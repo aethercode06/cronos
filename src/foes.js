@@ -264,3 +264,16 @@ drawProjs = function () {
     }
   }
 };
+// ---------------- sombras de contacto suaves (integran los sprites en los fondos pintados) ----------------
+function softShadow(cx, gy, w, a) { if (a <= 0.02) return; bx.globalAlpha = a; bx.drawImage(glowSpr('rgba(0,0,0,.85)'), Math.round(cx - w / 2), Math.round(gy - 4), Math.round(w), 8); bx.globalAlpha = 1; }
+function castShadow(cx, footY, w) {
+  const g = groundBelow(cx, footY - 2, 220); if (!g) return;
+  const h = g.y - footY, k = clamp(1 - h / 220, 0, 1); softShadow(cx, g.y, w * (0.55 + 0.45 * k), 0.55 * k);
+}
+const _drawEnemyS = drawEnemy;
+drawEnemy = function (e) {
+  if (!(e.b === 'burrower' && e.st !== 'surface' && e.st !== 'up') && e.b !== 'revive' && e.b !== 'ghost') castShadow(e.x + e.w / 2, e.y + e.h, Math.max(18, e.w * 1.25));
+  _drawEnemyS(e);
+};
+const _drawPlayerS = drawPlayer;
+drawPlayer = function () { if (p && !p.dead) castShadow(p.x + p.w / 2, p.y + p.h, 34); _drawPlayerS(); };

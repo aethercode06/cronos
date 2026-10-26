@@ -629,7 +629,7 @@ function updateBoss(dt) {
       if (b.t >= 0.22) {
         b.t = 0; b.shots++;
         projs.push({ x: bcx - b.side * 50, y: b.aimY, vx: -b.side * 560 * ag, vy: 0, hw: 26, hh: 4, type: 'laser', dmg: 14, life: 4 }); sfx('shoot', .6);
-        if (b.shots >= (diffIdx === 2 ? 4 : 3)) { b.cycle++; b.st = b.cycle % 2 === 0 ? 'drop' : 'move'; b.t = 0; }
+        if (b.shots >= (diffIdx >= 2 ? 4 : 3)) { b.cycle++; b.st = b.cycle % 2 === 0 ? 'drop' : 'move'; b.t = 0; }
       }
     } else if (b.st === 'drop') { b.y = Math.min(A.floor - b.h, b.y + 520 * dt); if (b.y >= A.floor - b.h) { b.st = 'down'; b.t = 0; shake = 12; sfx('stomp'); dust(bcx, A.floor, 14); } }
     else if (b.st === 'down') { contact = false; if (b.t > 2.4 / Math.sqrt(ag)) { b.st = 'move'; b.t = 0; b.side *= -1; } }
@@ -639,7 +639,7 @@ function updateBoss(dt) {
     b.throwA = Math.max(0, b.throwA - dt); b.cd -= dt;
     if (b.cd <= 0) {
       b.atk++; b.cd = (b.vulnT > 0 ? 2.6 : 1.8) / ag; b.throwA = 0.6; b.anim = 0;
-      if (b.atk % 3 === 0) { const cnt = diffIdx === 2 ? 5 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.9 + i * 0.15 }); sfx('alert', .6); shake = Math.max(shake, 6); }
+      if (b.atk % 3 === 0) { const cnt = diffIdx >= 2 ? 5 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.9 + i * 0.15 }); sfx('alert', .6); shake = Math.max(shake, 6); }
       else {
         const sx = bcx + b.face * 40, sy = b.y + 30, tg = [[pcx, pcy]];
         if (diffIdx > 0 && b.hp <= b.max / 2) { tg.push([pcx - 120, pcy]); tg.push([pcx + 120, pcy]); }
@@ -656,7 +656,7 @@ function updateBoss(dt) {
       b.cd -= dt;
       if (b.cd <= 0) {
         b.cd = 1.3 / ag; b.volleys++; b.atkA = 0.4; sfx('shoot', .5, .7);
-        const n = diffIdx === 2 ? 5 : 3;
+        const n = diffIdx >= 2 ? 5 : 3;
         for (let i = 0; i < n; i++) { const a = Math.atan2(pcy - (b.y + b.h / 2), pcx - bcx) + (i - (n - 1) / 2) * 0.25; projs.push({ x: bcx, y: b.y + b.h / 2, vx: Math.cos(a) * 230 * D.spd, vy: Math.sin(a) * 230 * D.spd, hw: 7, hh: 7, type: 'eyeball', dmg: 12, life: 4 }); }
         if (b.volleys >= 3) { b.volleys = 0; b.st = 'tele'; b.t = 0; sfx('alert', .6); }
       }
@@ -688,7 +688,7 @@ function updateBoss(dt) {
       b.x += b.vx * dt; if (Math.random() < .6) dust(b.face > 0 ? b.x : b.x + b.w, A.floor, 2, -b.face);
       if (b.x <= A.x1 + 4 || b.x + b.w >= A.x2 - 4) {
         b.x = clamp(b.x, A.x1 + 4, A.x2 - b.w - 4); b.st = 'stagger'; b.t = 0; shake = 16; sfx('stomp'); sfx('ice', .8);
-        const cnt = diffIdx === 2 ? 6 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.5 + i * 0.18, kind: 'ice' });
+        const cnt = diffIdx >= 2 ? 6 : 4; for (let i = 0; i < cnt; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.5 + i * 0.18, kind: 'ice' });
       }
     } else if (b.st === 'stagger') { contact = false; if (b.t > 1.3) { b.st = 'idle'; b.cd = 0.8 / ag; } }
     else if (b.st === 'leapT') { b.face = pcx < bcx ? -1 : 1; if (b.t > 0.4) { b.st = 'leap'; b.t = 0; const tx = clamp(pcx - b.w / 2, A.x1 + 10, A.x2 - b.w - 10); b.vx = (tx - b.x) / 0.9; b.vy = -820; sfx('jump', .8, .5); } }
@@ -739,7 +739,7 @@ function updateBoss(dt) {
         waves.push({ x: bcx - 30, y: A.floor, dir: -1, spd: 320 * ag, t: 0, col: '#d070ff' }); waves.push({ x: bcx + 30, y: A.floor, dir: 1, spd: 320 * ag, t: 0, col: '#d070ff' }); }
       if (!p.dead && b.vy > 0 && overlap(p, b)) hurt(20, bcx);
     } else if (b.st === 'clocks') {
-      if (b.t > 0.3 && !b.thrown) { b.thrown = true; const n = diffIdx === 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + 10, vx: (i - (n - 1) / 2) * 140, vy: -260, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .5, 1.5); }
+      if (b.t > 0.3 && !b.thrown) { b.thrown = true; const n = diffIdx >= 2 ? 4 : 3; for (let i = 0; i < n; i++) projs.push({ x: bcx, y: b.y + 10, vx: (i - (n - 1) / 2) * 140, vy: -260, hw: 8, hh: 8, type: 'clock', dmg: 14, life: 3.5 }); sfx('slow', .5, 1.5); }
       if (b.t > 0.8) { b.thrown = false; b.st = 'recover'; b.t = 0; }
     } else if (b.st === 'recover') { contact = false; if (b.t > 0.9 / Math.sqrt(ag)) { b.st = 'idle'; b.cd = 0.5; } }
   }
