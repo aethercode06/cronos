@@ -8,7 +8,7 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
     polish (continuar en checkpoint, furia de jefes, Cámaras del Desafío, logros, mando, calidad, Android),
     modes (estrellas por fase, Torre del Tiempo), i18n_data + i18n_extra + i18n (9 idiomas).
   - `src/*assets.js` — arte embebido (no editar a mano). `src/head.html` — cabecera del HTML.
-- Mundos 14-17 (v1.9: Minas de Cristal, Bosque de Huesos, Biblioteca Prohibida, Torre de las Tormentas) usan arte recoloreado de otros mundos en `src/hf16assets.js` (fondos, terreno, decorado, guardianes `boss_golemc`, `boss_stag`, `boss_dragon`, `WZB_*`). `WBASE`/`VWI()` en data.js dice a qué mundo se parecen para pasos y partículas. Orden de juego en `ORDER` (flow.js); el guardado v5 desplaza las fases ≥36.
+- Mundos 14-17 (v1.9: Minas de Cristal, Bosque de Huesos, Biblioteca Prohibida, Torre de las Tormentas) tienen fondos pintados con Higgsfield (`pbg14`-`pbg17`; originales en `store/fondos_higgsfield/`) y el resto del arte recoloreado de otros mundos en `src/hf16assets.js` (terreno, decorado, guardianes `boss_golemc`, `boss_stag`, `boss_dragon`, `WZB_*`). `WBASE`/`VWI()` en data.js dice a qué mundo se parecen para pasos y partículas. Orden de juego en `ORDER` (flow.js); el guardado v5 desplaza las fases ≥36.
 - Criaturas gigantes del cielo por mundo en `GIANT_OF` (live2.js): las marinas (ballena, mantarraya, medusa) solo en el Arrecife y el Nexo.
 - `i18n/*.json` — traducciones por id (`es.json` es el original). Textos nuevos: añadirlos en `src/i18n_extra.js` o `src/i18n_extra2.js` en los 9 idiomas.
 - `www/` — juego listo + PWA (manifest, sw.js: subir VERSION en cada publicación) + privacidad.html.

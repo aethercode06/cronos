@@ -336,7 +336,7 @@ function paintBG(n, par) {
   let x = -(((cam.x * (par || 0.05)) % w) + w) % w;
   for (; x < VW + 2; x += w) bx.drawImage(img, Math.round(x * QR) / QR, y, w, h);
   // atenuar y dar profundidad para que el primer plano y los personajes destaquen
-  const DIM = [.16, .3, .28, .22, .3, .3, .32, .3, .34, .32, .58, .34], dd = DIM[curWorld] || .32, tint = WORLDS[curWorld].c;
+  const DIM = [.16, .3, .28, .22, .3, .3, .32, .3, .34, .32, .58, .34, .32, .32, .1, .28, .26, .26], dd = DIM[curWorld] || .32, tint = WORLDS[curWorld].c;
   const g = bx.createLinearGradient(0, 0, 0, VH); g.addColorStop(0, 'rgba(6,6,18,' + (dd * .7) + ')'); g.addColorStop(1, 'rgba(6,6,18,' + Math.min(.7, dd * 1.5) + ')');
   bx.fillStyle = g; bx.fillRect(0, 0, VW + 2, VH + 2);
   bx.globalAlpha = .06; bx.fillStyle = tint; bx.fillRect(0, 0, VW + 2, VH + 2); bx.globalAlpha = 1;
