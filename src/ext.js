@@ -336,7 +336,7 @@ function paintBG(n, par) {
   let x = -(((cam.x * (par || 0.05)) % w) + w) % w;
   for (; x < VW + 2; x += w) bx.drawImage(img, Math.round(x * QR) / QR, y, w, h);
   // atenuar y dar profundidad para que el primer plano y los personajes destaquen
-  const DIM = [.16, .3, .28, .22, .3, .3, .32, .3, .34, .32, .58, .34, .32, .2, .1, .28, .26, .26], dd = DIM[curWorld] || .32, tint = WORLDS[curWorld].c;
+  const DIM = [.16, .3, .28, .22, .3, .3, .32, .3, .34, .32, .58, .34, .16, .2, .1, .28, .26, .26], dd = DIM[curWorld] || .32, tint = WORLDS[curWorld].c;
   const g = bx.createLinearGradient(0, 0, 0, VH); g.addColorStop(0, 'rgba(6,6,18,' + (dd * .7) + ')'); g.addColorStop(1, 'rgba(6,6,18,' + Math.min(.7, dd * 1.5) + ')');
   bx.fillStyle = g; bx.fillRect(0, 0, VW + 2, VH + 2);
   bx.globalAlpha = .06; bx.fillStyle = tint; bx.fillRect(0, 0, VW + 2, VH + 2); bx.globalAlpha = 1;
@@ -517,7 +517,7 @@ function drawMap2() {
   }
   for (const b of uiButtons()) drawButton(b);
 }
-function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'WZB_idle_s2', 'boss_dragon']; return P[w]; }
+function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'boss_archi', 'boss_dragon']; return P[w]; }
 function mapButtons(B) {
   B.push({ x: 18, y: 16, w: 118, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', fn: toTitle });
   B.push({ x: W - 506, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });

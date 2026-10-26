@@ -443,10 +443,19 @@ function drawBoss() {
     const vul = b.vulnT > 0;
     let k = 'WZ_idle', f = Math.floor(b.anim * 10);
     if (b.dying) { k = 'WZ_death'; f = Math.min(4, Math.floor((2.8 - b.dieT) * 3)); } else if (b.throwA > 0) { k = 'WZ_atk'; f = Math.min(7, Math.floor((0.6 - b.throwA) / 0.6 * 8)); } else if (wh) { k = 'WZ_hit'; f = 1; }
-    const arc = b.skin && b.skin.startsWith('WZB'); if (arc) k = k.replace('WZ_', 'WZB_');
-    glowAt(cx, by - 50, 90, arc ? 'rgba(80,200,255,.38)' : 'rgba(255,100,30,.35)', .8);
+    const arc = b.skin === 'boss_archi' && SPR.boss_archi && SPR.boss_archi.width;
+    if (arc) {
+      // El Archivero Sin Rostro: arte pintado (Higgsfield), flota y se inclina al lanzar
+      const m = meta('boss_archi'), src = wh || blink ? whiteOf('boss_archi', false) : SPR.boss_archi, bob = Math.sin(time * 2.2) * 4 - 8, tilt = b.throwA > 0 ? -0.09 : Math.sin(time * 1.3) * 0.02, fl = b.face < 0;
+      glowAt(cx, by - 70, 100, 'rgba(80,200,255,.38)', .8); glowAt(cx + (fl ? -40 : 40), by - 95, 26, 'rgba(90,255,220,.8)', .6 + Math.sin(time * 6) * .2);
+      bx.save(); bx.translate(Math.round(cx), Math.round(by + bob)); if (b.dying) bx.globalAlpha = clamp(b.dieT / 2.8, 0, 1);
+      bx.rotate(fl ? -tilt : tilt); bx.scale(fl ? -1 : 1, 1); bx.drawImage(src, 0, 0, m.fw, m.fh, -m.ax, -m.ay, m.fw, m.fh); bx.restore();
+      if (!vul && !b.dying) shieldBubble(cx, by - 78, 88);
+    } else {
+    glowAt(cx, by - 50, 90, 'rgba(255,100,30,.35)', .8);
     spr(k + '_s2', f, cx, by + 2, b.face < 0, 1, wh || blink);
     if (!vul && !b.dying) shieldBubble(cx, by - 56, 74);
+    }
   } else if (b.type === 3) {
     const k = b.st === 'dive' || b.st === 'tele' || b.atkA > 0 ? 'eye_atk' : 'eye', f = Math.floor(b.anim * 12);
     if (b.atkA > 0) b.atkA -= 1 / 60;

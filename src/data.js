@@ -146,7 +146,7 @@ const WORLDS = [
     g: ['shieldskel', 'gskel'], a: ['ghost', 'eye'], spk: 'spk_cem', mplat: 'gv_mplat',
     pool: ['shiftwall', 'shiftgap', 'echo', 'crumble', 'mover', 'elevator', 'stairs', 'gap', 'spikes', 'firejets'], sig: ['shiftwall', 'echo', 'shiftgap'],
     deco: [['gv_statue', 1], ['gv_pillar-broken', 2], ['gv_stone-1', 2], ['d_torch', 2]],
-    boss: { type: 2, skin: 'WZB_idle_s2', name: 'EL ARCHIVERO SIN ROSTRO', hint: 'Golpea las 3 palancas para romper su escudo' },
+    boss: { type: 2, skin: 'boss_archi', name: 'EL ARCHIVERO SIN ROSTRO', hint: 'Golpea las 3 palancas para romper su escudo' },
     lore: 'La Biblioteca Prohibida guarda cada instante que la Orden quiso olvidar. Los libros vuelan solos y su guardián ya no recuerda su propio rostro.' },
   { name: 'TORRE DE LAS TORMENTAS', sub: 'Rayos y vendavales', c: '#8fa8ff', tiles: 'T_marble', music: 'w6', rate: 0.95, bg: 17, weather: 'rain', critter: null,
     g: ['golem'], a: ['seraph', 'eye'], spk: 'spk_ice', mplat: 'w_platform',
