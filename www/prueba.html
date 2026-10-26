@@ -5706,6 +5706,7 @@ function exitApp() {
   if (A && A.exitApp) A.exitApp();
 }
 function backAction() {
+  if (state === 'stats' && typeof closeStats === 'function') { closeStats(); return; }
   if (state === 'playing') { pauseGame(); return; }
   if (state === 'paused') { resume(); return; }
   if (state === 'options') { closeOptions(); return; }
@@ -6015,6 +6016,484 @@ draw = function () {
 ACH.push(['est42', 'Coleccionista de estrellas', 'Consigue 42 estrellas'], ['est126', 'Perfección temporal', 'Consigue las 162 estrellas'],
   ['torre10', 'Escalador del tiempo', 'Llega al piso 10 de la Torre'], ['torre25', 'Señor de la Torre', 'Llega al piso 25 de la Torre']);
 
+// =====================================================================
+//  ENEMIGOS CON COMPORTAMIENTOS PROPIOS POR MUNDO (v2.1)
+//  Reutilizan el arte que ya existe; cambia cómo se mueven y atacan.
+//  Todos avisan antes de atacar (dificultad justa).
+// =====================================================================
+const FOE_HINT = {
+  rammer: 'Ese sabueso se agacha antes de embestir. Salta por encima y golpéalo mientras se recupera.',
+  sniper: 'Torreta con mira: cuando veas la línea roja, ¡muévete!',
+  dropper: 'Mira la sombra en el suelo: ahí va a caer lo que suelte.',
+  burrower: 'Algo se mueve bajo la arena. Cuando tiemble el suelo, ¡salta!',
+  ambusher: 'Ojo: aquí no todo lo que parece decorado lo es.',
+  reviver: 'Estos huesos se recomponen. Remátalos en la dimensión violeta (SHIFT) y no volverán.',
+  book: 'Los libros de aquí muerden. Un golpe y se cierran para siempre.',
+  strike: 'Si ves una columna de luz en el suelo, apártate: el rayo cae justo ahí.',
+  pulse: 'Las medusas brillan antes de soltar una descarga. Espera a que se apaguen.',
+  splitter: 'Las ratas de fuego se parten en dos al morir. No te confíes.',
+  spread: 'Los serafines disparan en abanico. Esquiva por arriba o por abajo.'
+};
+ENEMY.book = { b: 'book', anim: 'pr16_5', w: 26, h: 20, hp: 1, face: 1, death: 'poof' };
+let strikes = [], strikeT = 4, foeHinted = {};
+function foeHint(k, x) {
+  SAVE.fh = SAVE.fh || {};
+  if (SAVE.fh[k] || foeHinted[k] || ticSay || dlg) return;
+  if (x !== undefined && Math.abs(x - (p.x + p.w / 2)) > 420) return;
+  foeHinted[k] = 1; SAVE.fh[k] = 1; try { persist(); } catch (e) {} tSay(FOE_HINT[k], 4);
+}
+// qué variantes aparecen en cada mundo: [id original, variante, probabilidad]
+const FOE_PLAN = {
+  1: [['cyhound', 'rammer', .7], ['turret', 'sniper', .7]],
+  2: [['firerat', 'splitter', .8]],
+  3: [['mushroom', 'ambusher', .7], ['eye', 'dropper', .35]],
+  4: [['hound', 'rammer', .6], ['gskel', 'reviver', .6]],
+  5: [['icehound', 'rammer', .7], ['iceeye', 'dropper', .7]],
+  6: [['infhound', 'rammer', .7], ['infworm', 'splitter', 0]],
+  7: [['goldeye', 'dropper', .5], ['shieldskel', 'reviver', 0]],
+  8: [['jelly', 'pulse', .7]],
+  9: [['scarab', 'burrower', .7], ['vulture', 'dropper', .6]],
+  10: [['seraph', 'spread', .7], ['golem', 'ambusher', .3]],
+  11: [['jelly', 'pulse', .6], ['seraph', 'spread', .6]],
+  12: [['mushroom', 'ambusher', .8], ['gskel', 'reviver', .5]],
+  13: [['hound', 'rammer', .6], ['gskel', 'reviver', .6]],
+  14: [['golem', 'ambusher', .7], ['iceeye', 'dropper', .5]],
+  15: [['gskel', 'reviver', .8], ['hound', 'rammer', .6]],
+  16: [['ghost', 'book', .6], ['eye', 'book', .8], ['gskel', 'reviver', .5]],
+  17: [['eye', 'dropper', .35], ['seraph', 'spread', .6]]
+};
+function foeGround(e) { const g = groundBelow(e.x + e.w / 2, e.y + e.h, 40); return g ? g.y : e.y + e.h; }
+const _buildStageF = buildStage;
+buildStage = function (wi, act) {
+  const L = _buildStageF(wi, act), plan = FOE_PLAN[wi];
+  if (!plan || (typeof TOWER_ON !== 'undefined' && TOWER_ON && !TOWER_TRIAL && false)) return L;
+  const r = seeded(7777 + wi * 131 + act * 17);
+  for (const e of L.enemies) {
+    for (const [id, v, pr] of plan) {
+      if (e.id !== id || r() >= pr) continue;
+      e.v = v;
+      if (v === 'rammer') { e.b = 'rammer'; e.st = 'walk'; }
+      else if (v === 'sniper') { e.b = 'sniper'; e.st = 'idle'; e.cd = 1.5 + r(); }
+      else if (v === 'dropper') { e.b = 'dropper'; e.st = 'hover'; e.cd = 1 + r(); }
+      else if (v === 'burrower') { e.b = 'burrower'; e.st = 'under'; e.gy = e.y + e.h; e.cd = 1.2; }
+      else if (v === 'ambusher') { e.b0 = e.b; e.b = 'dormant'; e.st = 'dormant'; }
+      else if (v === 'book') { const d = ENEMY.book; Object.assign(e, { id: 'book', d, b: 'book', w: d.w, h: d.h, hp: 1, st: 'idle', y0: e.y, x0: e.x }); }
+      // reviver, pulse, splitter y spread conservan su movimiento original
+      break;
+    }
+  }
+  return L;
+};
+// enemigos que no se pueden golpear mientras están escondidos
+const _hittableF = enemyHittable;
+enemyHittable = function (e) {
+  if (e.b === 'burrower' && (e.st === 'under' || e.st === 'tele')) return false;
+  if (e.b === 'dormant' || e.b === 'revive') return false;
+  return _hittableF(e);
+};
+// muertes especiales: se recomponen o se parten
+const _damageF = damageEnemy;
+damageEnemy = function (e, hb) {
+  _damageF(e, hb);
+  if (!e.dead) { if (e.b === 'rammer' && e.st === 'aim') { e.st = 'stun'; e.tt = 0.6; } return; }
+  if (e.v === 'reviver' && !e.revived) {
+    if (dim === 1) { addFloat(e.x + e.w / 2, e.y - 14, '¡DESTRUIDO!', '#d8a0ff', 13); return; }
+    e.dead = false; e.revived = true; e.b0 = 'riser'; e.b = 'revive'; e.tt = 2.2; e.hp = e.d.hp; e.gy = e.y + e.h;
+    addFloat(e.x + e.w / 2, e.y - 14, 'SE RECOMPONE…', '#e8dcc0', 13); foeHint('reviver');
+  } else if (e.v === 'splitter' && !e.mini) {
+    foeHint('splitter');
+    for (const s of [-1, 1]) { const m = Object.assign({}, e, { dead: false, mini: true, v: 'mini', b: 'walker', hp: 1, w: 20, h: 14, x: e.x + e.w / 2 - 10 + s * 8, y: e.y + e.h - 14, dir: s, minX: e.x - 120, maxX: e.x + 120, kx: s * 180, hit: 0.2, t: Math.random() * 3 }); level.enemies.push(m); try { p.hitSet.add(m); } catch (er) {} }
+  }
+};
+// abanico de disparos
+const _shootF = shoot;
+shoot = function (e, kind, tx, ty, sp) {
+  const n0 = projs.length; _shootF(e, kind, tx, ty, sp);
+  if (e.v === 'spread' && projs.length > n0) {
+    const q = projs[projs.length - 1], a = Math.atan2(q.vy, q.vx), v = Math.hypot(q.vx, q.vy);
+    for (const da of [-0.32, 0.32]) projs.push(Object.assign({}, q, { vx: Math.cos(a + da) * v, vy: Math.sin(a + da) * v }));
+    foeHint('spread', e.x);
+  }
+};
+const _updEnemiesF = updateEnemies;
+updateEnemies = function (dt) {
+  _updEnemiesF(dt);
+  const D = DIFFS[diffIdx], pcx = p.x + p.w / 2, pcy = p.y + p.h / 2;
+  for (const e of level.enemies) {
+    if (e.dead || !e.v) continue;
+    if (Math.abs(e.x - cam.x - VW / 2) > 900) continue;
+    const cx = e.x + e.w / 2, dx = pcx - cx, dy = pcy - (e.y + e.h / 2), adx = Math.abs(dx), d = e.d;
+    if (e.b === 'rammer') {
+      if (e.st === 'walk') {
+        if (e.hit <= 0) { const nx = e.x + e.dir * (d.spd || 70) * D.spd * dt, fx_ = e.dir > 0 ? nx + e.w + 2 : nx - 2; if (groundBelow(fx_, e.y + e.h, 14) && nx > e.minX && nx < e.maxX) e.x = nx; else e.dir *= -1; }
+        e.cd = (e.cd || 0) - dt;
+        if (adx < 320 && Math.abs(dy) < 60 && e.cd <= 0 && !p.dead) { e.dir = dx > 0 ? 1 : -1; e.st = 'aim'; e.tt = 0.65 / Math.max(.7, D.aggr); e.alert = e.tt; sfx('roar', .35, 1.4); foeHint('rammer', cx); }
+      } else if (e.st === 'aim') {
+        e.tt -= dt; if (Math.random() < .5) dust(cx - e.dir * 12, e.y + e.h, 1, -e.dir);
+        if (e.tt <= 0) { e.st = 'run'; e.run = 0; sfx('dash', .35, 1.2); }
+      } else if (e.st === 'run') {
+        const sp = (curWorld === 5 ? 480 : 400) * D.spd, nx = e.x + e.dir * sp * dt, fx_ = e.dir > 0 ? nx + e.w + 2 : nx - 2;
+        e.run += sp * dt;
+        let wall = false; for (const s of level.plats) if (s.k === 'solid' && !s.float && overlap({ x: nx, y: e.y + 2, w: e.w, h: e.h - 6 }, s)) { wall = true; break; }
+        if (!groundBelow(fx_, e.y + e.h, 14) || wall || e.run > (curWorld === 5 ? 520 : 380)) { e.st = 'stun'; e.tt = 1.1; if (wall) { shake = Math.max(shake, 4); sfx('stomp', .4); } }
+        else { e.x = nx; if (Math.random() < .6) dust(cx - e.dir * 14, e.y + e.h, 1, -e.dir); }
+        if ((e.id === 'infhound' || curWorld === 6) && (e.trail = (e.trail || 0) + sp * dt) > 34) { e.trail = 0; projs.push({ x: cx - e.dir * 16, y: e.y + e.h - 8, vx: 0, vy: 0, hw: 6, hh: 6, type: 'fire', dmg: 8, life: 1.1 }); }
+      } else if (e.st === 'stun') { e.tt -= dt; if (e.tt <= 0) { e.st = 'walk'; e.cd = 1.2; } }
+    } else if (e.b === 'sniper') {
+      e.dir = dx > 0 ? 1 : -1;
+      if (e.st === 'idle') { e.cd -= dt; if (e.cd <= 0 && Math.hypot(dx, dy) < 540 && !p.dead) { e.st = 'aim'; e.tt = 1.15 / Math.max(.7, D.aggr); sfx('alert', .3, 1.4); foeHint('sniper', cx); } }
+      else if (e.st === 'aim') {
+        e.tt -= dt; if (e.tt > 0.35) { e.tx = pcx; e.ty = pcy; }
+        if (e.tt <= 0) {
+          const ox = cx + e.dir * 10, oy = e.y + 8, ddx = e.tx - ox, ddy = e.ty - oy, dd = Math.hypot(ddx, ddy) || 1, v = 720 * D.spd;
+          projs.push({ x: ox, y: oy, vx: ddx / dd * v, vy: ddy / dd * v, hw: 6, hh: 4, type: 'bolt', dmg: 14, life: 2 });
+          sfx('shoot', .45, .8); e.fire = 0.4; e.st = 'idle'; e.cd = rnd(2, 2.8) / D.aggr;
+        }
+      }
+    } else if (e.b === 'dropper') {
+      if (e.y0 === undefined) e.y0 = e.y;
+      if (e.st === 'hover') {
+        const tx = clamp(pcx, e.x0 - 260, e.x0 + 260) - e.w / 2; e.x += clamp(tx - e.x, -1, 1) * 95 * D.spd * dt; e.y = e.y0 + Math.sin(e.t * 2) * 8; e.dir = dx > 0 ? 1 : -1;
+        e.cd -= dt;
+        if (e.cd <= 0 && adx < 24 && pcy > e.y && !p.dead) { e.st = 'drop'; e.tt = 0.55; e.alert = 0.55; foeHint('dropper', cx); }
+      } else if (e.st === 'drop') {
+        e.tt -= dt; e.x += Math.sin(e.t * 50) * .4;
+        if (e.tt <= 0) {
+          const kind = curWorld === 5 || curWorld === 14 ? 'icicle' : curWorld === 9 ? 'sandblock' : 'orb';
+          projs.push({ x: cx, y: e.y + e.h, vx: 0, vy: 60, grav: 900, hw: kind === 'sandblock' ? 9 : 5, hh: 8, type: kind, dmg: 14, life: 3 });
+          sfx(kind === 'icicle' ? 'ice' : 'swing', .4); e.st = 'hover'; e.cd = rnd(1.8, 2.6) / D.aggr;
+        }
+      }
+    } else if (e.b === 'burrower') {
+      if (e.st === 'under') {
+        e.y = e.gy + 60; e.dir = dx > 0 ? 1 : -1;
+        const nx = e.x + e.dir * 105 * D.spd * dt; if (groundBelow(nx + e.w / 2, e.gy, 8) && nx > e.minX - 200 && nx < e.maxX + 200) e.x = nx;
+        if (Math.random() < .35) parts.push({ x: cx + rnd(-8, 8), y: e.gy - 2, vx: rnd(-30, 30), vy: rnd(-90, -30), life: .4, max: .4, c: Math.random() < .5 ? '#e0b060' : '#8a6a30', s: 2, g: 400 });
+        e.cd -= dt; if (e.cd <= 0 && adx < 26 && Math.abs(pcy - e.gy) < 90 && !p.dead) { e.st = 'tele'; e.tt = 0.6; sfx('crumble', .45); foeHint('burrower', cx); }
+      } else if (e.st === 'tele') {
+        e.tt -= dt; if (Math.random() < .8) parts.push({ x: cx + rnd(-14, 14), y: e.gy - 2, vx: rnd(-50, 50), vy: rnd(-200, -80), life: .5, max: .5, c: '#e0b060', s: 3, g: 500 });
+        if (e.tt <= 0) { e.st = 'up'; e.y = e.gy - e.h; e.vy = -420; shake = Math.max(shake, 4); sfx('stomp', .5); burst(cx, e.gy, '#e0b060', 16, 180, 500, .6, 3); }
+      } else if (e.st === 'up') {
+        e.vy += 1400 * dt; e.y += e.vy * dt; if (e.y + e.h >= e.gy) { e.y = e.gy - e.h; e.st = 'surface'; e.tt = 2.6; }
+      } else if (e.st === 'surface') {
+        e.tt -= dt; e.dir = dx > 0 ? 1 : -1;
+        if (e.tt <= 0) { e.st = 'under'; e.cd = 1.4; burst(cx, e.gy, '#e0b060', 10, 120, 400, .5, 2); }
+      }
+    } else if (e.b === 'dormant') {
+      if (adx < 115 && Math.abs(dy) < 90) {
+        e.b = e.b0; e.st = 0; e.cd = 0.2; e.alert = 0.4; foeHint('ambusher', cx);
+        burst(cx, e.y + e.h / 2, curWorld === 14 ? '#c48cff' : '#c070a0', 18, 200, 300, .6, 3); sfx(curWorld === 14 ? 'ice' : 'crumble', .5);
+        if (e.b === 'shooter') for (const vx of [-150, 0, 150]) projs.push({ x: cx, y: e.y + 6, vx: vx * D.spd, vy: -330, grav: 700, hw: 6, hh: 6, type: 'spore', dmg: 12, life: 3 });
+      }
+    } else if (e.b === 'revive') {
+      e.tt -= dt; e.y = e.gy + 80;
+      if (e.tt <= 0) { e.b = 'riser'; e.st = 'buried'; e.y = e.gy - e.h; }
+    } else if (e.b === 'book') {
+      if (e.st === 'idle') { e.x = e.x0 + Math.sin(e.t * 1.3) * 20; e.y = e.y0 + Math.sin(e.t * 2.6) * 10; if (Math.hypot(dx, dy) < 300 && !p.dead) { e.st = 'chase'; e.tt = 4; e.vx = 0; e.vy = 0; sfx('swing', .3, 1.6); foeHint('book', cx); } }
+      else if (e.st === 'chase') {
+        const dd = Math.hypot(dx, dy) || 1; e.vx += dx / dd * 300 * dt; e.vy += dy / dd * 300 * dt; const v = Math.hypot(e.vx, e.vy), mx = 150 * D.spd; if (v > mx) { e.vx *= mx / v; e.vy *= mx / v; }
+        e.x += e.vx * dt; e.y += e.vy * dt + Math.sin(e.t * 14) * 0.6; e.dir = e.vx > 0 ? 1 : -1; e.tt -= dt;
+        if (e.tt <= 0 || Math.hypot(e.x - e.x0, e.y - e.y0) > 700) { e.st = 'rest'; e.tt = 1.2; }
+      } else if (e.st === 'rest') { e.tt -= dt; e.vx *= 0.95; e.vy *= 0.95; e.x += e.vx * dt; e.y += e.vy * dt; if (e.tt <= 0) e.st = 'chase', e.tt = 3; }
+    }
+    if (e.v === 'pulse') {
+      e.pc = (e.pc === undefined ? 1.5 + Math.random() * 2 : e.pc) - dt;
+      if (e.pc <= 0 && !e.pq && Math.hypot(dx, dy) < 260) { e.pq = 0.8; sfx('alert', .2, 1.8); foeHint('pulse', cx); }
+      if (e.pq) { e.pq -= dt; if (e.pq <= 0) { e.pq = 0; e.pc = 3.4 / D.aggr; e.pr = 0.35; sfx('shield', .4, 1.5); if (Math.hypot(dx, dy) < 66 && !p.dead) hurt(12, cx); } }
+      if (e.pr) e.pr = Math.max(0, e.pr - dt);
+    }
+  }
+  // rayos con aviso en la Torre de las Tormentas
+  if (curWorld === 17 && !arenaLock && !boss && !p.dead && !(typeof TOWER !== 'undefined' && TOWER)) {
+    strikeT -= dt;
+    if (strikeT <= 0 && !dlg) {
+      strikeT = rnd(3.6, 6) / D.aggr; const x = pcx + p.vx * 0.55, g = groundBelow(x, p.y, 600);
+      if (g) { strikes.push({ x, gy: g.y, t: 1.1, hit: 0 }); sfx('wind', .25, 1.4); foeHint('strike'); }
+    }
+  }
+  for (let i = strikes.length - 1; i >= 0; i--) {
+    const s = strikes[i]; s.t -= dt;
+    if (s.t <= 0 && !s.hit) {
+      s.hit = 0.25; flash = Math.max(flash, 0.18); flashCol = '200,220,255'; shake = Math.max(shake, 6); sfx('boom', .5, 1.3);
+      burst(s.x, s.gy, '#cfe0ff', 18, 240, 300, .5, 2);
+      if (Math.abs(pcx - s.x) < 22 && p.y < s.gy + 4) hurt(16, s.x);
+    }
+    if (s.hit) { s.hit -= dt; if (s.hit <= 0) strikes.splice(i, 1); }
+  }
+};
+const _startStageF = startStage;
+startStage = function (wi, act, fresh) { strikes = []; strikeT = 4; _startStageF(wi, act, fresh); };
+// ---------------- dibujo ----------------
+const _drawEnemyF = drawEnemy;
+drawEnemy = function (e) {
+  const cx = e.x + e.w / 2, by = e.y + e.h, d = e.d, flip = d.face === 0 ? false : (e.dir !== d.face), wh = e.hit > 0;
+  if (e.b === 'burrower' && (e.st === 'under' || e.st === 'tele')) {
+    bx.fillStyle = 'rgba(120,90,40,.55)'; const w = e.st === 'tele' ? 26 + Math.sin(time * 40) * 3 : 18; bx.fillRect(Math.round(cx - w / 2), e.gy - 3, Math.round(w), 3);
+    if (e.st === 'tele') glowAt(cx, e.gy - 6, 30, 'rgba(255,200,90,.55)', .8);
+    return;
+  }
+  if (e.b === 'revive') { bx.fillStyle = '#d8d0c0'; for (let i = 0; i < 4; i++) bx.fillRect(Math.round(cx - 10 + i * 6), e.gy - 3 - (i % 2) * 2, 4, 2); glowAt(cx, e.gy - 4, 16, 'rgba(255,240,200,.35)', .5 + Math.sin(time * 8) * .2); return; }
+  if (e.b === 'dormant') {
+    if (curWorld === 14 || curWorld === 10) { if (SPR.pr14_2 && SPR.pr14_2.width) spr('pr14_2', 0, cx, by + 1, false, 0.55); else _drawEnemyF(e); return; }
+    bx.save(); bx.globalAlpha = 0.95; spr(d.anim, 0, cx, by + 1, flip, 1, false); bx.restore(); return;
+  }
+  if (e.b === 'book') {
+    if (SPR.pr16_5 && SPR.pr16_5.width) { glowAt(cx, e.y + e.h / 2, 22, 'rgba(160,120,255,.45)', .6); bx.save(); bx.translate(Math.round(cx), Math.round(by)); bx.rotate(Math.sin(e.t * 12) * 0.12); spr('pr16_5', 0, 0, 0, e.dir < 0, 0.42, wh); bx.restore(); }
+    else { bx.fillStyle = '#6a3a20'; bx.fillRect(Math.round(e.x), Math.round(e.y), e.w, e.h); }
+    return;
+  }
+  if (e.mini) { spr(d.anim, Math.floor(e.t * 14), cx, by + 1, flip, 0.62, wh); return; }
+  if (e.b === 'rammer' && e.st === 'aim') { bx.save(); bx.translate(Math.round(Math.sin(time * 60) * 1.5), 0); _drawEnemyF(e); bx.restore(); glowAt(cx, e.y + e.h / 2, 26, 'rgba(255,60,60,.55)', .8); return; }
+  _drawEnemyF(e);
+  if (e.b === 'rammer' && e.st === 'stun') for (let i = 0; i < 3; i++) { const a = time * 6 + i * 2.1; bx.fillStyle = '#ffe066'; bx.fillRect(Math.round(cx + Math.cos(a) * 12), Math.round(e.y - 6 + Math.sin(a) * 3), 2, 2); }
+  if (e.v === 'pulse') {
+    if (e.pq) glowAt(cx, e.y + e.h / 2, 26 + (0.8 - e.pq) * 40, 'rgba(120,240,255,.7)', .5 + (0.8 - e.pq));
+    if (e.pr) { const r = 66 * (1 - e.pr / 0.35) + 10; bx.strokeStyle = 'rgba(170,250,255,' + (e.pr / 0.35) + ')'; bx.lineWidth = 3; bx.beginPath(); bx.arc(cx, e.y + e.h / 2, r, 0, 6.3); bx.stroke(); }
+  }
+};
+const _drawProjsF = drawProjs;
+drawProjs = function () {
+  // mira de las torretas
+  for (const e of level.enemies) if (!e.dead && e.b === 'sniper' && e.st === 'aim' && e.tx !== undefined && onScreen(e.x, e.w)) {
+    const ox = e.x + e.w / 2 + e.dir * 10, oy = e.y + 8, lock = e.tt <= 0.35, a = lock ? .5 + .5 * Math.abs(Math.sin(time * 30)) : .35;
+    bx.strokeStyle = 'rgba(255,40,70,' + a + ')'; bx.lineWidth = lock ? 2 : 1; bx.beginPath(); bx.moveTo(ox, oy);
+    const dx = e.tx - ox, dy = e.ty - oy, dd = Math.hypot(dx, dy) || 1; bx.lineTo(ox + dx / dd * 600, oy + dy / dd * 600); bx.stroke();
+    glowAt(ox, oy, 10, 'rgba(255,40,70,.8)', a);
+  }
+  // sombra de lo que va a caer
+  for (const e of level.enemies) if (!e.dead && e.b === 'dropper' && onScreen(e.x, e.w)) {
+    const g = groundBelow(e.x + e.w / 2, e.y + e.h, 500); if (!g) continue;
+    const w = e.st === 'drop' ? 22 + Math.sin(time * 30) * 3 : 12; bx.fillStyle = e.st === 'drop' ? 'rgba(255,60,60,.5)' : 'rgba(0,0,0,.3)'; bx.fillRect(Math.round(e.x + e.w / 2 - w / 2), g.y - 2, Math.round(w), 2);
+  }
+  _drawProjsF();
+  // rayos
+  for (const s of strikes) {
+    if (!s.hit) {
+      const a = (0.25 + 0.5 * (1 - s.t / 1.1)) * (0.6 + 0.4 * Math.abs(Math.sin(time * 18)));
+      bx.fillStyle = 'rgba(170,200,255,' + a * 0.45 + ')'; bx.fillRect(Math.round(s.x) - 14, cam.y, 28, s.gy - cam.y);
+      bx.fillStyle = 'rgba(230,240,255,' + a * 0.6 + ')'; bx.fillRect(Math.round(s.x) - 2, cam.y, 4, s.gy - cam.y);
+      glowAt(s.x, s.gy - 6, 34, 'rgba(180,210,255,.9)', a);
+      bx.fillStyle = 'rgba(230,240,255,' + Math.min(1, a * 1.5) + ')'; bx.fillRect(Math.round(s.x) - 20, s.gy - 4, 40, 4);
+    } else {
+      glowAt(s.x, s.gy - 60, 70, 'rgba(180,210,255,.8)', 1);
+      bx.fillStyle = '#ffffff'; let x = s.x, y = cam.y; bx.beginPath(); bx.moveTo(x, y);
+      while (y < s.gy) { y += 24; x = s.x + Math.sin(y * 0.13 + s.gy) * 9; bx.lineTo(x, Math.min(y, s.gy)); }
+      bx.lineWidth = 4; bx.strokeStyle = 'rgba(200,225,255,.9)'; bx.stroke(); bx.lineWidth = 1.5; bx.strokeStyle = '#ffffff'; bx.stroke();
+    }
+  }
+};
+
+// =====================================================================
+//  MEDICIÓN DE PARTIDAS (solo en el teléfono, nada sale del dispositivo
+//  salvo que el jugador comparta el informe): intentos, muertes con
+//  posición y causa, abandonos, reinicios y tiempos por fase.
+//  Pantalla ESTADÍSTICAS con mapa de calor de muertes por fase.
+// =====================================================================
+const TKEY = 'chronos_stats' + (PRUEBA ? '_p' : '');
+let TSTAT = { v: 1, s: {} };
+try { const o = JSON.parse(localStorage.getItem(TKEY) || 'null'); if (o && o.s) TSTAT = o; } catch (e) {}
+let tRun = null, tCause = 'trampa', tSaveT = 0;
+function tSave() { try { localStorage.setItem(TKEY, JSON.stringify(TSTAT)); } catch (e) {} }
+function tRec(s) { return TSTAT.s[s] || (TSTAT.s[s] = { a: 0, c: 0, q: 0, r: 0, d: 0, tt: 0, tb: 0, cz: {}, p: [] }); }
+function tOn() { return !(typeof TOWER_ON !== 'undefined' && TOWER_ON) && !(typeof TOWER !== 'undefined' && TOWER); }
+function tClose(kind) {
+  if (!tRun) return; const R = tRec(tRun.s);
+  if (kind === 'q') R.q++; else if (kind === 'r') R.r++;
+  tRun = null; tSave();
+}
+// nombre legible de lo que hirió al jugador
+function tWho(srcX) {
+  if (boss && !boss.done && Math.abs(boss.x + boss.w / 2 - srcX) < boss.w) return 'guardián';
+  let best = null, bd = 90;
+  for (const e of level.enemies) if (!e.dead) { const d = Math.abs(e.x + e.w / 2 - srcX) + Math.abs(e.y + e.h / 2 - (p.y + p.h / 2)) * .5; if (d < bd) { bd = d; best = e; } }
+  if (best) return ENAME[best.id] || best.id;
+  for (const q of projs) if (Math.abs(q.x - (p.x + p.w / 2)) < 60 && Math.abs(q.y - (p.y + p.h / 2)) < 60) return 'disparo';
+  return 'trampa';
+}
+const ENAME = { opossum: 'zarigüeya', frog: 'rana', eagle: 'águila', turret: 'torreta', drone: 'dron', cyhound: 'sabueso', firerat: 'rata de fuego', worm: 'gusano', fireeagle: 'águila de fuego', goblin: 'duende bombero', mushroom: 'hongo', eye: 'ojo', gskel: 'esqueleto', hound: 'sabueso', ghost: 'espectro', iceskel: 'esqueleto de hielo', icehound: 'sabueso de hielo', iceeye: 'ojo de hielo', infworm: 'gusano infernal', infhound: 'sabueso infernal', infghost: 'espectro de fuego', shieldskel: 'esqueleto con escudo', goldskel: 'esqueleto dorado', goldeye: 'ojo dorado', cdrone: 'dron', crab: 'cangrejo', angler: 'pez linterna', jelly: 'medusa', scarab: 'escarabajo', mummy: 'momia', vulture: 'buitre', seraph: 'serafín', golem: 'gólem', voidling: 'criatura del vacío' };
+const _startStageT = startStage;
+startStage = function (wi, act, fresh) {
+  if (tRun && tRun.s !== sIdx(wi, act)) tClose('q');
+  _startStageT(wi, act, fresh);
+  if (!tOn()) { tRun = null; return; }
+  const s = sIdx(wi, act); tRec(s).a++; tRun = { s, d: 0 }; tSave();
+};
+const _hurtT = hurt;
+hurt = function (dmg, srcX) { if (p && !p.dead && p.inv <= 0 && tRun) tCause = tWho(srcX === undefined ? p.x : srcX); return _hurtT(dmg, srcX); };
+const _hazardT = hazardRespawn;
+hazardRespawn = function (dmg) {
+  if (tRun) tCause = p.y > level.deathY ? 'caída' : level.lava && p.y + p.h > level.lava.y ? 'lava' : 'trampa';
+  if (tRun && p.y > level.deathY) { const R = tRec(tRun.s); R.cz['caída*'] = (R.cz['caída*'] || 0) + 1; if (R.p.length < 120) R.p.push([Math.round(p.x), Math.round(Math.min(p.y, level.deathY)), 'caída*']); }
+  return _hazardT(dmg);
+};
+const _killT = kill;
+kill = function () {
+  if (tRun && !p.dead) {
+    const R = tRec(tRun.s); R.d++; tRun.d++; R.cz[tCause] = (R.cz[tCause] || 0) + 1;
+    if (R.p.length >= 120) R.p.shift(); R.p.push([Math.round(p.x + p.w / 2), Math.round(p.y + p.h / 2), tCause]); tSave();
+  }
+  tCause = 'trampa'; return _killT();
+};
+const _clearT = stageClear;
+stageClear = function () {
+  const was = state === 'playing' && tRun;
+  _clearT();
+  if (was && state !== 'playing') { const R = tRec(tRun.s); R.c++; R.tt += levelTime; R.tb = R.tb ? Math.min(R.tb, levelTime) : levelTime; tRun = null; tSave(); }
+};
+const _retryT = retry; retry = function () { tClose('r'); _retryT(); };
+const _toMapT = toMap; toMap = function () { tClose('q'); _toMapT(); };
+const _toTitleT = toTitle; toTitle = function () { tClose('q'); _toTitleT(); };
+// el jefe vencido cuenta como fase superada aunque la pantalla de fragmento llegue después
+addEventListener('pagehide', () => { if (tRun) { tRec(tRun.s).q++; tRun = null; tSave(); } });
+
+// ---------------- informe de texto para compartir ----------------
+const fmtS = s => { s = Math.round(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function tStageName(s) { const w = ORDER[Math.floor(s / 3)]; return (Math.floor(s / 3) + 1) + '-' + (s % 3 + 1) + ' ' + WORLDS[w].name; }
+function tTopCause(R) { let k = null, n = 0; for (const c in R.cz) if (R.cz[c] > n) { n = R.cz[c]; k = c; } return k ? k.replace('*', '') + ' ×' + n : '—'; }
+function tReport() {
+  const L = ['CHRONOS & THE SHIFT · informe de partidas' + (PRUEBA ? ' (versión de prueba)' : ''), 'Dificultad: ' + DIFFS[diffIdx].name + ' · ' + new Date().toLocaleDateString(), ''];
+  const ks = Object.keys(TSTAT.s).map(Number).sort((a, b) => a - b);
+  for (const s of ks) {
+    const R = TSTAT.s[s]; if (!R.a) continue;
+    const causes = Object.entries(R.cz).sort((a, b) => b[1] - a[1]).map(([k, v]) => k.replace('*', '') + ' ' + v).join(', ');
+    L.push(tStageName(s) + ' | intentos ' + R.a + ' | superada ' + R.c + ' | muertes ' + R.d + (causes ? ' (' + causes + ')' : '') + ' | abandonos ' + R.q + ' | reinicios ' + R.r + (R.c ? ' | tiempo medio ' + fmtS(R.tt / R.c) + ' · mejor ' + fmtS(R.tb) : ''));
+    if (R.p.length) L.push('   pos: ' + R.p.slice(-30).map(q => q[0] + ',' + q[1]).join(' '));
+  }
+  if (L.length === 3) L.push('Todavía no hay partidas registradas.');
+  return L.join('\n');
+}
+function tShare() {
+  const text = tReport();
+  const done = m => { toastMsg(m); };
+  try { if (navigator.share) { navigator.share({ title: 'Informe Chronos', text }).catch(() => tCopy(text, done)); return; } } catch (e) {}
+  tCopy(text, done);
+}
+function tCopy(text, done) {
+  const fallback = () => {
+    let ta = document.getElementById('tele-ta');
+    if (!ta) { ta = document.createElement('textarea'); ta.id = 'tele-ta'; ta.style.cssText = 'position:fixed;left:5%;top:8%;width:90%;height:70%;z-index:99;font:12px monospace;background:#120e24;color:#fff;border:2px solid #ffcf4a;border-radius:10px;padding:10px'; document.body.appendChild(ta);
+      const b = document.createElement('button'); b.id = 'tele-close'; b.textContent = 'CERRAR'; b.style.cssText = 'position:fixed;left:40%;top:80%;width:20%;height:44px;z-index:99;font:bold 15px sans-serif;background:#ffcf4a;border:0;border-radius:22px'; b.onclick = () => { ta.remove(); b.remove(); }; document.body.appendChild(b); }
+    ta.value = text; ta.focus(); ta.select(); done('Copia el texto y envíalo');
+  };
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(() => done('Informe copiado: pégalo en un mensaje'), fallback); return; } } catch (e) {}
+  fallback();
+}
+let tMsg = '', tMsgT = 0;
+function toastMsg(m) { tMsg = m; tMsgT = 3; }
+
+// ---------------- pantalla ESTADÍSTICAS ----------------
+let tPrev = 'title', tSel = -1, tGeo = null, tPage = 0;
+function openStats() { tPrev = state; state = 'stats'; fade = .4; tSel = -1; tPage = 0; }
+function closeStats() { if (tSel >= 0) { tSel = -1; return; } state = tPrev === 'stats' ? 'title' : tPrev; fade = .4; }
+function tRows() {
+  const rows = [];
+  for (let s = 0; s <= LAST; s++) { const R = TSTAT.s[s]; if (R && R.a) rows.push(s); }
+  rows.sort((a, b) => (TSTAT.s[b].d + TSTAT.s[b].q * 2) - (TSTAT.s[a].d + TSTAT.s[a].q * 2));
+  return rows;
+}
+function tButtons() {
+  const ox = Math.round((W - 960) / 2), B = [];
+  if (tSel < 0) {
+    const rows = tRows(), per = 9, pages = Math.max(1, Math.ceil(rows.length / per));
+    rows.slice(tPage * per, tPage * per + per).forEach((s, i) => B.push({ x: ox + 60, y: 118 + i * 38, w: 840, h: 34, row: s }));
+    if (pages > 1) { B.push({ x: ox + 60, y: 470, w: 110, h: 40, t: '', ic: 'left', c: '#35e2ff', small: true, fn: () => { tPage = (tPage + pages - 1) % pages; } }); B.push({ x: ox + 790, y: 470, w: 110, h: 40, t: '', ic: 'right', c: '#35e2ff', small: true, fn: () => { tPage = (tPage + 1) % pages; } }); }
+    B.push({ x: ox + 190, y: 470, w: 180, h: 40, t: 'COMPARTIR', ic: 'flag', c: '#ffcf4a', c2: '#ff8a3d', sel: true, small: true, fn: tShare });
+    B.push({ x: ox + 390, y: 470, w: 180, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', small: true, fn: closeStats });
+    B.push({ x: ox + 590, y: 470, w: 180, h: 40, t: tConfirm > 0 ? '¿SEGURO? TOCA' : 'BORRAR DATOS', c: '#ff5470', small: true, fn: () => { if (tConfirm > 0) { TSTAT = { v: 1, s: {} }; tSave(); tConfirm = 0; toastMsg('Datos borrados'); } else tConfirm = 3; } });
+  } else {
+    B.push({ x: ox + 290, y: 470, w: 180, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', small: true, fn: () => { tSel = -1; } });
+    B.push({ x: ox + 490, y: 470, w: 180, h: 40, t: 'JUGAR FASE', ic: 'right', c: '#ffcf4a', c2: '#ff8a3d', sel: true, small: true, fn: () => { const s = tSel; if (s > SAVE.unl) { toastMsg('Fase todavía bloqueada'); return; } tSel = -1; state = 'map'; beginStage(ORDER[Math.floor(s / 3)], s % 3); } });
+  }
+  return B;
+}
+let tConfirm = 0;
+function drawStats(dt) {
+  if (tConfirm > 0) tConfirm -= dt;
+  ctx.fillStyle = '#07060f'; ctx.fillRect(0, 0, W, H);
+  const gr = ctx.createRadialGradient(W / 2, H * .25, 10, W / 2, H * .3, W * .7); gr.addColorStop(0, 'rgba(60,120,200,.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  const ox = Math.round((W - 960) / 2);
+  ctx.save(); ctx.translate(ox, 0);
+  ctx.save(); ctx.shadowColor = 'rgba(90,180,255,.7)'; ctx.shadowBlur = 18; txt(tSel < 0 ? 'ESTADÍSTICAS' : tStageName(tSel), 480, 40, tSel < 0 ? 30 : 24, '#a8dcff', null, 0, 'center', LOGOF, 900); ctx.restore();
+  if (tSel < 0) {
+    let tot = { a: 0, d: 0, c: 0, q: 0 }; for (const k in TSTAT.s) { const R = TSTAT.s[k]; tot.a += R.a; tot.d += R.d; tot.c += R.c; tot.q += R.q; }
+    txt('Intentos ' + tot.a + '  ·  Superadas ' + tot.c + '  ·  Muertes ' + tot.d + '  ·  Abandonos ' + tot.q + '   —   ordenadas de más difícil a más fácil', 480, 70, 12, 'rgba(255,255,255,.75)', null, 0, 'center', UIF, 700);
+    txt('FASE', 80, 100, 11, 'rgba(255,255,255,.5)', null, 0, 'left', UIF, 800);
+    [['INTENTOS', 470], ['SUPERADA', 545], ['MUERTES', 620], ['ABANDONA', 695], ['T. MEDIO', 770], ['CAUSA PRINCIPAL', 860]].forEach(c => txt(c[0], c[1], 100, 10, 'rgba(255,255,255,.5)', null, 0, 'center', UIF, 800));
+    const B = tButtons(), rows = B.filter(b => b.row !== undefined);
+    if (!rows.length) txt('Juega algunas fases y aquí verás dónde mueres, cuánto tardas y dónde abandonas.', 480, 250, 14, 'rgba(255,255,255,.7)', null, 0, 'center', UIF, 600);
+    for (const b of rows) {
+      const R = TSTAT.s[b.row], x = b.x - ox, hard = R.d + R.q * 2, heat = clamp(hard / 10, 0, 1);
+      rrect(x, b.y, b.w, b.h, 9); ctx.fillStyle = 'rgba(' + Math.round(40 + heat * 160) + ',' + Math.round(40 + (1 - heat) * 60) + ',70,.35)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1; ctx.stroke();
+      const w = WORLDS[ORDER[Math.floor(b.row / 3)]];
+      ctx.fillStyle = w.c; ctx.beginPath(); ctx.arc(x + 16, b.y + 17, 6, 0, 6.3); ctx.fill();
+      txt(tStageName(b.row), x + 30, b.y + 18, 13, '#ffffff', null, 0, 'left', UIF, 800);
+      const v = [R.a, R.c, R.d, R.q, R.c ? fmtS(R.tt / R.c) : '—'];
+      v.forEach((t, i) => txt(String(t), 470 + i * 75, b.y + 18, 13, i === 2 && R.d > 4 ? '#ff8a8a' : i === 3 && R.q > 1 ? '#ffc070' : '#ffffff', null, 0, 'center', UIF, 800));
+      txt(tTopCause(R), 860, b.y + 18, 12, 'rgba(255,220,170,.9)', null, 0, 'center', UIF, 700);
+    }
+    for (const b of B) if (b.row === undefined) drawButton(Object.assign({}, b, { x: b.x - ox }));
+    txt('Toca una fase para ver en el mapa dónde mueren los jugadores', 480, 524, 11, 'rgba(170,210,255,.6)', null, 0, 'center', UIF, 600);
+  } else {
+    drawHeat(tSel);
+    for (const b of tButtons()) drawButton(Object.assign({}, b, { x: b.x - ox }));
+  }
+  if (tMsgT > 0) { tMsgT -= dt; ctx.globalAlpha = Math.min(1, tMsgT * 2); glass(280, 446 - 50, 400, 40, 14, '#8fd0ff', true); txt(tMsg, 480, 446 - 30, 13, '#ffffff', null, 0, 'center', UIF, 800); ctx.globalAlpha = 1; }
+  ctx.restore();
+}
+// mapa de la fase (plataformas) con un punto por cada muerte
+function drawHeat(s) {
+  if (!tGeo || tGeo.s !== s) {
+    const w = ORDER[Math.floor(s / 3)], a = s % 3; let L = null;
+    try { L = buildStage(w, a); } catch (e) {}
+    tGeo = { s, L };
+  }
+  const L = tGeo.L, R = TSTAT.s[s] || { p: [], cz: {} };
+  if (!L) { txt('No se pudo dibujar la fase', 480, 250, 14, '#fff', null, 0, 'center', UIF, 700); return; }
+  let x1 = 1e9, x2 = -1e9, y1 = 1e9, y2 = -1e9;
+  for (const q of L.plats) { x1 = Math.min(x1, q.x); x2 = Math.max(x2, q.x + q.w); y1 = Math.min(y1, q.y); y2 = Math.max(y2, Math.min(q.y + q.h, q.y + 60)); }
+  for (const q of R.p) { y1 = Math.min(y1, q[1] - 30); y2 = Math.max(y2, q[1] + 10); }
+  const bx0 = 30, by0 = 70, bw = 900, bh = 330, sc = Math.min(bw / (x2 - x1 + 40), bh / (y2 - y1 + 40));
+  const X = v => bx0 + (bw - (x2 - x1) * sc) / 2 + (v - x1) * sc, Y = v => by0 + (bh - (y2 - y1) * sc) / 2 + (v - y1) * sc;
+  rrect(bx0 - 6, by0 - 6, bw + 12, bh + 12, 12); ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.fill();
+  const wc = WORLDS[ORDER[Math.floor(s / 3)]].c;
+  for (const q of L.plats) { ctx.fillStyle = q.k === 'solid' ? hexA(wc, .55) : q.k === 'move' ? 'rgba(120,200,255,.6)' : q.k === 'bounce' ? 'rgba(120,255,160,.7)' : 'rgba(255,255,255,.35)'; ctx.fillRect(X(q.x), Y(q.y), Math.max(1.5, q.w * sc), Math.max(2, Math.min(q.h, 40) * sc)); }
+  for (const h of L.hazards) { ctx.fillStyle = 'rgba(255,90,90,.7)'; ctx.fillRect(X(h.x), Y(h.y), Math.max(1.5, h.w * sc), Math.max(2, h.h * sc)); }
+  for (const e of L.enemies) { ctx.fillStyle = 'rgba(255,200,90,.65)'; ctx.fillRect(X(e.x), Y(e.y), 3, 3); }
+  if (L.arena) { ctx.strokeStyle = 'rgba(255,90,120,.6)'; ctx.setLineDash([4, 4]); ctx.strokeRect(X(L.arena.x1), Y(L.arena.floor - 300), (L.arena.x2 - L.arena.x1) * sc, 300 * sc); ctx.setLineDash([]); }
+  ctx.globalCompositeOperation = 'lighter';
+  for (const q of R.p) { const g = ctx.createRadialGradient(X(q[0]), Y(q[1]), 0, X(q[0]), Y(q[1]), 14); g.addColorStop(0, 'rgba(255,60,60,.75)'); g.addColorStop(1, 'rgba(255,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(X(q[0]) - 14, Y(q[1]) - 14, 28, 28); }
+  ctx.globalCompositeOperation = 'source-over';
+  for (const q of R.p) { ctx.fillStyle = q[2] === 'caída*' ? '#ffd040' : '#ffffff'; ctx.fillRect(X(q[0]) - 1.5, Y(q[1]) - 1.5, 3, 3); }
+  const causes = Object.entries(R.cz).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => k.replace('*', '') + ' ' + v).join('   ·   ');
+  txt('Intentos ' + (R.a || 0) + '  ·  Superada ' + (R.c || 0) + '  ·  Muertes ' + (R.d || 0) + '  ·  Abandonos ' + (R.q || 0) + '  ·  Reinicios ' + (R.r || 0) + (R.c ? '  ·  Tiempo medio ' + fmtS(R.tt / R.c) : ''), 480, 422, 12, '#ffffff', null, 0, 'center', UIF, 700);
+  txt(causes || 'Sin muertes registradas', 480, 444, 12, 'rgba(255,210,160,.9)', null, 0, 'center', UIF, 700);
+  txt('● muerte   ● caída al vacío   ▪ enemigo   ▪ trampa   ▭ arena del guardián', 480, 524, 10, 'rgba(255,255,255,.55)', null, 0, 'center', UIF, 600);
+}
+const _uiButtonsT = uiButtons;
+uiButtons = function () {
+  const B = _uiButtonsT();
+  if (state === 'title') { B.push({ x: W - 228, y: 14, w: 160, h: 34, t: 'ESTADÍSTICAS', c: '#8fd0ff', small: true, fn: openStats }); }
+  return B;
+};
+const _handleTapT = handleTap;
+handleTap = function (x, y, type) {
+  if (state === 'stats') {
+    for (const b of tButtons()) if (inRect({ x, y }, b)) { sfx('click'); if (b.row !== undefined) { tSel = b.row; tGeo = null; } else b.fn(); return; }
+    return;
+  }
+  _handleTapT(x, y, type);
+};
+const _onKeyT = onKey;
+onKey = function (c) { if (state === 'stats') { if (c === 'Escape') closeStats(); return; } _onKeyT(c); };
+let lastDrawT = performance.now();
+const _drawT = draw;
+draw = function () {
+  const now = performance.now(), dt = Math.min(.05, (now - lastDrawT) / 1000); lastDrawT = now;
+  if (state === 'stats') { ctx.setTransform(RES, 0, 0, RES, 0, 0); drawStats(dt); if (fade > 0) { ctx.fillStyle = 'rgba(0,0,0,' + fade + ')'; ctx.fillRect(0, 0, W, H); } try { drawToasts(dt); } catch (e) {} }
+  else _drawT();
+};
+
 // Textos traducidos (generado desde i18n/*.json)
 const I18N_ES = ["DASH", "ESPADA", "SALTO", "SHIFT", "TIEMPO", "ECO", "KAEL SOMBRÍO", "EL DEVORADOR", "Hace mil años, la Orden de Chronos custodiaba el Corazón del Tiempo: el reloj que mantiene unidos a todos los mundos.", "Kael era su aprendiz más joven. Lyra, su hermana mayor, la guardiana más brillante que la Orden había conocido.", "Hasta la Noche de las Cenizas. Un incendio devoró la Torre del Reloj… y a Lyra con ella.", "¡No! Todavía puedo llegar… ¡solo necesito un segundo más!", "Kael usó el poder prohibido de la Orden: el SHIFT. Quiso volver atrás en el tiempo para salvarla.", "Pero el tiempo no se deja reescribir. El Corazón estalló en catorce fragmentos que cayeron en catorce mundos distintos.", "Cada fragmento corrompió a la criatura que lo encontró. Y de la grieta nació una sombra con el rostro de Kael.", "¡Eh! ¡Despierta, chaval! Soy Tic, búho mecánico oficial de la Orden. Modelo 3000. Bueno… el único modelo.", "Tengo una noticia mala y una buena. La mala: has roto el universo. La buena: ¡se puede arreglar!", "¿Y Lyra? ¿Dónde está Lyra?", "Su eco quedó atrapado entre dos segundos. Si reunimos los catorce fragmentos… quizá podamos encontrarla.", "Entonces no hay tiempo que perder.", "Técnicamente, ahora mismo hay MUCHO tiempo perdido. Pero sí, vamos.", "¿Crees que eres mejor que yo? Solo quería lo mismo que tú: tenerla de vuelta.", "Pero no fui yo quien rompió el Corazón. Algo nos susurró desde la grieta. Algo que se alimenta de los instantes rotos.", "EL DEVORADOR DE HORAS. Con cada segundo perdido, crece. Con cada fragmento que reúnes… despierta.", "Vale. Eso no venía en el manual.", "Los seis últimos fragmentos están más allá del tiempo. Ve, Kael. Haz lo que yo no fui capaz de hacer.", "Lo haré. Por los dos.", "En el Nexo, la luz de los catorce fragmentos atravesó al Devorador de Horas.", "Y por primera vez en mil años, el Corazón del Tiempo volvió a latir.", "Lo lograste, hermanito. Escucha… el tiempo vuelve a correr.", "Puedo usar el Shift una última vez. Puedo traerte de vuelta, Lyra.", "Y volverías a romperlo todo. El tiempo no se arregla, Kael. Se vive.", "Estaré en cada amanecer. Te lo prometo.", "Los catorce mundos volvieron a girar. Y cada mañana, en la Jungla Flotante, el sol sale un segundo antes.", "Dicen que es Lyra, saludando.", "Para ser un chaval que rompió el universo, no lo has hecho nada mal.", "Gracias, Tic. ¿Y ahora qué?", "Ahora… ¿desayuno? Llevo mil años sin aceite.", "Kael… ¿recuerdas cuando me enseñaste a trepar los árboles de la jungla? Siempre llegabas primero.", "¡El fragmento ha despertado tu SHIFT! Cambia de dimensión y verás plataformas que antes no estaban.", "En Velmora tocaban las campanas cada vez que alguien se perdía. Hace siglos que ya no suenan.", "Uno menos. Doce más y te invito a un aceite de engranajes.", "El fuego no fue culpa tuya. Nunca lo fue.", "Bueno. Eso ha sido intenso. Sigamos.", "En el bosque del crepúsculo el sol nunca se pone. Así querías que fuera aquel día, ¿verdad?", "Los muertos no deberían volver, Kael. Ni siquiera yo.", "¿Ha dicho lo que creo que ha dicho?", "Hace frío aquí… como el instante en el que estoy atrapada.", "Él se acerca. Tu sombra. Quiere congelar el tiempo para siempre en la noche del incendio.", "Bajo el mar el tiempo va más lento. Aquí casi puedo tocarte.", "¡Nuevo poder: el ECO! Graba tus movimientos y tu yo del pasado los repetirá. Úsalo para pisar dos placas a la vez.", "Cada grano de arena es un segundo que alguien perdió. No pierdas los tuyos buscándome.", "Ya casi, hermanito. Pero prométeme algo: cuando llegue el final… déjame ir.", "No puedo prometer eso.", "Lo harás. Te conozco.", "Las brujas decían que el tiempo se puede embotellar. Mintieron. Solo se puede compartir.", "Puaj. Tengo barro hasta en los engranajes.", "Él también quiso detener el tiempo para no perder a nadie. Mira cómo acabó, hermanito.", "No seré como él.", "Lo sé.", "Primero lo primero: muévete, salta y no te caigas. Es más difícil de lo que parece.", "Las lianas y los resortes son tus amigos. Las zarigüeyas, no tanto.", "El fragmento late al final de la jungla. Y algo muy grande croa cerca.", "Velmora, la ciudad maldita. Las campanas callaron cuando cayó el fragmento.", "Con el SHIFT puedes cambiar de dimensión. Cian y violeta: dos mundos, un Kael.", "En lo alto de la catedral duerme una gárgola colosal. Sus rayos malditos duelen. Te lo digo por experiencia.", "Aquí hace un calor de mil demonios. Literalmente, más adelante.", "Los bloques agrietados se rompen al pisarlos. No te quedes quieto.", "La lava sube. ¡Sube, sube, SUBE! Y arriba espera un hechicero.", "Un bosque donde el sol nunca termina de ponerse. Precioso. Sospechoso.", "Las corrientes de aire te elevan. Déjate llevar, como yo en las reuniones.", "Siento que algo nos observa desde arriba. Un ojo. Muy grande.", "Un cementerio. Genial. Justo lo que mis engranajes necesitaban.", "Los espectros solo se tocan en la dimensión violeta. ¡SHIFT y espadazo!", "Un caballero que no sabe que su guerra terminó hace siglos. Atácale por la espalda.", "Hielo. El suelo resbala, así que frena con tiempo.", "Las estalactitas caen cuando pasas debajo. Mira arriba de vez en cuando.", "Escucho un rugido helado. Esquiva sus cargas y que choque contra la pared.", "El Abismo. Si oyes voces, no son mías. Bueno, a veces sí.", "Fuego, lava y almas en pena. Lo normal de un martes.", "El demonio guarda el penúltimo fragmento de esta parte del viaje. Cuando baje a descansar… ¡a por él!", "La Ciudadela del Tiempo, fuera de toda era. Aquí la gravedad hace lo que quiere.", "Engranajes, láseres y dimensiones. Todo lo que has aprendido, junto.", "Tu sombra te espera. Conoce todos tus trucos. Sé mejor que tú mismo.", "¡Agua! Dentro del agua puedes nadar: pulsa SALTO sin parar para subir.", "Las corrientes te arrastran. Y las medusas pican. Mucho.", "El Leviatán duerme en el fondo. Cuando muerda el suelo, ataca su señuelo.", "El Desierto Eterno. Aquí la arena cae hacia arriba. No preguntes.", "Usa el ECO: graba tu camino hasta la placa y tu eco la mantendrá pulsada mientras cruzas.", "La Esfinge solo se rinde ante quien está en dos lugares a la vez. ¿Te suena?", "El Templo Celeste. Los anillos dorados son ANCLAS: acércate en el aire y te engancharás.", "Balancéate y suelta con SALTO en el momento justo. ¡Wiii!", "El Serafín invierte el cielo y la tierra. Mantén la cabeza fría… y del revés.", "El Nexo. Aquí están todos los mundos a la vez. Y todo lo que has aprendido.", "Ya casi. Puedo sentir a Lyra. Y algo enorme que respira entre los segundos.", "El Devorador de Horas. Este es el final, Kael. Hagámoslo bien.", "El Pantano de las Brujas. Si oyes risitas en la niebla, no eran mías.", "El agua está turbia y los espectros solo se tocan en la dimensión violeta. ¡SHIFT!", "La Bruja Madre. Cuando caiga aturdida tras sus picados… ¡a por ella!", "La Ciudadela del Rey Caído. Todo aquí está encadenado. Hasta el tiempo.", "Los caballeros siguen defendiendo un reino que ya no existe. Atácalos por la espalda.", "El Rey Caído. Embiste como una tormenta. Cuando clave la espada en el suelo, ¡golpéalo!", "¡CROAAAC! Este fragmento brilla… ¡y es MÍO!", "Salta sus ondas de choque. Y no le mires a los ojos. Son raros.", "Mil años vigilando esta catedral… y por fin llega algo que romper.", "Cuando caiga al suelo después de disparar, ¡golpéala!", "El fuego purifica, niño. Deja que purifique tu error.", "Rompe las tres palancas para quitarle el escudo.", "Te he visto caer mil veces en mil futuros. Este será uno más.", "Juré proteger este lugar hasta el fin de los tiempos. Y el tiempo… se ha detenido.", "GRRRRRRAAAH…", "Creo que no habla. Pero muerde.", "Los siglos saben dulces. Tú sabrás a eternidad.", "Yo soy tú. El que no se rindió. Apártate de mi camino.", "No. Esta vez no voy a huir del pasado.", "Las mareas del tiempo me obedecen. Hundiré tu luz en el abismo.", "Responde, viajero: ¿qué se pierde al recuperarlo?", "Demasiado tarde.", "Aquí arriba el cielo es suelo y el suelo es cielo. Tú no perteneces a ningún lugar.", "CATORCE INSTANTES. CATORCE MUNDOS. TODO EL TIEMPO… SERÁ MÍO.", "El tiempo no es de nadie.", "Hueles a tiempo robado, niño. Mi caldero lleva siglos esperándote.", "Esquiva sus picados. ¡Y no aceptes nada que te ofrezca!", "Yo también tuve a alguien a quien salvar. Mi reino entero. Y fracasé.", "Entonces déjame terminar lo que tú no pudiste.", "FÁCIL", "NORMAL", "DIFÍCIL", "JUNGLA FLOTANTE", "Resortes y lianas", "GRAN SAPO ANCESTRAL", "¡Salta las ondas de choque!", "El Reloj del Origen se ha roto y sus fragmentos han desgarrado la realidad. Kael, el último Guardián del Tiempo, despierta en la Jungla Flotante.", "VELMORA, CIUDAD MALDITA", "Catedrales y dimensiones", "GÁRGOLA DE LA CATEDRAL", "Esquiva sus rayos malditos y golpéala cuando caiga", "Un fragmento cayó sobre Velmora, la ciudad de las mil campanas, y la maldijo para siempre. Aquí despiertas el poder del SHIFT: cambia de dimensión para hacer aparecer y desaparecer plataformas.", "CALDERO VOLCÁNICO", "Lava y fuego", "HECHICERO DE MAGMA", "Golpea las 3 palancas para romper su escudo", "El calor del núcleo funde el tiempo mismo. La lava sube y el Hechicero de Magma custodia el tercer fragmento.", "BOSQUE DEL CREPÚSCULO", "Vientos y hongos", "OJO ABISAL", "Esquiva sus embestidas y golpéalo al bajar", "En el bosque donde el sol nunca termina de ponerse, los vientos del tiempo soplan con fuerza. Algo te observa desde las alturas.", "CEMENTERIO MALDITO", "Espectros y tumbas", "CABALLERO ESQUELETO", "Su escudo bloquea de frente: atácalo por la espalda", "Los muertos se levantan cuando el tiempo se detiene. Los espectros solo son tangibles en la otra dimensión: usa el SHIFT para golpearlos.", "CRIPTA HELADA", "Hielo y estalactitas", "BESTIA DE ESCARCHA", "Esquiva sus cargas y las estalactitas", "Bajo el hielo eterno, cada paso resbala. Cuidado con las estalactitas: caen cuando pasas debajo.", "ABISMO INFERNAL", "Llamas y almas", "DEMONIO DEL ABISMO", "Aléjate de su aliento y atácalo cuando descienda", "El penúltimo fragmento arde en el corazón del abismo. El Demonio que lo custodia ha devorado siglos enteros.", "CIUDADELA DEL TIEMPO", "Gravedad cero", "Tu reflejo conoce tus movimientos. Anticípate.", "En la Ciudadela, fuera del tiempo, te espera tu propio reflejo: el Kael que eligió romper el Reloj. Solo uno puede salir de aquí.", "ARRECIFE ABISAL", "Nado y corrientes", "LEVIATÁN DE CORAL", "Cuando muerda el suelo, ¡golpea su señuelo!", "Un fragmento se hundió en una ciudad sumergida. Bajo el agua el tiempo fluye despacio: pulsa SALTO para nadar.", "DESIERTO ETERNO", "Eco temporal y arenas", "ESFINGE DEL RELOJ", "Pisa las dos placas a la vez (tú y tu ECO) para romper su escudo", "Arena que cae hacia el cielo y ruinas de relojes colosales. Aquí necesitarás estar en dos lugares a la vez: usa el ECO.", "TEMPLO CELESTE", "Anclas y nubes", "SERAFÍN INVERTIDO", "Cuando el cielo se invierta, mantén la calma: tus controles no cambian", "Templos colgando de las nubes y cascadas que suben. Engánchate a los anillos dorados acercándote en el aire.", "NEXO DE CHRONOS", "Todos los mundos", "EL DEVORADOR DE HORAS", "Cuando se agote y baje, ¡ataca su ojo!", "El corazón roto del tiempo. Aquí todos los mundos se mezclan. El último fragmento… y el Devorador.", "PANTANO DE LAS BRUJAS", "Ciénagas y maleficios", "LA BRUJA MADRE", "Esquiva sus picados y golpéala cuando quede aturdida en el suelo", "Más allá de las nubes, un fragmento se pudre en el Pantano de las Brujas. La niebla susurra tu nombre… y algo en el agua responde.", "CIUDADELA DEL REY CAÍDO", "Tronos rotos y cadenas", "EL REY CAÍDO", "Cuando clave su espada en el suelo y quede atrapado, ¡golpéalo!", "El último reino antes del Nexo. Su rey juró proteger el tiempo y acabó encadenado a él. Su trono vacío aún arde con fuego de almas.", "Muévete con las flechas y salta los huecos con SALTO", "Pulsa ESPADA para atacar. Encadena golpes para hacer COMBOS", "Pulsa SALTO otra vez en el aire para el DOBLE SALTO", "Los hongos saltarines te impulsan muy alto", "Súbete a la plataforma móvil y espera el momento justo", "Usa DASH para cruzar huecos largos (eres invencible mientras dura)", "Cada fase esconde un RELOJ DE ARENA secreto. ¡Explora!", "Deslízate por la pared y pulsa SALTO para rebotar hacia arriba", "Pulsa SHIFT para cambiar de dimensión: aparecen otras plataformas", "Los muros de otra dimensión se atraviesan con SHIFT", "Ataca en el aire sobre pinchos o enemigos para rebotar", "Los espectros solo se pueden golpear en la dimensión violeta (SHIFT)", "Las corrientes de aire te elevan: déjate llevar", "Zona de gravedad reducida: tus saltos llegan mucho más alto", "Las estalactitas caen cuando pasas por debajo", "Las cintas te arrastran: corre en contra", "Los bloques agrietados se desmoronan al pisarlos", "Observa el ritmo de las llamas antes de cruzar", "Las ráfagas de viento te empujan hacia atrás", "En el agua pulsa SALTO varias veces para nadar hacia arriba", "Las corrientes te arrastran: nada en contra o aprovéchalas", "Pulsa ECO, camina hasta la placa y vuelve a pulsar ECO: tu eco la mantendrá pulsada", "La arena movediza te frena y te hunde: ¡salta sin parar!", "Acércate en el aire a un anillo dorado y pulsa SALTO para engancharte. Vuelve a pulsar para soltarte", "Las nubes se deshacen al pisarlas", "La arena del tiempo cae hacia arriba: déjate llevar", "¡COMBO x", "SHIFT dormido: recupera el 1.er fragmento", "¡BLOQUEADO!", "¡TIEMPO RALENTIZADO!", "¡LA ARENA TE TRAGÓ!", "+20 VIDA", "¡RELOJ DE ARENA SECRETO!", "PUNTO DE CONTROL", "PARRY", "¡PALANCA!", "¡ESCUDO ROTO!", "ESCUDO", "¡BLOQUEO!", "INMUNE", "BLOQUEO", "ESCUDO RESTAURADO", "¡LEVANTAOS!", "¡SHIFT!", "¡SOMBRAS, DEVORADLO!", "Corazón de bronce", "+20 de vida máxima", "Filo del minutero", "+50% de daño con la espada", "Muelle comprimido", "El DASH recarga más rápido", "Arena dorada", "El poder del TIEMPO se carga antes", "Imán de Tic", "Las gemas cercanas vuelan hacia ti", "GRABANDO ECO…", "¡ECO EN MARCHA!", "¡EL CIELO SE INVIERTE!", "¡SE AGOTA!", "SALTAR ▶▶", "FRAGMENTO ", "Recuperado de ", "Toca para continuar", "TALLER DE TIC", "«Dame gemas y te ajusto los engranajes. Sin garantía.»", "MAPA DEL TIEMPO", " fragmentos", "MUNDO ", "VOLVER", "TALLER", "JEFE", "FASE ", "¿Nos quedamos aquí a vivir?", "Si te quedas quieto, el tiempo no se arregla solo…", "Tic, tac. Tic, tac. Era una indirecta.", "Me oxido si no nos movemos.", "¡Cuidado, Kael! ¡Estás muy herido!", "Busca una cereza, ¡rápido!", "Esa herida no me gusta nada.", "¡Mira, gemas!", "Brillitos a la vista.", "Para el taller, ¡no las dejes!", "Siento un reloj de arena escondido por aquí…", "Algo brilla cerca. ¿Lo oyes?", "¡Buen golpe!", "¡Eso le ha dolido!", "¡Combo!", "Un punto de control. Respira.", "Guardado. Bueno, más o menos.", "¡Qué olor a selva!", "Oigo pájaros de otra era.", "Mil campanas y ninguna suena. Mal presagio.", "Esas gárgolas me están mirando. Lo sé.", "¡Quema, quema!", "Mis engranajes se derriten.", "Qué atardecer tan bonito… y eterno.", "Las luciérnagas me saludan.", "Esto da escalofríos.", "No mires las tumbas. Bueno, ya miraste.", "Brrr. Mis tuercas tiritan.", "Cuidado, resbala.", "Huele a azufre.", "Ni los demonios quieren estar aquí.", "¡Engranajes por todas partes! Me siento en casa.", "El tiempo aquí da vueltas.", "¡Glub! ¿Los búhos nadan?", "Mira cuántos peces.", "Arena en todos mis engranajes…", "Las arenas suben al cielo. Qué raro.", "¡Qué vistas!", "No mires abajo.", "Siento a Lyra muy cerca.", "Esto es el corazón de todo.", "Croac. No, no he sido yo.", "Ese caldero huele a problemas.", "Cuántas cadenas…", "Un trono vacío da más miedo que uno ocupado.", "¿Recuerdas cuando contábamos estrellas desde la torre?", "Siempre fuiste el valiente, aunque temblaras.", "Me gustaba cómo te reías de tus propios chistes malos.", "El tiempo es como un río, Kael. No se puede beber todo.", "Prométeme que también vivirás por ti.", "Cada amanecer es un regalo. No los gastes mirando atrás.", "Tic siempre me cayó bien. No se lo digas.", "Te enseñé a esgrimir con una rama. Mírate ahora.", "Estoy orgullosa de ti, hermanito.", "Cuando cierres los ojos, piensa en el olor del pan de mamá.", "Las estrellas también se apagan… pero su luz sigue viajando.", "Ya casi. Puedo oír tu corazón desde aquí.", "¡Salta sobre esa seta! Rebota muchísimo.", "Esas vasijas suenan a gemas… ¡rómpelas!", "Un farol apagado. Tócalo y dale luz.", "Flores campana… ¡tócalas todas, cantan!", "Una runa del tiempo. Písala, Kael.", "Esa flor cura. Guárdala para cuando estés herido.", "¡Un cofre allí arriba!", "¡Había un espíritu ahí dentro!", "¡Cofre del tiempo!", "¡Un cofre! ¡Brillitos para el taller!", "¡Tesoro! Sabía que valía la pena subir.", "¡Todos los faroles encendidos!", "¡Qué bonito! El mundo brilla otra vez.", "¡Melodía completa!", "¡Las flores cantan para ti!", "Bendición del ciervo de luz", "Dicen que el ciervo de luz guía a los viajeros del tiempo…", "¡Mira arriba, Kael!", "Qué criatura tan enorme…", "Nunca había visto algo así.", "Golpe Cargado", "Mantén ESPADA y suéltala para lanzar una onda de luz que atraviesa a los enemigos.", "Mantén ESPADA y suelta", "Parada Perfecta", "Cúbrete justo antes del golpe: no gastas escudo, devuelves los disparos y contraatacas.", "GUARDIA justo a tiempo", "Dash Fantasma", "Tu DASH atraviesa a los enemigos y les hace daño.", "DASH contra un enemigo", "Golpe Sísmico", "En el aire, pulsa GUARDIA para caer en picado y liberar una onda sísmica.", "GUARDIA en el aire", "Imán del Cronista", "Las gemas y cerezas lejanas vuelan hacia ti.", "Siempre activo", "Triple Salto", "Puedes saltar una tercera vez en el aire.", "SALTO tres veces", "Corazón de Cristal", "+40 de vida máxima. Si nadie te golpea, recuperas vida poco a poco.", "Capa Planeadora", "Mantén SALTO mientras caes para planear con tu capa.", "Mantén SALTO al caer", "Ojo del Cronista", "Una brújula te señala la reliquia escondida y los cofres de cada fase.", "Espada de Luz", "El tercer golpe del combo lanza una media luna de luz.", "Combo de 3 golpes", "Segunda Oportunidad", "Una vez por fase, si caes derrotado, el tiempo retrocede y vuelves con media vida.", "Escudo del Tiempo", "Mantén GUARDIA para bloquear los ataques de frente. Cada bloqueo gasta escudo; si se agota, la guardia se rompe.", "Mantén GUARDIA", "GUARDIA", "Si algo te ataca, mantén GUARDIA para cubrirte con el escudo del tiempo.", "¡PARADA!", "¡GUARDIA ROTA!", "SEGUNDA OPORTUNIDAD", "¡Uf! El tiempo te ha dado otra oportunidad.", "¡NUEVA HABILIDAD!", "CÓMO SE USA: ", "HABILIDADES DE KAEL", " reliquias  ·  vence al guardián de cada mundo para conseguir la siguiente", "Guardián del mundo ", "Toca para volver", "GUARDIÁN: ", "Música", "Efectos de sonido", "Vibración", "Sí", "Temblor de cámara", "Tamaño de botones", "Pequeño", "Opacidad de botones", "Pantalla completa", "Calidad gráfica", "Máxima", "LISTO", "JUGAR", "NUEVA AVENTURA", "OPCIONES", "LOGROS", "HISTORIA", "MÁXIMO", "CONTINUAR", "HABILIDADES", "REINICIAR FASE", "MAPA", "SIGUIENTE MUNDO", "IR AL GUARDIÁN", "SIGUIENTE FASE", "VER MAPA", "TÍTULO", "TIEMPO LENTO", "TIEMPO LISTO", "DIM B", "DIM A", "COMBO  ×", "● GRABANDO ECO  (pulsa ECO)", "MOVER", "GUARDIÁN DEL MUNDO ", "PAUSA", "Mundo ", "Puntos: ", "HAS CAÍDO", "Kael ha caído en ", "El guardián te espera: volverás a la entrada de la arena", "Volverás al último punto de control con la vida llena", "   ·   Récord: ", "FRAGMENTO RECUPERADO", "FASE SUPERADA", "Fragmentos de Realidad: ", "   ·   ¡Reloj secreto!", "Tiempo ", "   ·   Bonus +", "Puntos totales: ", "EL RELOJ ESTÁ COMPLETO", "El Devorador de Horas ha caído y el Corazón vuelve a latir.", "Los catorce mundos giran de nuevo. Gracias por jugar.", "   ·   Puntos: ", "14 MUNDOS  ·  42 FASES  ·  14 GUARDIANES  ·  11 HABILIDADES", "MANDO:  A saltar · X espada · B/RT dash · LB/LT guardia · Y dimensión · RB tiempo · SELECT eco · START pausa", "Mover · Salto (doble y en pared) · Dash · Espada · Shift · Tiempo", "← → mover · ESPACIO saltar · SHIFT dash · Z espada · X dimensión · C tiempo · E eco · P pausa", "RÉCORD  ", "Gira el teléfono para jugar en horizontal", "Cargando 14 mundos…", "¡DE PIE, KAEL!", "¡FURIA!", " despierta su verdadero poder", "OLEADA ", "CÁMARA DEL DESAFÍO", "Sobrevive a todas las oleadas", "¡DESAFÍO SUPERADO!", "+1500 puntos · +40 vida · fragmentos de recompensa", "Primeros pasos", "Completa la fase 1-1", "Derrota a tu primer guardián", "Medio Reloj", "Derrota a 7 guardianes", "Corazón del Tiempo", "Derrota a los 14 guardianes", "Derrota a un guardián sin recibir daño", "Sin piedad", "Derrota a un guardián en DIFÍCIL", "Ritmo letal", "Consigue un combo x25", "Tormenta de acero", "Consigue un combo x50", "Ojo para lo oculto", "Encuentra un reloj de arena secreto", "Guardián de arena", "Encuentra 10 relojes secretos", "Lluvia de fragmentos", "Recoge 300 fragmentos de realidad", "Supera una Cámara del Desafío", "Campeón de las cámaras", "Supera 10 Cámaras del Desafío", "Muro viviente", "Bloquea 50 ataques", "Filo perfecto", "Haz 10 paradas perfectas", "Arsenal del tiempo", "Consigue 6 habilidades", "Veloz como un segundo", "Completa una fase en menos de 75 s", "Nunca te rindes", "Levántate 20 veces tras caer", "LOGRO DESBLOQUEADO", " min", " desbloqueados", "Guardianes: ", "/14   ·   Cámaras: ", "   ·   Caídas: ", "   ·   Paradas: ", "   ·   Tiempo de juego: ", "Toca la pantalla o pulsa ESC para volver", "MANDO CONECTADO", "Bloqueado", "Botones", "Controles", "Grande", "Intocable", "Joystick", "No", "Normal", "Rendimiento", "Rompeguardianes", "Superviviente", "IDIOMA", "Idioma", "Elige tu idioma", "Puedes cambiarlo cuando quieras en Opciones"];
 const I18N = {
@@ -6089,6 +6568,21 @@ const I18N = {
     ja: ["セラフが倒れると、空は古い紙のように裂け、騎士団のどの地図にもない道が現れた。", "えっと…地図によると、ここには何もないはずなんだけど。なのにあそこに…世界があと六つ。", "秒と秒のあいだに隠された、忘れられた六つの世界。最後の欠片はそこに落ちていた。", "沼のにおいがする。それとスープ。沼のスープ。ぜんぜん好きじゃない。", "ライラは、どの夜明けにもいるって言った。あの下では夜が明けることはない。", "じゃあ、持っていってあげなきゃね。", "嵐の塔の頂で、十六個目の欠片がカエルの手の中で輝いた。", "十六個。残りはあと二つ。感じる？雨が…空中で止まってる。", "カエル…欠片が集まるたびに、わたしはあなたに近づく。でも、それは彼も目覚めさせるの。", "その先には堕ちた王の城塞がある。彼もあなたと同じことをしようとした。民を救うために時を止めようとしたの。", "それで、彼はどうなったの？", "彼の王国は今もそこにある。最後の一秒のまま凍りついて。永遠に。", "メモ：あの人みたいにならないこと。", "時は止めないよ、ライラ。もう一度、動かしてみせる。"],
     ko: ["세라핌이 쓰러지자 하늘이 낡은 종이처럼 찢어지며 기사단의 어떤 지도에도 없는 길들이 드러났다.", "어… 내 지도에 따르면 여긴 아무것도 없어야 하는데. 그런데 저기에… 세계가 여섯 개나 더 있어.", "초와 초 사이에 숨겨진 잊힌 여섯 세계. 마지막 조각들은 그곳에 떨어져 있었다.", "늪 냄새가 나. 그리고 수프 냄새. 늪 수프. 정말 싫어.", "라이라는 모든 새벽에 있겠다고 했어. 저 아래는 새벽이 오지 않아.", "그럼 하나 가져다줘야겠네.", "폭풍의 탑 꼭대기에서, 열여섯 번째 조각이 카엘의 손에서 빛났다.", "열여섯 개. 이제 두 개 남았어. 느껴져? 비가… 공중에 멈췄어.", "카엘… 조각 하나하나가 나를 너에게 데려다줘. 하지만 그것도 깨우고 있어.", "그 너머에는 몰락한 왕의 성채가 있어. 그도 너와 같은 걸 시도했지. 자기 백성을 구하려고 시간을 멈추려 했어.", "그래서 그는 어떻게 됐어?", "그의 왕국은 아직 거기 있어. 마지막 일 초에 얼어붙은 채로. 영원히.", "메모: 저 아저씨처럼 되지 말 것.", "시간을 멈추지 않을 거야, 라이라. 다시 흐르게 만들 거야."],
     zh: ["炽天使倒下时，天空像旧纸一样撕裂，露出了骑士团任何地图都不记得的道路。", "呃……按照我的地图，这里本该什么都没有。可那边……还有六个世界。", "六个被遗忘的世界，藏在秒与秒之间。最后的碎片就落在那里。", "一股沼泽味。还有汤味。沼泽汤。我一点也不喜欢。", "莱拉说过，她会在每一个黎明里。可那下面永远不会天亮。", "那我们就给她带一个过去。", "在风暴之塔的顶端，第十六块碎片在凯尔手中亮了起来。", "十六块。只剩两块了。你感觉到了吗？雨……停在半空中了。", "凯尔……每一块碎片都让我离你更近。但也会把他唤醒。", "再往前是堕落之王的城堡。他也试过和你一样的事：为了拯救他的子民而让时间停下。", "那他后来怎么样了？", "他的王国还在那里。冻结在最后一秒。永远。", "备忘：千万别变成那位大叔那样。", "我不会让时间停下，莱拉。我要让它重新流动。"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.1: enemigos con comportamientos nuevos y pantalla de estadísticas
+(function () {
+  const ES = ["Ese sabueso se agacha antes de embestir. Salta por encima y golpéalo mientras se recupera.", "Torreta con mira: cuando veas la línea roja, ¡muévete!", "Mira la sombra en el suelo: ahí va a caer lo que suelte.", "Algo se mueve bajo la arena. Cuando tiemble el suelo, ¡salta!", "Ojo: aquí no todo lo que parece decorado lo es.", "Estos huesos se recomponen. Remátalos en la dimensión violeta (SHIFT) y no volverán.", "Los libros de aquí muerden. Un golpe y se cierran para siempre.", "Si ves una columna de luz en el suelo, apártate: el rayo cae justo ahí.", "Las medusas brillan antes de soltar una descarga. Espera a que se apaguen.", "Las ratas de fuego se parten en dos al morir. No te confíes.", "Los serafines disparan en abanico. Esquiva por arriba o por abajo.", "¡DESTRUIDO!", "SE RECOMPONE…", "ESTADÍSTICAS", "COMPARTIR", "BORRAR DATOS", "¿SEGURO? TOCA", "JUGAR FASE", "FASE", "INTENTOS", "SUPERADA", "MUERTES", "ABANDONA", "T. MEDIO", "CAUSA PRINCIPAL", "Datos borrados", "Fase todavía bloqueada", "Informe copiado: pégalo en un mensaje", "Copia el texto y envíalo", "Toca una fase para ver en el mapa dónde mueren los jugadores", "Juega algunas fases y aquí verás dónde mueres, cuánto tardas y dónde abandonas.", "Sin muertes registradas", "● muerte   ● caída al vacío   ▪ enemigo   ▪ trampa   ▭ arena del guardián"];
+  const X = {
+    en: ["That hound crouches before it charges. Jump over it and hit it while it recovers.", "Turret with a scope: when you see the red line, move!", "Watch the shadow on the ground: that's where whatever it drops will land.", "Something is moving under the sand. When the ground shakes, jump!", "Careful: not everything that looks like scenery is scenery here.", "These bones put themselves back together. Finish them in the violet dimension (SHIFT) and they won't return.", "The books here bite. One hit and they close forever.", "If you see a column of light on the ground, get out of the way: the lightning strikes right there.", "The jellyfish glow before releasing a shock. Wait for them to dim.", "Fire rats split in two when they die. Don't get cocky.", "Seraphs fire in a fan. Dodge above or below.", "DESTROYED!", "REASSEMBLING…", "STATISTICS", "SHARE", "DELETE DATA", "SURE? TAP", "PLAY STAGE", "STAGE", "ATTEMPTS", "CLEARED", "DEATHS", "QUITS", "AVG. TIME", "MAIN CAUSE", "Data deleted", "Stage still locked", "Report copied: paste it in a message", "Copy the text and send it", "Tap a stage to see on the map where players die", "Play a few stages and you'll see here where you die, how long you take and where you quit.", "No deaths recorded", "● death   ● fell into the void   ▪ enemy   ▪ trap   ▭ guardian arena"],
+    pt: ["Esse cão se abaixa antes de investir. Pule por cima e ataque enquanto ele se recupera.", "Torreta com mira: quando vir a linha vermelha, mexa-se!", "Olhe a sombra no chão: é ali que vai cair o que ele soltar.", "Algo se move sob a areia. Quando o chão tremer, pule!", "Cuidado: aqui nem tudo que parece cenário é cenário.", "Esses ossos se recompõem. Acabe com eles na dimensão violeta (SHIFT) e não voltarão.", "Os livros daqui mordem. Um golpe e eles se fecham para sempre.", "Se vir uma coluna de luz no chão, saia da frente: o raio cai bem ali.", "As águas-vivas brilham antes de soltar uma descarga. Espere que se apaguem.", "Os ratos de fogo se dividem em dois ao morrer. Não se distraia.", "Os serafins disparam em leque. Desvie por cima ou por baixo.", "DESTRUÍDO!", "SE RECOMPONDO…", "ESTATÍSTICAS", "COMPARTILHAR", "APAGAR DADOS", "CERTEZA? TOQUE", "JOGAR FASE", "FASE", "TENTATIVAS", "SUPERADA", "MORTES", "DESISTÊNCIAS", "T. MÉDIO", "CAUSA PRINCIPAL", "Dados apagados", "Fase ainda bloqueada", "Relatório copiado: cole numa mensagem", "Copie o texto e envie", "Toque numa fase para ver no mapa onde os jogadores morrem", "Jogue algumas fases e aqui verá onde morre, quanto demora e onde desiste.", "Nenhuma morte registrada", "● morte   ● queda no vazio   ▪ inimigo   ▪ armadilha   ▭ arena do guardião"],
+    fr: ["Ce molosse se baisse avant de charger. Saute par-dessus et frappe-le pendant qu'il récupère.", "Tourelle à lunette : quand tu vois la ligne rouge, bouge !", "Regarde l'ombre au sol : c'est là que tombera ce qu'il lâche.", "Quelque chose bouge sous le sable. Quand le sol tremble, saute !", "Attention : ici, tout ce qui ressemble à du décor n'en est pas.", "Ces os se reconstituent. Achève-les dans la dimension violette (SHIFT) et ils ne reviendront pas.", "Ici, les livres mordent. Un coup et ils se ferment pour toujours.", "Si tu vois une colonne de lumière au sol, écarte-toi : la foudre tombe juste là.", "Les méduses brillent avant de lâcher une décharge. Attends qu'elles s'éteignent.", "Les rats de feu se divisent en deux en mourant. Ne baisse pas ta garde.", "Les séraphins tirent en éventail. Esquive par-dessus ou par-dessous.", "DÉTRUIT !", "SE RECONSTITUE…", "STATISTIQUES", "PARTAGER", "EFFACER LES DONNÉES", "SÛR ? TOUCHE", "JOUER LE NIVEAU", "NIVEAU", "ESSAIS", "RÉUSSI", "MORTS", "ABANDONS", "T. MOYEN", "CAUSE PRINCIPALE", "Données effacées", "Niveau encore verrouillé", "Rapport copié : colle-le dans un message", "Copie le texte et envoie-le", "Touche un niveau pour voir sur la carte où meurent les joueurs", "Joue quelques niveaux et tu verras ici où tu meurs, combien de temps tu mets et où tu abandonnes.", "Aucune mort enregistrée", "● mort   ● chute dans le vide   ▪ ennemi   ▪ piège   ▭ arène du gardien"],
+    de: ["Dieser Hund duckt sich, bevor er angreift. Spring drüber und schlag zu, während er sich erholt.", "Geschütz mit Zielfernrohr: Wenn du die rote Linie siehst, beweg dich!", "Achte auf den Schatten am Boden: Dort landet, was er fallen lässt.", "Etwas bewegt sich unter dem Sand. Wenn der Boden bebt, spring!", "Vorsicht: Hier ist nicht alles, was nach Kulisse aussieht, auch Kulisse.", "Diese Knochen setzen sich wieder zusammen. Erledige sie in der violetten Dimension (SHIFT), dann kommen sie nicht zurück.", "Die Bücher hier beißen. Ein Schlag und sie schließen sich für immer.", "Siehst du eine Lichtsäule am Boden, geh weg: Genau dort schlägt der Blitz ein.", "Die Quallen leuchten, bevor sie einen Schlag abgeben. Warte, bis sie erlöschen.", "Feuerratten teilen sich beim Sterben in zwei. Sei nicht zu sicher.", "Seraphe schießen im Fächer. Weich nach oben oder unten aus.", "ZERSTÖRT!", "SETZT SICH ZUSAMMEN…", "STATISTIKEN", "TEILEN", "DATEN LÖSCHEN", "SICHER? TIPPEN", "STUFE SPIELEN", "STUFE", "VERSUCHE", "GESCHAFFT", "TODE", "ABBRÜCHE", "Ø ZEIT", "HAUPTURSACHE", "Daten gelöscht", "Stufe noch gesperrt", "Bericht kopiert: füge ihn in eine Nachricht ein", "Kopiere den Text und sende ihn", "Tippe auf eine Stufe, um auf der Karte zu sehen, wo die Spieler sterben", "Spiel ein paar Stufen, dann siehst du hier, wo du stirbst, wie lange du brauchst und wo du aufgibst.", "Keine Tode erfasst", "● Tod   ● Sturz ins Leere   ▪ Gegner   ▪ Falle   ▭ Wächter-Arena"],
+    it: ["Quel segugio si abbassa prima di caricare. Saltagli sopra e colpiscilo mentre si riprende.", "Torretta con mirino: quando vedi la linea rossa, muoviti!", "Guarda l'ombra a terra: è lì che cadrà ciò che lascia andare.", "Qualcosa si muove sotto la sabbia. Quando il suolo trema, salta!", "Attento: qui non tutto ciò che sembra scenografia lo è.", "Queste ossa si ricompongono. Finiscile nella dimensione viola (SHIFT) e non torneranno.", "I libri qui mordono. Un colpo e si chiudono per sempre.", "Se vedi una colonna di luce a terra, spostati: il fulmine cade proprio lì.", "Le meduse brillano prima di rilasciare una scarica. Aspetta che si spengano.", "I ratti di fuoco si dividono in due quando muoiono. Non abbassare la guardia.", "I serafini sparano a ventaglio. Schiva sopra o sotto.", "DISTRUTTO!", "SI RICOMPONE…", "STATISTICHE", "CONDIVIDI", "CANCELLA DATI", "SICURO? TOCCA", "GIOCA LIVELLO", "LIVELLO", "TENTATIVI", "SUPERATO", "MORTI", "ABBANDONI", "T. MEDIO", "CAUSA PRINCIPALE", "Dati cancellati", "Livello ancora bloccato", "Rapporto copiato: incollalo in un messaggio", "Copia il testo e invialo", "Tocca un livello per vedere sulla mappa dove muoiono i giocatori", "Gioca qualche livello e qui vedrai dove muori, quanto impieghi e dove abbandoni.", "Nessuna morte registrata", "● morte   ● caduta nel vuoto   ▪ nemico   ▪ trappola   ▭ arena del guardiano"],
+    ja: ["あの猟犬は突進の前に身をかがめる。飛び越えて、立ち直る前に斬りつけろ。", "照準付きの砲台だ。赤い線が見えたら動け！", "地面の影を見て。落としてくる物はそこに落ちる。", "砂の下で何かが動いてる。地面が揺れたらジャンプ！", "気をつけて。ここでは飾りに見えるものが飾りとは限らない。", "この骨は元に戻る。紫の次元（SHIFT）でとどめを刺せば、もう戻らない。", "ここの本は噛みつく。一撃で永遠に閉じるよ。", "地面に光の柱が見えたら離れて。雷はちょうどそこに落ちる。", "クラゲは放電の前に光る。光が消えるまで待って。", "火ネズミは死ぬと二つに分かれる。油断しないで。", "セラフは扇状に撃ってくる。上か下によけて。", "撃破！", "再生中…", "統計", "共有", "データ削除", "本当に？タップ", "ステージをプレイ", "ステージ", "挑戦", "クリア", "死亡", "中断", "平均時間", "主な原因", "データを削除しました", "まだロックされています", "レポートをコピーしました：メッセージに貼り付けてね", "テキストをコピーして送ってね", "ステージをタップすると、プレイヤーが死んだ場所を地図で見られます", "いくつかステージを遊ぶと、どこで死ぬか、どれくらいかかるか、どこでやめるかがここに表示されます。", "死亡記録なし", "● 死亡   ● 落下   ▪ 敵   ▪ 罠   ▭ 守護者のアリーナ"],
+    ko: ["저 사냥개는 돌진하기 전에 몸을 웅크려. 뛰어넘고 회복하는 동안 공격해.", "조준경 달린 포탑이야. 빨간 선이 보이면 움직여!", "바닥의 그림자를 봐. 떨어뜨리는 건 거기로 떨어져.", "모래 밑에서 뭔가 움직여. 땅이 흔들리면 점프!", "조심해. 여기선 장식처럼 보인다고 다 장식은 아니야.", "이 뼈들은 다시 맞춰져. 보라색 차원(SHIFT)에서 끝내면 돌아오지 않아.", "여기 책들은 물어. 한 대면 영원히 닫혀.", "바닥에 빛기둥이 보이면 피해. 번개가 바로 거기 떨어져.", "해파리는 전기를 내뿜기 전에 빛나. 빛이 꺼질 때까지 기다려.", "불쥐는 죽으면 둘로 갈라져. 방심하지 마.", "세라핌은 부채꼴로 쏴. 위나 아래로 피해.", "파괴!", "재조립 중…", "통계", "공유", "데이터 삭제", "정말? 탭", "스테이지 플레이", "스테이지", "시도", "클리어", "사망", "포기", "평균 시간", "주요 원인", "데이터가 삭제됐어요", "아직 잠긴 스테이지예요", "보고서 복사됨: 메시지에 붙여 넣으세요", "텍스트를 복사해서 보내세요", "스테이지를 탭하면 플레이어가 죽는 위치를 지도에서 볼 수 있어요", "스테이지를 몇 개 플레이하면 어디서 죽는지, 얼마나 걸리는지, 어디서 포기하는지 여기 나와요.", "사망 기록 없음", "● 사망   ● 추락   ▪ 적   ▪ 함정   ▭ 수호자 아레나"],
+    zh: ["那只猎犬冲撞前会先蹲下。跳过去，趁它恢复时攻击它。", "带瞄准镜的炮塔：看到红线就快动！", "看地上的影子：它丢下的东西会落在那里。", "沙子底下有东西在动。地面一震动就跳！", "小心：这里看起来像布景的东西不一定是布景。", "这些骨头会重新拼合。在紫色维度（SHIFT）里消灭它们，它们就不会回来。", "这里的书会咬人。一击就能让它们永远合上。", "看到地上有光柱就躲开：闪电会正好落在那里。", "水母放电前会发光。等它们暗下来。", "火鼠死时会分裂成两只。别大意。", "炽天使会扇形射击。从上方或下方闪避。", "已摧毁！", "正在重组……", "统计", "分享", "删除数据", "确定？点击", "进入关卡", "关卡", "尝试", "通关", "死亡", "放弃", "平均用时", "主要原因", "数据已删除", "关卡尚未解锁", "报告已复制：粘贴到消息里", "复制文本并发送", "点击关卡，在地图上查看玩家死亡的位置", "玩几关后，这里会显示你在哪里死亡、用时多久以及在哪里放弃。", "暂无死亡记录", "● 死亡   ● 坠落   ▪ 敌人   ▪ 陷阱   ▭ 守护者竞技场"]
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();

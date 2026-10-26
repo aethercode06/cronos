@@ -270,6 +270,7 @@ function exitApp() {
   if (A && A.exitApp) A.exitApp();
 }
 function backAction() {
+  if (state === 'stats' && typeof closeStats === 'function') { closeStats(); return; }
   if (state === 'playing') { pauseGame(); return; }
   if (state === 'paused') { resume(); return; }
   if (state === 'options') { closeOptions(); return; }
