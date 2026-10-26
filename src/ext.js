@@ -385,7 +385,7 @@ function portrait(key, cx, cy, r, col) {
   ctx.restore(); ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.3); ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.shadowColor = col; ctx.shadowBlur = 12; ctx.stroke(); ctx.restore();
 }
 function whoOf(id) { if (id === 'BOSS') return { n: boss ? boss.name : '', c: WORLDS[curWorld].c, pt: null }; return WHO[id] || WHO.NARR; }
-function bossPortraitKey() { if (boss && boss.skin) return boss.skin; const P = ['frog_boss_idle_s4', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'pt_sombrio', 'boss_lev', 'boss_sph', 'boss_ser', 'pt_devo']; return P[boss ? boss.type : 0]; }
+function bossPortraitKey() { if (boss && boss.skin) return boss.skin; if (boss && hdbKey(boss.type)) return hdbKey(boss.type); const P = ['frog_boss_idle_s4', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'pt_sombrio', 'boss_lev', 'boss_sph', 'boss_ser', 'pt_devo']; return P[boss ? boss.type : 0]; }
 function drawDialogBox(line, shown, y, tapHint) {
   const w = whoOf(line[0]), x0 = Math.round((W - 760) / 2), text = line[1].slice(0, Math.floor(shown));
   const hasP = w.pt || line[0] === 'BOSS';
@@ -517,7 +517,7 @@ function drawMap2() {
   }
   for (const b of uiButtons()) drawButton(b);
 }
-function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'boss_archi', 'boss_dragon']; return P[w]; }
+function bossPortraitKeyW(w) { const P = ['frog_boss_idle', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king', 'boss_golemc', 'boss_stag', 'boss_archi', 'boss_dragon']; const B = WORLDS[w] && WORLDS[w].boss; return (B && !B.skin && hdbKey(B.type)) || P[w]; }
 function mapButtons(B) {
   B.push({ x: 18, y: 16, w: 118, h: 40, t: 'VOLVER', ic: 'left', c: '#35e2ff', fn: toTitle });
   B.push({ x: W - 506, y: 18, w: 126, h: 36, t: 'TALLER', ic: 'time', c: '#ffc861', small: true, fn: () => { state = 'shop'; } });

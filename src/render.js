@@ -421,12 +421,54 @@ function drawEnemy(e) {
   } else spr(d.anim, Math.floor(e.t * 10), cx, by + 1, flip, 1, wh);
   if (e.alert > 0 && e.b !== 'diver') { const y = e.y - 14 + Math.round(Math.sin(time * 20) * 1); bx.fillStyle = '#ffffff'; bx.fillRect(Math.round(cx) - 2, y - 1, 5, 12); bx.fillStyle = '#ff3d5a'; bx.fillRect(Math.round(cx) - 1, y, 3, 7); bx.fillRect(Math.round(cx) - 1, y + 8, 3, 2); }
 }
+// ---------------- Guardianes clásicos con arte pintado (si existe) ----------------
+// El arte nuevo mira a la derecha; se gira según b.face. Conserva todos los ataques y estados.
+const HDB = { 0: 'hdb_frog', 2: 'hdb_wizard', 3: 'hdb_eye', 4: 'hdb_knight', 5: 'hdb_beast', 6: 'hdb_demon' };
+function hdbKey(t) { const k = HDB[t]; return k && SPR[k] && SPR[k].width ? k : null; }
+function stunStars(cx, y, r) { for (let i = 0; i < 3; i++) { const a = time * 5 + i * 2.1; bx.fillStyle = '#ffe066'; bx.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(y + Math.sin(a) * 6), 3, 3); } }
+function drawBossHD(b, k, wh, blink, cx, by) {
+  const m = meta(k), src = wh || blink ? whiteOf(k, false) : SPR[k], fl = b.face < 0, mid = b.y + b.h / 2;
+  let sx = 1, sy = 1, px = cx, py = by, rot = 0, center = false;
+  if (b.type === 0) {
+    if (b.st === 'crouch') { sy = 0.86; sx = 1.08; } else if (b.st === 'air') { sy = 1.08; sx = 0.94; rot = b.vy < 0 ? -0.08 : 0.06; } else sy = 1 + Math.sin(time * 4) * 0.02;
+    py = by + 4;
+  } else if (b.type === 2) {
+    py = by + Math.sin(time * 2.2) * 4 - 6; rot = b.throwA > 0 ? -0.09 : Math.sin(time * 1.3) * 0.02;
+    glowAt(cx, by - 60, 95, 'rgba(255,100,30,.38)', .8); glowAt(cx + (fl ? -36 : 36), by - 92, 24, 'rgba(255,170,60,.8)', .6 + Math.sin(time * 6) * .2);
+  } else if (b.type === 3) {
+    center = true; py = mid + Math.sin(time * 3) * 3; rot = b.st === 'dive' ? 0.25 : Math.sin(time * 2) * 0.06;
+    if (b.atkA > 0) b.atkA -= 1 / 60;
+    glowAt(cx, mid, 80, 'rgba(255,150,60,.28)', .6); if (b.st === 'tele') glowAt(cx, mid, 64, 'rgba(255,40,60,.75)', .85);
+  } else if (b.type === 4) {
+    const walk = b.st === 'walk' && !b.dying; sy = walk ? 1 + Math.abs(Math.sin(time * 8)) * 0.02 : 1;
+    rot = b.st === 'windup' ? -0.1 : b.st === 'slash' ? 0.14 : b.st === 'guard' ? -0.04 : 0; py = by + 2;
+    if (b.st === 'windup') glowAt(cx + b.face * 30, b.y + 40, 44, 'rgba(255,60,60,.55)', .6);
+  } else if (b.type === 5) {
+    const run = b.st === 'charge' || b.st === 'leap'; rot = run ? 0.06 : b.st === 'roar' ? -0.08 : 0; sy = run ? 1 + Math.sin(time * 18) * 0.03 : 1 + Math.sin(time * 3) * 0.015; py = by + 4;
+    glowAt(cx, mid, 85, 'rgba(150,220,255,.3)', .6);
+  } else if (b.type === 6) {
+    center = true; py = mid + (b.st === 'rest' ? 10 : Math.sin(time * 2) * 6); rot = Math.sin(time * 1.5) * 0.03;
+    glowAt(cx, b.y + 70, 150, 'rgba(255,70,30,.5)', .9); glowAt(cx, b.y + 40, 60, 'rgba(255,160,60,.35)', .8);
+  }
+  bx.save(); bx.translate(Math.round(px), Math.round(py)); if (b.dying) bx.globalAlpha = clamp(b.dieT / 2.8 + 0.15, 0, 1);
+  bx.rotate(fl ? -rot : rot); bx.scale(fl ? -sx : sx, sy);
+  if (center) bx.drawImage(src, 0, 0, m.fw, m.fh, -m.fw / 2, -m.fh / 2, m.fw, m.fh); else bx.drawImage(src, 0, 0, m.fw, m.fh, -m.ax, -m.ay, m.fw, m.fh);
+  bx.restore();
+  if (b.type === 2 && b.vulnT <= 0 && !b.dying) shieldBubble(cx, by - 74, 86);
+  if (b.type === 3 && b.st === 'stun') stunStars(cx, b.y - 6, 30);
+  if (b.type === 4 && b.st === 'guard') glowAt(cx + b.face * 30, b.y + 50, 44, 'rgba(200,220,255,.45)', .6);
+  if (b.type === 5 && b.st === 'roar') for (let i = 0; i < 3; i++) { const r = (b.t * 200 + i * 30) % 90; bx.strokeStyle = 'rgba(200,240,255,' + (1 - r / 90) * .6 + ')'; bx.lineWidth = 2; bx.beginPath(); bx.arc(cx + b.face * 50, b.y + 20, r, 0, 6.3); bx.stroke(); }
+  if (b.type === 5 && b.st === 'stagger') stunStars(cx, b.y - 4, 34);
+  if (b.type === 6 && b.st === 'rest') stunStars(cx, b.y - 4, 40);
+  if (b.type === 6 && b.st === 'breath') glowAt(b.face < 0 ? b.x - 90 : b.x + b.w + 90, b.y + 120, 110, 'rgba(60,220,255,.45)', .8);
+}
 function drawBoss() {
   if (!boss || boss.done) return;
   const b = boss, wh = b.hit > 0, A = level.arena, cx = b.x + b.w / 2, by = b.y + b.h;
   const blink = b.dying && Math.floor(time * 20) % 2 === 0;
   bx.fillStyle = 'rgba(0,0,0,.3)';
   const sw = Math.round(b.w * .55 * clamp(1 - (A.floor - by) / 300, .3, 1)); bx.fillRect(Math.round(cx - sw), A.floor - 3, sw * 2, 3);
+  const hk = !b.skin && hdbKey(b.type); if (hk) { drawBossHD(b, hk, wh, blink, cx, by); return; }
   if (b.type === 0) {
     let k = 'frog_boss_idle_s4', f = 0, sy = 1;
     if (b.st === 'air') { k = 'frog_boss_jump_s4'; f = b.vy < 0 ? 0 : 1; } else if (b.st === 'crouch') sy = 0.875; else sy = 1 + Math.sin(time * 4) * 0.02;

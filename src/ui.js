@@ -264,9 +264,9 @@ function drawBossIntro() {
   txt('GUARDIÁN DEL MUNDO ' + (WPOS(curWorld) + 1), 58 - sl, 394, 13, c, null, 0, 'left', UIF, 800);
   ctx.save(); ctx.shadowColor = hexA(c, .8); ctx.shadowBlur = 24; txt(boss.name, 56 - sl, 430, 34, '#ffffff', null, 0, 'left', LOGOF, 900); ctx.restore();
   const PORT = ['frog_boss_idle_s4', 'boss_ship', 'WZ_idle_s2', 'eye_s2', 'skel_idle_s2', 'hound_ice_s2', 'demon_idle', 'S_idle', 'boss_lev', 'boss_sph', 'boss_ser', 'boss_devo', 'boss_witch', 'boss_king'];
-  const pk = boss.skin || PORT[boss.type], pm = meta(pk), R = 64, mx = 56 - sl + R, my = 300;
+  const pk = boss.skin || hdbKey(boss.type) || PORT[boss.type], pm = meta(pk), R = 64, mx = 56 - sl + R, my = 300;
   ctx.save(); ctx.beginPath(); ctx.arc(mx, my, R, 0, 6.3); const rg = ctx.createRadialGradient(mx, my - 20, 6, mx, my, R); rg.addColorStop(0, hexA(c, .55)); rg.addColorStop(1, 'rgba(10,8,24,.92)'); ctx.fillStyle = rg; ctx.fill();
-  ctx.clip(); ctx.imageSmoothingEnabled = false; const ps = Math.min(2.4 * R / pm.fh, 2.4 * R / pm.fw), flipP = boss.type === 5 || boss.type === 6;
+  ctx.clip(); ctx.imageSmoothingEnabled = false; const ps = Math.min(2.4 * R / pm.fh, 2.4 * R / pm.fw), flipP = !boss.skin && !hdbKey(boss.type) && (boss.type === 5 || boss.type === 6);
   ctx.translate(mx, my + R * 0.15); if (flipP) ctx.scale(-1, 1); ctx.drawImage(SPR[pk], 0, 0, pm.fw, pm.fh, -pm.fw * ps / 2, -pm.fh * ps / 2, pm.fw * ps, pm.fh * ps); ctx.restore();
   ctx.save(); ctx.beginPath(); ctx.arc(mx, my, R, 0, 6.3); ctx.strokeStyle = c; ctx.lineWidth = 3; ctx.shadowColor = c; ctx.shadowBlur = 16; ctx.stroke(); ctx.restore();
   ctx.globalAlpha = 1;
