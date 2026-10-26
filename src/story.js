@@ -39,6 +39,29 @@ const CUTS = {
       ['SOMBRIO', 'Los diez últimos fragmentos están más allá del tiempo. Ve, Kael. Haz lo que yo no fui capaz de hacer.'],
       ['KAEL', 'Lo haré. Por los dos.']] }
   ],
+  veil: [
+    { img: 'cs_veil', pan: [0.05, 0.08, 1.0, 1.12], lines: [
+      ['NARR', 'Al caer el Serafín, el cielo se rasgó como papel viejo y mostró caminos que ningún mapa de la Orden recordaba.'],
+      ['TIC', 'Eh… según mi mapa, aquí no debería haber nada. Y ahí hay… seis mundos más.'],
+      ['NARR', 'Seis mundos olvidados, escondidos entre los segundos. Allí habían caído los últimos fragmentos.']] },
+    { img: 'cs_swamp', pan: [0.08, 0.05, 1.12, 1.0], lines: [
+      ['TIC', 'Huele a pantano. Y a sopa. Sopa de pantano. No me gusta nada.'],
+      ['KAEL', 'Lyra dijo que estaría en cada amanecer. Ahí abajo no amanece nunca.'],
+      ['TIC', 'Pues habrá que llevarle uno.']] }
+  ],
+  late: [
+    { img: 'cs_storm', pan: [0.06, 0.0, 1.12, 1.0], lines: [
+      ['NARR', 'En lo alto de la Torre de las Tormentas, el decimosexto fragmento se encendió en la mano de Kael.'],
+      ['TIC', 'Dieciséis. Solo quedan dos. ¿Lo notas? La lluvia… se ha quedado quieta.']] },
+    { img: 'cs_echo', pan: [0.0, 0.08, 1.0, 1.12], lines: [
+      ['LYRA', 'Kael… cada fragmento me acerca a ti. Pero también lo despierta a él.'],
+      ['LYRA', 'Más allá está la Ciudadela del Rey Caído. Él intentó lo mismo que tú: detener el tiempo para salvar a los suyos.'],
+      ['KAEL', '¿Y qué le pasó?'],
+      ['LYRA', 'Que su reino sigue allí. Congelado en el último segundo. Para siempre.']] },
+    { img: 'cs_citadel', pan: [0.1, 0.05, 1.0, 1.1], lines: [
+      ['TIC', 'Nota mental: no acabar como ese señor.'],
+      ['KAEL', 'No voy a detener el tiempo, Lyra. Voy a hacer que vuelva a correr.']] }
+  ],
   ending: [
     { img: 'cs_final', pan: [0.05, 0.05, 1.15, 1.0], lines: [
       ['NARR', 'En el Nexo, la luz de los dieciocho fragmentos atravesó al Devorador de Horas.'],

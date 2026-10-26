@@ -9,6 +9,7 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
     modes (estrellas por fase, Torre del Tiempo), i18n_data + i18n_extra + i18n (9 idiomas).
   - `src/*assets.js` — arte embebido (no editar a mano). `src/head.html` — cabecera del HTML.
 - Mundos 14-17 (v1.9: Minas de Cristal, Bosque de Huesos, Biblioteca Prohibida, Torre de las Tormentas) tienen fondos pintados con Higgsfield (`pbg14`-`pbg17`, `pbg13` del Rey Caído y `pbg12` del Pantano; guardianes pintados `boss_golemc`, `boss_stag`, `boss_archi`; originales en `store/fondos_higgsfield/`) y el resto del arte recoloreado de otros mundos en `src/hf16assets.js` (terreno, decorado, guardianes `boss_golemc`, `boss_stag`, `boss_dragon`, `WZB_*`). `WBASE`/`VWI()` en data.js dice a qué mundo se parecen para pasos y partículas. Orden de juego en `ORDER` (flow.js); el guardado v5 desplaza las fases ≥36.
+- v2.0: guardianes clásicos pintados `hdb_frog`, `hdb_wizard`, `hdb_eye`, `hdb_knight`, `hdb_beast`, `hdb_demon` (HDB en render.js) y `boss_dragon` pintado; decorados propios `pr12_*` y `pr14_*`-`pr17_*`; escenas nuevas `veil` (tras el mundo 10) y `late` (tras el 17) con `cs_veil`, `cs_swamp`, `cs_storm`, `cs_echo`, `cs_citadel`; todo en `src/hf16assets.js` (originales en `store/fondos_higgsfield/hf_guardian_*`). Recortes de fondo con rembg en local.
 - Criaturas gigantes del cielo por mundo en `GIANT_OF` (live2.js): las marinas (ballena, mantarraya, medusa) solo en el Arrecife y el Nexo.
 - `i18n/*.json` — traducciones por id (`es.json` es el original). Textos nuevos: añadirlos en `src/i18n_extra.js` o `src/i18n_extra2.js` en los 9 idiomas.
 - `www/` — juego listo + PWA (manifest, sw.js: subir VERSION en cada publicación) + privacidad.html.
@@ -23,6 +24,7 @@ Juego de plataformas 2D dark fantasy de Aether Code (César de los Santos Rivera
 3. Commit y push a main: GitHub compila el APK solo.
 
 ## Pendiente
-- Arte HD de los jefes de los mundos 1 y 3–7, arte propio para Pantano y Ciudadela, música original (necesita créditos de Higgsfield).
+- PRÓXIMO (pedido por el usuario): mundo nuevo de bosque medieval fantástico con duendes y elfos como enemigos/personajes. Arte de concepto ya hecho en `store/concepto/bosque_medieval.jpg` y `store/concepto/duendes_elfos.jpg` (duende, duende chamán, elfa arquera, caballero elfo): usarlo como guía de estilo. Faltan hojas de animación, fondo final, terreno y decorados (necesita créditos de Higgsfield).
+- Música original: Higgsfield no ofrece modelo de música utilizable fuera de su pipeline de juegos.
 - Fases secretas por mundo, Modo Pesadilla, Boss Rush. AAB firmado y API 36 para Google Play.
 - El usuario habla español y trabaja desde un Samsung S23 Ultra (sin computadora).

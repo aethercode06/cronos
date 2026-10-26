@@ -439,6 +439,7 @@ function fragAdvance() {
 function finishFragment() {
   const w = frag.w; frag = null;
   if (w === 7) playCut('mid', () => { state = 'clear'; fade = 1; });
+  else if ((w === 10 || w === 17) && CUTS[w === 10 ? 'veil' : 'late']) playCut(w === 10 ? 'veil' : 'late', () => { state = 'clear'; fade = 1; });
   else if (w === 11) playCut('ending', () => { state = 'victory'; fade = 1; SAVE.done = 1; persist(); sfx('v_youwin'); sfx('win', .8); });
   else { state = 'clear'; fade = 1; }
 }
