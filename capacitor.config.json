@@ -1,0 +1,7 @@
+{
+  "appId": "com.aethercode.chronos",
+  "appName": "Chronos & The Shift",
+  "webDir": "www",
+  "backgroundColor": "#07050f",
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false }
+}

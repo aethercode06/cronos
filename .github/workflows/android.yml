@@ -1,0 +1,57 @@
+name: Compilar APK de Android
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'www/**', 'assets/**', 'keys/**', 'capacitor.config.json', 'package.json', '.github/workflows/android.yml' ]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Instalar Capacitor
+        run: npm install
+      - name: Crear el proyecto Android
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Icono y pantalla de carga del juego
+        continue-on-error: true
+        run: |
+          [ -f assets/splash-dark.png ] || cp assets/splash.png assets/splash-dark.png
+          npx @capacitor/assets generate --android --iconBackgroundColor '#0e081a' --iconBackgroundColorDark '#0e081a' --splashBackgroundColor '#07050f' --splashBackgroundColorDark '#07050f'
+      - name: Horizontal, pantalla completa y número de versión
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's/<activity/<activity android:screenOrientation="sensorLandscape"/' $M
+          G=android/app/build.gradle
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" $G
+          sed -i "s/versionName \"[^\"]*\"/versionName \"1.7.${{ github.run_number }}\"/" $G
+          S=android/app/src/main/res/values/styles.xml
+          sed -i 's#<item name="android:background">@null</item>#<item name="android:background">@null</item>\n        <item name="android:windowFullscreen">true</item>\n        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>#' $S
+      - name: Usar siempre la misma firma (para poder actualizar sin desinstalar)
+        run: mkdir -p ~/.android && cp keys/debug.keystore ~/.android/debug.keystore
+      - name: Compilar APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - name: Preparar archivo
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Chronos-The-Shift.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chronos-apk
+          path: Chronos-The-Shift.apk
+      - name: Publicar en Descargas (Releases)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ultima-version -y --cleanup-tag || true
+          gh release create ultima-version Chronos-The-Shift.apk \
+            --title "Chronos & The Shift · versión 1.7.${{ github.run_number }}" \
+            --notes "Toca **Chronos-The-Shift.apk** para descargarlo e instalarlo en Android. Si el teléfono lo pide, permite instalar apps de origen desconocido para tu navegador." \
+            --latest
