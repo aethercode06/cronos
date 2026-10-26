@@ -4,7 +4,9 @@
 //  propios). Se genera en el teléfono la primera vez que suena y se
 //  guarda en memoria. Opciones > Banda sonora: Original / Clásica.
 // =====================================================================
-if (OPT.ost === undefined) OPT.ost = 'orig';
+if (OPT.ost === undefined) OPT.ost = 'clasica';
+// cada mundo tiene ahora su propio tema compuesto (los mundos 9-18 ya no repiten los de otros)
+for (let i = 8; i < WORLDS.length; i++) if (MUS['w' + i]) { WORLDS[i].music = 'w' + i; delete WORLDS[i].rate; }
 const SC = { aeolian: [0, 2, 3, 5, 7, 8, 10], dorian: [0, 2, 3, 5, 7, 9, 10], phrygian: [0, 1, 3, 5, 7, 8, 10], harm: [0, 2, 3, 5, 7, 8, 11], hijaz: [0, 1, 4, 5, 7, 8, 10], lydian: [0, 2, 4, 6, 7, 9, 11], ionian: [0, 2, 4, 5, 7, 9, 11], penta: [0, 3, 5, 7, 10, 12, 15] };
 // tema por mundo: r = nota base (MIDI), s = escala, bpm, p/pB = grados de los acordes (8 compases), lead/arp/bass/drums = estilos
 const SONGS = {
@@ -213,7 +215,7 @@ function genIdFor(id) {
   if (id === 'menu') return 'gmenu';
   if (id === 'boss') return 'gboss';
   if (id === 'final') return 'gfinal';
-  if (/^w\d$/.test(id) && typeof curWorld === 'number') return 'g' + curWorld;
+  if (/^w\d+$/.test(id) && typeof curWorld === 'number') return 'g' + curWorld;
   return null;
 }
 let musicWanted = null;
@@ -232,7 +234,7 @@ const _optRowsG = optRows;
 optRows = function () {
   const R = _optRowsG();
   const sw = () => { OPT.ost = OPT.ost === 'orig' ? 'clasica' : 'orig'; const w = wantMusic; curMusicId = null; playMusic(w); };
-  R.splice(2, 0, ['Banda sonora', OPT.ost === 'orig' ? 'Original' : 'Clásica', sw, sw]);
+  R.splice(2, 0, ['Banda sonora', OPT.ost === 'orig' ? 'Sintetizada' : 'Compuesta', sw, sw]);
   return R;
 };
 // componer de antemano el tema del menú y del mundo siguiente cuando el audio arranca
@@ -241,3 +243,17 @@ initAudio = function () { _initAudioG(); if (AC && OPT.ost === 'orig') { genSong
 // al entrar en una fase, preparar también el tema del guardián
 const _startStageG = startStage;
 startStage = function (wi, act, fresh) { _startStageG(wi, act, fresh); if (AC && OPT.ost === 'orig') { genSong('g' + wi); genSong(wi >= 6 ? 'gfinal' : 'gboss'); } };
+// ---------------- efectos de sonido con variaciones (v2.5) ----------------
+// cada golpe, paso o rugido elige entre varias grabaciones para no sonar repetitivo
+const SFX_POOL = { hit: ['hit', 'hit_a', 'hit_b', 'hit_c'], clang: ['clang', 'clang_a', 'clang_b'], stomp: ['stomp', 'stomp_a', 'stomp_b'], step: ['step', 'step_a', 'step_b'],
+  swing: ['swing', 'swing_a', 'swing_b'], roar: ['roar_a', 'roar_b'], kill: ['kill', 'kill_a'] };
+const sfxLast = {};
+const _sfxV = sfx;
+sfx = function (k, vol, rate) {
+  const P = SFX_POOL[k];
+  if (P && typeof SND_GAIN !== 'undefined') {
+    const ok = P.filter(x => (typeof BUF === 'undefined' || BUF[x]) && x !== sfxLast[k]);
+    if (ok.length) { const c = ok[Math.floor(Math.random() * ok.length)]; sfxLast[k] = c; return _sfxV(c, (vol === undefined ? 1 : vol) * (SND_GAIN[c] || 1), rate); }
+  }
+  return _sfxV(k, vol, rate);
+};

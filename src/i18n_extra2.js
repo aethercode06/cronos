@@ -79,3 +79,14 @@
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v2.5: bestiario nuevo
+(function () {
+  const ES = ["Ese bruto levanta el arma antes de golpear: apártate y contraataca por la espalda."];
+  const X = { en: ["That brute raises its weapon before striking: step aside and counterattack from behind."], pt: ["Esse brutamontes ergue a arma antes de golpear: saia da frente e contra-ataque pelas costas."], fr: ["Cette brute lève son arme avant de frapper : écarte-toi et contre-attaque par derrière."], de: ["Dieser Grobian hebt seine Waffe, bevor er zuschlägt: weich aus und greif von hinten an."], it: ["Quel bruto alza l'arma prima di colpire: spostati e contrattacca alle spalle."], ja: ["あの巨漢は攻撃の前に武器を振り上げる。よけて背後から反撃して！"], ko: ["저 괴력꾼은 때리기 전에 무기를 치켜들어. 피했다가 뒤에서 반격해!"], zh: ["那个蛮兵出手前会先举起武器：闪开，从背后反击！"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+(function () {
+  const ES = ["Sintetizada", "Compuesta"];
+  const X = { en: ["Synthesized", "Composed"], pt: ["Sintetizada", "Composta"], fr: ["Synthétisée", "Composée"], de: ["Synthetisiert", "Komponiert"], it: ["Sintetizzata", "Composta"], ja: ["シンセ", "作曲版"], ko: ["신시사이저", "작곡판"], zh: ["合成", "作曲"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();

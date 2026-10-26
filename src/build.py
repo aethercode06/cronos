@@ -15,8 +15,8 @@ for k in I5: I4.pop(k, None)
 hf8 = h8[:m8.start()] + 'const IMG4=' + json.dumps(I4) + ';\n' + h8[m8.end():]
 fonts = open(B + 'fonts2.js').read()
 hf = '\n'.join([open(B + 'hfassets.js').read(), open(B + 'hf7assets.js').read(), hf8] +
-               [open(B + f).read() for f in ['hf9assets.js', 'hf10assets.js', 'hf11assets.js', 'hf12assets.js', 'hf14assets.js', 'hf15assets.js', 'hf16assets.js']])
-MODS = ['core', 'hdrender', 'gl', 'amb', 'story', 'data', 'logic', 'ext', 'terrain', 'hd', 'live', 'live2', 'render', 'particles', 'abilities', 'flow', 'ui', 'polish', 'modes', 'foes', 'rush', 'music', 'secret', 'tele', 'pace', 'i18n_data', 'i18n_extra', 'i18n_extra2', 'i18n']
+               [open(B + f).read() for f in ['hf9assets.js', 'hf10assets.js', 'hf11assets.js', 'hf12assets.js', 'hf14assets.js', 'hf15assets.js', 'hf16assets.js', 'hf17assets.js', 'musassets.js', 'sndassets.js']])
+MODS = ['core', 'hdrender', 'gl', 'amb', 'story', 'data', 'logic', 'ext', 'terrain', 'hd', 'live', 'live2', 'render', 'particles', 'abilities', 'flow', 'ui', 'polish', 'modes', 'foes', 'rush', 'music', 'secret', 'tele', 'bestiary', 'pace', 'i18n_data', 'i18n_extra', 'i18n_extra2', 'i18n']
 game = '\n'.join(open(B + f + '.js').read() for f in MODS)
 
 head = open(B + 'head.html').read()
