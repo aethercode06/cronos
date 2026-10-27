@@ -64,6 +64,13 @@ jobs:
         run: |
           gh release delete ultima-version -y --cleanup-tag || true
           gh release create ultima-version Chronos-The-Shift.apk Chronos-PRUEBA.apk \
-            --title "Chronos & The Shift · versión 2.5.${{ github.run_number }}" \
+            --title "Chronos & The Shift · versión 2.8.${{ github.run_number }}" \
             --notes "Toca **Chronos-The-Shift.apk** para descargarlo e instalarlo en Android. **Chronos-PRUEBA.apk** es la versión de prueba con todos los mundos abiertos: se instala aparte y no toca tu partida. Si el teléfono lo pide, permite instalar apps de origen desconocido para tu navegador." \
             --latest
+          # a veces GitHub deja la versión como borrador (404 al descargar): se publica y se comprueba
+          for i in 1 2 3 4 5; do
+            gh release edit ultima-version --draft=false --latest || true
+            sleep 4
+            if [ "$(gh release view ultima-version --json isDraft -q .isDraft)" = "false" ]; then echo "publicada"; break; fi
+          done
+          [ "$(gh release view ultima-version --json isDraft -q .isDraft)" = "false" ]
