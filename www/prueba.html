@@ -7579,6 +7579,235 @@ frame = function (now) {
 };
 window.addEventListener('orientationchange', () => setTimeout(resize, 250));
 
+// =====================================================================
+//  ENGANCHE (v3.0): que juegues una partida y quieras seguir
+//  1) Reintento instantáneo: al caer vuelves al punto de control en
+//     menos de un segundo, con «Llegaste al 72 %» para picarte.
+//  2) Reto diario: la misma fase para todos cada día, récord de tiempo.
+//  3) Cofre diario con racha de días seguidos (crece hasta 7 días).
+//  4) Tres misiones diarias con premio en fragmentos.
+//  5) Récord de tiempo por fase y aviso de «¡NUEVO RÉCORD!».
+// =====================================================================
+const tr = s => { try { return (typeof TRM !== 'undefined' && TRM && TRM.get(s)) || s; } catch (e) { return s; } };
+const dayNum = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+SAVE.dly = Object.assign({ streak: 0, last: -9, best: {}, done: -9, dstreak: 0, dlast: -9 }, SAVE.dly || {});
+SAVE.mis = SAVE.mis || { day: -1, list: [] };
+SAVE.bt = SAVE.bt || {};
+// ---------------- misiones diarias ----------------
+const MIS_POOL = [
+  ['kill', 'Derrota a {n} enemigos', [25, 40, 60], 30],
+  ['clear', 'Supera {n} fases', [2, 3, 4], 40],
+  ['boss', 'Derrota a un guardián', [1], 60],
+  ['nodmg', 'Supera una fase sin recibir daño', [1], 60],
+  ['crit', 'Haz {n} golpes críticos a guardianes', [4, 8], 40],
+  ['seal', 'Abre {n} barreras de emboscada', [2, 4], 35],
+  ['gems', 'Recoge {n} fragmentos', [50, 90], 30],
+  ['daily', 'Completa el reto diario', [1], 50],
+  ['combo', 'Consigue un combo de {n}', [15, 25], 35]
+];
+function misEnsure() {
+  const d = dayNum(); if (SAVE.mis.day === d) return;
+  const r = seeded(d * 7919 + 101), pool = MIS_POOL.slice(), list = [];
+  while (list.length < 3 && pool.length) {
+    const m = pool.splice(Math.floor(r() * pool.length), 1)[0], oi = Math.floor(r() * m[2].length);
+    list.push({ k: m[0], txt: m[1], n: m[2][oi], rw: Math.round(m[3] * (1 + oi * 0.5)), p: 0, ok: false });
+  }
+  SAVE.mis = { day: d, list }; try { persist(); } catch (e) {}
+}
+const misText = m => tr(m.txt).replace('{n}', m.n);
+const streakTxt = n => n === 1 ? tr('Racha de 1 día') : tr('Racha de {n} días').replace('{n}', n);
+const mtoasts = [];
+function misAdd(k, v, isMax) {
+  misEnsure();
+  for (const m of SAVE.mis.list) {
+    if (m.k !== k || m.ok) continue;
+    m.p = isMax ? Math.max(m.p, v) : m.p + (v === undefined ? 1 : v);
+    if (m.p >= m.n) { m.p = m.n; m.ok = true; SAVE.bank = (SAVE.bank || 0) + m.rw; mtoasts.push({ t: 0, head: 'MISIÓN CUMPLIDA', body: misText(m), rw: m.rw }); sfx('relic', .5, 1.1); try { persist(); } catch (e) {} }
+  }
+}
+// ---------------- cofre diario y racha ----------------
+const chestReady = () => SAVE.dly.last !== dayNum();
+function claimChest() {
+  const d = dayNum(); if (SAVE.dly.last === d) return;
+  SAVE.dly.streak = SAVE.dly.last === d - 1 ? SAVE.dly.streak + 1 : 1; SAVE.dly.last = d;
+  const g = 15 + 5 * Math.min(SAVE.dly.streak, 7);
+  SAVE.bank = (SAVE.bank || 0) + g; persist();
+  mtoasts.push({ t: 0, head: 'COFRE DIARIO', body: streakTxt(SAVE.dly.streak), rw: g });
+  sfx('relic', .7); sfx('gem', .6); flash = .2; flashCol = '255,220,120';
+}
+// ---------------- reto diario ----------------
+let DAILY = null, dailyRes = null;
+function dailyPlan() {
+  const d = dayNum(), r = seeded(d * 104729 + 7), ws = towerWorlds();
+  let wi = ws[Math.floor(r() * ws.length)], act = r() < .5 ? 0 : 1; if (wi === 0) act = 1;
+  return { d, wi, act, seed: d * 7907 + 3 };
+}
+function startDaily() {
+  const P = dailyPlan();
+  try { endTower(); } catch (e) {}
+  DAILY = { d: P.d, deaths: 0 }; dailyRes = null; score = 0;
+  TOWER_ON = true; TOWER_SEED = P.seed; TOWER_N = 9; TOWER_TRIAL = false;
+  try { startStage(P.wi, P.act, false); } finally { TOWER_ON = false; }
+  stageScore0 = 0; levelTime = 0; p.rewindUsed = true; dlg = null; loreT = 0;
+  banner('RETO DIARIO', tr('La misma fase para todos hoy · ¡bate tu récord!'), '#ff8a3d', 2.6);
+}
+const _stageClearH = stageClear;
+stageClear = function () {
+  if (state !== 'playing') return _stageClearH();
+  const g = level.gems.filter(x => x.taken).length;
+  misAdd('clear'); misAdd('gems', g); if (!stageHurt) misAdd('nodmg'); if (curAct === 2 && !DAILY) misAdd('boss');
+  if (DAILY) {
+    const t = levelTime + DAILY.deaths * 5, d = DAILY.d, prev = SAVE.dly.best[d];
+    const first = SAVE.dly.done !== d;
+    if (first) { SAVE.dly.dstreak = SAVE.dly.dlast === d - 1 ? SAVE.dly.dstreak + 1 : 1; SAVE.dly.dlast = d; SAVE.dly.done = d; SAVE.bank = (SAVE.bank || 0) + 40 + g; misAdd('daily'); }
+    const rec = !prev || t < prev; if (rec) SAVE.dly.best[d] = t;
+    for (const k in SAVE.dly.best) if (+k < d - 7) delete SAVE.dly.best[k];
+    dailyRes = { t, time: levelTime, deaths: DAILY.deaths, rec, prev, first, g };
+    persist(); stopAmbience(); slowT = 0; fade = 1; echo = null; dlg = null;
+    state = 'dailyDone'; sfx('portal', .8); sfx('win', .8); playMusic('menu');
+    return;
+  }
+  // récord de tiempo de la fase
+  const s = sIdx(curWorld, curAct), bt = SAVE.bt[s];
+  clearRec = (!bt || levelTime < bt) ? { t: levelTime, prev: bt } : null;
+  if (clearRec) SAVE.bt[s] = levelTime;
+  _stageClearH();
+};
+let clearRec = null, stageHurt = false;
+const _startStageH = startStage;
+startStage = function (wi, act, fresh) { stageHurt = false; sealsOpened = 0; _startStageH(wi, act, fresh); };
+const _hurtH = hurt;
+hurt = function (dmg, srcX) { const r = _hurtH(dmg, srcX); if (r) stageHurt = true; return r; };
+const _hazH = hazardRespawn;
+hazardRespawn = function (d) { stageHurt = true; return _hazH(d); };
+// enemigos derrotados y golpes críticos
+const _dmgEnemyH = damageEnemy;
+damageEnemy = function (e, hb) { const was = e.dead; _dmgEnemyH(e, hb); if (!was && e.dead) misAdd('kill'); };
+const _hitBossH = hitBoss;
+hitBoss = function (hb, fromAbove) {
+  const b = boss; let crit = false;
+  try { crit = b && (b.type >= 8 ? bossHitRule(b) : bossWeak(b)) >= 1.6; } catch (e) {}
+  const hp0 = b ? b.hp : 0; _hitBossH(hb, fromAbove);
+  if (crit && b && b.hp < hp0) misAdd('crit');
+};
+// ---------------- reintento instantáneo ----------------
+let sealsOpened = 0, deathN = 0;
+const _updateH = update;
+update = function (dt) {
+  _updateH(dt);
+  if (state === 'playing' && p) {
+    if (p.dead && p.deadT > 0.6) p.deadT = 0.6;           // caída más corta
+    if (p.combo >= 10) misAdd('combo', p.combo, true);
+    if (level && level.seals) { const n = level.seals.filter(z => z.st === 2).length; if (n > sealsOpened) { misAdd('seal', n - sealsOpened); sealsOpened = n; } }
+  }
+  // al caer: de vuelta al punto de control al instante (no en la Torre, el Boss Rush ni las Grietas)
+  if (state === 'gameover' && !TOWER && !RUSH && !SECRET) {
+    const goal = level.goal ? level.goal.x : level.arena ? level.arena.x1 : level.width, pct = Math.round(clamp(p.x / goal, 0, 1) * 100);
+    deathN++; if (DAILY) DAILY.deaths++;
+    reviveCheckpoint(); fade = 0.55;
+    const sub = DAILY ? tr('+5 s por caída · ¡sigue!') : pct >= 30 ? tr('Llegaste al {n} % · ¡tú puedes!').replace('{n}', pct) : tr('¡Otra vez!');
+    banner(tr('INTENTO {n}').replace('{n}', stageDeaths + 1), sub, '#ffd34d', 1.3);
+  }
+};
+// salir del reto al ir al mapa o al título
+for (const fn of ['toMap', 'toTitle', 'beginStage']) {
+  const o = window[fn]; if (typeof o !== 'function') continue;
+  window[fn] = function () { DAILY = null; return o.apply(this, arguments); };
+}
+try { toMap = window.toMap; toTitle = window.toTitle; beginStage = window.beginStage; } catch (e) {}
+const _retryH = retry;
+retry = function () { if (DAILY) { startDaily(); return; } _retryH(); };
+// ---------------- botones ----------------
+const _uiButtonsH = uiButtons;
+uiButtons = function () {
+  const B = _uiButtonsH(), ox = Math.round((W - 960) / 2);
+  if (state === 'title' && SAVE.intro) {
+    const st = SAVE.dly.dstreak && SAVE.dly.dlast >= dayNum() - 1 ? '  🔥' + SAVE.dly.dstreak : '';
+    B.push({ x: ox + 612, y: 340, w: 210, h: 46, t: tr('RETO DIARIO') + st, ic: 'time', c: '#ff8a3d', c2: '#ff4d6d', sel: SAVE.dly.done !== dayNum(), small: true, fn: () => { goFull(); sfx('select'); startDaily(); } });
+    misEnsure(); const done = SAVE.mis.list.filter(m => m.ok).length;
+    B.push({ x: ox + 138, y: 340, w: 210, h: 46, t: tr('MISIONES') + ' ' + done + '/3', ic: 'flag', c: '#3df5a0', small: true, fn: () => { sfx('click'); misPrev = state; state = 'misiones'; } });
+    if (chestReady()) B.push({ x: W - 400, y: 14, w: 160, h: 34, t: '🎁 ' + tr('COFRE'), c: '#ffcf4a', c2: '#ff8a3d', sel: true, small: true, fn: claimChest });
+  }
+  if (state === 'misiones') return [{ x: ox + 380, y: 452, w: 200, h: 44, t: 'VOLVER', ic: 'left', c: '#35e2ff', fn: () => { state = misPrev || 'title'; } }];
+  if (state === 'dailyDone') return [
+    { x: ox + 230, y: 402, w: 240, h: 48, t: tr('OTRA VEZ'), ic: 'time', c: '#ffcf4a', c2: '#ff8a3d', sel: true, fn: startDaily },
+    { x: ox + 490, y: 402, w: 240, h: 48, t: 'MAPA', ic: 'flag', c: '#35e2ff', c2: '#7a5cff', fn: toMap }];
+  return B;
+};
+let misPrev = 'title';
+const _onKeyH = onKey;
+onKey = function (c) {
+  if (state === 'misiones') { if (c === 'Escape' || c === 'Enter') state = misPrev || 'title'; return; }
+  if (state === 'dailyDone') { if (c === 'Enter' || c === 'Space') startDaily(); else if (c === 'Escape') toMap(); return; }
+  _onKeyH(c);
+};
+// ---------------- dibujo ----------------
+function drawMisiones() {
+  ctx.fillStyle = 'rgba(6,4,16,.72)'; ctx.fillRect(0, 0, W, H);
+  const ox = Math.round((W - 960) / 2), py = Math.round((H - 440) / 2);
+  ctx.save(); ctx.translate(ox, 0); glass(200, py, 560, 400, 24, '#3df5a0', true);
+  txt('MISIONES DE HOY', 480, py + 46, 26, '#c8ffe4', null, 0, 'center', LOGOF, 900);
+  txt(tr('Se renuevan cada día · premio en fragmentos'), 480, py + 74, 12, 'rgba(255,255,255,.7)', null, 0, 'center', UIF, 600);
+  misEnsure();
+  SAVE.mis.list.forEach((m, i) => {
+    const y = py + 104 + i * 72;
+    rrect(230, y, 500, 60, 14); ctx.fillStyle = m.ok ? 'rgba(61,245,160,.14)' : 'rgba(255,255,255,.05)'; ctx.fill();
+    txt(misText(m), 250, y + 22, 15, m.ok ? '#9dffd0' : '#ffffff', null, 0, 'left', UIF, 800);
+    txt((m.ok ? '✓ ' : '') + '◆ ' + m.rw, 712, y + 22, 14, '#ffe27a', null, 0, 'right', UIF, 800);
+    rrect(250, y + 36, 460, 10, 5); ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fill();
+    rrect(250, y + 36, Math.max(10, 460 * m.p / m.n), 10, 5); ctx.fillStyle = m.ok ? '#3df5a0' : '#35e2ff'; ctx.fill();
+    txt(m.p + ' / ' + m.n, 712, y + 46, 11, 'rgba(255,255,255,.75)', null, 0, 'right', UIF, 700);
+  });
+  const st = SAVE.dly.streak && SAVE.dly.last >= dayNum() - 1 ? SAVE.dly.streak : 0;
+  txt('🔥 ' + streakTxt(st) + (chestReady() ? '  ·  ' + tr('¡Tu cofre de hoy te espera en el título!') : ''), 480, py + 336, 13, '#ffd34d', null, 0, 'center', UIF, 700);
+  ctx.restore();
+}
+function drawDailyDone() {
+  ctx.fillStyle = 'rgba(6,4,16,.66)'; ctx.fillRect(0, 0, W, H);
+  const R = dailyRes, ox = Math.round((W - 960) / 2), py = Math.round((H - 420) / 2);
+  ctx.save(); ctx.translate(ox, 0); glass(210, py, 540, 380, 24, '#ff8a3d', true);
+  ctx.save(); ctx.shadowColor = 'rgba(255,140,60,.7)'; ctx.shadowBlur = 22; txt('RETO DIARIO SUPERADO', 480, py + 52, 24, '#ffd0a0', null, 0, 'center', LOGOF, 900); ctx.restore();
+  txt(fmtMS(R.t), 480, py + 122, 54, '#ffffff', null, 0, 'center', UIF, 900);
+  txt(tr('Tiempo') + ' ' + fmtMS(R.time) + '  ·  ' + tr('Caídas') + ' ' + R.deaths + ' (+' + R.deaths * 5 + ' s)', 480, py + 160, 13, 'rgba(255,255,255,.8)', null, 0, 'center', UIF, 700);
+  if (R.rec && R.prev) { ctx.save(); ctx.globalAlpha = .75 + Math.sin(time * 6) * .25; txt('¡NUEVO RÉCORD!', 480, py + 200, 22, '#ffe27a', null, 0, 'center', UIF, 900); ctx.restore(); }
+  else if (R.prev) txt(tr('Récord de hoy') + ': ' + fmtMS(R.prev), 480, py + 200, 15, '#ffe27a', null, 0, 'center', UIF, 800);
+  if (R.first) txt('+' + (40 + R.g) + ' ◆  ·  🔥 ' + streakTxt(SAVE.dly.dstreak), 480, py + 236, 15, '#9dffd0', null, 0, 'center', UIF, 800);
+  txt(tr('Mañana habrá una fase nueva'), 480, py + 268, 12, 'rgba(255,255,255,.6)', null, 0, 'center', UIF, 600);
+  ctx.restore();
+  for (const b of uiButtons()) drawButton(b);
+}
+function drawMToasts(dt) {
+  if (!mtoasts.length) return;
+  const T = mtoasts[0]; T.t += dt;
+  const k = T.t < .35 ? T.t / .35 : T.t > 3 ? Math.max(0, 1 - (T.t - 3) / .35) : 1, e = 1 - Math.pow(1 - k, 3);
+  const w = 400, h = 60, x = (W - w) / 2, y = H - e * (h + 18);
+  ctx.save(); ctx.globalAlpha = Math.min(1, k * 1.4);
+  glass(x, y, w, h, 16, '#3df5a0', true);
+  txt(T.head, x + 20, y + 20, 11, '#3df5a0', null, 0, 'left', UIF, 800);
+  txt(T.body, x + 20, y + 41, 15, '#ffffff', null, 0, 'left', UIF, 800);
+  txt('+' + T.rw + ' ◆', x + w - 18, y + 33, 18, '#ffe27a', null, 0, 'right', UIF, 900);
+  ctx.restore();
+  if (T.t > 3.4) mtoasts.shift();
+}
+// la voz de «game over» ya no suena en cada caída (ahora se reintenta al instante)
+const _sfxH = sfx;
+sfx = function (k, v, r) { if (k === 'v_gameover' && !TOWER && !RUSH && !SECRET) return; return _sfxH(k, v, r); };
+const _drawOverlayH = drawOverlay;
+drawOverlay = function () {
+  if (state === 'dailyDone' && dailyRes) { drawDailyDone(); return; }
+  _drawOverlayH();
+};
+const _drawH = draw;
+draw = function () {
+  if (state === 'misiones') { state = misPrev || 'title'; try { _drawH(); } finally { state = 'misiones'; } drawMisiones(); for (const b of uiButtons()) drawButton(b); drawMToasts(1 / 60); return; }
+  _drawH();
+  if (state === 'clear' && clearRec && clearRec.prev) { ctx.save(); ctx.globalAlpha = .8 + Math.sin(time * 6) * .2; txt('¡NUEVO RÉCORD!  ' + fmtMS(clearRec.t), W / 2, 66, 18, '#ffe27a', null, 0, 'center', UIF, 900); ctx.restore(); }
+  if (state === 'playing' && DAILY) txt(tr('RETO DIARIO') + '  ' + fmtMS(levelTime + DAILY.deaths * 5), W / 2, 22, 13, '#ffd0a0', null, 0, 'center', UIF, 900);
+  if (state === 'title' && SAVE.intro && chestReady()) { const ox = W - 400; ctx.save(); ctx.globalAlpha = .5 + Math.sin(time * 5) * .5; ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 2; rrect(ox - 3, 11, 166, 40, 20); ctx.stroke(); ctx.restore(); }
+  drawMToasts(1 / 60);
+};
+misEnsure();
+
 // Textos traducidos (generado desde i18n/*.json)
 const I18N_ES = ["DASH", "ESPADA", "SALTO", "SHIFT", "TIEMPO", "ECO", "KAEL SOMBRÍO", "EL DEVORADOR", "Hace mil años, la Orden de Chronos custodiaba el Corazón del Tiempo: el reloj que mantiene unidos a todos los mundos.", "Kael era su aprendiz más joven. Lyra, su hermana mayor, la guardiana más brillante que la Orden había conocido.", "Hasta la Noche de las Cenizas. Un incendio devoró la Torre del Reloj… y a Lyra con ella.", "¡No! Todavía puedo llegar… ¡solo necesito un segundo más!", "Kael usó el poder prohibido de la Orden: el SHIFT. Quiso volver atrás en el tiempo para salvarla.", "Pero el tiempo no se deja reescribir. El Corazón estalló en catorce fragmentos que cayeron en catorce mundos distintos.", "Cada fragmento corrompió a la criatura que lo encontró. Y de la grieta nació una sombra con el rostro de Kael.", "¡Eh! ¡Despierta, chaval! Soy Tic, búho mecánico oficial de la Orden. Modelo 3000. Bueno… el único modelo.", "Tengo una noticia mala y una buena. La mala: has roto el universo. La buena: ¡se puede arreglar!", "¿Y Lyra? ¿Dónde está Lyra?", "Su eco quedó atrapado entre dos segundos. Si reunimos los catorce fragmentos… quizá podamos encontrarla.", "Entonces no hay tiempo que perder.", "Técnicamente, ahora mismo hay MUCHO tiempo perdido. Pero sí, vamos.", "¿Crees que eres mejor que yo? Solo quería lo mismo que tú: tenerla de vuelta.", "Pero no fui yo quien rompió el Corazón. Algo nos susurró desde la grieta. Algo que se alimenta de los instantes rotos.", "EL DEVORADOR DE HORAS. Con cada segundo perdido, crece. Con cada fragmento que reúnes… despierta.", "Vale. Eso no venía en el manual.", "Los seis últimos fragmentos están más allá del tiempo. Ve, Kael. Haz lo que yo no fui capaz de hacer.", "Lo haré. Por los dos.", "En el Nexo, la luz de los catorce fragmentos atravesó al Devorador de Horas.", "Y por primera vez en mil años, el Corazón del Tiempo volvió a latir.", "Lo lograste, hermanito. Escucha… el tiempo vuelve a correr.", "Puedo usar el Shift una última vez. Puedo traerte de vuelta, Lyra.", "Y volverías a romperlo todo. El tiempo no se arregla, Kael. Se vive.", "Estaré en cada amanecer. Te lo prometo.", "Los catorce mundos volvieron a girar. Y cada mañana, en la Jungla Flotante, el sol sale un segundo antes.", "Dicen que es Lyra, saludando.", "Para ser un chaval que rompió el universo, no lo has hecho nada mal.", "Gracias, Tic. ¿Y ahora qué?", "Ahora… ¿desayuno? Llevo mil años sin aceite.", "Kael… ¿recuerdas cuando me enseñaste a trepar los árboles de la jungla? Siempre llegabas primero.", "¡El fragmento ha despertado tu SHIFT! Cambia de dimensión y verás plataformas que antes no estaban.", "En Velmora tocaban las campanas cada vez que alguien se perdía. Hace siglos que ya no suenan.", "Uno menos. Doce más y te invito a un aceite de engranajes.", "El fuego no fue culpa tuya. Nunca lo fue.", "Bueno. Eso ha sido intenso. Sigamos.", "En el bosque del crepúsculo el sol nunca se pone. Así querías que fuera aquel día, ¿verdad?", "Los muertos no deberían volver, Kael. Ni siquiera yo.", "¿Ha dicho lo que creo que ha dicho?", "Hace frío aquí… como el instante en el que estoy atrapada.", "Él se acerca. Tu sombra. Quiere congelar el tiempo para siempre en la noche del incendio.", "Bajo el mar el tiempo va más lento. Aquí casi puedo tocarte.", "¡Nuevo poder: el ECO! Graba tus movimientos y tu yo del pasado los repetirá. Úsalo para pisar dos placas a la vez.", "Cada grano de arena es un segundo que alguien perdió. No pierdas los tuyos buscándome.", "Ya casi, hermanito. Pero prométeme algo: cuando llegue el final… déjame ir.", "No puedo prometer eso.", "Lo harás. Te conozco.", "Las brujas decían que el tiempo se puede embotellar. Mintieron. Solo se puede compartir.", "Puaj. Tengo barro hasta en los engranajes.", "Él también quiso detener el tiempo para no perder a nadie. Mira cómo acabó, hermanito.", "No seré como él.", "Lo sé.", "Primero lo primero: muévete, salta y no te caigas. Es más difícil de lo que parece.", "Las lianas y los resortes son tus amigos. Las zarigüeyas, no tanto.", "El fragmento late al final de la jungla. Y algo muy grande croa cerca.", "Velmora, la ciudad maldita. Las campanas callaron cuando cayó el fragmento.", "Con el SHIFT puedes cambiar de dimensión. Cian y violeta: dos mundos, un Kael.", "En lo alto de la catedral duerme una gárgola colosal. Sus rayos malditos duelen. Te lo digo por experiencia.", "Aquí hace un calor de mil demonios. Literalmente, más adelante.", "Los bloques agrietados se rompen al pisarlos. No te quedes quieto.", "La lava sube. ¡Sube, sube, SUBE! Y arriba espera un hechicero.", "Un bosque donde el sol nunca termina de ponerse. Precioso. Sospechoso.", "Las corrientes de aire te elevan. Déjate llevar, como yo en las reuniones.", "Siento que algo nos observa desde arriba. Un ojo. Muy grande.", "Un cementerio. Genial. Justo lo que mis engranajes necesitaban.", "Los espectros solo se tocan en la dimensión violeta. ¡SHIFT y espadazo!", "Un caballero que no sabe que su guerra terminó hace siglos. Atácale por la espalda.", "Hielo. El suelo resbala, así que frena con tiempo.", "Las estalactitas caen cuando pasas debajo. Mira arriba de vez en cuando.", "Escucho un rugido helado. Esquiva sus cargas y que choque contra la pared.", "El Abismo. Si oyes voces, no son mías. Bueno, a veces sí.", "Fuego, lava y almas en pena. Lo normal de un martes.", "El demonio guarda el penúltimo fragmento de esta parte del viaje. Cuando baje a descansar… ¡a por él!", "La Ciudadela del Tiempo, fuera de toda era. Aquí la gravedad hace lo que quiere.", "Engranajes, láseres y dimensiones. Todo lo que has aprendido, junto.", "Tu sombra te espera. Conoce todos tus trucos. Sé mejor que tú mismo.", "¡Agua! Dentro del agua puedes nadar: pulsa SALTO sin parar para subir.", "Las corrientes te arrastran. Y las medusas pican. Mucho.", "El Leviatán duerme en el fondo. Cuando muerda el suelo, ataca su señuelo.", "El Desierto Eterno. Aquí la arena cae hacia arriba. No preguntes.", "Usa el ECO: graba tu camino hasta la placa y tu eco la mantendrá pulsada mientras cruzas.", "La Esfinge solo se rinde ante quien está en dos lugares a la vez. ¿Te suena?", "El Templo Celeste. Los anillos dorados son ANCLAS: acércate en el aire y te engancharás.", "Balancéate y suelta con SALTO en el momento justo. ¡Wiii!", "El Serafín invierte el cielo y la tierra. Mantén la cabeza fría… y del revés.", "El Nexo. Aquí están todos los mundos a la vez. Y todo lo que has aprendido.", "Ya casi. Puedo sentir a Lyra. Y algo enorme que respira entre los segundos.", "El Devorador de Horas. Este es el final, Kael. Hagámoslo bien.", "El Pantano de las Brujas. Si oyes risitas en la niebla, no eran mías.", "El agua está turbia y los espectros solo se tocan en la dimensión violeta. ¡SHIFT!", "La Bruja Madre. Cuando caiga aturdida tras sus picados… ¡a por ella!", "La Ciudadela del Rey Caído. Todo aquí está encadenado. Hasta el tiempo.", "Los caballeros siguen defendiendo un reino que ya no existe. Atácalos por la espalda.", "El Rey Caído. Embiste como una tormenta. Cuando clave la espada en el suelo, ¡golpéalo!", "¡CROAAAC! Este fragmento brilla… ¡y es MÍO!", "Salta sus ondas de choque. Y no le mires a los ojos. Son raros.", "Mil años vigilando esta catedral… y por fin llega algo que romper.", "Cuando caiga al suelo después de disparar, ¡golpéala!", "El fuego purifica, niño. Deja que purifique tu error.", "Rompe las tres palancas para quitarle el escudo.", "Te he visto caer mil veces en mil futuros. Este será uno más.", "Juré proteger este lugar hasta el fin de los tiempos. Y el tiempo… se ha detenido.", "GRRRRRRAAAH…", "Creo que no habla. Pero muerde.", "Los siglos saben dulces. Tú sabrás a eternidad.", "Yo soy tú. El que no se rindió. Apártate de mi camino.", "No. Esta vez no voy a huir del pasado.", "Las mareas del tiempo me obedecen. Hundiré tu luz en el abismo.", "Responde, viajero: ¿qué se pierde al recuperarlo?", "Demasiado tarde.", "Aquí arriba el cielo es suelo y el suelo es cielo. Tú no perteneces a ningún lugar.", "CATORCE INSTANTES. CATORCE MUNDOS. TODO EL TIEMPO… SERÁ MÍO.", "El tiempo no es de nadie.", "Hueles a tiempo robado, niño. Mi caldero lleva siglos esperándote.", "Esquiva sus picados. ¡Y no aceptes nada que te ofrezca!", "Yo también tuve a alguien a quien salvar. Mi reino entero. Y fracasé.", "Entonces déjame terminar lo que tú no pudiste.", "FÁCIL", "NORMAL", "DIFÍCIL", "JUNGLA FLOTANTE", "Resortes y lianas", "GRAN SAPO ANCESTRAL", "¡Salta las ondas de choque!", "El Reloj del Origen se ha roto y sus fragmentos han desgarrado la realidad. Kael, el último Guardián del Tiempo, despierta en la Jungla Flotante.", "VELMORA, CIUDAD MALDITA", "Catedrales y dimensiones", "GÁRGOLA DE LA CATEDRAL", "Esquiva sus rayos malditos y golpéala cuando caiga", "Un fragmento cayó sobre Velmora, la ciudad de las mil campanas, y la maldijo para siempre. Aquí despiertas el poder del SHIFT: cambia de dimensión para hacer aparecer y desaparecer plataformas.", "CALDERO VOLCÁNICO", "Lava y fuego", "HECHICERO DE MAGMA", "Golpea las 3 palancas para romper su escudo", "El calor del núcleo funde el tiempo mismo. La lava sube y el Hechicero de Magma custodia el tercer fragmento.", "BOSQUE DEL CREPÚSCULO", "Vientos y hongos", "OJO ABISAL", "Esquiva sus embestidas y golpéalo al bajar", "En el bosque donde el sol nunca termina de ponerse, los vientos del tiempo soplan con fuerza. Algo te observa desde las alturas.", "CEMENTERIO MALDITO", "Espectros y tumbas", "CABALLERO ESQUELETO", "Su escudo bloquea de frente: atácalo por la espalda", "Los muertos se levantan cuando el tiempo se detiene. Los espectros solo son tangibles en la otra dimensión: usa el SHIFT para golpearlos.", "CRIPTA HELADA", "Hielo y estalactitas", "BESTIA DE ESCARCHA", "Esquiva sus cargas y las estalactitas", "Bajo el hielo eterno, cada paso resbala. Cuidado con las estalactitas: caen cuando pasas debajo.", "ABISMO INFERNAL", "Llamas y almas", "DEMONIO DEL ABISMO", "Aléjate de su aliento y atácalo cuando descienda", "El penúltimo fragmento arde en el corazón del abismo. El Demonio que lo custodia ha devorado siglos enteros.", "CIUDADELA DEL TIEMPO", "Gravedad cero", "Tu reflejo conoce tus movimientos. Anticípate.", "En la Ciudadela, fuera del tiempo, te espera tu propio reflejo: el Kael que eligió romper el Reloj. Solo uno puede salir de aquí.", "ARRECIFE ABISAL", "Nado y corrientes", "LEVIATÁN DE CORAL", "Cuando muerda el suelo, ¡golpea su señuelo!", "Un fragmento se hundió en una ciudad sumergida. Bajo el agua el tiempo fluye despacio: pulsa SALTO para nadar.", "DESIERTO ETERNO", "Eco temporal y arenas", "ESFINGE DEL RELOJ", "Pisa las dos placas a la vez (tú y tu ECO) para romper su escudo", "Arena que cae hacia el cielo y ruinas de relojes colosales. Aquí necesitarás estar en dos lugares a la vez: usa el ECO.", "TEMPLO CELESTE", "Anclas y nubes", "SERAFÍN INVERTIDO", "Cuando el cielo se invierta, mantén la calma: tus controles no cambian", "Templos colgando de las nubes y cascadas que suben. Engánchate a los anillos dorados acercándote en el aire.", "NEXO DE CHRONOS", "Todos los mundos", "EL DEVORADOR DE HORAS", "Cuando se agote y baje, ¡ataca su ojo!", "El corazón roto del tiempo. Aquí todos los mundos se mezclan. El último fragmento… y el Devorador.", "PANTANO DE LAS BRUJAS", "Ciénagas y maleficios", "LA BRUJA MADRE", "Esquiva sus picados y golpéala cuando quede aturdida en el suelo", "Más allá de las nubes, un fragmento se pudre en el Pantano de las Brujas. La niebla susurra tu nombre… y algo en el agua responde.", "CIUDADELA DEL REY CAÍDO", "Tronos rotos y cadenas", "EL REY CAÍDO", "Cuando clave su espada en el suelo y quede atrapado, ¡golpéalo!", "El último reino antes del Nexo. Su rey juró proteger el tiempo y acabó encadenado a él. Su trono vacío aún arde con fuego de almas.", "Muévete con las flechas y salta los huecos con SALTO", "Pulsa ESPADA para atacar. Encadena golpes para hacer COMBOS", "Pulsa SALTO otra vez en el aire para el DOBLE SALTO", "Los hongos saltarines te impulsan muy alto", "Súbete a la plataforma móvil y espera el momento justo", "Usa DASH para cruzar huecos largos (eres invencible mientras dura)", "Cada fase esconde un RELOJ DE ARENA secreto. ¡Explora!", "Deslízate por la pared y pulsa SALTO para rebotar hacia arriba", "Pulsa SHIFT para cambiar de dimensión: aparecen otras plataformas", "Los muros de otra dimensión se atraviesan con SHIFT", "Ataca en el aire sobre pinchos o enemigos para rebotar", "Los espectros solo se pueden golpear en la dimensión violeta (SHIFT)", "Las corrientes de aire te elevan: déjate llevar", "Zona de gravedad reducida: tus saltos llegan mucho más alto", "Las estalactitas caen cuando pasas por debajo", "Las cintas te arrastran: corre en contra", "Los bloques agrietados se desmoronan al pisarlos", "Observa el ritmo de las llamas antes de cruzar", "Las ráfagas de viento te empujan hacia atrás", "En el agua pulsa SALTO varias veces para nadar hacia arriba", "Las corrientes te arrastran: nada en contra o aprovéchalas", "Pulsa ECO, camina hasta la placa y vuelve a pulsar ECO: tu eco la mantendrá pulsada", "La arena movediza te frena y te hunde: ¡salta sin parar!", "Acércate en el aire a un anillo dorado y pulsa SALTO para engancharte. Vuelve a pulsar para soltarte", "Las nubes se deshacen al pisarlas", "La arena del tiempo cae hacia arriba: déjate llevar", "¡COMBO x", "SHIFT dormido: recupera el 1.er fragmento", "¡BLOQUEADO!", "¡TIEMPO RALENTIZADO!", "¡LA ARENA TE TRAGÓ!", "+20 VIDA", "¡RELOJ DE ARENA SECRETO!", "PUNTO DE CONTROL", "PARRY", "¡PALANCA!", "¡ESCUDO ROTO!", "ESCUDO", "¡BLOQUEO!", "INMUNE", "BLOQUEO", "ESCUDO RESTAURADO", "¡LEVANTAOS!", "¡SHIFT!", "¡SOMBRAS, DEVORADLO!", "Corazón de bronce", "+20 de vida máxima", "Filo del minutero", "+50% de daño con la espada", "Muelle comprimido", "El DASH recarga más rápido", "Arena dorada", "El poder del TIEMPO se carga antes", "Imán de Tic", "Las gemas cercanas vuelan hacia ti", "GRABANDO ECO…", "¡ECO EN MARCHA!", "¡EL CIELO SE INVIERTE!", "¡SE AGOTA!", "SALTAR ▶▶", "FRAGMENTO ", "Recuperado de ", "Toca para continuar", "TALLER DE TIC", "«Dame gemas y te ajusto los engranajes. Sin garantía.»", "MAPA DEL TIEMPO", " fragmentos", "MUNDO ", "VOLVER", "TALLER", "JEFE", "FASE ", "¿Nos quedamos aquí a vivir?", "Si te quedas quieto, el tiempo no se arregla solo…", "Tic, tac. Tic, tac. Era una indirecta.", "Me oxido si no nos movemos.", "¡Cuidado, Kael! ¡Estás muy herido!", "Busca una cereza, ¡rápido!", "Esa herida no me gusta nada.", "¡Mira, gemas!", "Brillitos a la vista.", "Para el taller, ¡no las dejes!", "Siento un reloj de arena escondido por aquí…", "Algo brilla cerca. ¿Lo oyes?", "¡Buen golpe!", "¡Eso le ha dolido!", "¡Combo!", "Un punto de control. Respira.", "Guardado. Bueno, más o menos.", "¡Qué olor a selva!", "Oigo pájaros de otra era.", "Mil campanas y ninguna suena. Mal presagio.", "Esas gárgolas me están mirando. Lo sé.", "¡Quema, quema!", "Mis engranajes se derriten.", "Qué atardecer tan bonito… y eterno.", "Las luciérnagas me saludan.", "Esto da escalofríos.", "No mires las tumbas. Bueno, ya miraste.", "Brrr. Mis tuercas tiritan.", "Cuidado, resbala.", "Huele a azufre.", "Ni los demonios quieren estar aquí.", "¡Engranajes por todas partes! Me siento en casa.", "El tiempo aquí da vueltas.", "¡Glub! ¿Los búhos nadan?", "Mira cuántos peces.", "Arena en todos mis engranajes…", "Las arenas suben al cielo. Qué raro.", "¡Qué vistas!", "No mires abajo.", "Siento a Lyra muy cerca.", "Esto es el corazón de todo.", "Croac. No, no he sido yo.", "Ese caldero huele a problemas.", "Cuántas cadenas…", "Un trono vacío da más miedo que uno ocupado.", "¿Recuerdas cuando contábamos estrellas desde la torre?", "Siempre fuiste el valiente, aunque temblaras.", "Me gustaba cómo te reías de tus propios chistes malos.", "El tiempo es como un río, Kael. No se puede beber todo.", "Prométeme que también vivirás por ti.", "Cada amanecer es un regalo. No los gastes mirando atrás.", "Tic siempre me cayó bien. No se lo digas.", "Te enseñé a esgrimir con una rama. Mírate ahora.", "Estoy orgullosa de ti, hermanito.", "Cuando cierres los ojos, piensa en el olor del pan de mamá.", "Las estrellas también se apagan… pero su luz sigue viajando.", "Ya casi. Puedo oír tu corazón desde aquí.", "¡Salta sobre esa seta! Rebota muchísimo.", "Esas vasijas suenan a gemas… ¡rómpelas!", "Un farol apagado. Tócalo y dale luz.", "Flores campana… ¡tócalas todas, cantan!", "Una runa del tiempo. Písala, Kael.", "Esa flor cura. Guárdala para cuando estés herido.", "¡Un cofre allí arriba!", "¡Había un espíritu ahí dentro!", "¡Cofre del tiempo!", "¡Un cofre! ¡Brillitos para el taller!", "¡Tesoro! Sabía que valía la pena subir.", "¡Todos los faroles encendidos!", "¡Qué bonito! El mundo brilla otra vez.", "¡Melodía completa!", "¡Las flores cantan para ti!", "Bendición del ciervo de luz", "Dicen que el ciervo de luz guía a los viajeros del tiempo…", "¡Mira arriba, Kael!", "Qué criatura tan enorme…", "Nunca había visto algo así.", "Golpe Cargado", "Mantén ESPADA y suéltala para lanzar una onda de luz que atraviesa a los enemigos.", "Mantén ESPADA y suelta", "Parada Perfecta", "Cúbrete justo antes del golpe: no gastas escudo, devuelves los disparos y contraatacas.", "GUARDIA justo a tiempo", "Dash Fantasma", "Tu DASH atraviesa a los enemigos y les hace daño.", "DASH contra un enemigo", "Golpe Sísmico", "En el aire, pulsa GUARDIA para caer en picado y liberar una onda sísmica.", "GUARDIA en el aire", "Imán del Cronista", "Las gemas y cerezas lejanas vuelan hacia ti.", "Siempre activo", "Triple Salto", "Puedes saltar una tercera vez en el aire.", "SALTO tres veces", "Corazón de Cristal", "+40 de vida máxima. Si nadie te golpea, recuperas vida poco a poco.", "Capa Planeadora", "Mantén SALTO mientras caes para planear con tu capa.", "Mantén SALTO al caer", "Ojo del Cronista", "Una brújula te señala la reliquia escondida y los cofres de cada fase.", "Espada de Luz", "El tercer golpe del combo lanza una media luna de luz.", "Combo de 3 golpes", "Segunda Oportunidad", "Una vez por fase, si caes derrotado, el tiempo retrocede y vuelves con media vida.", "Escudo del Tiempo", "Mantén GUARDIA para bloquear los ataques de frente. Cada bloqueo gasta escudo; si se agota, la guardia se rompe.", "Mantén GUARDIA", "GUARDIA", "Si algo te ataca, mantén GUARDIA para cubrirte con el escudo del tiempo.", "¡PARADA!", "¡GUARDIA ROTA!", "SEGUNDA OPORTUNIDAD", "¡Uf! El tiempo te ha dado otra oportunidad.", "¡NUEVA HABILIDAD!", "CÓMO SE USA: ", "HABILIDADES DE KAEL", " reliquias  ·  vence al guardián de cada mundo para conseguir la siguiente", "Guardián del mundo ", "Toca para volver", "GUARDIÁN: ", "Música", "Efectos de sonido", "Vibración", "Sí", "Temblor de cámara", "Tamaño de botones", "Pequeño", "Opacidad de botones", "Pantalla completa", "Calidad gráfica", "Máxima", "LISTO", "JUGAR", "NUEVA AVENTURA", "OPCIONES", "LOGROS", "HISTORIA", "MÁXIMO", "CONTINUAR", "HABILIDADES", "REINICIAR FASE", "MAPA", "SIGUIENTE MUNDO", "IR AL GUARDIÁN", "SIGUIENTE FASE", "VER MAPA", "TÍTULO", "TIEMPO LENTO", "TIEMPO LISTO", "DIM B", "DIM A", "COMBO  ×", "● GRABANDO ECO  (pulsa ECO)", "MOVER", "GUARDIÁN DEL MUNDO ", "PAUSA", "Mundo ", "Puntos: ", "HAS CAÍDO", "Kael ha caído en ", "El guardián te espera: volverás a la entrada de la arena", "Volverás al último punto de control con la vida llena", "   ·   Récord: ", "FRAGMENTO RECUPERADO", "FASE SUPERADA", "Fragmentos de Realidad: ", "   ·   ¡Reloj secreto!", "Tiempo ", "   ·   Bonus +", "Puntos totales: ", "EL RELOJ ESTÁ COMPLETO", "El Devorador de Horas ha caído y el Corazón vuelve a latir.", "Los catorce mundos giran de nuevo. Gracias por jugar.", "   ·   Puntos: ", "14 MUNDOS  ·  42 FASES  ·  14 GUARDIANES  ·  11 HABILIDADES", "MANDO:  A saltar · X espada · B/RT dash · LB/LT guardia · Y dimensión · RB tiempo · SELECT eco · START pausa", "Mover · Salto (doble y en pared) · Dash · Espada · Shift · Tiempo", "← → mover · ESPACIO saltar · SHIFT dash · Z espada · X dimensión · C tiempo · E eco · P pausa", "RÉCORD  ", "Gira el teléfono para jugar en horizontal", "Cargando 14 mundos…", "¡DE PIE, KAEL!", "¡FURIA!", " despierta su verdadero poder", "OLEADA ", "CÁMARA DEL DESAFÍO", "Sobrevive a todas las oleadas", "¡DESAFÍO SUPERADO!", "+1500 puntos · +40 vida · fragmentos de recompensa", "Primeros pasos", "Completa la fase 1-1", "Derrota a tu primer guardián", "Medio Reloj", "Derrota a 7 guardianes", "Corazón del Tiempo", "Derrota a los 14 guardianes", "Derrota a un guardián sin recibir daño", "Sin piedad", "Derrota a un guardián en DIFÍCIL", "Ritmo letal", "Consigue un combo x25", "Tormenta de acero", "Consigue un combo x50", "Ojo para lo oculto", "Encuentra un reloj de arena secreto", "Guardián de arena", "Encuentra 10 relojes secretos", "Lluvia de fragmentos", "Recoge 300 fragmentos de realidad", "Supera una Cámara del Desafío", "Campeón de las cámaras", "Supera 10 Cámaras del Desafío", "Muro viviente", "Bloquea 50 ataques", "Filo perfecto", "Haz 10 paradas perfectas", "Arsenal del tiempo", "Consigue 6 habilidades", "Veloz como un segundo", "Completa una fase en menos de 75 s", "Nunca te rindes", "Levántate 20 veces tras caer", "LOGRO DESBLOQUEADO", " min", " desbloqueados", "Guardianes: ", "/14   ·   Cámaras: ", "   ·   Caídas: ", "   ·   Paradas: ", "   ·   Tiempo de juego: ", "Toca la pantalla o pulsa ESC para volver", "MANDO CONECTADO", "Bloqueado", "Botones", "Controles", "Grande", "Intocable", "Joystick", "No", "Normal", "Rendimiento", "Rompeguardianes", "Superviviente", "IDIOMA", "Idioma", "Elige tu idioma", "Puedes cambiarlo cuando quieras en Opciones"];
 const I18N = {
@@ -7773,6 +8002,44 @@ const I18N = {
   const X = { en: ["Screen", "Landscape", "Portrait", "Automatic"], pt: ["Tela", "Horizontal", "Vertical", "Automática"], fr: ["Écran", "Paysage", "Portrait", "Automatique"],
     de: ["Bildschirm", "Querformat", "Hochformat", "Automatisch"], it: ["Schermo", "Orizzontale", "Verticale", "Automatica"], ja: ["画面", "横向き", "縦向き", "自動"],
     ko: ["화면", "가로", "세로", "자동"], zh: ["屏幕", "横屏", "竖屏", "自动"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v3.0: enganche (reto diario, misiones, cofre, reintento)
+(function () {
+  const ES = ["Derrota a {n} enemigos", "Supera {n} fases", "Derrota a un guardián", "Supera una fase sin recibir daño", "Haz {n} golpes críticos a guardianes", "Abre {n} barreras de emboscada", "Recoge {n} fragmentos", "Completa el reto diario", "Consigue un combo de {n}",
+    "MISIÓN CUMPLIDA", "COFRE DIARIO", "Racha de {n} días", "RETO DIARIO", "La misma fase para todos hoy · ¡bate tu récord!", "+5 s por caída · ¡sigue!", "Llegaste al {n} % · ¡tú puedes!", "¡Otra vez!", "INTENTO {n}",
+    "MISIONES", "COFRE", "OTRA VEZ", "MISIONES DE HOY", "Se renuevan cada día · premio en fragmentos", "¡Tu cofre de hoy te espera en el título!", "RETO DIARIO SUPERADO", "Tiempo", "Caídas", "¡NUEVO RÉCORD!", "Récord de hoy", "Mañana habrá una fase nueva"];
+  const X = {
+    en: ["Defeat {n} enemies", "Clear {n} stages", "Defeat a guardian", "Clear a stage without taking damage", "Land {n} critical hits on guardians", "Open {n} ambush barriers", "Collect {n} shards", "Complete the daily challenge", "Reach a {n} combo",
+      "MISSION COMPLETE", "DAILY CHEST", "{n}-day streak", "DAILY CHALLENGE", "Same stage for everyone today · beat your record!", "+5 s per fall · keep going!", "You reached {n}% · you can do it!", "Again!", "ATTEMPT {n}",
+      "MISSIONS", "CHEST", "AGAIN", "TODAY'S MISSIONS", "They renew every day · shard rewards", "Your chest for today awaits on the title screen!", "DAILY CHALLENGE CLEARED", "Time", "Falls", "NEW RECORD!", "Today's record", "A new stage arrives tomorrow"],
+    pt: ["Derrote {n} inimigos", "Supere {n} fases", "Derrote um guardião", "Supere uma fase sem levar dano", "Acerte {n} golpes críticos em guardiões", "Abra {n} barreiras de emboscada", "Colete {n} fragmentos", "Complete o desafio diário", "Faça um combo de {n}",
+      "MISSÃO CUMPRIDA", "BAÚ DIÁRIO", "Sequência de {n} dias", "DESAFIO DIÁRIO", "A mesma fase para todos hoje · bata seu recorde!", "+5 s por queda · continue!", "Você chegou a {n}% · você consegue!", "De novo!", "TENTATIVA {n}",
+      "MISSÕES", "BAÚ", "DE NOVO", "MISSÕES DE HOJE", "Renovam todo dia · prêmio em fragmentos", "Seu baú de hoje espera na tela inicial!", "DESAFIO DIÁRIO SUPERADO", "Tempo", "Quedas", "NOVO RECORDE!", "Recorde de hoje", "Amanhã haverá uma fase nova"],
+    fr: ["Bats {n} ennemis", "Termine {n} niveaux", "Bats un gardien", "Termine un niveau sans dégâts", "Place {n} coups critiques aux gardiens", "Ouvre {n} barrières d'embuscade", "Ramasse {n} fragments", "Termine le défi du jour", "Fais un combo de {n}",
+      "MISSION ACCOMPLIE", "COFFRE DU JOUR", "Série de {n} jours", "DÉFI DU JOUR", "Le même niveau pour tous aujourd'hui · bats ton record !", "+5 s par chute · continue !", "Tu es arrivé à {n} % · tu peux le faire !", "Encore !", "ESSAI {n}",
+      "MISSIONS", "COFFRE", "ENCORE", "MISSIONS DU JOUR", "Renouvelées chaque jour · récompense en fragments", "Ton coffre du jour t'attend sur l'écran titre !", "DÉFI DU JOUR RÉUSSI", "Temps", "Chutes", "NOUVEAU RECORD !", "Record du jour", "Un nouveau niveau arrive demain"],
+    de: ["Besiege {n} Gegner", "Schaffe {n} Level", "Besiege einen Wächter", "Schaffe ein Level ohne Schaden", "Lande {n} kritische Treffer an Wächtern", "Öffne {n} Hinterhalt-Barrieren", "Sammle {n} Splitter", "Schaffe die Tagesherausforderung", "Erreiche eine {n}er-Kombo",
+      "MISSION ERFÜLLT", "TAGESTRUHE", "{n} Tage in Folge", "TAGESHERAUSFORDERUNG", "Heute dasselbe Level für alle · schlag deinen Rekord!", "+5 s pro Sturz · weiter!", "Du hast {n} % geschafft · du schaffst das!", "Nochmal!", "VERSUCH {n}",
+      "MISSIONEN", "TRUHE", "NOCHMAL", "HEUTIGE MISSIONEN", "Jeden Tag neu · Belohnung in Splittern", "Deine Truhe wartet im Titelbildschirm!", "TAGESHERAUSFORDERUNG GESCHAFFT", "Zeit", "Stürze", "NEUER REKORD!", "Heutiger Rekord", "Morgen gibt es ein neues Level"],
+    it: ["Sconfiggi {n} nemici", "Supera {n} livelli", "Sconfiggi un guardiano", "Supera un livello senza danni", "Metti a segno {n} colpi critici sui guardiani", "Apri {n} barriere d'imboscata", "Raccogli {n} frammenti", "Completa la sfida del giorno", "Fai una combo da {n}",
+      "MISSIONE COMPIUTA", "FORZIERE DEL GIORNO", "Serie di {n} giorni", "SFIDA DEL GIORNO", "Lo stesso livello per tutti oggi · batti il tuo record!", "+5 s per caduta · continua!", "Sei arrivato al {n}% · ce la puoi fare!", "Ancora!", "TENTATIVO {n}",
+      "MISSIONI", "FORZIERE", "ANCORA", "MISSIONI DI OGGI", "Si rinnovano ogni giorno · premio in frammenti", "Il forziere di oggi ti aspetta nella schermata iniziale!", "SFIDA DEL GIORNO SUPERATA", "Tempo", "Cadute", "NUOVO RECORD!", "Record di oggi", "Domani arriva un livello nuovo"],
+    ja: ["敵を{n}体倒す", "ステージを{n}つクリア", "ガーディアンを倒す", "ノーダメージでステージをクリア", "ガーディアンに会心の一撃を{n}回", "待ち伏せの障壁を{n}つ開く", "欠片を{n}個集める", "デイリーチャレンジをクリア", "{n}コンボを達成",
+      "ミッション達成", "デイリー宝箱", "{n}日連続", "デイリーチャレンジ", "今日は全員同じステージ・記録を更新しよう！", "落下ごとに+5秒・続けよう！", "{n}%まで到達・きっとできる！", "もう一回！", "挑戦 {n}",
+      "ミッション", "宝箱", "もう一回", "今日のミッション", "毎日更新・報酬は欠片", "今日の宝箱がタイトルで待っているよ！", "デイリーチャレンジ達成", "タイム", "落下", "新記録！", "今日の記録", "明日は新しいステージ"],
+    ko: ["적 {n}마리 처치", "스테이지 {n}개 클리어", "수호자 처치", "피해 없이 스테이지 클리어", "수호자에게 치명타 {n}회", "매복 장벽 {n}개 열기", "조각 {n}개 모으기", "일일 도전 완료", "{n} 콤보 달성",
+      "미션 완료", "일일 상자", "{n}일 연속", "일일 도전", "오늘은 모두 같은 스테이지 · 기록을 깨라!", "추락마다 +5초 · 계속해!", "{n}%까지 왔어 · 할 수 있어!", "다시!", "시도 {n}",
+      "미션", "상자", "다시", "오늘의 미션", "매일 갱신 · 보상은 조각", "오늘의 상자가 타이틀에서 기다려!", "일일 도전 성공", "시간", "추락", "신기록!", "오늘의 기록", "내일은 새 스테이지"],
+    zh: ["击败{n}个敌人", "通过{n}个关卡", "击败一名守护者", "无伤通过一个关卡", "对守护者打出{n}次暴击", "打开{n}道伏击屏障", "收集{n}个碎片", "完成每日挑战", "达成{n}连击",
+      "任务完成", "每日宝箱", "连续{n}天", "每日挑战", "今天所有人同一关 · 打破你的纪录！", "每次坠落+5秒 · 继续！", "你到达了{n}% · 你能行！", "再来！", "第{n}次尝试",
+      "任务", "宝箱", "再来一次", "今日任务", "每天刷新 · 奖励碎片", "今天的宝箱在标题画面等你！", "每日挑战完成", "时间", "坠落", "新纪录！", "今日纪录", "明天会有新关卡"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+(function () {
+  const ES = ["Racha de 1 día"];
+  const X = { en: ["1-day streak"], pt: ["Sequência de 1 dia"], fr: ["Série de 1 jour"], de: ["1 Tag in Folge"], it: ["Serie di 1 giorno"], ja: ["1日連続"], ko: ["1일 연속"], zh: ["连续1天"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
 

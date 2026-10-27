@@ -147,3 +147,41 @@
     ko: ["화면", "가로", "세로", "자동"], zh: ["屏幕", "横屏", "竖屏", "自动"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v3.0: enganche (reto diario, misiones, cofre, reintento)
+(function () {
+  const ES = ["Derrota a {n} enemigos", "Supera {n} fases", "Derrota a un guardián", "Supera una fase sin recibir daño", "Haz {n} golpes críticos a guardianes", "Abre {n} barreras de emboscada", "Recoge {n} fragmentos", "Completa el reto diario", "Consigue un combo de {n}",
+    "MISIÓN CUMPLIDA", "COFRE DIARIO", "Racha de {n} días", "RETO DIARIO", "La misma fase para todos hoy · ¡bate tu récord!", "+5 s por caída · ¡sigue!", "Llegaste al {n} % · ¡tú puedes!", "¡Otra vez!", "INTENTO {n}",
+    "MISIONES", "COFRE", "OTRA VEZ", "MISIONES DE HOY", "Se renuevan cada día · premio en fragmentos", "¡Tu cofre de hoy te espera en el título!", "RETO DIARIO SUPERADO", "Tiempo", "Caídas", "¡NUEVO RÉCORD!", "Récord de hoy", "Mañana habrá una fase nueva"];
+  const X = {
+    en: ["Defeat {n} enemies", "Clear {n} stages", "Defeat a guardian", "Clear a stage without taking damage", "Land {n} critical hits on guardians", "Open {n} ambush barriers", "Collect {n} shards", "Complete the daily challenge", "Reach a {n} combo",
+      "MISSION COMPLETE", "DAILY CHEST", "{n}-day streak", "DAILY CHALLENGE", "Same stage for everyone today · beat your record!", "+5 s per fall · keep going!", "You reached {n}% · you can do it!", "Again!", "ATTEMPT {n}",
+      "MISSIONS", "CHEST", "AGAIN", "TODAY'S MISSIONS", "They renew every day · shard rewards", "Your chest for today awaits on the title screen!", "DAILY CHALLENGE CLEARED", "Time", "Falls", "NEW RECORD!", "Today's record", "A new stage arrives tomorrow"],
+    pt: ["Derrote {n} inimigos", "Supere {n} fases", "Derrote um guardião", "Supere uma fase sem levar dano", "Acerte {n} golpes críticos em guardiões", "Abra {n} barreiras de emboscada", "Colete {n} fragmentos", "Complete o desafio diário", "Faça um combo de {n}",
+      "MISSÃO CUMPRIDA", "BAÚ DIÁRIO", "Sequência de {n} dias", "DESAFIO DIÁRIO", "A mesma fase para todos hoje · bata seu recorde!", "+5 s por queda · continue!", "Você chegou a {n}% · você consegue!", "De novo!", "TENTATIVA {n}",
+      "MISSÕES", "BAÚ", "DE NOVO", "MISSÕES DE HOJE", "Renovam todo dia · prêmio em fragmentos", "Seu baú de hoje espera na tela inicial!", "DESAFIO DIÁRIO SUPERADO", "Tempo", "Quedas", "NOVO RECORDE!", "Recorde de hoje", "Amanhã haverá uma fase nova"],
+    fr: ["Bats {n} ennemis", "Termine {n} niveaux", "Bats un gardien", "Termine un niveau sans dégâts", "Place {n} coups critiques aux gardiens", "Ouvre {n} barrières d'embuscade", "Ramasse {n} fragments", "Termine le défi du jour", "Fais un combo de {n}",
+      "MISSION ACCOMPLIE", "COFFRE DU JOUR", "Série de {n} jours", "DÉFI DU JOUR", "Le même niveau pour tous aujourd'hui · bats ton record !", "+5 s par chute · continue !", "Tu es arrivé à {n} % · tu peux le faire !", "Encore !", "ESSAI {n}",
+      "MISSIONS", "COFFRE", "ENCORE", "MISSIONS DU JOUR", "Renouvelées chaque jour · récompense en fragments", "Ton coffre du jour t'attend sur l'écran titre !", "DÉFI DU JOUR RÉUSSI", "Temps", "Chutes", "NOUVEAU RECORD !", "Record du jour", "Un nouveau niveau arrive demain"],
+    de: ["Besiege {n} Gegner", "Schaffe {n} Level", "Besiege einen Wächter", "Schaffe ein Level ohne Schaden", "Lande {n} kritische Treffer an Wächtern", "Öffne {n} Hinterhalt-Barrieren", "Sammle {n} Splitter", "Schaffe die Tagesherausforderung", "Erreiche eine {n}er-Kombo",
+      "MISSION ERFÜLLT", "TAGESTRUHE", "{n} Tage in Folge", "TAGESHERAUSFORDERUNG", "Heute dasselbe Level für alle · schlag deinen Rekord!", "+5 s pro Sturz · weiter!", "Du hast {n} % geschafft · du schaffst das!", "Nochmal!", "VERSUCH {n}",
+      "MISSIONEN", "TRUHE", "NOCHMAL", "HEUTIGE MISSIONEN", "Jeden Tag neu · Belohnung in Splittern", "Deine Truhe wartet im Titelbildschirm!", "TAGESHERAUSFORDERUNG GESCHAFFT", "Zeit", "Stürze", "NEUER REKORD!", "Heutiger Rekord", "Morgen gibt es ein neues Level"],
+    it: ["Sconfiggi {n} nemici", "Supera {n} livelli", "Sconfiggi un guardiano", "Supera un livello senza danni", "Metti a segno {n} colpi critici sui guardiani", "Apri {n} barriere d'imboscata", "Raccogli {n} frammenti", "Completa la sfida del giorno", "Fai una combo da {n}",
+      "MISSIONE COMPIUTA", "FORZIERE DEL GIORNO", "Serie di {n} giorni", "SFIDA DEL GIORNO", "Lo stesso livello per tutti oggi · batti il tuo record!", "+5 s per caduta · continua!", "Sei arrivato al {n}% · ce la puoi fare!", "Ancora!", "TENTATIVO {n}",
+      "MISSIONI", "FORZIERE", "ANCORA", "MISSIONI DI OGGI", "Si rinnovano ogni giorno · premio in frammenti", "Il forziere di oggi ti aspetta nella schermata iniziale!", "SFIDA DEL GIORNO SUPERATA", "Tempo", "Cadute", "NUOVO RECORD!", "Record di oggi", "Domani arriva un livello nuovo"],
+    ja: ["敵を{n}体倒す", "ステージを{n}つクリア", "ガーディアンを倒す", "ノーダメージでステージをクリア", "ガーディアンに会心の一撃を{n}回", "待ち伏せの障壁を{n}つ開く", "欠片を{n}個集める", "デイリーチャレンジをクリア", "{n}コンボを達成",
+      "ミッション達成", "デイリー宝箱", "{n}日連続", "デイリーチャレンジ", "今日は全員同じステージ・記録を更新しよう！", "落下ごとに+5秒・続けよう！", "{n}%まで到達・きっとできる！", "もう一回！", "挑戦 {n}",
+      "ミッション", "宝箱", "もう一回", "今日のミッション", "毎日更新・報酬は欠片", "今日の宝箱がタイトルで待っているよ！", "デイリーチャレンジ達成", "タイム", "落下", "新記録！", "今日の記録", "明日は新しいステージ"],
+    ko: ["적 {n}마리 처치", "스테이지 {n}개 클리어", "수호자 처치", "피해 없이 스테이지 클리어", "수호자에게 치명타 {n}회", "매복 장벽 {n}개 열기", "조각 {n}개 모으기", "일일 도전 완료", "{n} 콤보 달성",
+      "미션 완료", "일일 상자", "{n}일 연속", "일일 도전", "오늘은 모두 같은 스테이지 · 기록을 깨라!", "추락마다 +5초 · 계속해!", "{n}%까지 왔어 · 할 수 있어!", "다시!", "시도 {n}",
+      "미션", "상자", "다시", "오늘의 미션", "매일 갱신 · 보상은 조각", "오늘의 상자가 타이틀에서 기다려!", "일일 도전 성공", "시간", "추락", "신기록!", "오늘의 기록", "내일은 새 스테이지"],
+    zh: ["击败{n}个敌人", "通过{n}个关卡", "击败一名守护者", "无伤通过一个关卡", "对守护者打出{n}次暴击", "打开{n}道伏击屏障", "收集{n}个碎片", "完成每日挑战", "达成{n}连击",
+      "任务完成", "每日宝箱", "连续{n}天", "每日挑战", "今天所有人同一关 · 打破你的纪录！", "每次坠落+5秒 · 继续！", "你到达了{n}% · 你能行！", "再来！", "第{n}次尝试",
+      "任务", "宝箱", "再来一次", "今日任务", "每天刷新 · 奖励碎片", "今天的宝箱在标题画面等你！", "每日挑战完成", "时间", "坠落", "新纪录！", "今日纪录", "明天会有新关卡"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+(function () {
+  const ES = ["Racha de 1 día"];
+  const X = { en: ["1-day streak"], pt: ["Sequência de 1 dia"], fr: ["Série de 1 jour"], de: ["1 Tag in Folge"], it: ["Serie di 1 giorno"], ja: ["1日連続"], ko: ["1일 연속"], zh: ["连续1天"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
