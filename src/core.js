@@ -12,7 +12,7 @@
 // ---------------- Lienzo ----------------
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d', { alpha: true });
-let W = 960; const H = 540, RES = 2;
+let W = 960, H = 540; const RES = 2;
 cv.width = W * RES; cv.height = H * RES;
 // Opciones del jugador (se guardan en el teléfono)
 let OPT = { mus: 0.8, sfx: 0.9, vib: true, shake: true, ctrl: 'botones', size: 1, alpha: 0.7, full: true };
