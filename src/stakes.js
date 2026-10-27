@@ -67,3 +67,18 @@ draw = function () {
   }
   ctx.restore();
 };
+// ---------------- Kael ya no es casi invencible (v3.4) ----------------
+// (el daño recibido sube en DIFFS de data.js: Normal ×1,5, Difícil ×2,1, Pesadilla ×2,5)
+// menos invencibilidad tras un golpe
+const _hurtK = hurt;
+hurt = function (dmg, srcX) { const r = _hurtK(dmg, srcX); if (r && diffIdx >= 1 && p.inv > 0.6) p.inv = 0.6; return r; };
+// la Segunda Oportunidad deja a Kael con solo el 25 % de vida
+const _killK = kill;
+kill = function () { _killK(); if (diffIdx >= 1 && !p.dead && p.rewindUsed && p.hp > p.maxHp * 0.25) p.hp = Math.round(p.maxHp * 0.25); };
+// el escudo se gasta más rápido al bloquear (la parada perfecta no)
+const _blockHitK = blockHit;
+blockHit = function (dmg, srcX, proj) {
+  const perfect = hasAb('parada') && p.guardT < 0.22;
+  if (!perfect && diffIdx >= 1) p.gst = (p.gst || 0) - dmg * (diffIdx >= 2 ? 2.2 : 1.6);
+  return _blockHitK(dmg, srcX, proj);
+};

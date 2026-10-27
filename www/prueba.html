@@ -858,10 +858,10 @@ function updateDlg(dt) {
 //  DATOS: mundos, enemigos, historia y generador de niveles por bloques
 // =====================================================================
 const DIFFS = [
-  { name: 'FÁCIL',   hp: 150, dmg: .6,  spd: .85, boss: .8,   aggr: .9,  lava: 8,  c: '#5ef08a', extra: 0 },
-  { name: 'NORMAL',  hp: 100, dmg: 1,   spd: 1,   boss: 1.15,  aggr: 1.15,  lava: 12, c: '#ffd34d', extra: 0 },
-  { name: 'DIFÍCIL', hp: 80,  dmg: 1.6, spd: 1.3, boss: 1.5, aggr: 1.45,lava: 16, c: '#ff5470', extra: 1 },
-  { name: 'PESADILLA', hp: 70, dmg: 2, spd: 1.42, boss: 1.75, aggr: 1.65, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
+  { name: 'FÁCIL',   hp: 150, dmg: .7,  spd: .85, boss: .8,   aggr: .9,  lava: 8,  c: '#5ef08a', extra: 0 },
+  { name: 'NORMAL',  hp: 100, dmg: 1.5, spd: 1,   boss: 1.15,  aggr: 1.15,  lava: 12, c: '#ffd34d', extra: 0 },
+  { name: 'DIFÍCIL', hp: 80,  dmg: 2.1, spd: 1.3, boss: 1.5, aggr: 1.45,lava: 16, c: '#ff5470', extra: 1 },
+  { name: 'PESADILLA', hp: 70, dmg: 2.5, spd: 1.42, boss: 1.75, aggr: 1.65, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
 ];
 // Tipos de enemigo: b = comportamiento, face = hacia dónde mira el sprite original
 const ENEMY = {
@@ -3111,7 +3111,7 @@ function placeLive(L) {
       const q = r();
       let k = q < 0.24 ? 'urn' : q < 0.4 ? 'bell' : q < 0.53 ? 'lamp' : q < 0.64 ? 'rune' : q < 0.78 ? 'fern' : q < 0.92 ? 'shroom' : 'heal';
       if (k === 'urn' && r() < 0.4) k = 'vase';
-      if (k === 'heal' && heals >= 2) k = 'fern';
+      if (k === 'heal' && heals >= (typeof diffIdx !== 'undefined' && diffIdx >= 1 ? 1 : 2)) k = 'fern';
       if (k === 'shroom' && roofOver(x, s.y, 260)) k = 'urn';
       if (k === 'lamp' && roofOver(x, s.y, 50)) k = 'bell';
       if (WL && r() < 0.5) { const q2 = r(); k = q2 < 0.24 ? 'Wglow' : q2 < 0.44 ? 'Wspring' : q2 < 0.74 ? 'Wbreak' : 'Wreact'; if (k === 'Wspring' && roofOver(x, s.y, 260)) k = 'Wbreak'; if (k === 'Wglow' && roofOver(x, s.y, 60)) k = 'Wreact'; }
@@ -7970,6 +7970,21 @@ draw = function () {
     ctx.restore();
   }
   ctx.restore();
+};
+// ---------------- Kael ya no es casi invencible (v3.4) ----------------
+// (el daño recibido sube en DIFFS de data.js: Normal ×1,5, Difícil ×2,1, Pesadilla ×2,5)
+// menos invencibilidad tras un golpe
+const _hurtK = hurt;
+hurt = function (dmg, srcX) { const r = _hurtK(dmg, srcX); if (r && diffIdx >= 1 && p.inv > 0.6) p.inv = 0.6; return r; };
+// la Segunda Oportunidad deja a Kael con solo el 25 % de vida
+const _killK = kill;
+kill = function () { _killK(); if (diffIdx >= 1 && !p.dead && p.rewindUsed && p.hp > p.maxHp * 0.25) p.hp = Math.round(p.maxHp * 0.25); };
+// el escudo se gasta más rápido al bloquear (la parada perfecta no)
+const _blockHitK = blockHit;
+blockHit = function (dmg, srcX, proj) {
+  const perfect = hasAb('parada') && p.guardT < 0.22;
+  if (!perfect && diffIdx >= 1) p.gst = (p.gst || 0) - dmg * (diffIdx >= 2 ? 2.2 : 1.6);
+  return _blockHitK(dmg, srcX, proj);
 };
 
 // =====================================================================

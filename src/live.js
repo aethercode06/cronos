@@ -49,7 +49,7 @@ function placeLive(L) {
       const q = r();
       let k = q < 0.24 ? 'urn' : q < 0.4 ? 'bell' : q < 0.53 ? 'lamp' : q < 0.64 ? 'rune' : q < 0.78 ? 'fern' : q < 0.92 ? 'shroom' : 'heal';
       if (k === 'urn' && r() < 0.4) k = 'vase';
-      if (k === 'heal' && heals >= 2) k = 'fern';
+      if (k === 'heal' && heals >= (typeof diffIdx !== 'undefined' && diffIdx >= 1 ? 1 : 2)) k = 'fern';
       if (k === 'shroom' && roofOver(x, s.y, 260)) k = 'urn';
       if (k === 'lamp' && roofOver(x, s.y, 50)) k = 'bell';
       if (WL && r() < 0.5) { const q2 = r(); k = q2 < 0.24 ? 'Wglow' : q2 < 0.44 ? 'Wspring' : q2 < 0.74 ? 'Wbreak' : 'Wreact'; if (k === 'Wspring' && roofOver(x, s.y, 260)) k = 'Wbreak'; if (k === 'Wglow' && roofOver(x, s.y, 60)) k = 'Wreact'; }
