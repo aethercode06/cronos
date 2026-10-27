@@ -123,9 +123,10 @@ update = function (dt) {
   if (state === 'gameover' && !TOWER && !RUSH && !SECRET) {
     const goal = level.goal ? level.goal.x : level.arena ? level.arena.x1 : level.width, pct = Math.round(clamp(p.x / goal, 0, 1) * 100);
     deathN++; if (DAILY) DAILY.deaths++;
+    if (typeof loseLife === 'function' && loseLife()) return;   // sin vidas: la fase empieza de nuevo (stakes.js)
     reviveCheckpoint(); fade = 0.55;
     const sub = DAILY ? tr('+5 s por caída · ¡sigue!') : pct >= 30 ? tr('Llegaste al {n} % · ¡tú puedes!').replace('{n}', pct) : tr('¡Otra vez!');
-    banner(tr('INTENTO {n}').replace('{n}', stageDeaths + 1), sub, '#ffd34d', 1.3);
+    banner(tr('INTENTO {n}').replace('{n}', stageDeaths + 1) + (typeof livesLeft === 'function' && livesLeft() < 90 ? '   ♥ ' + livesLeft() : ''), sub, '#ffd34d', 1.3);
   }
 };
 // salir del reto al ir al mapa o al título

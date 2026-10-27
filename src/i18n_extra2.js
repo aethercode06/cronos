@@ -185,3 +185,20 @@
   const X = { en: ["1-day streak"], pt: ["Sequência de 1 dia"], fr: ["Série de 1 jour"], de: ["1 Tag in Folge"], it: ["Serie di 1 giorno"], ja: ["1日連続"], ko: ["1일 연속"], zh: ["连续1天"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v3.1: celebración al superar una fase
+(function () {
+  const ES = ["¡FASE SUPERADA!", "¡META!", "¡GRAN SALTO!", "¡SALTO PERFECTO!", "PUNTOS", "¡PERFECTO!"];
+  const X = { en: ["STAGE CLEAR!", "GOAL!", "GREAT JUMP!", "PERFECT JUMP!", "POINTS", "PERFECT!"], pt: ["FASE CONCLUÍDA!", "META!", "GRANDE SALTO!", "SALTO PERFEITO!", "PONTOS", "PERFEITO!"],
+    fr: ["NIVEAU RÉUSSI !", "ARRIVÉE !", "BEAU SAUT !", "SAUT PARFAIT !", "POINTS", "PARFAIT !"], de: ["LEVEL GESCHAFFT!", "ZIEL!", "TOLLER SPRUNG!", "PERFEKTER SPRUNG!", "PUNKTE", "PERFEKT!"],
+    it: ["LIVELLO SUPERATO!", "TRAGUARDO!", "GRANDE SALTO!", "SALTO PERFETTO!", "PUNTI", "PERFETTO!"], ja: ["ステージクリア！", "ゴール！", "ナイスジャンプ！", "パーフェクトジャンプ！", "ポイント", "パーフェクト！"],
+    ko: ["스테이지 클리어!", "골인!", "멋진 점프!", "완벽한 점프!", "점수", "퍼펙트!"], zh: ["关卡通过！", "到达！", "漂亮的跳跃！", "完美跳跃！", "分数", "完美！"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v3.1: vidas
+(function () {
+  const ES = ["¡SIN VIDAS!", "La fase empieza de nuevo", "¡+1 VIDA!"];
+  const X = { en: ["OUT OF LIVES!", "The stage starts over", "+1 LIFE!"], pt: ["SEM VIDAS!", "A fase recomeça", "+1 VIDA!"], fr: ["PLUS DE VIES !", "Le niveau recommence", "+1 VIE !"],
+    de: ["KEINE LEBEN MEHR!", "Das Level beginnt von vorn", "+1 LEBEN!"], it: ["VITE FINITE!", "Il livello ricomincia", "+1 VITA!"], ja: ["ライフがなくなった！", "ステージを最初からやり直し", "1UP！"],
+    ko: ["목숨이 없다!", "스테이지를 처음부터 다시", "+1 목숨!"], zh: ["生命耗尽！", "关卡重新开始", "+1 生命！"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
