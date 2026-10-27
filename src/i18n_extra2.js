@@ -139,3 +139,11 @@
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v2.9: orientación de la pantalla
+(function () {
+  const ES = ["Pantalla", "Horizontal", "Vertical", "Automática"];
+  const X = { en: ["Screen", "Landscape", "Portrait", "Automatic"], pt: ["Tela", "Horizontal", "Vertical", "Automática"], fr: ["Écran", "Paysage", "Portrait", "Automatique"],
+    de: ["Bildschirm", "Querformat", "Hochformat", "Automatisch"], it: ["Schermo", "Orizzontale", "Verticale", "Automatica"], ja: ["画面", "横向き", "縦向き", "自動"],
+    ko: ["화면", "가로", "세로", "자동"], zh: ["屏幕", "横屏", "竖屏", "自动"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();

@@ -33,7 +33,7 @@ jobs:
           sed -i 's/<activity/<activity android:screenOrientation="sensorLandscape"/' $M
           G=android/app/build.gradle
           sed -i "s/versionCode [0-9]*/versionCode $((1000 + ${{ github.run_number }}))/" $G
-          sed -i "s/versionName \"[^\"]*\"/versionName \"2.8.${{ github.run_number }}\"/" $G
+          sed -i "s/versionName \"[^\"]*\"/versionName \"2.9.${{ github.run_number }}\"/" $G
           S=android/app/src/main/res/values/styles.xml
           sed -i 's#<item name="android:background">@null</item>#<item name="android:background">@null</item>\n        <item name="android:windowFullscreen">true</item>\n        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>#' $S
       - name: Usar siempre la misma firma (para poder actualizar sin desinstalar)
@@ -64,7 +64,7 @@ jobs:
         run: |
           gh release delete ultima-version -y --cleanup-tag || true
           gh release create ultima-version Chronos-The-Shift.apk Chronos-PRUEBA.apk \
-            --title "Chronos & The Shift · versión 2.8.${{ github.run_number }}" \
+            --title "Chronos & The Shift · versión 2.9.${{ github.run_number }}" \
             --notes "Toca **Chronos-The-Shift.apk** para descargarlo e instalarlo en Android. **Chronos-PRUEBA.apk** es la versión de prueba con todos los mundos abiertos: se instala aparte y no toca tu partida. Si el teléfono lo pide, permite instalar apps de origen desconocido para tu navegador." \
             --latest
           # a veces GitHub deja la versión como borrador (404 al descargar): se publica y se comprueba
