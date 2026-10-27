@@ -25,7 +25,7 @@ function EXTRA_CH(h) {
     pits(x) {
       G(x, 128); let cx = x + 128; const n = 3 + (g > .45 ? 1 : 0);
       for (let i = 0; i < n; i++) {
-        const gap = Math.round(R(120, 150) + 80 * g), w = Math.round(96 - 28 * g), y = 440 - (i % 2) * Math.round(40 + 40 * g);
+        const gap = Math.round(R(135, 165) + 105 * g), w = Math.round(88 - 32 * g), y = 440 - (i % 2) * Math.round(40 + 40 * g);
         P(cx + gap, y, w); gem(cx + gap / 2, y - 50);
         if (i % 2 === 1 && g > .15) E('a', cx + gap + w / 2, y - 120);
         cx += gap + w;
@@ -34,8 +34,8 @@ function EXTRA_CH(h) {
     },
     // hueco largo: doble salto + dash
     dashgap(x) {
-      G(x, 192); const gap = Math.round(290 + 100 * g);
-      arc(x + 200, 380, 6, gap / 6, 70); if (g > .5) E('a', x + 192 + gap / 2, 300);
+      G(x, 192); const gap = Math.round(305 + 115 * g);
+      arc(x + 200, 380, 6, gap / 6, 70); if (g > .3) E('a', x + 192 + gap / 2, 300);
       G(x + 192 + gap, 192); hint(x + 40, 'dash'); return 384 + gap;
     },
     // plataformas que se mueven sobre el vacío
@@ -43,12 +43,12 @@ function EXTRA_CH(h) {
       G(x, 128); const sp = 0.9 + 0.5 * g;
       M(x + 170, 430, 80, x + 370, 430, sp); M(x + 480, 400, 80, x + 480, 270, sp);
       arc(x + 190, 390, 4, 50, 30); gem(x + 520, 240);
-      if (g > .3) E('a', x + 420, 300);
+      if (g > .15) E('a', x + 420, 300);
       G(x + 650, 128); return 778;
     },
     // cadena de plataformas que se derrumban
     crumblechain(x) {
-      G(x, 128); const n = 5, sp = Math.round(145 + 35 * g);
+      G(x, 128); const n = 5 + (g > .5 ? 1 : 0), sp = Math.round(160 + 45 * g);
       for (let i = 0; i < n; i++) { const px = x + 128 + 40 + i * sp; BR(px, 440 - (i % 2) * 40, 64); gem(px + 32, 400 - (i % 2) * 40); }
       if (WD.lavaPits) LAVA(x + 128, n * sp + 40);
       if (g > .4) E('a', x + 128 + sp * 2.5, 320);
@@ -72,7 +72,7 @@ function EXTRA_CH(h) {
     },
     // viento que empuja hacia atrás sobre el vacío
     windpit(x) {
-      G(x, 160); const gap = Math.round(250 + 60 * g);
+      G(x, 160); const gap = Math.round(270 + 80 * g);
       P(x + 160 + gap / 2 - 40, 420, 80);
       ZONE('wind', x + 160, 180, gap, 300, -(1000 + 500 * g), 0);
       arc(x + 180, 390, 5, gap / 5, 40); G(x + 160 + gap, 160); hint(x + 40, 'gust'); return 320 + gap;
@@ -109,7 +109,7 @@ function EXTRA_CH(h) {
     shiftpit(x) {
       G(x, 128); const gap = Math.round(100 + 40 * g);
       PH_(x + 128 + gap, 420, 96, 16, 0); PH_(x + 224 + gap * 2, 380, 96, 16, 1); PH_(x + 320 + gap * 3, 420, 96, 16, 0);
-      arc(x + 150, 370, 6, gap / 1.5, 30); if (g > .4) E('a', x + 300 + gap * 2, 300);
+      arc(x + 150, 370, 6, gap / 1.5, 30); if (g > .2) E('a', x + 300 + gap * 2, 300);
       G(x + 416 + gap * 4, 128); hint(x + 40, 'shiftgap'); return 544 + gap * 4;
     },
     // ¡PERSECUCIÓN!: corre sin parar
@@ -117,7 +117,7 @@ function EXTRA_CH(h) {
       let cx = x; const parts = [[384], [256], [320], [256], [384], [288]];
       G(cx, 384); cx += 384;
       for (let i = 1; i < parts.length; i++) {
-        const gap = Math.round(R(96, 140) + 40 * g); cx += gap; G(cx, parts[i][0]);
+        const gap = Math.round(R(110, 150) + 60 * g); cx += gap; G(cx, parts[i][0]);
         if (i % 2 === 0) SPK(cx + 110, 32); else pillar(cx + 140, 430, 480, 24);
         row(cx + 40, 420, 3, 40); cx += parts[i][0];
       }
