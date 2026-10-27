@@ -202,3 +202,16 @@
     ko: ["목숨이 없다!", "스테이지를 처음부터 다시", "+1 목숨!"], zh: ["生命耗尽！", "关卡重新开始", "+1 生命！"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v3.2: persecuciones
+(function () {
+  const ES = ["¡CORRE!", "LA SOMBRA TE PERSIGUE", "EL FUEGO TE PERSIGUE", "EL VACÍO TE PERSIGUE", "EL CASTILLO SE DERRUMBA", "LA TORMENTA TE PERSIGUE", "¡A SALVO!"];
+  const X = { en: ["RUN!", "THE SHADOW IS CHASING YOU", "THE FIRE IS CHASING YOU", "THE VOID IS CHASING YOU", "THE CASTLE IS COLLAPSING", "THE STORM IS CHASING YOU", "SAFE!"],
+    pt: ["CORRA!", "A SOMBRA ESTÁ TE PERSEGUINDO", "O FOGO ESTÁ TE PERSEGUINDO", "O VAZIO ESTÁ TE PERSEGUINDO", "O CASTELO ESTÁ DESABANDO", "A TEMPESTADE ESTÁ TE PERSEGUINDO", "A SALVO!"],
+    fr: ["COURS !", "L'OMBRE TE POURSUIT", "LE FEU TE POURSUIT", "LE NÉANT TE POURSUIT", "LE CHÂTEAU S'EFFONDRE", "LA TEMPÊTE TE POURSUIT", "EN SÉCURITÉ !"],
+    de: ["LAUF!", "DER SCHATTEN VERFOLGT DICH", "DAS FEUER VERFOLGT DICH", "DIE LEERE VERFOLGT DICH", "DIE BURG STÜRZT EIN", "DER STURM VERFOLGT DICH", "IN SICHERHEIT!"],
+    it: ["CORRI!", "L'OMBRA TI INSEGUE", "IL FUOCO TI INSEGUE", "IL VUOTO TI INSEGUE", "IL CASTELLO CROLLA", "LA TEMPESTA TI INSEGUE", "IN SALVO!"],
+    ja: ["走れ！", "影が追ってくる", "炎が追ってくる", "虚無が追ってくる", "城が崩れていく", "嵐が追ってくる", "助かった！"],
+    ko: ["달려!", "그림자가 쫓아온다", "불길이 쫓아온다", "공허가 쫓아온다", "성이 무너진다", "폭풍이 쫓아온다", "안전하다!"],
+    zh: ["快跑！", "阴影在追你", "烈火在追你", "虚空在追你", "城堡正在崩塌", "风暴在追你", "安全了！"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();

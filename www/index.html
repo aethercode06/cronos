@@ -1178,6 +1178,8 @@ function buildStage(wi, act) {
     gears(x) { G(x, 128); M(x + 150, 450, 64, x + 150, 300, 1.3); M(x + 260, 300, 96, x + 400, 300, 1.0); M(x + 520, 300, 64, x + 520, 450, 1.3); G(x + 640, 128); row(x + 280, 260, 4, 40); E('a', x + 380, 220); return 768; }
   };
 
+  // tramos extra definidos en levels.js (v3.2): reciben las mismas herramientas de construcción
+  if (typeof EXTRA_CH === 'function') Object.assign(CH_, EXTRA_CH({ L, r, D, WD, wi, act, solid, G, P, pillar, M, SPRING, LZ, BO, BR, PH_, CONV, SPK, JET, ICI, LAVA, ZONE, gem, row, arc, CH, RS, E, fixE, hint }));
   let x = 0;
   if (wi === 0 && act === 0) {
     // ===== MUNDO 1-1: TUTORIAL DISEÑADO A MANO =====
@@ -1231,7 +1233,7 @@ function buildStage(wi, act) {
       water: 1, current: 2, echo: 2, quicksand: 1, sandfall: 2, anchors: 2, anchors2: 3, clouds: 2 };
     const cnt = {}; const uniq = []; for (const s of seq) { cnt[s] = (cnt[s] || 0) + 1; if (cnt[s] <= 2) uniq.push(s); }
     while (uniq.length < n) { const c = pick(WD.pool); if ((cnt[c] || 0) < 2) { cnt[c] = (cnt[c] || 0) + 1; uniq.push(c); } }
-    const keyed = uniq.map(s => [s, (RATE[s] || 1) + r() * 1.6 + act * 0.3]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
+    const keyed = uniq.map(s => [s, (RATE[s] ?? (typeof EXTRA_RATE !== 'undefined' ? EXTRA_RATE[s] : undefined) ?? 1) + r() * 1.6 + act * 0.3]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
     for (let i = 1; i < keyed.length; i++) if (keyed[i] === keyed[i - 1]) { const j = keyed.findIndex((s, k) => k > i && s !== keyed[i]); if (j > 0) [keyed[i], keyed[j]] = [keyed[j], keyed[i]]; }
     seq.length = 0; seq.push(...keyed);
     seq.unshift('flat');
@@ -1247,7 +1249,7 @@ function buildStage(wi, act) {
     }
     for (let i = 0; i < seq.length; i++) {
       if (i > 0 && (i % 2 === 0 || seq[i] === 'trial') && !L.checks.some(c => c.x === x + 40)) L.checks.push({ x: x + 40, y: GY - 40, w: 24, h: 40, on: false });
-      x += CH_[seq[i]](x);
+      (L.segs = L.segs || []).push({ k: seq[i], x }); x += CH_[seq[i]](x);
       if (i === Math.floor(seq.length / 3) || i === Math.floor(seq.length * 2 / 3)) CH(x - 60, 440);
     }
     L.seq = seq;
@@ -7969,6 +7971,199 @@ draw = function () {
   ctx.restore();
 };
 
+// =====================================================================
+//  NIVELES CON IDENTIDAD (v3.2)
+//  Antes los 18 mundos mezclaban casi los mismos bloques (huecos de
+//  64 px, escaleras, un enemigo): cambiaba el dibujo, no el juego.
+//  Ahora:
+//  · Tramos nuevos que exigen saltar bien: plataformas sobre el vacío,
+//    hueco que solo se cruza con dash, plataformas móviles, cadenas que
+//    se derrumban, subidas verticales, pasillos con enemigos y púas,
+//    viento sobre el vacío, anclas, láseres, cintas en contra, hielo,
+//    plataformas de dimensión sobre el vacío.
+//  · Cada mundo tiene su mecánica protagonista y su propia mezcla.
+//  · Los tramos se endurecen con el avance (huecos más largos, más
+//    enemigos, plataformas más pequeñas).
+//  · Momento especial en 5 mundos: ¡PERSECUCIÓN! (sombra, fuego,
+//    vacío, derrumbe, tormenta) que te obliga a correr sin parar.
+//  Física de referencia: salto ~200 px, doble salto ~375 px, +dash ~130 px.
+// =====================================================================
+const EXTRA_RATE = { pits: 2.5, dashgap: 3, movepits: 3, crumblechain: 3, climb: 2.5, gauntlet: 2, windpit: 3, anchorpit: 3.5, laserrun: 3.5, conveyorpit: 3, icerun: 2.5, shiftpit: 3, chase: 4.5 };
+function EXTRA_CH(h) {
+  const { L, r, WD, wi, act, G, P, pillar, M, BR, PH_, CONV, SPK, LZ, ICI, LAVA, ZONE, gem, row, arc, E, hint } = h;
+  const g = clamp(WPOS(wi) / (ORDER.length - 1), 0, 1) * 0.85 + act * 0.07;
+  const R = (a, b) => a + r() * (b - a);
+  return {
+    // plataformas pequeñas sobre el vacío
+    pits(x) {
+      G(x, 128); let cx = x + 128; const n = 3 + (g > .45 ? 1 : 0);
+      for (let i = 0; i < n; i++) {
+        const gap = Math.round(R(120, 150) + 80 * g), w = Math.round(96 - 28 * g), y = 440 - (i % 2) * Math.round(40 + 40 * g);
+        P(cx + gap, y, w); gem(cx + gap / 2, y - 50);
+        if (i % 2 === 1 && g > .15) E('a', cx + gap + w / 2, y - 120);
+        cx += gap + w;
+      }
+      const end = Math.round(130 + 60 * g); G(cx + end, 160); return cx + end + 160 - x;
+    },
+    // hueco largo: doble salto + dash
+    dashgap(x) {
+      G(x, 192); const gap = Math.round(290 + 100 * g);
+      arc(x + 200, 380, 6, gap / 6, 70); if (g > .5) E('a', x + 192 + gap / 2, 300);
+      G(x + 192 + gap, 192); hint(x + 40, 'dash'); return 384 + gap;
+    },
+    // plataformas que se mueven sobre el vacío
+    movepits(x) {
+      G(x, 128); const sp = 0.9 + 0.5 * g;
+      M(x + 170, 430, 80, x + 370, 430, sp); M(x + 480, 400, 80, x + 480, 270, sp);
+      arc(x + 190, 390, 4, 50, 30); gem(x + 520, 240);
+      if (g > .3) E('a', x + 420, 300);
+      G(x + 650, 128); return 778;
+    },
+    // cadena de plataformas que se derrumban
+    crumblechain(x) {
+      G(x, 128); const n = 5, sp = Math.round(145 + 35 * g);
+      for (let i = 0; i < n; i++) { const px = x + 128 + 40 + i * sp; BR(px, 440 - (i % 2) * 40, 64); gem(px + 32, 400 - (i % 2) * 40); }
+      if (WD.lavaPits) LAVA(x + 128, n * sp + 40);
+      if (g > .4) E('a', x + 128 + sp * 2.5, 320);
+      G(x + 128 + 40 + n * sp, 128); return 128 + 40 + n * sp + 128;
+    },
+    // subida vertical por encima de un muro
+    climb(x) {
+      G(x, 448);
+      P(x + 60, 400, 112); P(x + 220, 320, 112); P(x + 60, 240, 112); P(x + 220, 160, 112); P(x + 380, 112, 176);
+      pillar(x + 430, 150, 480, 24);
+      E('g', x + 270, 320, 90); if (g > .3) E('a', x + 150, 190); if (g > .6) E('g', x + 110, 240, 90);
+      row(x + 400, 80, 4, 36); gem(x + 115, 210);
+      G(x + 448, 192); return 640;
+    },
+    // pasillo con enemigos y púas
+    gauntlet(x) {
+      G(x, 896); SPK(x + 200, 32 + Math.round(16 * g)); SPK(x + 540, 48);
+      E('g', x + 340, 480, 160); E('g', x + 720, 480, 160); E('a', x + 460, 330);
+      if (g > .5) E('g', x + 620, 480, 100); if (g > .75) E('a', x + 780, 300);
+      arc(x + 180, 400, 4, 30, 40); arc(x + 520, 390, 4, 30, 50); return 896;
+    },
+    // viento que empuja hacia atrás sobre el vacío
+    windpit(x) {
+      G(x, 160); const gap = Math.round(250 + 60 * g);
+      P(x + 160 + gap / 2 - 40, 420, 80);
+      ZONE('wind', x + 160, 180, gap, 300, -(1000 + 500 * g), 0);
+      arc(x + 180, 390, 5, gap / 5, 40); G(x + 160 + gap, 160); hint(x + 40, 'gust'); return 320 + gap;
+    },
+    // anclas sobre un gran vacío
+    anchorpit(x) {
+      G(x, 160); L.anchors.push({ x: x + 300, y: 290 }, { x: x + 530, y: 260 }, { x: x + 760, y: 290 });
+      if (g > .5) E('a', x + 640, 360);
+      arc(x + 300, 380, 7, 75, 40); G(x + 920, 192); return 1112;
+    },
+    // plataformas bajo láseres
+    laserrun(x) {
+      G(x, 128);
+      P(x + 175, 420, 96); P(x + 335, 380, 96); P(x + 495, 420, 96);
+      LZ(x + 175, 330, 96, 0); LZ(x + 335, 290, 96, 1.1); LZ(x + 495, 330, 96, 2.2);
+      row(x + 200, 390, 3, 160); if (g > .4) E('a', x + 420, 250);
+      G(x + 655, 128); return 783;
+    },
+    // cintas en contra entre vacíos
+    conveyorpit(x) {
+      G(x, 128); const gap = Math.round(150 + 40 * g);
+      CONV(x + 128, 256, -1); CONV(x + 384 + gap, 256, -1);
+      E('g', x + 260, 480, 80); if (g > .4) E('a', x + 384 + gap / 2, 330);
+      row(x + 180, 440, 4, 50); G(x + 640 + gap * 2, 128); return 768 + gap * 2;
+    },
+    // hielo resbaladizo con huecos y estalactitas
+    icerun(x) {
+      G(x, 384); const gap = Math.round(160 + 60 * g);
+      G(x + 384 + gap, 256); for (const ix of [x + 420 + gap, x + 500 + gap]) ICI(ix, 300);
+      E('g', x + 200, 480, 140); if (g > .3) E('g', x + 470 + gap, 480, 80);
+      G(x + 640 + gap * 2, 256); arc(x + 384, 380, 4, gap / 4, 50); return 896 + gap * 2;
+    },
+    // plataformas de dimensión sobre el vacío: hay que cambiar en el aire
+    shiftpit(x) {
+      G(x, 128); const gap = Math.round(100 + 40 * g);
+      PH_(x + 128 + gap, 420, 96, 16, 0); PH_(x + 224 + gap * 2, 380, 96, 16, 1); PH_(x + 320 + gap * 3, 420, 96, 16, 0);
+      arc(x + 150, 370, 6, gap / 1.5, 30); if (g > .4) E('a', x + 300 + gap * 2, 300);
+      G(x + 416 + gap * 4, 128); hint(x + 40, 'shiftgap'); return 544 + gap * 4;
+    },
+    // ¡PERSECUCIÓN!: corre sin parar
+    chase(x) {
+      let cx = x; const parts = [[384], [256], [320], [256], [384], [288]];
+      G(cx, 384); cx += 384;
+      for (let i = 1; i < parts.length; i++) {
+        const gap = Math.round(R(96, 140) + 40 * g); cx += gap; G(cx, parts[i][0]);
+        if (i % 2 === 0) SPK(cx + 110, 32); else pillar(cx + 140, 430, 480, 24);
+        row(cx + 40, 420, 3, 40); cx += parts[i][0];
+      }
+      (L.chases = L.chases || []).push({ x0: x + 60, x1: cx - 40, st: 0, wx: 0 });
+      return cx - x;
+    }
+  };
+}
+// mecánica protagonista y mezcla de cada mundo
+const WORLD_PLAN = {
+  0: [['spring', 'bouncefield', 'pits', 'movepits', 'mover', 'elevator', 'climb'], ['spring', 'pits', 'spikes']],
+  1: [['shiftgap', 'shiftwall', 'shiftpit', 'lasers', 'gauntlet', 'crumble', 'dashgap'], ['shiftpit', 'shiftwall', 'chase']],
+  2: [['lavapit', 'firejets', 'crumblechain', 'crumble', 'climb', 'dashgap', 'gauntlet'], ['crumblechain', 'lavapit', 'firejets']],
+  3: [['updraft', 'gust', 'windpit', 'bouncefield', 'pits', 'climb', 'spring'], ['windpit', 'updraft', 'gust']],
+  4: [['graves', 'ghosts', 'gauntlet', 'shiftwall', 'pits', 'climb', 'crumble'], ['gauntlet', 'ghosts', 'graves']],
+  5: [['icicles', 'icerun', 'pits', 'crumblechain', 'dashgap', 'climb', 'movepits'], ['icerun', 'icicles', 'crumblechain']],
+  6: [['firejets', 'lavapit', 'crumblechain', 'gauntlet', 'shiftwall', 'dashgap', 'climb'], ['firejets', 'crumblechain', 'chase']],
+  7: [['lowgrav', 'gears', 'laserrun', 'lasers', 'movepits', 'conveyorpit', 'shiftgap'], ['gears', 'laserrun', 'lowgrav']],
+  8: [['water', 'current', 'movepits', 'pits', 'crumble', 'dashgap', 'gauntlet'], ['water', 'current', 'movepits']],
+  9: [['quicksand', 'sandfall', 'echo', 'dashgap', 'gauntlet', 'pits', 'crumblechain'], ['quicksand', 'echo', 'dashgap']],
+  10: [['anchors', 'anchors2', 'clouds', 'anchorpit', 'windpit', 'updraft', 'pits'], ['anchorpit', 'clouds', 'anchors2']],
+  11: [['dashgap', 'movepits', 'crumblechain', 'laserrun', 'windpit', 'anchorpit', 'shiftpit', 'gauntlet', 'water'], ['anchorpit', 'shiftpit', 'chase']],
+  12: [['water', 'gauntlet', 'pits', 'movepits', 'graves', 'ghosts', 'crumble'], ['water', 'gauntlet', 'pits']],
+  13: [['gauntlet', 'shiftwall', 'climb', 'dashgap', 'lasers', 'crumblechain', 'firejets'], ['gauntlet', 'climb', 'chase']],
+  14: [['conveyorpit', 'conveyor', 'elevator', 'icicles', 'climb', 'crumblechain', 'movepits'], ['conveyorpit', 'elevator', 'climb']],
+  15: [['graves', 'ghosts', 'gauntlet', 'pits', 'climb', 'bouncefield', 'shiftwall'], ['graves', 'ghosts', 'climb']],
+  16: [['shiftwall', 'shiftpit', 'shiftgap', 'climb', 'gauntlet', 'echo', 'pits'], ['shiftpit', 'climb', 'shiftwall']],
+  17: [['gust', 'windpit', 'anchors', 'anchorpit', 'updraft', 'climb', 'dashgap'], ['windpit', 'anchorpit', 'chase']]
+};
+for (const w in WORLD_PLAN) { WORLDS[w].pool = WORLD_PLAN[w][0]; WORLDS[w].sig = WORLD_PLAN[w][1]; }
+// ---------------- persecución ----------------
+const CHASE_LOOK = { 1: ['rgba(40,10,60,', '#b070ff', 'LA SOMBRA TE PERSIGUE'], 6: ['rgba(120,20,0,', '#ff7a30', 'EL FUEGO TE PERSIGUE'], 11: ['rgba(20,0,40,', '#ff6ad5', 'EL VACÍO TE PERSIGUE'],
+  13: ['rgba(30,30,50,', '#8fb4ff', 'EL CASTILLO SE DERRUMBA'], 17: ['rgba(20,30,70,', '#bfe6ff', 'LA TORMENTA TE PERSIGUE'] };
+function chaseLook() { return CHASE_LOOK[curWorld] || CHASE_LOOK[1]; }
+const _updateC = update;
+update = function (dt) {
+  _updateC(dt);
+  if (state !== 'playing' || !level || !level.chases) return;
+  for (const c of level.chases) {
+    if (c.st === 0 && !p.dead && p.x > c.x0 && p.x < c.x1 - 200) {
+      c.st = 1; c.wx = c.x0 - 260; c.sp = 200;
+      banner(tr('¡CORRE!'), tr(chaseLook()[2]), chaseLook()[1], 1.8); sfx('roar', .7, .7); shake = Math.max(shake, 8);
+    }
+    if (c.st !== 1) continue;
+    if (p.dead) { c.st = 0; continue; }                         // al caer, la persecución vuelve a empezar
+    c.sp = Math.min(255, c.sp + dt * 22); c.wx += c.sp * dt;
+    if (Math.random() < .5) parts.push({ x: c.wx + rnd(-10, 10), y: rnd(cam.y, cam.y + VH), vx: rnd(20, 80), vy: rnd(-40, 40), life: .6, max: .6, c: chaseLook()[1], s: 2, g: 0 });
+    if (Math.abs(c.wx - p.x) < 300) shake = Math.max(shake, 2);
+    if (p.x < c.wx && p.inv <= 0) {
+      if (diffIdx >= 1) { p.hp = 0; kill(); } else { hurt(25, c.wx - 100); p.x = c.wx + 30; }
+    }
+    if (c.wx >= c.x1) { c.st = 2; burst(c.x1, p.y, chaseLook()[1], 30, 260, 0, .8, 2); sfx('relic', .5); addFloat(p.x + p.w / 2, p.y - 30, tr('¡A SALVO!'), '#3df5a0', 20); }
+  }
+};
+const _drawWorldC = drawWorld;
+drawWorld = function () {
+  _drawWorldC.apply(this, arguments);
+  if (!level || !level.chases) return;
+  for (const c of level.chases) {
+    if (c.st !== 1) continue;
+    const L = chaseLook(), x = c.wx - cam.x;
+    if (x < -40) continue;
+    bx.save();
+    const gr = bx.createLinearGradient(c.wx - 260, 0, c.wx + 12, 0);
+    gr.addColorStop(0, L[0] + '0.97)'); gr.addColorStop(0.75, L[0] + '0.85)'); gr.addColorStop(1, L[0] + '0)');
+    bx.fillStyle = gr; bx.fillRect(c.wx - 260, cam.y - 20, 272, VH + 40);
+    bx.fillStyle = L[1]; bx.globalAlpha = .7;
+    for (let y = Math.floor(cam.y / 14) * 14; y < cam.y + VH; y += 14) bx.fillRect(Math.round(c.wx + Math.sin(time * 9 + y * .3) * 6), y, 3, 9);
+    bx.restore();
+  }
+};
+
+
 // Textos traducidos (generado desde i18n/*.json)
 const I18N_ES = ["DASH", "ESPADA", "SALTO", "SHIFT", "TIEMPO", "ECO", "KAEL SOMBRÍO", "EL DEVORADOR", "Hace mil años, la Orden de Chronos custodiaba el Corazón del Tiempo: el reloj que mantiene unidos a todos los mundos.", "Kael era su aprendiz más joven. Lyra, su hermana mayor, la guardiana más brillante que la Orden había conocido.", "Hasta la Noche de las Cenizas. Un incendio devoró la Torre del Reloj… y a Lyra con ella.", "¡No! Todavía puedo llegar… ¡solo necesito un segundo más!", "Kael usó el poder prohibido de la Orden: el SHIFT. Quiso volver atrás en el tiempo para salvarla.", "Pero el tiempo no se deja reescribir. El Corazón estalló en catorce fragmentos que cayeron en catorce mundos distintos.", "Cada fragmento corrompió a la criatura que lo encontró. Y de la grieta nació una sombra con el rostro de Kael.", "¡Eh! ¡Despierta, chaval! Soy Tic, búho mecánico oficial de la Orden. Modelo 3000. Bueno… el único modelo.", "Tengo una noticia mala y una buena. La mala: has roto el universo. La buena: ¡se puede arreglar!", "¿Y Lyra? ¿Dónde está Lyra?", "Su eco quedó atrapado entre dos segundos. Si reunimos los catorce fragmentos… quizá podamos encontrarla.", "Entonces no hay tiempo que perder.", "Técnicamente, ahora mismo hay MUCHO tiempo perdido. Pero sí, vamos.", "¿Crees que eres mejor que yo? Solo quería lo mismo que tú: tenerla de vuelta.", "Pero no fui yo quien rompió el Corazón. Algo nos susurró desde la grieta. Algo que se alimenta de los instantes rotos.", "EL DEVORADOR DE HORAS. Con cada segundo perdido, crece. Con cada fragmento que reúnes… despierta.", "Vale. Eso no venía en el manual.", "Los seis últimos fragmentos están más allá del tiempo. Ve, Kael. Haz lo que yo no fui capaz de hacer.", "Lo haré. Por los dos.", "En el Nexo, la luz de los catorce fragmentos atravesó al Devorador de Horas.", "Y por primera vez en mil años, el Corazón del Tiempo volvió a latir.", "Lo lograste, hermanito. Escucha… el tiempo vuelve a correr.", "Puedo usar el Shift una última vez. Puedo traerte de vuelta, Lyra.", "Y volverías a romperlo todo. El tiempo no se arregla, Kael. Se vive.", "Estaré en cada amanecer. Te lo prometo.", "Los catorce mundos volvieron a girar. Y cada mañana, en la Jungla Flotante, el sol sale un segundo antes.", "Dicen que es Lyra, saludando.", "Para ser un chaval que rompió el universo, no lo has hecho nada mal.", "Gracias, Tic. ¿Y ahora qué?", "Ahora… ¿desayuno? Llevo mil años sin aceite.", "Kael… ¿recuerdas cuando me enseñaste a trepar los árboles de la jungla? Siempre llegabas primero.", "¡El fragmento ha despertado tu SHIFT! Cambia de dimensión y verás plataformas que antes no estaban.", "En Velmora tocaban las campanas cada vez que alguien se perdía. Hace siglos que ya no suenan.", "Uno menos. Doce más y te invito a un aceite de engranajes.", "El fuego no fue culpa tuya. Nunca lo fue.", "Bueno. Eso ha sido intenso. Sigamos.", "En el bosque del crepúsculo el sol nunca se pone. Así querías que fuera aquel día, ¿verdad?", "Los muertos no deberían volver, Kael. Ni siquiera yo.", "¿Ha dicho lo que creo que ha dicho?", "Hace frío aquí… como el instante en el que estoy atrapada.", "Él se acerca. Tu sombra. Quiere congelar el tiempo para siempre en la noche del incendio.", "Bajo el mar el tiempo va más lento. Aquí casi puedo tocarte.", "¡Nuevo poder: el ECO! Graba tus movimientos y tu yo del pasado los repetirá. Úsalo para pisar dos placas a la vez.", "Cada grano de arena es un segundo que alguien perdió. No pierdas los tuyos buscándome.", "Ya casi, hermanito. Pero prométeme algo: cuando llegue el final… déjame ir.", "No puedo prometer eso.", "Lo harás. Te conozco.", "Las brujas decían que el tiempo se puede embotellar. Mintieron. Solo se puede compartir.", "Puaj. Tengo barro hasta en los engranajes.", "Él también quiso detener el tiempo para no perder a nadie. Mira cómo acabó, hermanito.", "No seré como él.", "Lo sé.", "Primero lo primero: muévete, salta y no te caigas. Es más difícil de lo que parece.", "Las lianas y los resortes son tus amigos. Las zarigüeyas, no tanto.", "El fragmento late al final de la jungla. Y algo muy grande croa cerca.", "Velmora, la ciudad maldita. Las campanas callaron cuando cayó el fragmento.", "Con el SHIFT puedes cambiar de dimensión. Cian y violeta: dos mundos, un Kael.", "En lo alto de la catedral duerme una gárgola colosal. Sus rayos malditos duelen. Te lo digo por experiencia.", "Aquí hace un calor de mil demonios. Literalmente, más adelante.", "Los bloques agrietados se rompen al pisarlos. No te quedes quieto.", "La lava sube. ¡Sube, sube, SUBE! Y arriba espera un hechicero.", "Un bosque donde el sol nunca termina de ponerse. Precioso. Sospechoso.", "Las corrientes de aire te elevan. Déjate llevar, como yo en las reuniones.", "Siento que algo nos observa desde arriba. Un ojo. Muy grande.", "Un cementerio. Genial. Justo lo que mis engranajes necesitaban.", "Los espectros solo se tocan en la dimensión violeta. ¡SHIFT y espadazo!", "Un caballero que no sabe que su guerra terminó hace siglos. Atácale por la espalda.", "Hielo. El suelo resbala, así que frena con tiempo.", "Las estalactitas caen cuando pasas debajo. Mira arriba de vez en cuando.", "Escucho un rugido helado. Esquiva sus cargas y que choque contra la pared.", "El Abismo. Si oyes voces, no son mías. Bueno, a veces sí.", "Fuego, lava y almas en pena. Lo normal de un martes.", "El demonio guarda el penúltimo fragmento de esta parte del viaje. Cuando baje a descansar… ¡a por él!", "La Ciudadela del Tiempo, fuera de toda era. Aquí la gravedad hace lo que quiere.", "Engranajes, láseres y dimensiones. Todo lo que has aprendido, junto.", "Tu sombra te espera. Conoce todos tus trucos. Sé mejor que tú mismo.", "¡Agua! Dentro del agua puedes nadar: pulsa SALTO sin parar para subir.", "Las corrientes te arrastran. Y las medusas pican. Mucho.", "El Leviatán duerme en el fondo. Cuando muerda el suelo, ataca su señuelo.", "El Desierto Eterno. Aquí la arena cae hacia arriba. No preguntes.", "Usa el ECO: graba tu camino hasta la placa y tu eco la mantendrá pulsada mientras cruzas.", "La Esfinge solo se rinde ante quien está en dos lugares a la vez. ¿Te suena?", "El Templo Celeste. Los anillos dorados son ANCLAS: acércate en el aire y te engancharás.", "Balancéate y suelta con SALTO en el momento justo. ¡Wiii!", "El Serafín invierte el cielo y la tierra. Mantén la cabeza fría… y del revés.", "El Nexo. Aquí están todos los mundos a la vez. Y todo lo que has aprendido.", "Ya casi. Puedo sentir a Lyra. Y algo enorme que respira entre los segundos.", "El Devorador de Horas. Este es el final, Kael. Hagámoslo bien.", "El Pantano de las Brujas. Si oyes risitas en la niebla, no eran mías.", "El agua está turbia y los espectros solo se tocan en la dimensión violeta. ¡SHIFT!", "La Bruja Madre. Cuando caiga aturdida tras sus picados… ¡a por ella!", "La Ciudadela del Rey Caído. Todo aquí está encadenado. Hasta el tiempo.", "Los caballeros siguen defendiendo un reino que ya no existe. Atácalos por la espalda.", "El Rey Caído. Embiste como una tormenta. Cuando clave la espada en el suelo, ¡golpéalo!", "¡CROAAAC! Este fragmento brilla… ¡y es MÍO!", "Salta sus ondas de choque. Y no le mires a los ojos. Son raros.", "Mil años vigilando esta catedral… y por fin llega algo que romper.", "Cuando caiga al suelo después de disparar, ¡golpéala!", "El fuego purifica, niño. Deja que purifique tu error.", "Rompe las tres palancas para quitarle el escudo.", "Te he visto caer mil veces en mil futuros. Este será uno más.", "Juré proteger este lugar hasta el fin de los tiempos. Y el tiempo… se ha detenido.", "GRRRRRRAAAH…", "Creo que no habla. Pero muerde.", "Los siglos saben dulces. Tú sabrás a eternidad.", "Yo soy tú. El que no se rindió. Apártate de mi camino.", "No. Esta vez no voy a huir del pasado.", "Las mareas del tiempo me obedecen. Hundiré tu luz en el abismo.", "Responde, viajero: ¿qué se pierde al recuperarlo?", "Demasiado tarde.", "Aquí arriba el cielo es suelo y el suelo es cielo. Tú no perteneces a ningún lugar.", "CATORCE INSTANTES. CATORCE MUNDOS. TODO EL TIEMPO… SERÁ MÍO.", "El tiempo no es de nadie.", "Hueles a tiempo robado, niño. Mi caldero lleva siglos esperándote.", "Esquiva sus picados. ¡Y no aceptes nada que te ofrezca!", "Yo también tuve a alguien a quien salvar. Mi reino entero. Y fracasé.", "Entonces déjame terminar lo que tú no pudiste.", "FÁCIL", "NORMAL", "DIFÍCIL", "JUNGLA FLOTANTE", "Resortes y lianas", "GRAN SAPO ANCESTRAL", "¡Salta las ondas de choque!", "El Reloj del Origen se ha roto y sus fragmentos han desgarrado la realidad. Kael, el último Guardián del Tiempo, despierta en la Jungla Flotante.", "VELMORA, CIUDAD MALDITA", "Catedrales y dimensiones", "GÁRGOLA DE LA CATEDRAL", "Esquiva sus rayos malditos y golpéala cuando caiga", "Un fragmento cayó sobre Velmora, la ciudad de las mil campanas, y la maldijo para siempre. Aquí despiertas el poder del SHIFT: cambia de dimensión para hacer aparecer y desaparecer plataformas.", "CALDERO VOLCÁNICO", "Lava y fuego", "HECHICERO DE MAGMA", "Golpea las 3 palancas para romper su escudo", "El calor del núcleo funde el tiempo mismo. La lava sube y el Hechicero de Magma custodia el tercer fragmento.", "BOSQUE DEL CREPÚSCULO", "Vientos y hongos", "OJO ABISAL", "Esquiva sus embestidas y golpéalo al bajar", "En el bosque donde el sol nunca termina de ponerse, los vientos del tiempo soplan con fuerza. Algo te observa desde las alturas.", "CEMENTERIO MALDITO", "Espectros y tumbas", "CABALLERO ESQUELETO", "Su escudo bloquea de frente: atácalo por la espalda", "Los muertos se levantan cuando el tiempo se detiene. Los espectros solo son tangibles en la otra dimensión: usa el SHIFT para golpearlos.", "CRIPTA HELADA", "Hielo y estalactitas", "BESTIA DE ESCARCHA", "Esquiva sus cargas y las estalactitas", "Bajo el hielo eterno, cada paso resbala. Cuidado con las estalactitas: caen cuando pasas debajo.", "ABISMO INFERNAL", "Llamas y almas", "DEMONIO DEL ABISMO", "Aléjate de su aliento y atácalo cuando descienda", "El penúltimo fragmento arde en el corazón del abismo. El Demonio que lo custodia ha devorado siglos enteros.", "CIUDADELA DEL TIEMPO", "Gravedad cero", "Tu reflejo conoce tus movimientos. Anticípate.", "En la Ciudadela, fuera del tiempo, te espera tu propio reflejo: el Kael que eligió romper el Reloj. Solo uno puede salir de aquí.", "ARRECIFE ABISAL", "Nado y corrientes", "LEVIATÁN DE CORAL", "Cuando muerda el suelo, ¡golpea su señuelo!", "Un fragmento se hundió en una ciudad sumergida. Bajo el agua el tiempo fluye despacio: pulsa SALTO para nadar.", "DESIERTO ETERNO", "Eco temporal y arenas", "ESFINGE DEL RELOJ", "Pisa las dos placas a la vez (tú y tu ECO) para romper su escudo", "Arena que cae hacia el cielo y ruinas de relojes colosales. Aquí necesitarás estar en dos lugares a la vez: usa el ECO.", "TEMPLO CELESTE", "Anclas y nubes", "SERAFÍN INVERTIDO", "Cuando el cielo se invierta, mantén la calma: tus controles no cambian", "Templos colgando de las nubes y cascadas que suben. Engánchate a los anillos dorados acercándote en el aire.", "NEXO DE CHRONOS", "Todos los mundos", "EL DEVORADOR DE HORAS", "Cuando se agote y baje, ¡ataca su ojo!", "El corazón roto del tiempo. Aquí todos los mundos se mezclan. El último fragmento… y el Devorador.", "PANTANO DE LAS BRUJAS", "Ciénagas y maleficios", "LA BRUJA MADRE", "Esquiva sus picados y golpéala cuando quede aturdida en el suelo", "Más allá de las nubes, un fragmento se pudre en el Pantano de las Brujas. La niebla susurra tu nombre… y algo en el agua responde.", "CIUDADELA DEL REY CAÍDO", "Tronos rotos y cadenas", "EL REY CAÍDO", "Cuando clave su espada en el suelo y quede atrapado, ¡golpéalo!", "El último reino antes del Nexo. Su rey juró proteger el tiempo y acabó encadenado a él. Su trono vacío aún arde con fuego de almas.", "Muévete con las flechas y salta los huecos con SALTO", "Pulsa ESPADA para atacar. Encadena golpes para hacer COMBOS", "Pulsa SALTO otra vez en el aire para el DOBLE SALTO", "Los hongos saltarines te impulsan muy alto", "Súbete a la plataforma móvil y espera el momento justo", "Usa DASH para cruzar huecos largos (eres invencible mientras dura)", "Cada fase esconde un RELOJ DE ARENA secreto. ¡Explora!", "Deslízate por la pared y pulsa SALTO para rebotar hacia arriba", "Pulsa SHIFT para cambiar de dimensión: aparecen otras plataformas", "Los muros de otra dimensión se atraviesan con SHIFT", "Ataca en el aire sobre pinchos o enemigos para rebotar", "Los espectros solo se pueden golpear en la dimensión violeta (SHIFT)", "Las corrientes de aire te elevan: déjate llevar", "Zona de gravedad reducida: tus saltos llegan mucho más alto", "Las estalactitas caen cuando pasas por debajo", "Las cintas te arrastran: corre en contra", "Los bloques agrietados se desmoronan al pisarlos", "Observa el ritmo de las llamas antes de cruzar", "Las ráfagas de viento te empujan hacia atrás", "En el agua pulsa SALTO varias veces para nadar hacia arriba", "Las corrientes te arrastran: nada en contra o aprovéchalas", "Pulsa ECO, camina hasta la placa y vuelve a pulsar ECO: tu eco la mantendrá pulsada", "La arena movediza te frena y te hunde: ¡salta sin parar!", "Acércate en el aire a un anillo dorado y pulsa SALTO para engancharte. Vuelve a pulsar para soltarte", "Las nubes se deshacen al pisarlas", "La arena del tiempo cae hacia arriba: déjate llevar", "¡COMBO x", "SHIFT dormido: recupera el 1.er fragmento", "¡BLOQUEADO!", "¡TIEMPO RALENTIZADO!", "¡LA ARENA TE TRAGÓ!", "+20 VIDA", "¡RELOJ DE ARENA SECRETO!", "PUNTO DE CONTROL", "PARRY", "¡PALANCA!", "¡ESCUDO ROTO!", "ESCUDO", "¡BLOQUEO!", "INMUNE", "BLOQUEO", "ESCUDO RESTAURADO", "¡LEVANTAOS!", "¡SHIFT!", "¡SOMBRAS, DEVORADLO!", "Corazón de bronce", "+20 de vida máxima", "Filo del minutero", "+50% de daño con la espada", "Muelle comprimido", "El DASH recarga más rápido", "Arena dorada", "El poder del TIEMPO se carga antes", "Imán de Tic", "Las gemas cercanas vuelan hacia ti", "GRABANDO ECO…", "¡ECO EN MARCHA!", "¡EL CIELO SE INVIERTE!", "¡SE AGOTA!", "SALTAR ▶▶", "FRAGMENTO ", "Recuperado de ", "Toca para continuar", "TALLER DE TIC", "«Dame gemas y te ajusto los engranajes. Sin garantía.»", "MAPA DEL TIEMPO", " fragmentos", "MUNDO ", "VOLVER", "TALLER", "JEFE", "FASE ", "¿Nos quedamos aquí a vivir?", "Si te quedas quieto, el tiempo no se arregla solo…", "Tic, tac. Tic, tac. Era una indirecta.", "Me oxido si no nos movemos.", "¡Cuidado, Kael! ¡Estás muy herido!", "Busca una cereza, ¡rápido!", "Esa herida no me gusta nada.", "¡Mira, gemas!", "Brillitos a la vista.", "Para el taller, ¡no las dejes!", "Siento un reloj de arena escondido por aquí…", "Algo brilla cerca. ¿Lo oyes?", "¡Buen golpe!", "¡Eso le ha dolido!", "¡Combo!", "Un punto de control. Respira.", "Guardado. Bueno, más o menos.", "¡Qué olor a selva!", "Oigo pájaros de otra era.", "Mil campanas y ninguna suena. Mal presagio.", "Esas gárgolas me están mirando. Lo sé.", "¡Quema, quema!", "Mis engranajes se derriten.", "Qué atardecer tan bonito… y eterno.", "Las luciérnagas me saludan.", "Esto da escalofríos.", "No mires las tumbas. Bueno, ya miraste.", "Brrr. Mis tuercas tiritan.", "Cuidado, resbala.", "Huele a azufre.", "Ni los demonios quieren estar aquí.", "¡Engranajes por todas partes! Me siento en casa.", "El tiempo aquí da vueltas.", "¡Glub! ¿Los búhos nadan?", "Mira cuántos peces.", "Arena en todos mis engranajes…", "Las arenas suben al cielo. Qué raro.", "¡Qué vistas!", "No mires abajo.", "Siento a Lyra muy cerca.", "Esto es el corazón de todo.", "Croac. No, no he sido yo.", "Ese caldero huele a problemas.", "Cuántas cadenas…", "Un trono vacío da más miedo que uno ocupado.", "¿Recuerdas cuando contábamos estrellas desde la torre?", "Siempre fuiste el valiente, aunque temblaras.", "Me gustaba cómo te reías de tus propios chistes malos.", "El tiempo es como un río, Kael. No se puede beber todo.", "Prométeme que también vivirás por ti.", "Cada amanecer es un regalo. No los gastes mirando atrás.", "Tic siempre me cayó bien. No se lo digas.", "Te enseñé a esgrimir con una rama. Mírate ahora.", "Estoy orgullosa de ti, hermanito.", "Cuando cierres los ojos, piensa en el olor del pan de mamá.", "Las estrellas también se apagan… pero su luz sigue viajando.", "Ya casi. Puedo oír tu corazón desde aquí.", "¡Salta sobre esa seta! Rebota muchísimo.", "Esas vasijas suenan a gemas… ¡rómpelas!", "Un farol apagado. Tócalo y dale luz.", "Flores campana… ¡tócalas todas, cantan!", "Una runa del tiempo. Písala, Kael.", "Esa flor cura. Guárdala para cuando estés herido.", "¡Un cofre allí arriba!", "¡Había un espíritu ahí dentro!", "¡Cofre del tiempo!", "¡Un cofre! ¡Brillitos para el taller!", "¡Tesoro! Sabía que valía la pena subir.", "¡Todos los faroles encendidos!", "¡Qué bonito! El mundo brilla otra vez.", "¡Melodía completa!", "¡Las flores cantan para ti!", "Bendición del ciervo de luz", "Dicen que el ciervo de luz guía a los viajeros del tiempo…", "¡Mira arriba, Kael!", "Qué criatura tan enorme…", "Nunca había visto algo así.", "Golpe Cargado", "Mantén ESPADA y suéltala para lanzar una onda de luz que atraviesa a los enemigos.", "Mantén ESPADA y suelta", "Parada Perfecta", "Cúbrete justo antes del golpe: no gastas escudo, devuelves los disparos y contraatacas.", "GUARDIA justo a tiempo", "Dash Fantasma", "Tu DASH atraviesa a los enemigos y les hace daño.", "DASH contra un enemigo", "Golpe Sísmico", "En el aire, pulsa GUARDIA para caer en picado y liberar una onda sísmica.", "GUARDIA en el aire", "Imán del Cronista", "Las gemas y cerezas lejanas vuelan hacia ti.", "Siempre activo", "Triple Salto", "Puedes saltar una tercera vez en el aire.", "SALTO tres veces", "Corazón de Cristal", "+40 de vida máxima. Si nadie te golpea, recuperas vida poco a poco.", "Capa Planeadora", "Mantén SALTO mientras caes para planear con tu capa.", "Mantén SALTO al caer", "Ojo del Cronista", "Una brújula te señala la reliquia escondida y los cofres de cada fase.", "Espada de Luz", "El tercer golpe del combo lanza una media luna de luz.", "Combo de 3 golpes", "Segunda Oportunidad", "Una vez por fase, si caes derrotado, el tiempo retrocede y vuelves con media vida.", "Escudo del Tiempo", "Mantén GUARDIA para bloquear los ataques de frente. Cada bloqueo gasta escudo; si se agota, la guardia se rompe.", "Mantén GUARDIA", "GUARDIA", "Si algo te ataca, mantén GUARDIA para cubrirte con el escudo del tiempo.", "¡PARADA!", "¡GUARDIA ROTA!", "SEGUNDA OPORTUNIDAD", "¡Uf! El tiempo te ha dado otra oportunidad.", "¡NUEVA HABILIDAD!", "CÓMO SE USA: ", "HABILIDADES DE KAEL", " reliquias  ·  vence al guardián de cada mundo para conseguir la siguiente", "Guardián del mundo ", "Toca para volver", "GUARDIÁN: ", "Música", "Efectos de sonido", "Vibración", "Sí", "Temblor de cámara", "Tamaño de botones", "Pequeño", "Opacidad de botones", "Pantalla completa", "Calidad gráfica", "Máxima", "LISTO", "JUGAR", "NUEVA AVENTURA", "OPCIONES", "LOGROS", "HISTORIA", "MÁXIMO", "CONTINUAR", "HABILIDADES", "REINICIAR FASE", "MAPA", "SIGUIENTE MUNDO", "IR AL GUARDIÁN", "SIGUIENTE FASE", "VER MAPA", "TÍTULO", "TIEMPO LENTO", "TIEMPO LISTO", "DIM B", "DIM A", "COMBO  ×", "● GRABANDO ECO  (pulsa ECO)", "MOVER", "GUARDIÁN DEL MUNDO ", "PAUSA", "Mundo ", "Puntos: ", "HAS CAÍDO", "Kael ha caído en ", "El guardián te espera: volverás a la entrada de la arena", "Volverás al último punto de control con la vida llena", "   ·   Récord: ", "FRAGMENTO RECUPERADO", "FASE SUPERADA", "Fragmentos de Realidad: ", "   ·   ¡Reloj secreto!", "Tiempo ", "   ·   Bonus +", "Puntos totales: ", "EL RELOJ ESTÁ COMPLETO", "El Devorador de Horas ha caído y el Corazón vuelve a latir.", "Los catorce mundos giran de nuevo. Gracias por jugar.", "   ·   Puntos: ", "14 MUNDOS  ·  42 FASES  ·  14 GUARDIANES  ·  11 HABILIDADES", "MANDO:  A saltar · X espada · B/RT dash · LB/LT guardia · Y dimensión · RB tiempo · SELECT eco · START pausa", "Mover · Salto (doble y en pared) · Dash · Espada · Shift · Tiempo", "← → mover · ESPACIO saltar · SHIFT dash · Z espada · X dimensión · C tiempo · E eco · P pausa", "RÉCORD  ", "Gira el teléfono para jugar en horizontal", "Cargando 14 mundos…", "¡DE PIE, KAEL!", "¡FURIA!", " despierta su verdadero poder", "OLEADA ", "CÁMARA DEL DESAFÍO", "Sobrevive a todas las oleadas", "¡DESAFÍO SUPERADO!", "+1500 puntos · +40 vida · fragmentos de recompensa", "Primeros pasos", "Completa la fase 1-1", "Derrota a tu primer guardián", "Medio Reloj", "Derrota a 7 guardianes", "Corazón del Tiempo", "Derrota a los 14 guardianes", "Derrota a un guardián sin recibir daño", "Sin piedad", "Derrota a un guardián en DIFÍCIL", "Ritmo letal", "Consigue un combo x25", "Tormenta de acero", "Consigue un combo x50", "Ojo para lo oculto", "Encuentra un reloj de arena secreto", "Guardián de arena", "Encuentra 10 relojes secretos", "Lluvia de fragmentos", "Recoge 300 fragmentos de realidad", "Supera una Cámara del Desafío", "Campeón de las cámaras", "Supera 10 Cámaras del Desafío", "Muro viviente", "Bloquea 50 ataques", "Filo perfecto", "Haz 10 paradas perfectas", "Arsenal del tiempo", "Consigue 6 habilidades", "Veloz como un segundo", "Completa una fase en menos de 75 s", "Nunca te rindes", "Levántate 20 veces tras caer", "LOGRO DESBLOQUEADO", " min", " desbloqueados", "Guardianes: ", "/14   ·   Cámaras: ", "   ·   Caídas: ", "   ·   Paradas: ", "   ·   Tiempo de juego: ", "Toca la pantalla o pulsa ESC para volver", "MANDO CONECTADO", "Bloqueado", "Botones", "Controles", "Grande", "Intocable", "Joystick", "No", "Normal", "Rendimiento", "Rompeguardianes", "Superviviente", "IDIOMA", "Idioma", "Elige tu idioma", "Puedes cambiarlo cuando quieras en Opciones"];
 const I18N = {
@@ -8218,6 +8413,19 @@ const I18N = {
   const X = { en: ["OUT OF LIVES!", "The stage starts over", "+1 LIFE!"], pt: ["SEM VIDAS!", "A fase recomeça", "+1 VIDA!"], fr: ["PLUS DE VIES !", "Le niveau recommence", "+1 VIE !"],
     de: ["KEINE LEBEN MEHR!", "Das Level beginnt von vorn", "+1 LEBEN!"], it: ["VITE FINITE!", "Il livello ricomincia", "+1 VITA!"], ja: ["ライフがなくなった！", "ステージを最初からやり直し", "1UP！"],
     ko: ["목숨이 없다!", "스테이지를 처음부터 다시", "+1 목숨!"], zh: ["生命耗尽！", "关卡重新开始", "+1 生命！"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v3.2: persecuciones
+(function () {
+  const ES = ["¡CORRE!", "LA SOMBRA TE PERSIGUE", "EL FUEGO TE PERSIGUE", "EL VACÍO TE PERSIGUE", "EL CASTILLO SE DERRUMBA", "LA TORMENTA TE PERSIGUE", "¡A SALVO!"];
+  const X = { en: ["RUN!", "THE SHADOW IS CHASING YOU", "THE FIRE IS CHASING YOU", "THE VOID IS CHASING YOU", "THE CASTLE IS COLLAPSING", "THE STORM IS CHASING YOU", "SAFE!"],
+    pt: ["CORRA!", "A SOMBRA ESTÁ TE PERSEGUINDO", "O FOGO ESTÁ TE PERSEGUINDO", "O VAZIO ESTÁ TE PERSEGUINDO", "O CASTELO ESTÁ DESABANDO", "A TEMPESTADE ESTÁ TE PERSEGUINDO", "A SALVO!"],
+    fr: ["COURS !", "L'OMBRE TE POURSUIT", "LE FEU TE POURSUIT", "LE NÉANT TE POURSUIT", "LE CHÂTEAU S'EFFONDRE", "LA TEMPÊTE TE POURSUIT", "EN SÉCURITÉ !"],
+    de: ["LAUF!", "DER SCHATTEN VERFOLGT DICH", "DAS FEUER VERFOLGT DICH", "DIE LEERE VERFOLGT DICH", "DIE BURG STÜRZT EIN", "DER STURM VERFOLGT DICH", "IN SICHERHEIT!"],
+    it: ["CORRI!", "L'OMBRA TI INSEGUE", "IL FUOCO TI INSEGUE", "IL VUOTO TI INSEGUE", "IL CASTELLO CROLLA", "LA TEMPESTA TI INSEGUE", "IN SALVO!"],
+    ja: ["走れ！", "影が追ってくる", "炎が追ってくる", "虚無が追ってくる", "城が崩れていく", "嵐が追ってくる", "助かった！"],
+    ko: ["달려!", "그림자가 쫓아온다", "불길이 쫓아온다", "공허가 쫓아온다", "성이 무너진다", "폭풍이 쫓아온다", "안전하다!"],
+    zh: ["快跑！", "阴影在追你", "烈火在追你", "虚空在追你", "城堡正在崩塌", "风暴在追你", "安全了！"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
 

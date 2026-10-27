@@ -323,6 +323,8 @@ function buildStage(wi, act) {
     gears(x) { G(x, 128); M(x + 150, 450, 64, x + 150, 300, 1.3); M(x + 260, 300, 96, x + 400, 300, 1.0); M(x + 520, 300, 64, x + 520, 450, 1.3); G(x + 640, 128); row(x + 280, 260, 4, 40); E('a', x + 380, 220); return 768; }
   };
 
+  // tramos extra definidos en levels.js (v3.2): reciben las mismas herramientas de construcción
+  if (typeof EXTRA_CH === 'function') Object.assign(CH_, EXTRA_CH({ L, r, D, WD, wi, act, solid, G, P, pillar, M, SPRING, LZ, BO, BR, PH_, CONV, SPK, JET, ICI, LAVA, ZONE, gem, row, arc, CH, RS, E, fixE, hint }));
   let x = 0;
   if (wi === 0 && act === 0) {
     // ===== MUNDO 1-1: TUTORIAL DISEÑADO A MANO =====
@@ -376,7 +378,7 @@ function buildStage(wi, act) {
       water: 1, current: 2, echo: 2, quicksand: 1, sandfall: 2, anchors: 2, anchors2: 3, clouds: 2 };
     const cnt = {}; const uniq = []; for (const s of seq) { cnt[s] = (cnt[s] || 0) + 1; if (cnt[s] <= 2) uniq.push(s); }
     while (uniq.length < n) { const c = pick(WD.pool); if ((cnt[c] || 0) < 2) { cnt[c] = (cnt[c] || 0) + 1; uniq.push(c); } }
-    const keyed = uniq.map(s => [s, (RATE[s] || 1) + r() * 1.6 + act * 0.3]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
+    const keyed = uniq.map(s => [s, (RATE[s] ?? (typeof EXTRA_RATE !== 'undefined' ? EXTRA_RATE[s] : undefined) ?? 1) + r() * 1.6 + act * 0.3]).sort((a, b) => a[1] - b[1]).map(a => a[0]);
     for (let i = 1; i < keyed.length; i++) if (keyed[i] === keyed[i - 1]) { const j = keyed.findIndex((s, k) => k > i && s !== keyed[i]); if (j > 0) [keyed[i], keyed[j]] = [keyed[j], keyed[i]]; }
     seq.length = 0; seq.push(...keyed);
     seq.unshift('flat');
@@ -392,7 +394,7 @@ function buildStage(wi, act) {
     }
     for (let i = 0; i < seq.length; i++) {
       if (i > 0 && (i % 2 === 0 || seq[i] === 'trial') && !L.checks.some(c => c.x === x + 40)) L.checks.push({ x: x + 40, y: GY - 40, w: 24, h: 40, on: false });
-      x += CH_[seq[i]](x);
+      (L.segs = L.segs || []).push({ k: seq[i], x }); x += CH_[seq[i]](x);
       if (i === Math.floor(seq.length / 3) || i === Math.floor(seq.length * 2 / 3)) CH(x - 60, 440);
     }
     L.seq = seq;
