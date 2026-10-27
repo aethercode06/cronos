@@ -215,3 +215,8 @@
     zh: ["快跑！", "阴影在追你", "烈火在追你", "虚空在追你", "城堡正在崩塌", "风暴在追你", "安全了！"] };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+(function () {
+  const ES = ["¡ESQUIVA!"];
+  const X = { en: ["DODGE!"], pt: ["ESQUIVA!"], fr: ["ESQUIVE !"], de: ["AUSGEWICHEN!"], it: ["SCHIVATA!"], ja: ["回避！"], ko: ["회피!"], zh: ["闪避！"] };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
