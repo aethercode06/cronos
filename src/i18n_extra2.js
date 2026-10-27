@@ -124,3 +124,18 @@
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();
+// v2.8: dificultad
+(function () {
+  const ES = ["+1500 puntos · +25 vida · fragmentos de recompensa", "+600 puntos", "¡DESESPERADO!"];
+  const X = {
+    en: ["+1500 points · +25 HP · fragment reward", "+600 points", "DESPERATE!"],
+    pt: ["+1500 pontos · +25 vida · fragmentos de recompensa", "+600 pontos", "DESESPERADO!"],
+    fr: ["+1500 points · +25 vie · fragments en récompense", "+600 points", "DÉSESPÉRÉ !"],
+    de: ["+1500 Punkte · +25 Leben · Fragmente als Belohnung", "+600 Punkte", "VERZWEIFELT!"],
+    it: ["+1500 punti · +25 vita · frammenti in premio", "+600 punti", "DISPERATO!"],
+    ja: ["+1500点 ・ HP+25 ・ 報酬の欠片", "+600点", "必死だ！"],
+    ko: ["+1500점 · 체력 +25 · 보상 조각", "+600점", "필사적이다!"],
+    zh: ["+1500分 · +25生命 · 奖励碎片", "+600分", "垂死挣扎！"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();

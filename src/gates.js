@@ -90,9 +90,9 @@ function updateSeals(dt) {
     if (left < z.left && left > 0) addFloat(z.bar + 14, GY - 120, '⚔ ' + left, '#ff8a5a', 18);
     z.left = left;
     if (!left) {
-      z.st = 2; z.plate.on = true; addScore(600); p.hp = Math.min(p.maxHp, p.hp + 15); addTime(10);
+      z.st = 2; z.plate.on = true; addScore(600); addTime(10);
       for (let i = 0; i < 5; i++) level.gems.push({ x: z.bar - 200 + i * 40, y: 420 - Math.sin(i / 4 * Math.PI) * 50, taken: false, ph: i });
-      banner('¡PASO ABIERTO!', '+600 puntos · +15 vida', '#ffd34d', 1.6);
+      banner('¡PASO ABIERTO!', '+600 puntos', '#ffd34d', 1.6);
       sfx('relic', .5); ring(z.bar + 14, GY - 120, 10, 200, .6, 'rgba(255,220,120,.9)', 3);
     }
   }

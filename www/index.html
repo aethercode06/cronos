@@ -857,10 +857,10 @@ function updateDlg(dt) {
 //  DATOS: mundos, enemigos, historia y generador de niveles por bloques
 // =====================================================================
 const DIFFS = [
-  { name: 'FÁCIL',   hp: 150, dmg: .45, spd: .78, boss: .65,  aggr: .8,  lava: 8,  c: '#5ef08a', extra: 0 },
-  { name: 'NORMAL',  hp: 110, dmg: .72, spd: .9,  boss: .85,   aggr: 1,   lava: 12, c: '#ffd34d', extra: 0 },
-  { name: 'DIFÍCIL', hp: 80,  dmg: 1.4, spd: 1.3, boss: 1.25,aggr: 1.35,lava: 16, c: '#ff5470', extra: 1 },
-  { name: 'PESADILLA', hp: 70, dmg: 1.75, spd: 1.42, boss: 1.45, aggr: 1.55, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
+  { name: 'FÁCIL',   hp: 150, dmg: .6,  spd: .85, boss: .8,   aggr: .9,  lava: 8,  c: '#5ef08a', extra: 0 },
+  { name: 'NORMAL',  hp: 100, dmg: 1,   spd: 1,   boss: 1.15,  aggr: 1.15,  lava: 12, c: '#ffd34d', extra: 0 },
+  { name: 'DIFÍCIL', hp: 80,  dmg: 1.6, spd: 1.3, boss: 1.5, aggr: 1.45,lava: 16, c: '#ff5470', extra: 1 },
+  { name: 'PESADILLA', hp: 70, dmg: 2, spd: 1.42, boss: 1.75, aggr: 1.65, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
 ];
 // Tipos de enemigo: b = comportamiento, face = hacia dónde mira el sprite original
 const ENEMY = {
@@ -1438,7 +1438,7 @@ function hurt(dmg, srcX) {
   if (p.inv > 0 || p.dead) return false;
   const D = DIFFS[diffIdx];
   if (p.hook) p.hook = null;
-  p.hp -= dmg * D.dmg; p.inv = 1.0; p.stun = 0.28;
+  p.hp -= dmg * D.dmg; p.inv = 0.8; p.stun = 0.28;
   p.vx = (p.x + p.w / 2 < srcX ? -1 : 1) * 340; p.vy = -360; p.noCut = true;
   p.dashT = 0; p.boostT = 0; p.atkT = 0; p.combo = 0; shake = Math.max(shake, 7); hitStop = 0.07; flash = 0.12; flashCol = '255,60,80';
   sfx('hurt'); vib(45); zoomPunch(0.022); burst(p.x + p.w / 2, p.y + 18, '#ff4060', 10, 160, 300, .5, 2);
@@ -1665,7 +1665,7 @@ function updatePlayer(dt) {
   for (const c of level.checks) {
     if (!c.on && overlap(p, c)) {
       c.on = true; p.respawn = { x: c.x, y: c.y + c.h - p.h }; p.safe = { x: c.x, y: c.y + c.h - p.h };
-      p.hp = Math.min(p.maxHp, p.hp + 20); sfx('check', .6);
+      p.hp = Math.min(p.maxHp, p.hp + 10); sfx('check', .6);
       burst(c.x + 12, c.y + 6, '#9bffb0', 16, 140, 60, .8, 2);
       addFloat(c.x + 12, c.y - 18, 'PUNTO DE CONTROL', '#9bffb0', 16); tSay(TICQ.check[Math.floor(Math.random() * 2)], 2.2);
       for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283; parts.push({ x: c.x + 12, y: c.y + 10, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, life: .6, max: .6, c: i % 2 ? '#9bffb0' : '#ffffff', s: 2, g: 0 }); }
@@ -1753,7 +1753,7 @@ function damageEnemy(e, hb) {
     const k = e.d.death;
     addFx(k, e.x + e.w / 2, e.y + e.h + (k === 'boom' ? 14 : k === 'poof' ? 8 : 4), 16);
     addFloat(e.x + e.w / 2, e.y - 8, '+' + Math.round(50 * mult()), '#ffe066', 16);
-    if (Math.random() < 0.12) level.cherries.push({ x: e.x + e.w / 2, y: e.y + e.h - 14, taken: false, ph: 0 });
+    if (Math.random() < 0.05) level.cherries.push({ x: e.x + e.w / 2, y: e.y + e.h - 14, taken: false, ph: 0 });
   }
 }
 
@@ -5515,11 +5515,11 @@ updateBoss = function (dt) {
   if (b.enr && !b.dying) {
     if (Math.random() < .5) parts.push({ x: b.x + Math.random() * b.w, y: b.y + b.h * (0.3 + Math.random() * .7), vx: rnd(-20, 20), vy: rnd(-120, -50), life: .8, max: .8, c: Math.random() < .5 ? '#ff3050' : '#ffb040', s: 2, g: -40 });
     if (b.enrT > 0) { b.enrT -= dt; return; }
-    _updateBoss17(dt * (diffIdx === 0 ? 1.1 : diffIdx === 1 ? 1.2 : 1.3));
+    _updateBoss17(dt * (diffIdx === 0 ? 1.15 : diffIdx === 1 ? 1.3 : 1.4));
     if (diffIdx > 0 && !b.dying && !b.done) {
       b.burstCD -= dt;
       if (b.burstCD <= 0) {
-        b.burstCD = diffIdx >= 2 ? 4.2 : 5.6;
+        b.burstCD = diffIdx >= 2 ? 3.4 : 4.4;
         const cx = b.x + b.w / 2, cy = b.y + b.h * .45, n = diffIdx >= 2 ? 12 : 9, off = Math.random() * 6.283, sp = 170 * DIFFS[diffIdx].spd;
         for (let i = 0; i < n; i++) { const a = off + i / n * 6.283; projs.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, hw: 5, hh: 5, type: 'orb', dmg: 10, life: 3.2 }); }
         ring(cx, cy, 8, 90, .4, 'rgba(255,80,100,.9)', 3); sfx('shoot', .5, .7);
@@ -5577,9 +5577,9 @@ function updateTrials(dt) {
         else {
           t.st = 2; t.plates.forEach(q => { q.on = true; });
           SAVE.stats.trials++; persist();
-          p.hp = Math.min(p.maxHp, p.hp + 40); addScore(1500);
+          p.hp = Math.min(p.maxHp, p.hp + 25); addScore(1500);
           for (let i = 0; i < 7; i++) level.gems.push({ x: t.cx - 150 + i * 50, y: 400 - Math.sin(i / 6 * Math.PI) * 70, taken: false, ph: i });
-          banner('¡DESAFÍO SUPERADO!', '+1500 puntos · +40 vida · fragmentos de recompensa', '#ffd34d', 2.6);
+          banner('¡DESAFÍO SUPERADO!', '+1500 puntos · +25 vida · fragmentos de recompensa', '#ffd34d', 2.6);
           sfx('relic', .7); sfx('win', .5); flash = .2; flashCol = '255,220,120';
           ring(t.cx, GY - 140, 10, 300, .8, 'rgba(255,220,120,.9)', 3); burst(t.cx, GY - 140, '#ffe080', 40, 300, 60, 1, 2);
           achCheck();
@@ -7126,25 +7126,25 @@ function bossHint(k) { SAVE.fh = SAVE.fh || {}; if (SAVE.fh['b_' + k] || ticSay)
 function bossWeak(b) {
   const s = b.st;
   switch (b.type) {
-    case 0: return s === 'idle' && b.t < 0.9 ? 2 : s === 'air' ? 0.3 : 1;             // sapo: justo después de caer
-    case 1: return s === 'down' ? 2.2 : 0.3;                                            // gárgola: cuando cae al suelo
-    case 2: return b.vulnT > 0 ? 1.4 : 1;                                               // hechicero: escudo de palancas
-    case 3: return s === 'stun' ? 2.2 : 0.4;                                            // ojo: aturdido tras la embestida
-    case 4: { const behind = (p.x + p.w / 2 - (b.x + b.w / 2)) * b.face < 0; return behind ? 1.6 : s === 'windup' ? 0.5 : 1; } // caballero: por la espalda
-    case 5: return s === 'stagger' ? 2.2 : s === 'charge' ? 0.3 : 0.6;                 // bestia: aturdida contra la pared
-    case 6: return s === 'rest' ? 2.2 : 0.3;                                            // demonio: cuando descansa en el suelo
-    case 7: return s === 'recover' ? 2 : 0.6;                                           // Kael sombrío: tras su ataque
+    case 0: return s === 'idle' && b.t < 0.8 ? 1.7 : s === 'air' ? 0.3 : 1;             // sapo: justo después de caer
+    case 1: return s === 'down' ? 1.8 : 0.3;                                            // gárgola: cuando cae al suelo
+    case 2: return b.vulnT > 0 ? 1.3 : 0.8;                                               // hechicero: escudo de palancas
+    case 3: return s === 'stun' ? 1.8 : 0.4;                                            // ojo: aturdido tras la embestida
+    case 4: { const behind = (p.x + p.w / 2 - (b.x + b.w / 2)) * b.face < 0; return behind ? 1.4 : s === 'windup' ? 0.4 : 0.7; } // caballero: por la espalda
+    case 5: return s === 'stagger' ? 1.8 : s === 'charge' ? 0.3 : 0.6;                 // bestia: aturdida contra la pared
+    case 6: return s === 'rest' ? 1.8 : 0.3;                                            // demonio: cuando descansa en el suelo
+    case 7: return s === 'recover' ? 1.7 : 0.6;                                           // Kael sombrío: tras su ataque
   }
   return 1;
 }
 bossHitRule = function (b) {
   if (b.type === 8) {
-    if (b.skin === 'boss_king') { const behind = (p.x + p.w / 2 - (b.x + b.w / 2)) * b.face < 0; return b.st === 'stuck' ? (behind ? 2.4 : 1.2) : b.st === 'spit' ? 0.6 : 0; }
-    return b.st === 'stuck' ? 2.2 : b.st === 'spit' ? 0.8 : 0;
+    if (b.skin === 'boss_king') { const behind = (p.x + p.w / 2 - (b.x + b.w / 2)) * b.face < 0; return b.st === 'stuck' ? (behind ? 2 : 1) : b.st === 'spit' ? 0.5 : 0; }
+    return b.st === 'stuck' ? 1.8 : b.st === 'spit' ? 0.6 : 0;
   }
-  if (b.type === 9) return b.vulnT > 0 ? 2 : 0;
-  if (b.type === 10) return b.st === 'stun' ? 2.2 : 0.35;
-  return b.st === 'tired' ? 2.2 : 0.35;
+  if (b.type === 9) return b.vulnT > 0 ? 1.7 : 0;
+  if (b.type === 10) return b.st === 'stun' ? 1.8 : 0.3;
+  return b.st === 'tired' ? 1.8 : 0.3;
 };
 hitBoss = function (hb, fromAbove) {
   p.hitSet.add(boss);
@@ -7158,13 +7158,13 @@ hitBoss = function (hb, fromAbove) {
   if (fromAbove && !(p.slamT > 0.25)) {
     if (b.pogoCD > 0) return;
     b.pogoCD = 0.75; b.pogoN = (b.pogoT > 0 ? (b.pogoN || 0) : 0) + 1; b.pogoT = 2.6;
-    if (b.pogoN >= 3 && mult < 1.8) { bossShake(b); return; }
-    mult *= mult >= 1.8 ? 0.8 : 0.5;
+    if (b.pogoN >= 3 && mult < 1.6) { bossShake(b); return; }
+    mult *= mult >= 1.6 ? 0.6 : 0.4;
   }
   const dmg = mult * swordDmg() * (p.atkN === 2 ? 1.6 : 1);
-  b.hp -= dmg; b.hit = 0.12; zoomPunch(0.025 * Math.min(1.6, mult)); vib(22); addScore(Math.round(25 * mult)); addTime(4); addCombo(); hitStop = mult >= 1.8 ? 0.1 : 0.06;
-  slashFx(hb); sfx('hit'); shake = Math.max(shake, mult >= 1.8 ? 9 : 5);
-  if (mult >= 1.8) { addFloat(b.x + b.w / 2, b.y - 14, '¡CRÍTICO!', '#ffd34d', 18); bossHint('crit'); }
+  b.hp -= dmg; b.hit = 0.12; zoomPunch(0.025 * Math.min(1.6, mult)); vib(22); addScore(Math.round(25 * mult)); addTime(4); addCombo(); hitStop = mult >= 1.6 ? 0.1 : 0.06;
+  slashFx(hb); sfx('hit'); shake = Math.max(shake, mult >= 1.6 ? 9 : 5);
+  if (mult >= 1.6) { addFloat(b.x + b.w / 2, b.y - 14, '¡CRÍTICO!', '#ffd34d', 18); bossHint('crit'); }
   else if (mult <= 0.4) { addFloat(b.x + b.w / 2, b.y - 10, 'DURO', '#a8b4c8', 13); sfx('clang', .35, 1.3); bossHint('hard'); }
   if (b.hp <= 0.01) { b.hp = 0; b.dying = true; b.dieT = 2.8; b.anim = 0; projs = []; waves = []; warns = []; sfx('boom'); sfx('kill'); shake = 20; hitStop = 0.3; flash = 0.3; flashCol = '255,255,255'; playMusic(null); slowT = 0; zoomPunch(0.09); vib([60, 40, 160]); }
 };
@@ -7183,9 +7183,20 @@ updateBoss = function (dt) {
   if (b.pogoCD > 0) b.pogoCD -= dt; if (b.pogoT > 0) b.pogoT -= dt; else b.pogoN = 0;
   // quedarse encima del jefe tampoco vale (salvo cuando está aturdido o expuesto)
   const above = !p.dead && p.x + p.w > b.x + 6 && p.x < b.x + b.w - 6 && p.y + p.h <= b.y + 12 && p.y + p.h > b.y - 70;
-  const weak = (b.type >= 8 ? bossHitRule(b) : bossWeak(b)) >= 1.8;
+  const weak = (b.type >= 8 ? bossHitRule(b) : bossWeak(b)) >= 1.6;
   b.headT = above && !weak && bossIntro <= 0 ? (b.headT || 0) + dt : Math.max(0, (b.headT || 0) - dt * 2);
   if (b.headT > 1.1) bossShake(b);
+  // desesperación: por debajo del 30 % de vida, ondas de choque y caídas del techo (no en Fácil)
+  if (diffIdx > 0 && bossIntro <= 0 && b.hp <= b.max * 0.3 && level.arena) {
+    const A = level.arena, bcx = b.x + b.w / 2, ag = DIFFS[diffIdx].aggr;
+    if (!b.desp) { b.desp = true; b.despT = 1.6; shake = Math.max(shake, 12); sfx('roar', .8, .7); addFloat(bcx, b.y - 24, '¡DESESPERADO!', '#ff3050', 20); flash = .2; flashCol = '255,40,70'; }
+    b.despT -= dt;
+    if (b.despT <= 0) {
+      b.despN = (b.despN || 0) + 1; b.despT = (diffIdx >= 2 ? 3.0 : 3.8) / Math.sqrt(ag);
+      if (b.despN % 2) { const sp = 300 * Math.sqrt(ag); waves.push({ x: bcx - 40, y: A.floor, dir: -1, spd: sp, t: 0, col: '#ff6070' }, { x: bcx + 40, y: A.floor, dir: 1, spd: sp, t: 0, col: '#ff6070' }); sfx('stomp', .7); shake = Math.max(shake, 8); }
+      else { const pcx = p.x + p.w / 2, n = diffIdx >= 2 ? 4 : 3; for (let i = 0; i < n; i++) warns.push({ x: i === 0 ? pcx : rnd(A.x1 + 40, A.x2 - 40), t: 0.85 + i * 0.18 }); sfx('alert', .6); }
+    }
+  }
 };
 // ---------------- movimiento procedural de los jefes ----------------
 const BM_TENSE = /T$|wind|aim|tele|prep|charge|In$/, BM_DAZED = /stun|stuck|rest|tired|down|stagger|recover/;
@@ -7227,14 +7238,14 @@ drawBoss = function () {
 const DIFF_BASE = DIFFS.map(d => Object.assign({}, d));
 function applyCurve(wi) {
   const n = ORDER.length - 1, g = clamp(WPOS(wi) / n, 0, 1);
-  DIFFS.forEach((d, i) => { const B = DIFF_BASE[i]; d.spd = B.spd * (0.9 + 0.25 * g); d.aggr = B.aggr * (0.82 + 0.48 * g); d.dmg = B.dmg * (0.8 + 0.4 * g); d.boss = B.boss * (0.9 + 0.5 * g); });
+  DIFFS.forEach((d, i) => { const B = DIFF_BASE[i]; d.spd = B.spd * (1 + 0.2 * g); d.aggr = Math.min(1.9, B.aggr * (1 + 0.4 * g)); d.dmg = B.dmg * (1 + 0.45 * g); d.boss = B.boss * (1 + 0.6 * g); });
   return g;
 }
 const _startStageC = startStage;
 startStage = function (wi, act, fresh) { applyCurve(wi); _startStageC(wi, act, fresh); };
 const _buildStageC = buildStage;
 buildStage = function (wi, act) {
-  const L = _buildStageC(wi, act), g = clamp(WPOS(wi) / (ORDER.length - 1), 0, 1), extra = Math.floor(g * 2.2);
+  const L = _buildStageC(wi, act), g = clamp(WPOS(wi) / (ORDER.length - 1), 0, 1), extra = (g >= 0.15 ? 1 : 0) + Math.floor(g * 2.2);
   if (extra) for (const e of L.enemies) e.hp += extra;
   return L;
 };
@@ -7331,9 +7342,9 @@ function updateSeals(dt) {
     if (left < z.left && left > 0) addFloat(z.bar + 14, GY - 120, '⚔ ' + left, '#ff8a5a', 18);
     z.left = left;
     if (!left) {
-      z.st = 2; z.plate.on = true; addScore(600); p.hp = Math.min(p.maxHp, p.hp + 15); addTime(10);
+      z.st = 2; z.plate.on = true; addScore(600); addTime(10);
       for (let i = 0; i < 5; i++) level.gems.push({ x: z.bar - 200 + i * 40, y: 420 - Math.sin(i / 4 * Math.PI) * 50, taken: false, ph: i });
-      banner('¡PASO ABIERTO!', '+600 puntos · +15 vida', '#ffd34d', 1.6);
+      banner('¡PASO ABIERTO!', '+600 puntos', '#ffd34d', 1.6);
       sfx('relic', .5); ring(z.bar + 14, GY - 120, 10, 200, .6, 'rgba(255,220,120,.9)', 3);
     }
   }
@@ -7570,6 +7581,21 @@ const I18N = {
     ja: ["待ち伏せ！", "敵を倒して道を開こう", "道が開いた！", "+600点 · 体力+15", "障壁が道をふさいでいる。敵を全員倒せば開くよ。"],
     ko: ["매복!", "적을 물리쳐 길을 열어라", "길이 열렸다!", "+600점 · 체력 +15", "장벽이 길을 막고 있어: 적을 모두 쓰러뜨리면 열려."],
     zh: ["伏击！", "击败敌人以打开通路", "通路已开！", "+600分 · 生命+15", "屏障挡住了去路：击败所有敌人才能打开。"]
+  };
+  for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
+})();
+// v2.8: dificultad
+(function () {
+  const ES = ["+1500 puntos · +25 vida · fragmentos de recompensa", "+600 puntos", "¡DESESPERADO!"];
+  const X = {
+    en: ["+1500 points · +25 HP · fragment reward", "+600 points", "DESPERATE!"],
+    pt: ["+1500 pontos · +25 vida · fragmentos de recompensa", "+600 pontos", "DESESPERADO!"],
+    fr: ["+1500 points · +25 vie · fragments en récompense", "+600 points", "DÉSESPÉRÉ !"],
+    de: ["+1500 Punkte · +25 Leben · Fragmente als Belohnung", "+600 Punkte", "VERZWEIFELT!"],
+    it: ["+1500 punti · +25 vita · frammenti in premio", "+600 punti", "DISPERATO!"],
+    ja: ["+1500点 ・ HP+25 ・ 報酬の欠片", "+600点", "必死だ！"],
+    ko: ["+1500점 · 체력 +25 · 보상 조각", "+600점", "필사적이다!"],
+    zh: ["+1500分 · +25生命 · 奖励碎片", "+600分", "垂死挣扎！"]
   };
   for (let i = 0; i < ES.length; i++) { I18N_ES.push(ES[i]); for (const l in X) I18N[l].push(X[l][i]); }
 })();

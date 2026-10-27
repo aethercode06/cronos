@@ -103,7 +103,7 @@ function hurt(dmg, srcX) {
   if (p.inv > 0 || p.dead) return false;
   const D = DIFFS[diffIdx];
   if (p.hook) p.hook = null;
-  p.hp -= dmg * D.dmg; p.inv = 1.0; p.stun = 0.28;
+  p.hp -= dmg * D.dmg; p.inv = 0.8; p.stun = 0.28;
   p.vx = (p.x + p.w / 2 < srcX ? -1 : 1) * 340; p.vy = -360; p.noCut = true;
   p.dashT = 0; p.boostT = 0; p.atkT = 0; p.combo = 0; shake = Math.max(shake, 7); hitStop = 0.07; flash = 0.12; flashCol = '255,60,80';
   sfx('hurt'); vib(45); zoomPunch(0.022); burst(p.x + p.w / 2, p.y + 18, '#ff4060', 10, 160, 300, .5, 2);
@@ -330,7 +330,7 @@ function updatePlayer(dt) {
   for (const c of level.checks) {
     if (!c.on && overlap(p, c)) {
       c.on = true; p.respawn = { x: c.x, y: c.y + c.h - p.h }; p.safe = { x: c.x, y: c.y + c.h - p.h };
-      p.hp = Math.min(p.maxHp, p.hp + 20); sfx('check', .6);
+      p.hp = Math.min(p.maxHp, p.hp + 10); sfx('check', .6);
       burst(c.x + 12, c.y + 6, '#9bffb0', 16, 140, 60, .8, 2);
       addFloat(c.x + 12, c.y - 18, 'PUNTO DE CONTROL', '#9bffb0', 16); tSay(TICQ.check[Math.floor(Math.random() * 2)], 2.2);
       for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283; parts.push({ x: c.x + 12, y: c.y + 10, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, life: .6, max: .6, c: i % 2 ? '#9bffb0' : '#ffffff', s: 2, g: 0 }); }
@@ -418,7 +418,7 @@ function damageEnemy(e, hb) {
     const k = e.d.death;
     addFx(k, e.x + e.w / 2, e.y + e.h + (k === 'boom' ? 14 : k === 'poof' ? 8 : 4), 16);
     addFloat(e.x + e.w / 2, e.y - 8, '+' + Math.round(50 * mult()), '#ffe066', 16);
-    if (Math.random() < 0.12) level.cherries.push({ x: e.x + e.w / 2, y: e.y + e.h - 14, taken: false, ph: 0 });
+    if (Math.random() < 0.05) level.cherries.push({ x: e.x + e.w / 2, y: e.y + e.h - 14, taken: false, ph: 0 });
   }
 }
 

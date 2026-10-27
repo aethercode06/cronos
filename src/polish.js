@@ -53,11 +53,11 @@ updateBoss = function (dt) {
   if (b.enr && !b.dying) {
     if (Math.random() < .5) parts.push({ x: b.x + Math.random() * b.w, y: b.y + b.h * (0.3 + Math.random() * .7), vx: rnd(-20, 20), vy: rnd(-120, -50), life: .8, max: .8, c: Math.random() < .5 ? '#ff3050' : '#ffb040', s: 2, g: -40 });
     if (b.enrT > 0) { b.enrT -= dt; return; }
-    _updateBoss17(dt * (diffIdx === 0 ? 1.1 : diffIdx === 1 ? 1.2 : 1.3));
+    _updateBoss17(dt * (diffIdx === 0 ? 1.15 : diffIdx === 1 ? 1.3 : 1.4));
     if (diffIdx > 0 && !b.dying && !b.done) {
       b.burstCD -= dt;
       if (b.burstCD <= 0) {
-        b.burstCD = diffIdx >= 2 ? 4.2 : 5.6;
+        b.burstCD = diffIdx >= 2 ? 3.4 : 4.4;
         const cx = b.x + b.w / 2, cy = b.y + b.h * .45, n = diffIdx >= 2 ? 12 : 9, off = Math.random() * 6.283, sp = 170 * DIFFS[diffIdx].spd;
         for (let i = 0; i < n; i++) { const a = off + i / n * 6.283; projs.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, hw: 5, hh: 5, type: 'orb', dmg: 10, life: 3.2 }); }
         ring(cx, cy, 8, 90, .4, 'rgba(255,80,100,.9)', 3); sfx('shoot', .5, .7);
@@ -115,9 +115,9 @@ function updateTrials(dt) {
         else {
           t.st = 2; t.plates.forEach(q => { q.on = true; });
           SAVE.stats.trials++; persist();
-          p.hp = Math.min(p.maxHp, p.hp + 40); addScore(1500);
+          p.hp = Math.min(p.maxHp, p.hp + 25); addScore(1500);
           for (let i = 0; i < 7; i++) level.gems.push({ x: t.cx - 150 + i * 50, y: 400 - Math.sin(i / 6 * Math.PI) * 70, taken: false, ph: i });
-          banner('¡DESAFÍO SUPERADO!', '+1500 puntos · +40 vida · fragmentos de recompensa', '#ffd34d', 2.6);
+          banner('¡DESAFÍO SUPERADO!', '+1500 puntos · +25 vida · fragmentos de recompensa', '#ffd34d', 2.6);
           sfx('relic', .7); sfx('win', .5); flash = .2; flashCol = '255,220,120';
           ring(t.cx, GY - 140, 10, 300, .8, 'rgba(255,220,120,.9)', 3); burst(t.cx, GY - 140, '#ffe080', 40, 300, 60, 1, 2);
           achCheck();
