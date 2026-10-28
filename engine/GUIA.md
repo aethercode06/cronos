@@ -39,6 +39,39 @@ El asistente **Claude es opcional**: el motor funciona completo sin IA.
 | **Efectos** (`FX`) | Chispas, ondas expansivas, halos, estelas de espada y textos flotantes que brillan. |
 | **Aether** (siempre activo) | Parón de impacto, cámara lenta, temblor, destellos, sonido y música. |
 
+### Plantillas (panel Aether → Crear)
+
+| Plantilla | Qué es |
+|---|---|
+| Fase de plataformas | Nivel 2D con suelos, enemigos, cámara, vida, controles y pausa. |
+| Arena de jefe | Combate contra el Gran Sapo: el jefe empieza solo al acercarte y su barra aparece sola. |
+| Corredor infinito | El jugador corre solo; el nivel se genera sin fin y se guarda el récord. |
+| Aventura 3D | Mundo 3D con cielo, sol y sombras, jugador en tercera persona, enemigos, joystick táctil. |
+| Pantalla de título | Menú con JUGAR, OPCIONES (música, efectos, idioma) y SALIR. |
+
+### Piezas 3D
+
+| Pieza | Qué hace |
+|---|---|
+| **Jugador 3D** (`AetherPlayer3D`) | Se mueve según la cámara, salta, doble salto, dash, combo. Usa tu modelo .glb (con animaciones idle, run, jump, attack…) o una figura sencilla. |
+| **Enemigo 3D** (`AetherEnemy3D`) | Patrulla, te persigue, avisa y embiste. |
+| **Cámara 3D** (`AetherCamera3D`) | Tercera persona; gira con el dedo (lado derecho) o el ratón; no atraviesa paredes. |
+| **Ambiente 3D** (`AetherWorld3D`) | Cielo, sol con sombras, niebla y brillo: día, atardecer, noche o mazmorra. |
+| **Joystick táctil** | Mover con el pulgar izquierdo, girar la cámara con el derecho, botones de salto, ataque y dash. |
+
+Las formas 3D sencillas (cajas, esferas, cilindros) se crean con los nodos **CSG** de Godot y se les puede activar colisión.
+
+### Sistemas listos (desde cualquier script)
+
+| Sistema | Uso |
+|---|---|
+| Guardado | `Aether.save.set_value("nivel", 3)` · `Aether.save.get_value("nivel", 1)` |
+| Idiomas | Textos en `idiomas/en.json`, etc. `Aether.t("JUGAR")`. Detecta el idioma del teléfono. |
+| Logros | `Aether.achievements.define(...)` y `Aether.achievements.unlock("id")` con aviso en pantalla. |
+| Avisos | `Aether.toast("¡Bien hecho!")` |
+| Anuncios y compras | `Aether.store.show_rewarded(func(ok): ...)` · `Aether.store.buy("traje", func(ok): ...)`. Sin cuentas funciona en modo prueba; con los plugins de AdMob y Google Play Billing usa los reales. |
+| Menús | Pieza **Menú** en modo título o pausa (música, efectos, idioma). |
+
 ## 4. Personajes propios
 
 **Con animaciones en tira:** en el Inspector del Jugador o del Enemigo, en *Aspecto → Anim Set*, crea un **AetherAnimSet** y añade animaciones con estos nombres:
