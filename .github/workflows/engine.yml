@@ -119,6 +119,7 @@ jobs:
           grep -q "AETHER: PUBLICAR OK" publish.log
           ! grep -E "SCRIPT ERROR|Parse Error" publish.log
       - name: Prueba del AAB para Google Play (gradle)
+        if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
           GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ github.workspace }}/engine/keys/debug.keystore

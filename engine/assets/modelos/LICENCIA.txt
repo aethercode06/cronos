@@ -1,0 +1,2 @@
+robot.glb — «RobotExpressive» de Tomás Laulhé (modificado por Don McCurdy), licencia CC0 1.0 (dominio público).
+Fuente: repositorio de three.js (examples/models/gltf/RobotExpressive).

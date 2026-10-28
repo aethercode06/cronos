@@ -1,0 +1,42 @@
+name: Aether Engine (vídeo de demostración)
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'engine/demo/personaje_3d/**', 'engine/addons/aether/three_d/aether_animated_3d.gd', '.github/workflows/engine-demo.yml' ]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  GODOT_VERSION: 4.7.2
+jobs:
+  video:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar Godot
+        run: |
+          V=$GODOT_VERSION
+          wget -q https://github.com/godotengine/godot/releases/download/${V}-stable/Godot_v${V}-stable_linux.x86_64.zip
+          unzip -q Godot_v${V}-stable_linux.x86_64.zip && sudo mv Godot_v${V}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-vulkan-drivers ffmpeg > /dev/null
+      - name: Importar
+        run: godot --headless --path engine --import > import.log 2>&1 || true
+      - name: Grabar el vídeo (Movie Maker)
+        run: |
+          mkdir -p out
+          timeout 900 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-driver vulkan --write-movie $PWD/out/demo.avi --fixed-fps 30 --quit-after 700 res://demo/personaje_3d/demo.tscn > out/movie.log 2>&1 || true
+          if [ ! -s out/demo.avi ]; then
+            timeout 900 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 --write-movie $PWD/out/demo.avi --fixed-fps 30 --quit-after 700 res://demo/personaje_3d/demo.tscn >> out/movie.log 2>&1 || true
+          fi
+          tail -30 out/movie.log
+          ffmpeg -y -loglevel error -i out/demo.avi -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart out/aether_personaje_3d.mp4
+          rm -f out/demo.avi
+          ls -la out
+      - name: Subir a la rama aether-demo
+        if: always()
+        run: |
+          cp import.log out/ 2>/dev/null || true
+          cd out && git init -q && git checkout -q -b aether-demo
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Vídeo ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-demo

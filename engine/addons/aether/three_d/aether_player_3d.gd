@@ -198,8 +198,14 @@ func _physics_process(delta: float) -> void:
 			_play("idle")
 
 func _play(n: String) -> void:
-	if _anim and _anim.has_animation(n) and _anim.current_animation != n:
-		_anim.play(n, 0.12)
+	if _anim == null:
+		return
+	var std := {"idle": "reposo", "run": "correr", "walk": "andar", "jump": "saltar", "attack": "golpe", "death": "morir", "hurt": "herido"}
+	var a := AetherAnimated3D.find_anim(_anim, n)
+	if a == "" and std.has(n):
+		a = AetherAnimated3D.find_anim(_anim, std[n])
+	if a != "" and _anim.current_animation != a:
+		_anim.play(a, 0.15)
 
 func _do_hit() -> void:
 	var fwd := -_visual.global_transform.basis.z
