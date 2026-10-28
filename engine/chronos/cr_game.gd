@@ -120,6 +120,10 @@ func _ready() -> void:
 	Aether.player = self
 	if "--autoplay" in OS.get_cmdline_user_args():
 		autoplay = true
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--mundo="):
+			wi = int(arg.get_slice("=", 1))
+			act = 0
 	if not InputMap.has_action("shift"):
 		InputMap.add_action("shift")
 		for k in [KEY_Q, KEY_C]:
