@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/camera.svg")
 class_name AetherCamera
 extends Camera2D
 ## Cámara de Aether Engine: sigue al objetivo con anticipación,

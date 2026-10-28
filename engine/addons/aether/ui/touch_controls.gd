@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/ui.svg")
 class_name AetherTouchControls
 extends CanvasLayer
 ## Controles táctiles de Aether Engine: se muestran solo en pantallas táctiles.

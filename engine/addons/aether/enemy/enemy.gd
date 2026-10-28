@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/enemy.svg")
 class_name AetherEnemy
 extends CharacterBody2D
 ## Criatura genérica de Aether Engine. Tipos: «walker» (patrulla y embiste),
@@ -6,14 +7,27 @@ extends CharacterBody2D
 
 const FLASH_SHADER := preload("res://addons/aether/fx/flash.gdshader")
 
-@export var kind := "walker"
+## Comportamiento: «walker» patrulla y embiste · «jumper» salta hacia ti · «flyer» vuela y se lanza en picado.
+@export_enum("walker", "jumper", "flyer") var kind := "walker"
+@export_group("Aspecto")
+## Animaciones (move, jump, attack…). Vacío = usa las hojas de Chronos de abajo.
+@export var anim_set: AetherAnimSet
+## Hoja de Chronos para moverse.
 @export var sheet_move := "opossum"
-@export var sheet_alt := ""          # p. ej. salto o ataque
+## Hoja de Chronos para saltar o atacar (opcional).
+@export var sheet_alt := ""
+## Escala de las hojas de Chronos.
 @export var unit_scale := 0.667
+@export_group("Combate")
+## Golpes que aguanta.
 @export var hp := 3.0
+## Velocidad de movimiento.
 @export var speed := 150.0
+## Daño al tocar al jugador.
 @export var damage := 14.0
+## Distancia que patrulla a cada lado (o radio de vuelo).
 @export var patrol := 220.0
+## Tamaño del cuerpo para los golpes.
 @export var body_size := Vector2(60, 46)
 
 var face := -1.0
@@ -44,8 +58,10 @@ func _ready() -> void:
 	add_child(visual)
 	sprite = SheetSprite.new()
 	sprite.unit_scale = unit_scale
+	sprite.anim_set = anim_set
+	sprite.aliases = {"move": sheet_move, "jump": sheet_alt if sheet_alt != "" else sheet_move}
 	visual.add_child(sprite)
-	sprite.play(sheet_move, 12.0)
+	sprite.play("move", 12.0)
 	_mat = ShaderMaterial.new()
 	_mat.shader = FLASH_SHADER
 	sprite.material = _mat
@@ -116,15 +132,14 @@ func _jumper(delta: float, to_p: Vector2) -> void:
 	velocity.y = min(velocity.y + 2600 * delta, 1400)
 	if is_on_floor():
 		velocity.x = move_toward(velocity.x, 0, 3000 * delta)
-		if sprite.anim != sheet_move:
-			sprite.play(sheet_move, 8.0)
+		if sprite.anim != "move":
+			sprite.play("move", 8.0)
 			_squash = 1.0
 		if _state_t > 1.4 and _hit_t <= 0:
 			_state_t = 0
 			face = sign(to_p.x) if abs(to_p.x) < 600 else -face
 			velocity = Vector2(face * clamp(abs(to_p.x) * 1.3, 120, 420), -980)
-			if sheet_alt != "":
-				sprite.play(sheet_alt, 6.0, false)
+			sprite.play("jump", 6.0, false)
 	move_and_slide()
 
 func _flyer(delta: float, to_p: Vector2) -> void:

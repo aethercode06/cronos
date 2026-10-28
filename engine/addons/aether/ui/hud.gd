@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/ui.svg")
 class_name AetherHUD
 extends CanvasLayer
 ## Interfaz de Aether Engine: vida del jugador con retrato, barra del jefe
@@ -130,7 +131,13 @@ func banner(t: String, sub := "", dur := 2.4) -> void:
 		tw.tween_interval(dur)
 		tw.tween_property(l, "modulate:a", 0.0, 0.5)
 
+var _bound: Node = null
+
 func _process(delta: float) -> void:
+	# se conecta solo al jugador activo (no hace falta programar nada)
+	if Aether.player and _bound != Aether.player and Aether.player.has_signal("hp_changed"):
+		_bound = Aether.player
+		_bound.hp_changed.connect(set_hp)
 	_hp_fill.size.x = 300.0 * _hp_k
 	_hp_ghost_k = max(_hp_k, _hp_ghost_k - delta * 0.6)
 	_hp_ghost.size.x = 300.0 * _hp_ghost_k

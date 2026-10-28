@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/hazard.svg")
 class_name AetherHazard
 extends Node2D
 ## Peligros de los jefes: ondas de choque por el suelo y proyectiles en arco.

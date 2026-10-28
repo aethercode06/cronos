@@ -1,0 +1,74 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/world/aether_ground.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/chronos/tx0.webp" id="2"]
+[ext_resource type="Texture2D" path="res://assets/chronos/ed0.webp" id="3"]
+[ext_resource type="Script" path="res://addons/aether/player/platformer_player.gd" id="4"]
+[ext_resource type="Script" path="res://addons/aether/core/aether_camera.gd" id="5"]
+[ext_resource type="Script" path="res://addons/aether/enemy/enemy.gd" id="6"]
+[ext_resource type="Script" path="res://addons/aether/ui/hud.gd" id="7"]
+[ext_resource type="Script" path="res://addons/aether/ui/touch_controls.gd" id="8"]
+[ext_resource type="Texture2D" path="res://assets/chronos/pbg0.webp" id="9"]
+
+[node name="FaseDePlataformas" type="Node2D"]
+
+[node name="Fondo" type="Parallax2D" parent="."]
+z_index = -20
+scroll_scale = Vector2(0.25, 0.1)
+repeat_size = Vector2(2916, 0)
+repeat_times = 3
+
+[node name="Imagen" type="Sprite2D" parent="Fondo"]
+position = Vector2(-600, -560)
+scale = Vector2(1.157, 1.157)
+texture = ExtResource("9")
+centered = false
+
+[node name="Suelo" type="StaticBody2D" parent="."]
+position = Vector2(-300, 600)
+script = ExtResource("1")
+size = Vector2(1500, 600)
+fill_texture = ExtResource("2")
+edge_texture = ExtResource("3")
+
+[node name="Suelo2" type="StaticBody2D" parent="."]
+position = Vector2(1400, 560)
+script = ExtResource("1")
+size = Vector2(1200, 600)
+fill_texture = ExtResource("2")
+edge_texture = ExtResource("3")
+
+[node name="Plataforma" type="StaticBody2D" parent="."]
+position = Vector2(1000, 430)
+script = ExtResource("1")
+size = Vector2(220, 46)
+fill_texture = ExtResource("2")
+edge_texture = ExtResource("3")
+one_way = true
+
+[node name="Jugador" type="CharacterBody2D" parent="."]
+position = Vector2(100, 600)
+script = ExtResource("4")
+
+[node name="Enemigo" type="CharacterBody2D" parent="."]
+position = Vector2(900, 600)
+script = ExtResource("6")
+
+[node name="Enemigo2" type="CharacterBody2D" parent="."]
+position = Vector2(1900, 560)
+script = ExtResource("6")
+kind = "jumper"
+sheet_move = "frog_idle"
+sheet_alt = "frog_jump"
+body_size = Vector2(46, 56)
+
+[node name="Camara" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
+position = Vector2(100, 500)
+script = ExtResource("5")
+target = NodePath("../Jugador")
+
+[node name="Interfaz" type="CanvasLayer" parent="."]
+script = ExtResource("7")
+
+[node name="ControlesTactiles" type="CanvasLayer" parent="."]
+script = ExtResource("8")

@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/player.svg")
 class_name PlatformerPlayer
 extends CharacterBody2D
 ## Jugador de plataformas de Aether Engine (Kael en la prueba de Chronos).
@@ -12,17 +13,38 @@ const LAYER_WORLD := 1
 const LAYER_PLAYER := 2
 const LAYER_ENEMY := 4
 
+@export_group("Aspecto")
+## Animaciones del personaje. Vacío = Kael de Chronos.
+@export var anim_set: AetherAnimSet
+@export_group("Movimiento")
+## Velocidad al correr (píxeles por segundo).
 @export var move_speed := 560.0
+## Lo rápido que alcanza la velocidad en el suelo.
 @export var accel := 5200.0
+## Lo rápido que frena en el suelo.
 @export var decel := 6200.0
+## Control en el aire.
 @export var air_accel := 3600.0
+## Gravedad: más alta = cae más rápido.
 @export var gravity := 3500.0
+## Fuerza del salto.
 @export var jump_speed := 1180.0
+## Fuerza del doble salto (0 = sin doble salto).
 @export var double_jump_speed := 1080.0
+## Velocidad máxima de caída.
 @export var max_fall := 1500.0
+@export_group("Dash")
+## Velocidad del dash.
 @export var dash_speed := 1500.0
+## Duración del dash en segundos.
 @export var dash_time := 0.17
+@export_group("Vida")
+## Vida máxima.
 @export var max_hp := 100.0
+
+const KAEL := {"idle": "KH_idle", "run": "KH_run", "jump": "KH_jumpU", "fall": "KH_fallU", "double_jump": "KH_jump",
+	"attack1": "KH_atk1", "attack2": "KH_atk2", "attack3": "KH_atk3", "air_attack": "KH_airslash", "dash": "KH_dash",
+	"guard": "KH_guard", "guard_hit": "KH_guardHit", "hurt": "KH_hurt", "death": "KH_death"}
 
 var face := 1.0
 var hp := 100.0
@@ -68,8 +90,10 @@ func _ready() -> void:
 	add_child(visual)
 	sprite = SheetSprite.new()
 	sprite.unit_scale = 0.6
+	sprite.anim_set = anim_set
+	sprite.aliases = KAEL
 	visual.add_child(sprite)
-	sprite.play("KH_idle", 14.0)
+	sprite.play("idle", 14.0)
 	light = PointLight2D.new()
 	light.texture = FX.soft()
 	light.texture_scale = 9.0
@@ -190,7 +214,7 @@ func _jump(v: float, double: bool) -> void:
 	if double:
 		Aether.sfx("dj", 0.6)
 		FX.ring(get_parent(), global_position + Vector2(0, -6), Color(1.5, 1.4, 1.0, 0.8), 70, 0.25)
-		sprite.play("KH_jump", 26.0, false, true)
+		sprite.play("double_jump", 26.0, false, true)
 	else:
 		Aether.sfx("jump", 0.55)
 		FX.burst(get_parent(), global_position, Color(0.9, 0.85, 0.7, 0.6), 8, 160, 0.35, 12, 300, 60, Vector2.UP)
@@ -225,14 +249,14 @@ func _start_attack(on_floor: bool) -> void:
 	if not on_floor:
 		atk_n = 9
 		atk_dur = 0.3
-		sprite.play("KH_airslash", 1.0, false, true)
+		sprite.play("air_attack", 1.0, false, true)
 	else:
 		if combo_window > 0:
 			atk_n = (atk_n % 3) + 1
 		else:
 			atk_n = 1
 		atk_dur = [0.0, 0.27, 0.27, 0.42][atk_n]
-		sprite.play("KH_atk%d" % atk_n, [0.0, 34.0, 30.0, 27.0][atk_n], false, true)
+		sprite.play("attack%d" % atk_n, [0.0, 34.0, 30.0, 27.0][atk_n], false, true)
 	atk_t = atk_dur
 	combo_window = atk_dur + 0.32
 	Aether.sfx("swing", 0.6, 1.0 + 0.08 * atk_n)
@@ -276,7 +300,7 @@ func take_damage(amount: float, from_x: float, unblockable := false) -> void:
 	if guarding and not unblockable and sign(from_x - global_position.x) == face and guard_stamina > 0:
 		guard_stamina -= amount * 2.2
 		velocity.x = from_dir * 260
-		sprite.play("KH_guardHit", 1.0, false, true)
+		sprite.play("guard_hit", 1.0, false, true)
 		Aether.sfx("shield", 0.8)
 		FX.burst(get_parent(), global_position + Vector2(face * 30, -60), Color(1.4, 1.8, 2.4), 16, 380, 0.3, 10, 300)
 		Aether.hitstop(0.05)
@@ -289,7 +313,7 @@ func take_damage(amount: float, from_x: float, unblockable := false) -> void:
 	stun = 0.28
 	atk_t = 0
 	velocity = Vector2(from_dir * 520, -520)
-	sprite.play("KH_hurt", 1.0, false, true)
+	sprite.play("hurt", 1.0, false, true)
 	Aether.sfx("hurt", 0.9)
 	Aether.hitstop(0.09)
 	Aether.shake(12, 0.04)
@@ -304,7 +328,7 @@ func heal(v: float) -> void:
 
 func _die() -> void:
 	dead = true
-	sprite.play("KH_death", 6.0, false, true)
+	sprite.play("death", 6.0, false, true)
 	Aether.slowmo(0.35, 0.9)
 	Aether.sfx("kill", 0.8, 0.7)
 	died.emit()
@@ -317,7 +341,7 @@ func respawn() -> void:
 	global_position = checkpoint
 	velocity = Vector2.ZERO
 	inv = 1.2
-	sprite.play("KH_idle", 14.0, true, true)
+	sprite.play("idle", 14.0, true, true)
 
 # ---------------- animación ----------------
 func _animate(delta: float) -> void:
@@ -340,25 +364,25 @@ func _animate(delta: float) -> void:
 	if stun > 0 and inv > 0.5:
 		return
 	if dash_t > 0:
-		sprite.play("KH_dash", 1.0)
+		sprite.play("dash", 1.0)
 		return
 	if atk_t > 0:
 		return
-	if sprite.anim == "KH_guardHit" and not sprite.is_done():
+	if sprite.anim == "guard_hit" and not sprite.is_done():
 		return
 	if guarding:
-		sprite.play("KH_guard", 1.0)
+		sprite.play("guard", 1.0)
 		return
 	if not is_on_floor():
-		if sprite.anim == "KH_jump" and not sprite.is_done():
+		if sprite.anim == "double_jump" and not sprite.is_done():
 			return
-		sprite.play("KH_jumpU" if velocity.y < 0 else "KH_fallU", 1.0)
+		sprite.play("jump" if velocity.y < 0 else "fall", 1.0)
 		return
 	if abs(velocity.x) > 40:
-		sprite.play("KH_run", clamp(abs(velocity.x) / move_speed * 30.0, 14.0, 32.0))
+		sprite.play("run", clamp(abs(velocity.x) / move_speed * 30.0, 14.0, 32.0))
 		_run_dust -= delta
 		if _run_dust <= 0:
 			_run_dust = 0.16
 			FX.burst(get_parent(), global_position, Color(0.85, 0.8, 0.65, 0.35), 3, 90, 0.3, 10, 120, 50, Vector2(-face, -1))
 	else:
-		sprite.play("KH_idle", 14.0)
+		sprite.play("idle", 14.0)

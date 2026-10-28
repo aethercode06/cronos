@@ -20,6 +20,31 @@ func _ready() -> void:
 	add_child.call_deferred(level)
 	Aether.boss_defeated.connect(func(): ok_boss = true)
 	print("AETHER: escena cargada")
+	_check_parts()
+
+## Comprueba las otras piezas: plantilla y personaje por piezas.
+func _check_parts() -> void:
+	var tpl: PackedScene = load("res://plantillas/plataformas.tscn")
+	print("AETHER: plantilla carga = ", tpl != null and tpl.can_instantiate())
+	var rig := AetherRig.new()
+	var parts: Array[AetherRigPart] = []
+	for d in [["torso", "", Vector2(20, 40), Vector2.ZERO, "cuerpo"], ["cabeza", "torso", Vector2(15, 30), Vector2(0, -40), "cabeza"], ["brazo", "torso", Vector2(5, 5), Vector2(15, -30), "brazo_delante"]]:
+		var p := AetherRigPart.new()
+		p.name = d[0]
+		p.parent = d[1]
+		p.pivot = d[2]
+		p.offset = d[3]
+		p.role = d[4]
+		var img := Image.create(40, 60, false, Image.FORMAT_RGBA8)
+		img.fill(Color(0.6, 0.4, 0.9))
+		p.texture = ImageTexture.create_from_image(img)
+		parts.append(p)
+	rig.parts = parts
+	add_child(rig)
+	rig.position = Vector2(-500, -500)
+	rig.play("golpe")
+	await get_tree().create_timer(0.3).timeout
+	print("AETHER: personaje por piezas = ", rig.bones.size(), " huesos")
 
 func _shot(name: String) -> void:
 	if not shots:

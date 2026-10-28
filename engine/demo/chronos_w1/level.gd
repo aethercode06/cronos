@@ -51,7 +51,6 @@ func _ready() -> void:
 	hud = AetherHUD.new()
 	add_child(hud)
 	add_child(AetherTouchControls.new())
-	player.hp_changed.connect(hud.set_hp)
 	Aether.player_died.connect(_on_player_died)
 	_spawn_boss()
 	_weather()

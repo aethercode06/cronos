@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/anim.svg")
 class_name DeformSprite
 extends MeshInstance2D
 ## Convierte un dibujo de una sola pose en una malla deformable

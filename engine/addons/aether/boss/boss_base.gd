@@ -1,3 +1,4 @@
+@icon("res://addons/aether/icons/boss.svg")
 class_name AetherBoss
 extends CharacterBody2D
 ## Base de jefes de Aether Engine: vida, fases (furia al 50 %), momento débil

@@ -55,6 +55,8 @@ jobs:
           timeout 300 godot --headless --path engine res://tests/smoke.tscn > smoke.log 2>&1 || true
           tail -40 smoke.log
           grep -q "AETHER: SMOKE OK" smoke.log
+          grep -q "plantilla carga = true" smoke.log
+          grep -q "personaje por piezas = 3 huesos" smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error" smoke.log
       - name: Capturas de pantalla (render por software)
         continue-on-error: true
