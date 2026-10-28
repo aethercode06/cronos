@@ -15,6 +15,7 @@ func _enter_tree() -> void:
 	events_dock.name = "Eventos"
 	add_control_to_dock(DOCK_SLOT_LEFT_BR, events_dock)
 	claude = preload("res://addons/aether/editor/claude_panel.gd").new()
+	claude.plugin = self
 	claude.name = "Claude (opcional)"
 	add_control_to_dock(DOCK_SLOT_RIGHT_BL, claude)
 
