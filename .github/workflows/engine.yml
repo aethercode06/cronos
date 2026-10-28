@@ -99,6 +99,12 @@ jobs:
             sleep 4
             if [ "$(gh release view aether-engine --json isDraft -q .isDraft)" = "false" ]; then echo "publicada"; break; fi
           done
+      - name: Actualizar el proyecto inicial del editor (zip)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd engine && zip -qr ../AetherEngine-Proyecto.zip . -x ".godot/*" "keys/*" "branding/*" && cd ..
+          gh release upload aether-editor AetherEngine-Proyecto.zip --clobber || echo "aún no existe la versión del editor"
       - name: Guardar registros y capturas en la rama aether-logs
         if: always()
         run: |
