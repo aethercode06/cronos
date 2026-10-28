@@ -12,13 +12,15 @@ const GRAV := 1750.0
 const DASH := 760.0
 const PW := 22.0
 const PH := 48.0
-const VW := 640.0
-const VH := 360.0
+## Vista del mundo igual que el juego web: 270 de alto explorando, 420 en la arena.
+var VW := 480.0
+var VH := 270.0
 const GY := 480.0
 const DIFFS := [
 	{"name": "FÁCIL", "hp": 150.0, "dmg": 0.7, "spd": 0.85, "boss": 0.8, "aggr": 0.9},
 	{"name": "NORMAL", "hp": 100.0, "dmg": 1.25, "spd": 1.0, "boss": 1.15, "aggr": 1.15},
 	{"name": "DIFÍCIL", "hp": 80.0, "dmg": 2.1, "spd": 1.3, "boss": 1.5, "aggr": 1.45},
+	{"name": "PESADILLA", "hp": 70.0, "dmg": 2.5, "spd": 1.42, "boss": 1.75, "aggr": 1.65},
 ]
 const HINTS := {
 	"move": "◀ ▶ para moverte · SALTO para saltar",
@@ -31,12 +33,22 @@ const HINTS := {
 	"wallclimb": "Salta contra una pared y vuelve a saltar para subir",
 }
 
+## Mundo (0-17, el número interno del juego web) y fase (0-2).
+@export_range(0, 17) var wi := 0
 @export_range(0, 2) var act := 0
-@export_range(0, 2) var diff_idx := 1
+@export_range(0, 3) var diff_idx := 1
 ## Juega solo (para vídeos y pruebas).
 @export var autoplay := false
 
 var level := {}
+var WD := {}
+var dim := 0
+var shift_cd := 0.0
+static var DATA := {}
+## Lo que eligió el mapa (mundo, fase, dificultad) antes de abrir la escena.
+static var launch := {}
+const BOSS_ART := {0: "hdb_frog", 1: "boss_ship", 2: "hdb_wizard", 3: "hdb_eye", 4: "hdb_knight", 5: "hdb_beast", 6: "hdb_demon", 8: "boss_lev", 9: "boss_sph", 10: "boss_ser", 11: "boss_devo"}
+const BOSS_HP := [14, 16, 28, 20, 22, 22, 26, 30, 22, 22, 26, 40]
 var p := {}
 var boss := {}
 var projs: Array = []
@@ -61,6 +73,7 @@ var _boss_proxy: Node
 var _hud: Node
 var _bg: Sprite2D
 var _font: Font
+var _shift_btn: TouchScreenButton
 
 # ---------------- arranque ----------------
 func _ready() -> void:
@@ -86,14 +99,92 @@ func _ready() -> void:
 	Aether.player = self
 	if "--autoplay" in OS.get_cmdline_user_args():
 		autoplay = true
-	start_stage(act)
+	if not InputMap.has_action("shift"):
+		InputMap.add_action("shift")
+		for k in [KEY_Q, KEY_C]:
+			var ev := InputEventKey.new()
+			ev.physical_keycode = k
+			InputMap.action_add_event("shift", ev)
+		var jb := InputEventJoypadButton.new()
+		jb.button_index = JOY_BUTTON_Y
+		InputMap.action_add_event("shift", jb)
+	_add_shift_button()
+	if not launch.is_empty():
+		wi = int(launch.get("wi", wi))
+		act = int(launch.get("act", act))
+		diff_idx = int(launch.get("diff", diff_idx))
+		launch = {}
+	start_stage(act, wi)
 
-func start_stage(a: int) -> void:
+static func data() -> Dictionary:
+	if DATA.is_empty():
+		DATA = JSON.parse_string(FileAccess.get_file_as_string("res://chronos/niveles/datos.json"))
+	return DATA
+
+## Lee la fase exportada del juego web y vuelve a unir las referencias ($ref).
+static func load_level(d: int, w: int, a: int) -> Dictionary:
+	var raw = JSON.parse_string(FileAccess.get_file_as_string("res://chronos/niveles/d%d_%d_%d.json" % [d, w, a]))
+	if not raw is Dictionary:
+		return {}
+	var ids := {}
+	_collect(raw, ids)
+	return _resolve(raw, ids)
+
+static func _collect(o, ids: Dictionary) -> void:
+	if o is Dictionary:
+		if o.has("$id"):
+			ids[int(o["$id"])] = o
+		for k in o:
+			_collect(o[k], ids)
+	elif o is Array:
+		for v in o:
+			_collect(v, ids)
+
+static func _resolve(o, ids: Dictionary):
+	if o is Dictionary:
+		if o.has("$ref"):
+			return ids.get(int(o["$ref"]), {})
+		for k in o.keys():
+			o[k] = _resolve(o[k], ids)
+		return o
+	if o is Array:
+		for i in o.size():
+			o[i] = _resolve(o[i], ids)
+	return o
+
+func start_stage(a: int, w := -1) -> void:
 	act = a
-	var gen := CrLevel.new()
-	level = gen.build(0, act, diff_idx)
+	if w >= 0:
+		wi = w
+	WD = data().worlds[wi]
+	level = load_level(diff_idx, wi, act)
+	if level.is_empty():
+		level = CrLevel.new().build(0, act, diff_idx)
+	for k in ["arena", "goal", "lava"]:
+		if not level.get(k) is Dictionary:
+			level[k] = {}
+	for k in ["plats", "enemies", "gems", "cherries", "checks", "hazards", "hints", "zones", "lavaStrips", "decor", "plates", "doors", "anchors", "levers"]:
+		if not level.get(k) is Array:
+			level[k] = []
+	var EN: Dictionary = data().enemy
+	for e in level.enemies:
+		e["d"] = EN.get(e.get("id", ""), {"b": "walker", "anim": "opossum", "w": 32, "h": 22, "hp": 2, "face": -1})
+		for k in ["kx", "vx", "vy", "hit", "alert", "cd", "t", "fire"]:
+			if not e.has(k) or e[k] == null:
+				e[k] = 0.0
+		e["air"] = e.get("air", false) == true
+	for s in level.plats:
+		for k in ["dx", "dy", "t", "sq", "oy", "vy"]:
+			if not s.has(k):
+				s[k] = 0.0
+	dim = 0
+	if _shift_btn:
+		_shift_btn.visible = wi != 0
+	_bg.texture = Aether.tex("pbg%d" % wi)
 	var D: Dictionary = DIFFS[diff_idx]
-	var st: Vector2 = level.start
+	var st0 = level.start
+	var st: Vector2 = Vector2(st0.x, st0.y) if st0 is Dictionary else Vector2(70, GY - PH)
+	level.start = st
 	p = {"x": st.x, "y": st.y, "w": PW, "h": PH, "vx": 0.0, "vy": 0.0, "face": 1, "onGround": false, "ground": null, "jumps": 0,
 		"coyote": 0.0, "buf": 0.0, "dashT": 0.0, "dashCD": 0.0, "atkT": 0.0, "atkCD": 0.0, "atkN": 0, "lastAtk": -9.0, "air": false,
 		"hitSet": [], "pogoDone": false, "wall": 0, "wjLock": 0.0, "wjDir": 0, "inv": 0.0, "stun": 0.0, "hp": D.hp, "maxHp": D.hp,
@@ -108,9 +199,38 @@ func start_stage(a: int) -> void:
 	hint_txt = ""
 	_update_camera(0.0, true)
 	hp_changed.emit(p.hp, p.maxHp)
-	Aether.music("w0")
-	var names := ["1-1 · EL DESPERTAR", "1-2 · LA JUNGLA FLOTANTE", "1-3 · GUARIDA DEL GRAN SAPO"]
-	_banner(names[act])
+	Aether.music(str(WD.get("music", "w0")))
+	var pos: int = data().order.find(wi) + 1
+	_banner("MUNDO %d-%d · %s" % [pos, act + 1, ("GUARDIÁN: " + str(WD.boss.name)) if act == 2 else str(WD.name)])
+
+func _add_shift_button() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 61
+	add_child(layer)
+	var btn := TouchScreenButton.new()
+	btn.action = "shift"
+	btn.visibility_mode = TouchScreenButton.VISIBILITY_TOUCHSCREEN_ONLY
+	var sh := CircleShape2D.new()
+	sh.radius = 58
+	btn.shape = sh
+	btn.shape_centered = true
+	var img := Image.create(116, 116, false, Image.FORMAT_RGBA8)
+	for y in 116:
+		for x in 116:
+			if Vector2(x - 58, y - 58).length() < 58:
+				img.set_pixel(x, y, Color(0.8, 0.5, 1, 0.22))
+	btn.texture_normal = ImageTexture.create_from_image(img)
+	var l := Label.new()
+	l.text = "SHIFT"
+	l.size = Vector2(116, 116)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 24)
+	btn.add_child(l)
+	layer.add_child(btn)
+	var vs := get_viewport_rect().size
+	btn.position = Vector2(vs.x - 470 - 58, vs.y - 300 - 58)
+	_shift_btn = btn
 
 func _banner(t: String) -> void:
 	for h in get_tree().get_nodes_in_group("aether_hud"):
@@ -120,11 +240,26 @@ func _banner(t: String) -> void:
 static func ov(a: Dictionary, b: Dictionary) -> bool:
 	return a.x < b.x + b.w and a.x + a.w > b.x and a.y < b.y + b.h and a.y + a.h > b.y
 
+func _door_closed(s: Dictionary) -> bool:
+	var pl = s.get("plate")
+	return not (pl is Dictionary and pl.get("on", false))
+
 func _is_solid(s: Dictionary) -> bool:
-	return s.k == "solid" or s.k == "move" or s.k == "bounce" or (s.k == "break" and s.get("st", 0) < 2)
+	match s.k:
+		"solid", "move", "bounce":
+			return true
+		"door":
+			return _door_closed(s)
+		"laser":
+			return s.get("on", true)
+		"break":
+			return s.get("st", 0) < 2
+		"phase":
+			return int(s.get("ph", 0)) == dim
+	return false
 
 func _is_wall(s: Dictionary) -> bool:
-	return s.k == "solid" and not s.get("float", false)
+	return (s.k == "solid" and not s.get("float", false)) or (s.k == "door" and _door_closed(s)) or (s.k == "phase" and int(s.get("ph", 0)) == dim and s.h > 16)
 
 func _ground_below(x: float, y: float, maxd := 12.0):
 	for s in level.plats:
@@ -151,7 +286,7 @@ func _process(delta: float) -> void:
 	var dt: float = min(delta, 1.0 / 30.0)
 	if autoplay:
 		_bot()
-	for a in ["jump", "attack", "dash"]:
+	for a in ["jump", "attack", "dash", "shift"]:
 		_pressed[a] = Input.is_action_just_pressed(a)
 	if hit_stop > 0.0:
 		hit_stop -= dt
@@ -165,15 +300,27 @@ func _process(delta: float) -> void:
 		_update_enemies(dt)
 		_update_projs(dt)
 		_update_boss(dt)
+	elif state == "victory":
+		state_t -= dt
+		if state_t <= -3.0 and ResourceLoader.exists("res://chronos/mapa.tscn") and get_tree().current_scene == owner:
+			get_tree().change_scene_to_file("res://chronos/mapa.tscn")
 	elif state in ["clear", "gameover"]:
 		state_t -= dt
 		if state_t <= 0.0:
 			if state == "clear":
-				if act < 2:
-					start_stage(act + 1)
-				else:
-					state = "victory"
-					_banner("¡MUNDO 1 SUPERADO!")
+				var order: Array = data().order
+				var idx: int = order.find(wi) * 3 + act + 1
+				var prog: int = int(Aether.save.get_value("cr_prog", 1))
+				if idx + 1 > prog:
+					Aether.save.set_value("cr_prog", idx + 1)
+				var best: int = int(Aether.save.get_value("cr_score", 0))
+				Aether.save.set_value("cr_score", max(best, score))
+				if autoplay or idx < order.size() * 3:
+					if idx >= order.size() * 3:
+						state = "victory"
+						_banner("¡HAS SALVADO EL TIEMPO!")
+					else:
+						start_stage(idx % 3, int(order[idx / 3]))
 			else:
 				start_stage(act)
 	_update_particles(dt)
@@ -211,10 +358,80 @@ func _update_plats(dt: float) -> void:
 			s.dy = ny - s.y
 			s.x = nx
 			s.y = ny
+		elif s.k == "laser":
+			var c: float = fmod(time + float(s.get("phase", 0.0)), 3.2)
+			s.on = c < 2.0
+			s.warn = c > 1.55 and c < 2.0
+		elif s.k == "break":
+			if s.st == 1:
+				s.t -= dt
+				if s.t <= 0.0:
+					s.st = 2
+					s.t = 3.0
+					s.vy = 0.0
+					s.oy = 0.0
+					Aether.sfx("crumble", 0.7)
+					_burst(s.x + s.w / 2, s.y + 8, Color(0.35, 0.19, 0.19), 14, 120, 600, 0.8, 3)
+			elif s.st == 2:
+				s.t -= dt
+				s.vy += 900.0 * dt
+				s.oy += s.vy * dt
+				if s.t <= 0.0 and not ov(p, s):
+					s.st = 0
+					s.oy = 0.0
+		elif s.k == "door":
+			var want := 0.0 if _door_closed(s) else 1.0
+			s.open = move_toward(float(s.get("open", 0.0)), want, dt * 3.0)
 		elif s.k == "bounce" and s.sq > 0.0:
 			s.sq -= dt
 
-func _update_hazards(_dt: float) -> void:
+func _update_hazards(dt: float) -> void:
+	for l in level.lavaStrips:
+		if not p.dead and p.y + p.h > l.y + 4 and p.x + p.w > l.x and p.x < l.x + l.w:
+			_burst(p.x + p.w / 2, l.y, Color(1, 0.8, 0.25), 20, 200, 400, 0.7)
+			Aether.sfx("fire")
+			_hazard_respawn(25)
+	for h in level.hazards:
+		if h.k == "jet":
+			var c: float = fmod(time + float(h.get("ph", 0.0)), 2.4)
+			h.on = c > 1.8
+			h.warn = c > 1.4 and c <= 1.8
+			if h.on and randf() < 0.8:
+				parts.append({"x": h.x + 10 + randf_range(-6, 6), "y": GY - randf_range(0, 66), "vx": randf_range(-20, 20), "vy": randf_range(-120, -40), "life": 0.35, "max": 0.35, "c": (Color(1, 0.8, 0.25) if randf() < 0.5 else Color(1, 0.42, 0.1)), "s": 3.0, "g": -100.0})
+			if h.on and not p.dead and ov(p, h):
+				_hurt(18, h.x + 10)
+		elif h.k == "icicle":
+			var st: int = int(h.get("st", 0))
+			if st == 0 and abs(p.x + p.w / 2 - (h.x + 6)) < 34 and p.y > h.y and p.y - h.y < 260:
+				h.st = 1
+				h.t = 0.35
+				Aether.sfx("ice", 0.4, 1.4)
+			elif st == 1:
+				h.t -= dt
+				if h.t <= 0.0:
+					h.st = 2
+			elif st == 2:
+				h.vy = float(h.get("vy", 0.0)) + 1500.0 * dt
+				h.y += h.vy * dt
+				if not p.dead and ov(p, h):
+					_hurt(15, h.x + 6)
+					h.st = 3
+				for s in level.plats:
+					if s.k == "solid" and h.y + h.h > s.y and h.y < s.y + 8 and h.x + 6 > s.x and h.x + 6 < s.x + s.w and s.y > h.y0 + 20:
+						h.st = 3
+						break
+				if h.y > level.deathY:
+					h.st = 3
+				if h.st == 3:
+					_burst(h.x + 6, h.y + h.h, Color(0.8, 0.94, 1), 12, 140, 500, 0.5)
+					Aether.sfx("ice", 0.5)
+					h.t = 5.0
+			elif st == 3:
+				h.t -= dt
+				if h.t <= 0.0:
+					h.st = 0
+					h.y = h.y0
+					h.vy = 0.0
 	for h in level.hazards:
 		if h.k == "spike" and not p.dead and p.inv <= 0.0 and ov(p, {"x": h.x + 2, "y": h.y + 4, "w": h.w - 4, "h": h.h - 4}):
 			_burst(p.x + p.w / 2, h.y, Color.WHITE, 8, 120, 300, 0.4)
@@ -316,6 +533,61 @@ func _update_player(dt: float) -> void:
 	if p.onGround and p.ground != null and p.ground.k == "move":
 		p.x += p.ground.dx
 		p.y += p.ground.dy
+	if p.onGround and p.ground != null and p.ground.get("conv", 0) != 0:
+		p.x += float(p.ground.conv) * 120.0 * dt
+	shift_cd -= dt
+	if _press("shift") and shift_cd <= 0.0 and not p.dead:
+		if wi == 0:
+			shift_cd = 0.6
+			_float(p.x + p.w / 2, p.y - 10, "SHIFT dormido: recupera el 1.er fragmento", Color(0.75, 0.63, 1), 13)
+		else:
+			var nd := 1 - dim
+			var blocked := false
+			for q in level.plats:
+				if q.k == "phase" and int(q.ph) == nd and ov(p, q):
+					blocked = true
+			if blocked:
+				Aether.sfx("clang", 0.4, 1.5)
+				_float(p.x + p.w / 2, p.y - 10, "¡BLOQUEADO!", Color(1, 0.33, 0.44), 14)
+			else:
+				dim = nd
+				shift_cd = 0.22
+				Aether.sfx("shift", 0.7)
+				_burst(p.x + p.w / 2, p.y + p.h / 2, Color(0.82, 0.44, 1) if dim else Color(0.2, 0.89, 1), 16, 180, 0, 0.4)
+	# zonas: viento, gravedad baja, agua, arena
+	var gmul := 1.0
+	var wfx := 0.0
+	var wfy := 0.0
+	var water = null
+	var sand := false
+	for z in level.zones:
+		if ov(p, z):
+			match z.k:
+				"lowgrav":
+					gmul = 0.42
+				"wind":
+					wfx += float(z.get("fx", 0))
+					wfy += float(z.get("fy", 0))
+				"water":
+					if p.y + p.h * 0.45 > z.y:
+						water = z
+						wfx += float(z.get("fx", 0))
+				"sand":
+					sand = true
+	p.gmul = gmul
+	p.wfx = wfx
+	p.wfy = wfy
+	p.water = water
+	p.sand = sand
+	if sand and p.onGround:
+		p.sinkT = float(p.get("sinkT", 0.0)) + dt
+		if p.sinkT > 2.4:
+			p.sinkT = 0.0
+			_float(p.x + p.w / 2, p.y - 10, "¡LA ARENA TE TRAGÓ!", Color(1, 0.76, 0.29), 14)
+			_hazard_respawn(12)
+			return
+	elif not sand:
+		p.sinkT = 0.0
 	var dir := Input.get_axis("left", "right")
 	dir = 0.0 if abs(dir) < 0.3 else signf(dir)
 	if p.wjLock > 0.0:
@@ -352,11 +624,26 @@ func _update_player(dt: float) -> void:
 	else:
 		var atk_slow := 0.35 if (p.atkT > 0.0 and p.onGround) else 1.0
 		var accel := 2600.0 if p.onGround else 1800.0
+		if WD.get("ice", false) and p.onGround:
+			accel = 700.0
 		if not ctrl:
 			p.vx = move_toward(p.vx, 0.0, 600.0 * dt)
 		else:
-			p.vx = move_toward(p.vx, dir * MOVE * atk_slow, accel * dt)
-		if ctrl and p.buf > 0.0:
+			var mul := 0.72 if water != null else (0.45 if (sand and p.onGround) else 1.0)
+			p.vx = move_toward(p.vx, dir * MOVE * atk_slow * mul, (1400.0 if water != null else accel) * dt)
+		p.vx += wfx * dt
+		if water != null:
+			if ctrl and p.buf > 0.0:
+				p.buf = 0.0
+				var surf: bool = p.y < water.y + 14
+				p.vy = -JUMP * 0.98 if surf else -330.0
+				p.jumps = 1
+				p.noCut = true
+				Aether.sfx("jump" if surf else "dj", 0.35, 1.0 if surf else 0.8)
+			p.vy = min(p.vy + 520.0 * dt, 150.0)
+			if p.vy < -420 and p.y > water.y + 30:
+				p.vy = -420.0
+		elif ctrl and p.buf > 0.0:
 			if p.coyote > 0.0:
 				p.vy = -JUMP
 				p.jumps = 1
@@ -386,8 +673,15 @@ func _update_player(dt: float) -> void:
 				p.sq = 1.14
 				Aether.sfx("dj", 0.5)
 				_burst(p.x + p.w / 2, p.y + p.h, Color(0.75, 0.96, 1), 10, 120, 0, 0.35)
-		var gr := GRAV
-		if p.vy >= 0.0:
+		if wfy != 0.0:
+			p.noCut = true
+			p.vy += wfy * dt
+			if p.vy < -420:
+				p.vy = -420.0
+		var gr: float = GRAV * float(p.get("gmul", 1.0))
+		if water != null:
+			gr = 0.0
+		if p.vy >= 0.0 and wfy == 0.0:
 			p.noCut = false
 		if not Input.is_action_pressed("jump") and p.vy < 0.0 and not p.noCut:
 			gr *= 2.3
@@ -395,7 +689,8 @@ func _update_player(dt: float) -> void:
 			gr *= 0.55
 		if p.vy > 0.0:
 			gr *= 1.12
-		p.vy = min(p.vy + gr * dt, 110.0 if (p.wall != 0 and p.vy > 0.0) else 900.0)
+		if water == null:
+			p.vy = min(p.vy + gr * dt, 110.0 if (p.wall != 0 and p.vy > 0.0) else 900.0)
 	if ctrl and _press("attack") and p.atkCD <= 0.0 and p.dashT <= 0.0:
 		p.air = not p.onGround
 		p.atkN = (p.atkN + 1) % 3 if (not p.air and time - p.lastAtk < 0.6) else 0
@@ -493,7 +788,11 @@ func _move_and_collide(dt: float) -> void:
 			land.sq = 0.3
 			Aether.sfx("bounce", 0.8)
 			_burst(land.x + land.w / 2, land.y, Color(1, 0.48, 0.69), 12, 140, 300, 0.5)
-		elif land.k == "solid":
+		elif land.k == "break" and land.st == 0:
+			land.st = 1
+			land.t = 0.45
+			Aether.sfx("crumble", 0.3, 1.6)
+		elif land.k == "solid" and not land.get("conv", 0):
 			var cx: float = p.x + p.w / 2
 			var near := false
 			for h in level.hazards:
@@ -511,6 +810,12 @@ func _move_and_collide(dt: float) -> void:
 		_hazard_respawn(20)
 
 func _pickups() -> void:
+	for q in level.plates:
+		if not q.get("on", false) and not q.get("boss", false) and ov(p, {"x": q.x, "y": q.y - 6, "w": q.w, "h": q.h + 6}):
+			q.on = true
+			Aether.sfx("lever", 0.6)
+			_float(q.x + q.w / 2, q.y - 20, "¡PUERTA ABIERTA!", Color(0.6, 1, 0.69), 14)
+	_update_gates()
 	for gm in level.gems:
 		if gm.taken:
 			continue
@@ -556,9 +861,83 @@ func _pickups() -> void:
 		p.safe = p.respawn
 		_spawn_boss()
 		boss_intro = 2.8
-		Aether.music("boss")
+		dim = 0
+		Aether.music("final" if wi >= 6 else "boss")
 		Aether.sfx("roar", 0.8)
 		shake = 8.0
+
+func _spawn_foe(id: String, x: float, y: float) -> Dictionary:
+	var d: Dictionary = data().enemy.get(id, {"b": "walker", "anim": "opossum", "w": 32, "h": 22, "hp": 2, "face": -1})
+	var air: bool = d.b in ["flyer", "diver", "ghost", "dropper", "bob"]
+	var e := {"id": id, "d": d, "b": d.b, "x": x, "y": (y if air else GY - float(d.h)), "w": float(d.w), "h": float(d.h), "hp": float(d.hp), "hit": 0.0, "t": randf() * 5.0,
+		"dir": -1, "minX": x - 140.0, "maxX": x + 140.0 - float(d.w), "cd": 1.0 + randf(), "dead": false, "st": ("buried" if d.b == "riser" else 0), "x0": x, "y0": y, "fire": 0.0, "alert": 1.0, "vy": 0.0, "vx": 0.0, "kx": 0.0, "air": false}
+	level.enemies.append(e)
+	_burst(x + e.w / 2, e.y + e.h / 2, Color(1, 0.4, 0.3), 12, 160, 0, 0.4)
+	return e
+
+func _update_gates() -> void:
+	for z in level.get("seals", []):
+		if z.st == 0 and p.x + p.w > z.x1 and p.x + p.w < z.bar - 4:
+			z.st = 1
+			z.plate.on = false
+			z.live = []
+			for f in z.foes:
+				z.live.append(_spawn_foe(f.id, f.x, f.y))
+			_banner("¡EMBOSCADA!")
+			Aether.sfx("alert", 0.5)
+			shake = max(shake, 6.0)
+		if z.st != 1:
+			continue
+		var left := 0
+		for e in z.live:
+			if not e.dead and (e.y > level.deathY or abs(e.x - z.bar) > 1400):
+				e.dead = true
+			if not e.dead:
+				left += 1
+		if left == 0:
+			z.st = 2
+			z.plate.on = true
+			score += 600
+			for i in 5:
+				level.gems.append({"x": z.bar - 200 + i * 40, "y": 420 - sin(i / 4.0 * PI) * 50, "taken": false, "ph": float(i)})
+			_banner("¡PASO ABIERTO!")
+			Aether.sfx("relic", 0.5)
+	for t in level.get("trials", []):
+		if t.st == 0 and p.x > t.x1 + 70 and p.x + p.w < t.x2 - 40 and p.y > GY - 420:
+			t.st = 1
+			t.wave = 0
+			t.t = 0.9
+			t.live = []
+			for q in t.plates:
+				q.on = false
+			_banner("CÁMARA DEL DESAFÍO")
+			Aether.sfx("alert", 0.6)
+			shake = max(shake, 8.0)
+		if t.st != 1:
+			continue
+		var alive := false
+		for e in t.live:
+			if not e.dead:
+				alive = true
+		if alive:
+			continue
+		t.t -= get_process_delta_time()
+		if t.t > 0.0:
+			continue
+		if t.wave < t.waves.size():
+			for w in t.waves[t.wave]:
+				t.live.append(_spawn_foe(w.id, w.x, w.get("y0", w.y) if w.b in ["flyer", "diver", "ghost"] else w.y))
+			t.wave += 1
+			t.t = 1.1
+		else:
+			t.st = 2
+			for q in t.plates:
+				q.on = true
+			p.hp = min(p.maxHp, p.hp + 25.0)
+			hp_changed.emit(p.hp, p.maxHp)
+			score += 1500
+			_banner("¡DESAFÍO SUPERADO!")
+			Aether.sfx("win", 0.5)
 
 func _stage_clear() -> void:
 	if state != "playing":
@@ -598,7 +977,7 @@ func _do_attack() -> void:
 func _hit_enemies(hb: Dictionary) -> bool:
 	var hit := false
 	for e in level.enemies:
-		if not e.dead and not p.hitSet.has(e) and ov(hb, e):
+		if not e.dead and not p.hitSet.has(e) and ov(hb, e) and not (e.b == "ghost" and dim == 0) and not (e.b == "riser" and str(e.get("st", "")) == "buried"):
 			p.hitSet.append(e)
 			_damage_enemy(e, hb)
 			hit = true
@@ -636,14 +1015,27 @@ func _damage_enemy(e: Dictionary, hb: Dictionary) -> void:
 			level.cherries.append({"x": e.x + e.w / 2, "y": e.y + e.h - 14, "taken": false, "ph": 0.0})
 
 # ---------------- enemigos ----------------
-func _shoot(e: Dictionary, tx: float, ty: float) -> void:
+func _shoot(e: Dictionary, tx: float, ty: float, kind := "") -> void:
 	var D: Dictionary = DIFFS[diff_idx]
+	if kind == "":
+		kind = str(e.d.get("shot", "orb"))
 	var cx: float = e.x + e.w / 2
 	var cy: float = e.y + e.h / 2
 	var d := Vector2(tx - cx, ty - cy)
 	var l: float = max(1.0, d.length())
 	var sp: float = 210.0 * D.spd
-	projs.append({"x": cx, "y": cy, "vx": d.x / l * sp, "vy": d.y / l * sp, "hw": 5.0, "hh": 5.0, "type": "orb", "dmg": 12.0, "life": 4.0})
+	match kind:
+		"spore":
+			projs.append({"x": cx, "y": e.y + 6, "vx": clamp(d.x, -260.0, 260.0), "vy": -320.0, "grav": 700.0, "hw": 6.0, "hh": 6.0, "type": "spore", "dmg": 12.0, "life": 3.0})
+		"wormball":
+			projs.append({"x": cx + e.dir * 14, "y": cy - 2, "vx": e.dir * 200.0 * D.spd, "vy": 0.0, "hw": 7.0, "hh": 5.0, "type": "wormball", "dmg": 14.0, "life": 3.0})
+		"bolt":
+			projs.append({"x": cx + e.dir * 14, "y": e.y + 8, "vx": e.dir * 300.0 * D.spd, "vy": 0.0, "hw": 6.0, "hh": 4.0, "type": "bolt", "dmg": 12.0, "life": 3.0})
+		_:
+			projs.append({"x": cx, "y": cy, "vx": d.x / l * sp, "vy": d.y / l * sp, "hw": 5.0, "hh": 5.0, "type": "orb", "dmg": 12.0, "life": 4.0})
+
+## Comportamientos nuevos de foes.js que todavía usan el más parecido.
+const B_MAP := {"rammer": "chaser", "brute": "chaser", "burrower": "chaser", "dormant": "chaser", "book": "ghost", "sniper": "shooter", "dropper": "flyer", "pulse": "bob", "splitter": "walker", "spread": "shooter"}
 
 func _update_enemies(dt: float) -> void:
 	var D: Dictionary = DIFFS[diff_idx]
@@ -654,12 +1046,15 @@ func _update_enemies(dt: float) -> void:
 			continue
 		e.hit = max(0.0, e.hit - dt)
 		e.t += dt
+		if e.alert > 0.0:
+			e.alert -= dt
 		if abs(e.x - cam.x - VW / 2) > 900:
 			continue
 		var cx: float = e.x + e.w / 2
 		var dx: float = pcx - cx
 		var dy: float = pcy - (e.y + e.h / 2)
 		var adx: float = abs(dx)
+		var d: Dictionary = e.d
 		if e.kx != 0.0:
 			var nx: float = e.x + e.kx * dt
 			if _ground_below(nx + e.w if e.kx > 0 else nx, e.y + e.h, 14) != null or e.air:
@@ -667,16 +1062,58 @@ func _update_enemies(dt: float) -> void:
 			e.kx *= max(0.0, 1.0 - 9.0 * dt)
 			if abs(e.kx) < 8:
 				e.kx = 0.0
-		match e.b:
+		var b: String = B_MAP.get(e.b, e.b)
+		match b:
 			"walker":
 				if e.hit <= 0.0:
-					e.x += e.dir * float(e.d.spd) * D.spd * dt
+					e.x += e.dir * float(d.get("spd", 70)) * D.spd * dt
 				if e.x < e.minX:
 					e.x = e.minX
 					e.dir = 1
 				if e.x > e.maxX:
 					e.x = e.maxX
 					e.dir = -1
+			"chaser", "bomber", "riser", "shield":
+				if b == "riser" and str(e.get("st", "")) == "buried":
+					if adx < 150 and abs(dy) < 80:
+						e.st = "rising"
+						e.rise = 0.0
+						Aether.sfx("bones", 0.6)
+					continue
+				if b == "riser" and str(e.get("st", "")) == "rising":
+					e.rise = float(e.get("rise", 0.0)) + dt
+					if e.rise > 0.8:
+						e.st = "walk"
+					continue
+				var sees: bool = adx < (260 if b == "bomber" else 230) and abs(dy) < 70
+				if sees and not e.get("saw", false):
+					e.saw = true
+					e.alert = 0.6
+					if b == "chaser":
+						Aether.sfx("roar", 0.35, 1.3)
+				if not sees:
+					e.saw = false
+				var sp: float = float(d.get("spd", 60))
+				var target: int = e.dir
+				if sees:
+					target = 1 if dx > 0 else -1
+				if b == "chaser" and sees and e.alert <= 0.0:
+					sp = float(d.get("run", 240))
+				if b == "bomber" and sees:
+					sp = -float(d.get("spd", 60)) if adx < 90 else 0.0
+					e.cd -= dt
+					if e.cd <= 0.0 and e.alert <= 0.0:
+						e.cd = 2.2 / D.aggr
+						var T := 0.9
+						projs.append({"x": cx, "y": e.y + 4, "vx": (pcx - cx) / T, "vy": -(0.5 * 800 * T) + (pcy - e.y) / T * 0.3, "grav": 800.0, "hw": 6.0, "hh": 6.0, "type": "bomb", "dmg": 16.0, "life": 2.0})
+				e.dir = target
+				if e.hit <= 0.0 and e.alert <= 0.0 and sp != 0.0:
+					var nx2: float = e.x + e.dir * sp * D.spd * dt
+					var fx_: float = nx2 + e.w + 2 if e.dir > 0 else nx2 - 2
+					if _ground_below(fx_, e.y + e.h, 14) != null:
+						e.x = nx2
+					elif not sees:
+						e.dir *= -1
 			"jumper":
 				if not e.air:
 					e.cd -= dt
@@ -689,37 +1126,110 @@ func _update_enemies(dt: float) -> void:
 				else:
 					e.vy += 1400.0 * dt
 					var ny: float = e.y + e.vy * dt
-					var nx2: float = e.x + e.vx * dt
-					var gnd = _ground_below(nx2 + e.w / 2, ny + e.h, 16) if e.vy > 0 else null
+					var nx3: float = e.x + e.vx * dt
+					var gnd = _ground_below(nx3 + e.w / 2, ny + e.h, 16) if e.vy > 0 else null
 					if gnd != null and e.y + e.h <= gnd.y + 4:
 						e.y = gnd.y - e.h
 						e.air = false
 						e.vy = 0.0
 					else:
 						e.y = ny
-						if _ground_below(nx2 + e.w / 2, e.y + e.h, 400) != null or e.vy < 0:
-							e.x = nx2
+						if _ground_below(nx3 + e.w / 2, e.y + e.h, 400) != null or e.vy < 0:
+							e.x = nx3
 					if e.y > level.deathY:
 						e.dead = true
+			"shooter":
+				e.dir = 1 if dx > 0 else -1
+				if e.fire > 0.0:
+					e.fire -= dt
+				if not d.get("still", false) and e.fire <= 0.0 and adx > 120:
+					var nx4: float = e.x + e.dir * float(d.get("spd", 30)) * dt
+					var fx4: float = nx4 + e.w + 2 if e.dir > 0 else nx4 - 2
+					if _ground_below(fx4, e.y + e.h, 14) != null and nx4 > e.minX - 60 and nx4 < e.maxX + 60:
+						e.x = nx4
+				e.cd -= dt
+				if e.cd <= 0.0 and adx < 400 and abs(dy) < 150 and not p.dead:
+					e.cd = randf_range(1.8, 2.6) / D.aggr
+					e.fire = 0.5
+					_shoot(e, pcx, pcy)
+					Aether.sfx("shoot", 0.3, 1.3)
 			"flyer":
 				var ox: float = e.x
 				e.x = e.x0 + sin(e.t * 1.2) * 60.0
 				e.y = e.y0 + sin(e.t * 2.3) * 18.0
 				e.dir = 1 if e.x >= ox else -1
 				e.cd -= dt
-				if e.cd <= 0.0 and Vector2(dx, dy).length() < 400 and not p.dead:
+				if e.cd <= 0.0 and Vector2(dx, dy).length() < 400 and not p.dead and d.has("shot"):
 					e.cd = randf_range(2.2, 3.2) / D.aggr
 					_shoot(e, pcx, pcy)
-					Aether.sfx("swing", 0.25, 1.5)
-		if not p.dead and ov(p, e):
-			_hurt(12.0 if e.b == "flyer" else 15.0, e.x + e.w / 2)
+					Aether.sfx("shoot", 0.25, 1.5)
+			"diver":
+				var stt: String = str(e.get("st", ""))
+				if stt == "" or stt == "0":
+					e.st = "hover"
+					stt = "hover"
+				if stt == "hover":
+					e.x = lerp(float(e.x), e.x0 + sin(e.t) * 40.0, dt * 2.0)
+					e.y = lerp(float(e.y), e.y0 + sin(e.t * 2) * 12.0, dt * 2.0)
+					e.dir = 1 if dx > 0 else -1
+					e.cd -= dt
+					if e.cd <= 0.0 and adx < 240 and dy > -20 and dy < 260 and not p.dead:
+						e.st = "tele"
+						e.tt = 0.45
+						e.alert = 0.45
+				elif stt == "tele":
+					e.tt -= dt
+					e.x += sin(e.t * 60) * 0.6
+					if e.tt <= 0.0:
+						e.st = "dive"
+						e.tt = 0.9
+						var dd: float = max(1.0, Vector2(dx, dy).length())
+						e.vx = dx / dd * 380.0 * D.spd
+						e.vy = dy / dd * 380.0 * D.spd
+						e.dir = 1 if dx > 0 else -1
+						Aether.sfx("dash", 0.3, 1.6)
+				elif stt == "dive":
+					e.tt -= dt
+					e.x += e.vx * dt
+					e.y += e.vy * dt
+					if e.tt <= 0.0 or _ground_below(e.x + e.w / 2, e.y + e.h, 6) != null:
+						e.st = "back"
+				elif stt == "back":
+					e.x = lerp(float(e.x), float(e.x0), dt * 1.5)
+					e.y = lerp(float(e.y), float(e.y0), dt * 1.5)
+					if abs(e.y - e.y0) < 6:
+						e.st = "hover"
+						e.cd = randf_range(1.2, 2.2)
+			"bob":
+				e.y = e.y0 + sin(e.t * 1.4) * 34.0
+				e.x = e.x0 + sin(e.t * 0.6) * 20.0
+				e.dir = 1 if dx > 0 else -1
+			"ghost":
+				e.dir = 1 if dx > 0 else -1
+				var dl: float = Vector2(dx, dy).length()
+				if dl < 320:
+					e.x += dx / max(1.0, dl) * 50.0 * D.spd * dt
+					e.y += dy / max(1.0, dl) * 40.0 * D.spd * dt
+				e.y += sin(e.t * 2) * 10.0 * dt
+				if e.b == "ghost" and dim == 0:
+					continue
+		if not p.dead and ov(p, e) and not (b == "riser" and str(e.get("st", "")) != "walk"):
+			_hurt(12.0 if b in ["flyer", "diver"] else 15.0, e.x + e.w / 2)
 
 func _update_projs(dt: float) -> void:
 	for q in projs.duplicate():
 		q.life -= dt
+		if q.has("grav"):
+			q.vy += q.grav * dt
 		q.x += q.vx * dt
 		q.y += q.vy * dt
 		var rem: bool = q.life <= 0.0
+		if q.type in ["bolt", "wormball", "spore", "bomb"]:
+			for s in level.plats:
+				if s.k == "solid" and ov({"x": q.x - q.hw, "y": q.y - q.hh, "w": q.hw * 2, "h": q.hh * 2}, s):
+					rem = true
+					_burst(q.x, q.y, Color(1, 0.7, 0.4), 6, 100, 200, 0.3)
+					break
 		var rr := {"x": q.x - q.hw, "y": q.y - q.hh, "w": q.hw * 2, "h": q.hh * 2}
 		if not rem and not p.dead and ov(rr, p):
 			if _hurt(q.dmg, q.x):
@@ -738,16 +1248,33 @@ func _update_projs(dt: float) -> void:
 			parts.append({"x": w.x + randf_range(-8, 8), "y": w.y - 2, "vx": -w.dir * randf_range(20, 80), "vy": randf_range(-180, -60), "life": 0.4, "max": 0.4, "c": (Color(0.78, 0.63, 0.44) if randf() < 0.5 else Color(0.6, 0.86, 0.35)), "s": 3.0, "g": 600.0})
 
 # ---------------- Gran Sapo Ancestral ----------------
+func _boss_type() -> int:
+	return int(WD.get("boss", {}).get("type", 0))
+
+func _boss_art() -> String:
+	var skin = WD.get("boss", {}).get("skin")
+	if skin is String and skin != "":
+		return skin
+	return BOSS_ART.get(_boss_type(), "hdb_demon")
+
 func _spawn_boss() -> void:
 	var A: Dictionary = level.arena
 	var D: Dictionary = DIFFS[diff_idx]
-	boss = {"w": 116.0, "h": 92.0, "x": A.x2 - 260, "y": A.floor - 92, "vx": 0.0, "vy": 0.0, "st": "idle", "t": 0.0, "face": -1, "anim": 0.0, "hit": 0.0, "dying": false, "done": false, "dieT": 0.0}
-	boss.max = round(14 * D.boss)
+	var bt := _boss_type()
+	var flying: bool = bt in [1, 3, 6, 8, 10, 11] and WD.get("boss", {}).get("skin") == null
+	var bm: Dictionary = Aether.sheet(_boss_art())
+	var bw: float = clamp(float(bm.get("fw", 116)) * 0.85, 60.0, 170.0)
+	var bh: float = clamp(float(bm.get("fh", 92)) * 0.8, 56.0, 150.0)
+	if bt == 0:
+		bw = 116.0
+		bh = 92.0
+	boss = {"w": bw, "h": bh, "x": A.x2 - 260, "y": (A.floor - 300 if flying else A.floor - bh), "vx": 0.0, "vy": 0.0, "st": "idle", "t": 0.0, "face": -1, "anim": 0.0, "hit": 0.0, "dying": false, "done": false, "dieT": 0.0, "fly": flying, "shots": 0}
+	boss.max = round(BOSS_HP[min(bt, BOSS_HP.size() - 1)] * D.boss)
 	boss.hp = boss.max
 	for e in level.enemies:
 		if e.x > A.x1 - 300:
 			e.dead = true
-	_boss_proxy.activate("GRAN SAPO ANCESTRAL", boss.max)
+	_boss_proxy.activate(str(WD.get("boss", {}).get("name", "GUARDIÁN")), boss.max)
 
 func _hit_boss(hb: Dictionary) -> void:
 	p.hitSet.append("boss")
@@ -794,13 +1321,18 @@ func _update_boss(dt: float) -> void:
 	if boss_intro > 0.0:
 		boss_intro -= dt
 		if boss_intro <= 0.0:
-			hint_txt = Aether.t("¡Salta las ondas de choque!")
+			hint_txt = Aether.t(str(WD.get("boss", {}).get("hint", "")))
 			hint_t = 3.0
 		return
 	b.t += dt
 	var pcx: float = p.x + p.w / 2
 	var bcx: float = b.x + b.w / 2
 	var ag: float = D.aggr * (1.2 if b.hp <= b.max / 2 else 1.0)
+	if b.fly:
+		_update_flying_boss(dt, b, A, ag, pcx)
+		if not p.dead and ov(p, b) and b.st == "dive":
+			_hurt(20.0, bcx)
+		return
 	if b.st != "air":
 		b.face = -1 if pcx < bcx else 1
 	if b.st == "idle":
@@ -836,6 +1368,9 @@ func _update_boss(dt: float) -> void:
 
 # ---------------- cámara ----------------
 func _update_camera(dt: float, snap: bool) -> void:
+	var vsz := get_viewport_rect().size
+	VH = 420.0 if arena_lock else 270.0
+	VW = round(vsz.x / vsz.y * VH / 2.0) * 2.0
 	var tx := 0.0
 	var ty := 0.0
 	var A: Dictionary = level.arena
@@ -860,9 +1395,9 @@ func _update_camera(dt: float, snap: bool) -> void:
 		cam.y = lerp(cam.y, ty, min(1.0, dt * 5.0))
 	var vs := get_viewport_rect().size
 	var z: float = vs.y / VH
-	_camera.zoom = Vector2(z, z)
+	_camera.zoom = _camera.zoom.lerp(Vector2(z, z), 1.0 if snap else min(1.0, dt * 4.0))
 	var sh := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake * 0.4
-	_camera.position = cam - Vector2((vs.x / z - VW) / 2, 0) + sh
+	_camera.position = cam + sh
 	if _bg and _bg.texture:
 		var k: float = vs.y * 1.15 / _bg.texture.get_height()
 		_bg.scale = Vector2(k, k)
@@ -904,8 +1439,31 @@ func _update_kael() -> void:
 
 # ---------------- dibujo del mundo ----------------
 func _draw() -> void:
-	var tx := Aether.tex("tx0")
-	var ed := Aether.tex("ed0")
+	var tx := Aether.tex("tx%d" % wi)
+	var ed := Aether.tex("ed%d" % wi)
+	var wcol := Color.from_string(str(WD.get("c", "#7dea5a")), Color(0.5, 0.9, 0.4))
+	# zonas
+	for z in level.zones:
+		var zr := Rect2(z.x, z.y, z.w, z.h)
+		match z.k:
+			"water":
+				draw_rect(zr, Color(0.2, 0.5, 0.8, 0.35))
+				draw_rect(Rect2(z.x, z.y, z.w, 2), Color(0.8, 0.95, 1, 0.7))
+			"wind":
+				for i in 6:
+					var yy: float = z.y + fmod(i * 53.0 + (time * 300.0 if z.fy != 0 else 0.0), z.h)
+					var xx: float = z.x + fmod(i * 97.0 + (time * -float(z.fx) * 0.3 if z.fx != 0 else 0.0), z.w)
+					draw_line(Vector2(xx, yy), Vector2(xx + (20.0 if z.fx != 0 else 0.0), yy + (0.0 if z.fx != 0 else 20.0)), Color(1, 1, 1, 0.35), 1.5)
+			"lowgrav":
+				draw_rect(zr, Color(0.6, 0.5, 1, 0.08))
+			"sand":
+				draw_rect(zr, Color(0.9, 0.75, 0.4, 0.3))
+	# decorado pintado
+	for dco in level.decor:
+		if dco.x < cam.x - 200 or dco.x > cam.x + VW + 200:
+			continue
+		var sway: float = sin(time * 1.3 + float(dco.get("ph", 0.0))) * 0.6
+		_sheet_frame(str(dco.k), int(time * 8 + float(dco.get("ph", 0.0))), Vector2(dco.x + sway, dco.y), dco.get("flip", false))
 	for s in level.plats:
 		if s.x > cam.x + VW + 300 or s.x + s.w < cam.x - 300:
 			continue
@@ -917,20 +1475,67 @@ func _draw() -> void:
 				else:
 					draw_rect(r, Color(0.35, 0.25, 0.2))
 				if ed:
-					var eh: float = 15.0
-					draw_texture_rect_region(ed, Rect2(s.x, s.y - 4, s.w, eh), Rect2(s.x * 3.0, 0, s.w * 3.0, ed.get_height()))
+					var em: Dictionary = Aether.sheet("ed0")
+					var gy: float = float(em.get("gy", 9))
+					var eh: float = ed.get_height() / 3.0
+					draw_texture_rect_region(ed, Rect2(s.x, s.y - gy, s.w, eh), Rect2(s.x * 3.0, 0, s.w * 3.0, ed.get_height()))
 				else:
 					draw_rect(Rect2(s.x, s.y, s.w, 5), Color(0.45, 0.8, 0.3))
 				draw_rect(Rect2(s.x, s.y + r.size.y - 30, s.w, 30), Color(0, 0, 0, 0.25))
+				if s.get("conv", 0) != 0:
+					for i in int(s.w / 20):
+						var cxp: float = s.x + fmod(i * 20.0 + time * 60.0 * float(s.conv), s.w)
+						draw_line(Vector2(cxp, s.y + 3), Vector2(cxp + 6 * float(s.conv), s.y + 3), Color(1, 0.9, 0.4, 0.8), 2)
 			"move":
 				draw_rect(r, Color(0.55, 0.42, 0.3))
-				draw_rect(Rect2(s.x, s.y, s.w, 4), Color(0.6, 0.9, 0.4))
+				draw_rect(Rect2(s.x, s.y, s.w, 4), wcol)
+			"break":
+				if s.st < 2 or s.oy < 400:
+					var shake_x: float = randf_range(-1, 1) if s.st == 1 else 0.0
+					var br := Rect2(s.x + shake_x, s.y + s.oy, s.w, 16)
+					draw_rect(br, Color(0.45, 0.33, 0.28, 1.0 if s.st < 2 else 0.6))
+					draw_rect(Rect2(br.position, Vector2(s.w, 3)), wcol.darkened(0.2))
+					for i in int(s.w / 16):
+						draw_line(Vector2(s.x + i * 16 + 8, s.y + s.oy + 4), Vector2(s.x + i * 16 + 12, s.y + s.oy + 12), Color(0, 0, 0, 0.4), 1)
+			"phase":
+				var on: bool = int(s.ph) == dim
+				var pc := Color(0.2, 0.89, 1) if int(s.ph) == 0 else Color(0.82, 0.44, 1)
+				if on:
+					draw_rect(r, Color(pc.r, pc.g, pc.b, 0.55))
+					draw_rect(r, pc, false, 2)
+				else:
+					draw_rect(r, Color(pc.r, pc.g, pc.b, 0.12))
+					draw_rect(r, Color(pc.r, pc.g, pc.b, 0.35), false, 1)
+			"laser":
+				var lc := Color(1, 0.2, 0.3, 0.9) if s.get("on", true) else (Color(1, 0.6, 0.6, 0.5) if s.get("warn", false) else Color(1, 0.3, 0.3, 0.15))
+				draw_rect(Rect2(s.x, s.y + 2, s.w, 4), lc)
+				draw_rect(Rect2(s.x - 4, s.y - 2, 6, 12), Color(0.4, 0.4, 0.5))
+				draw_rect(Rect2(s.x + s.w - 2, s.y - 2, 6, 12), Color(0.4, 0.4, 0.5))
+			"door":
+				var op: float = float(s.get("open", 0.0))
+				var dh: float = s.h * (1.0 - op)
+				if dh > 1:
+					draw_rect(Rect2(s.x, s.y + s.h - dh, s.w, dh), Color(0.3, 0.28, 0.35))
+					draw_rect(Rect2(s.x, s.y + s.h - dh, s.w, dh), Color(1, 0.45, 0.35, 0.8) if s.get("trial", false) else wcol, false, 2)
 			"bounce":
 				var sq: float = clamp(float(s.sq) / 0.3, 0.0, 1.0)
 				draw_rect(Rect2(s.x + 4, s.y + 4 + sq * 5, s.w - 8, s.h - 4 - sq * 5), Color(1, 0.45, 0.65))
 				draw_rect(Rect2(s.x, s.y + sq * 5, s.w, 5), Color(1, 0.8, 0.9))
+	for l in level.lavaStrips:
+		draw_rect(Rect2(l.x, l.y, l.w, 300), Color(0.9, 0.3, 0.05))
+		draw_rect(Rect2(l.x, l.y, l.w, 4), Color(1, 0.8, 0.3))
+	for q in level.plates:
+		draw_rect(Rect2(q.x, q.y + (3 if q.get("on", false) else 0), q.w, q.h), Color(0.6, 1, 0.69) if q.get("on", false) else Color(0.9, 0.7, 0.3))
 	for h in level.hazards:
-		if h.k == "spike":
+		if h.k == "icicle":
+			draw_colored_polygon(PackedVector2Array([Vector2(h.x, h.y), Vector2(h.x + 12, h.y), Vector2(h.x + 6, h.y + 18)]), Color(0.8, 0.94, 1, 0.9 if int(h.get("st", 0)) != 3 else 0.0))
+		elif h.k == "jet":
+			draw_rect(Rect2(h.x, GY - 6, h.w, 6), Color(0.3, 0.25, 0.25))
+			if h.get("warn", false):
+				draw_rect(Rect2(h.x + 4, GY - 14, h.w - 8, 8), Color(1, 0.6, 0.2, 0.5))
+			if h.get("on", false):
+				draw_rect(Rect2(h.x + 3, h.y, h.w - 6, h.h), Color(1, 0.55, 0.15, 0.55))
+		elif h.k == "spike":
 			var n: int = int(h.w / 12)
 			for i in n:
 				var bx: float = h.x + i * 12
@@ -976,6 +1581,8 @@ func _draw() -> void:
 		var al: float = clamp(f.life / 0.4, 0.0, 1.0)
 		draw_string_outline(_font, Vector2(f.x - 60, f.y), f.t, HORIZONTAL_ALIGNMENT_CENTER, 120, int(f.s * 0.7), 3, Color(0, 0, 0, al))
 		draw_string(_font, Vector2(f.x - 60, f.y), f.t, HORIZONTAL_ALIGNMENT_CENTER, 120, int(f.s * 0.7), Color(f.c.r, f.c.g, f.c.b, al))
+	if dim == 1:
+		draw_rect(Rect2(cam.x - 10, cam.y - 10, VW + 20, VH + 20), Color(0.5, 0.2, 0.7, 0.12))
 	if hint_t > 0.0 and hint_txt != "":
 		var al2: float = clamp(hint_t, 0.0, 1.0)
 		var hp := cam + Vector2(VW / 2 - 200, VH - 40)
@@ -993,7 +1600,8 @@ func _sheet_frame(key: String, frame: int, pos: Vector2, flip: bool, scale_k := 
 	var f: int = posmod(frame, n)
 	var ax: float = m.get("ax", fw / 2)
 	var ay: float = m.get("ay", fh)
-	var src := Rect2(f * fw, 0, fw, fh)
+	var dens: float = float(m.get("d", 1.0))
+	var src := Rect2(f * fw * dens, 0, fw * dens, fh * dens)
 	var w := fw * scale_k
 	var h := fh * scale_k
 	var x := pos.x - (fw - ax if flip else ax) * scale_k
@@ -1004,18 +1612,26 @@ func _sheet_frame(key: String, frame: int, pos: Vector2, flip: bool, scale_k := 
 
 func _draw_enemy(e: Dictionary) -> void:
 	var d: Dictionary = e.d
+	if e.b == "riser" and str(e.get("st", "")) == "buried":
+		draw_rect(Rect2(e.x, e.y + e.h - 3, e.w, 3), Color(0.3, 0.25, 0.2, 0.7))
+		return
 	var key: String = d.anim
 	if e.b == "jumper" and e.air:
 		key = d.get("jump", key)
 	var fr := int(e.t * 10)
 	var flip: bool = (e.dir > 0) == (d.face < 0)
 	var mod := Color(3, 3, 3) if e.hit > 0.0 else Color.WHITE
+	if e.b == "ghost" and dim == 0:
+		mod.a = 0.3
+	if e.alert > 0.0:
+		draw_string(_font, Vector2(e.x + e.w / 2 - 4, e.y - 6), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 0.3, 0.3))
 	var sq := 1.0 + (0.12 if e.hit > 0.0 else 0.0)
-	_sheet_frame(key, fr, Vector2(e.x + e.w / 2, e.y + e.h + (2 if e.b != "flyer" else 10)), flip, sq, mod)
+	_sheet_frame(key, fr, Vector2(e.x + e.w / 2, e.y + e.h + 2 + float(d.get("oy", 0))), flip, sq, mod)
 
 func _draw_boss() -> void:
 	var b := boss
-	var t := Aether.tex("hdb_frog")
+	var art := _boss_art()
+	var t := Aether.tex(art)
 	var mod := Color(3, 3, 3) if b.hit > 0.0 else Color.WHITE
 	if b.dying:
 		mod.a = clamp(b.dieT / 2.8, 0.0, 1.0)
@@ -1028,15 +1644,17 @@ func _draw_boss() -> void:
 		sy = 1.12
 		sx = 0.92
 	var breathe := 1.0 + sin(b.anim * 3.0) * 0.02
-	var w: float = b.w * 1.35 * sx
-	var h: float = b.h * 1.35 * sy * breathe
-	var base := Vector2(b.x + b.w / 2, b.y + b.h + 4)
+	var bm: Dictionary = Aether.sheet(art)
+	var w: float = float(bm.get("fw", 136)) * sx
+	var h: float = float(bm.get("fh", 120)) * sy * breathe
+	var base := Vector2(b.x + b.w / 2, b.y + b.h + 2)
 	draw_circle(Vector2(base.x, b.y + b.h + 2 if b.st != "air" else level.arena.floor + 2), b.w * 0.45, Color(0, 0, 0, 0.25))
 	if t:
 		var r := Rect2(base.x - w / 2, base.y - h, w, h)
 		if b.face > 0:
 			r = Rect2(base.x + w / 2, base.y - h, -w, h)
-		draw_texture_rect(t, r, false, mod)
+		var dn: float = float(bm.get("d", 1.0))
+		draw_texture_rect_region(t, r, Rect2(0, 0, float(bm.get("fw", t.get_width())) * dn, float(bm.get("fh", t.get_height())) * dn), mod)
 	else:
 		draw_rect(Rect2(b.x, b.y, b.w, b.h), Color(0.3, 0.6, 0.3))
 
@@ -1081,3 +1699,57 @@ func _bot() -> void:
 		Input.action_press("dash")
 	else:
 		Input.action_release("dash")
+
+## Guardianes voladores (provisional hasta traducir cada uno): flotan, disparan
+## ráfagas y bajan en picado; tras el picado quedan aturdidos (momento débil).
+func _update_flying_boss(dt: float, b: Dictionary, A: Dictionary, ag: float, pcx: float) -> void:
+	var pcy: float = p.y + p.h / 2
+	b.face = -1 if pcx < b.x + b.w / 2 else 1
+	match b.st:
+		"idle":
+			var tx: float = clamp(pcx - b.w / 2 + sin(b.anim * 0.8) * 180.0, A.x1 + 20, A.x2 - b.w - 20)
+			var ty: float = A.floor - 290 + sin(b.anim * 1.7) * 30.0
+			b.x = lerp(float(b.x), tx, min(1.0, dt * 1.6))
+			b.y = lerp(float(b.y), ty, min(1.0, dt * 1.6))
+			if b.t > 1.3 / ag:
+				b.st = "fire"
+				b.t = 0.0
+				b.shots = 0
+		"fire":
+			if b.t > 0.32:
+				b.t = 0.0
+				b.shots += 1
+				var c := Vector2(b.x + b.w / 2, b.y + b.h * 0.6)
+				var d := (Vector2(pcx, pcy) - c).normalized()
+				for a in [-0.25, 0.0, 0.25]:
+					var v := d.rotated(a) * 230.0 * ag
+					projs.append({"x": c.x, "y": c.y, "vx": v.x, "vy": v.y, "hw": 6.0, "hh": 6.0, "type": "orb", "dmg": 14.0, "life": 4.0})
+				Aether.sfx("shoot", 0.5)
+				if b.shots >= 3:
+					b.st = "aim"
+					b.t = 0.0
+		"aim":
+			b.x += sin(b.anim * 50.0) * 0.8
+			if b.t > 0.7:
+				b.st = "dive"
+				b.t = 0.0
+				var dv := (Vector2(pcx, A.floor - 20) - Vector2(b.x + b.w / 2, b.y + b.h / 2)).normalized()
+				b.vx = dv.x * 520.0 * ag
+				b.vy = dv.y * 520.0 * ag
+				Aether.sfx("dash", 0.6, 0.7)
+		"dive":
+			b.x += b.vx * dt
+			b.y += b.vy * dt
+			b.x = clamp(b.x, A.x1, A.x2 - b.w)
+			if b.y + b.h >= A.floor:
+				b.y = A.floor - b.h
+				b.st = "stun"
+				b.t = 0.0
+				shake = 14.0
+				Aether.sfx("stomp")
+				waves.append({"x": b.x + b.w / 2 - 50, "y": A.floor, "dir": -1.0, "spd": 300.0 * ag})
+				waves.append({"x": b.x + b.w / 2 + 50, "y": A.floor, "dir": 1.0, "spd": 300.0 * ag})
+		"stun":
+			if b.t > 2.0 / sqrt(ag):
+				b.st = "idle"
+				b.t = 0.0

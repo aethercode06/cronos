@@ -9,5 +9,5 @@
 script = ExtResource("1")
 mode = "titulo"
 game_title = "CHRONOS & THE SHIFT"
-play_scene = "res://chronos/chronos.tscn"
+play_scene = "res://chronos/mapa.tscn"
 background = ExtResource("2")
