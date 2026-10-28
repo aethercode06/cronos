@@ -1,12 +1,12 @@
 // =====================================================================
 //  RIESGO DE VERDAD (v3.1): sin dificultad no hay emoción
-//  · Vidas por fase: Normal 3, Difícil 2, Pesadilla 1 (Fácil ilimitadas).
+//  · Vidas por fase: Normal 4, Difícil 2, Pesadilla 1 (Fácil ilimitadas).
 //    Sin vidas, la fase empieza de nuevo desde el principio.
 //  · Caer a un vacío o a la lava mata (Normal en adelante), como en Mario.
 //  · Menos puntos de control: 2 por fase en Normal, 1 en Difícil y Pesadilla.
 //  · Cada 50 fragmentos recogidos en una fase: +1 vida (máx. 5).
 // =====================================================================
-const LIVES_BY = [99, 3, 2, 1];
+const LIVES_BY = [99, 4, 2, 1];
 let lives = 3, livesGemMark = 0, livesFresh = true;
 const stakesOn = () => diffIdx >= 1 && !TOWER && !RUSH;
 function livesLeft() { return stakesOn() ? lives : 99; }

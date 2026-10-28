@@ -33,7 +33,7 @@ buildStage = function (wi, act) {
 };
 function hardPopulate(L, wi, act) {
   const r = seeded(4242 + wi * 61 + act * 13), g = clamp(WPOS(wi) / (ORDER.length - 1), 0, 1) * 0.85 + act * 0.1;
-  const k = diffIdx >= 2 ? 1.3 : 1;
+  const k = diffIdx >= 2 ? 1.3 : 0.4;   // v3.6: Normal más suave (el usuario: «ahora está muy difícil»)
   const base = L.enemies.filter(e => !e.mini && !e.boss);
   const ground = base.filter(e => !HARD_AIR[e.b] && e.v !== 'book');
   const patrol = base.filter(e => HARD_PATROL[e.b] || HARD_PATROL[e.b0]);

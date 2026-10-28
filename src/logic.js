@@ -330,7 +330,7 @@ function updatePlayer(dt) {
   for (const c of level.checks) {
     if (!c.on && overlap(p, c)) {
       c.on = true; p.respawn = { x: c.x, y: c.y + c.h - p.h }; p.safe = { x: c.x, y: c.y + c.h - p.h };
-      p.hp = Math.min(p.maxHp, p.hp + (diffIdx >= 1 ? 0 : 10)); sfx('check', .6);
+      p.hp = Math.min(p.maxHp, p.hp + (diffIdx >= 2 ? 0 : diffIdx === 1 ? 15 : 10)); sfx('check', .6);
       burst(c.x + 12, c.y + 6, '#9bffb0', 16, 140, 60, .8, 2);
       addFloat(c.x + 12, c.y - 18, 'PUNTO DE CONTROL', '#9bffb0', 16); tSay(TICQ.check[Math.floor(Math.random() * 2)], 2.2);
       for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283; parts.push({ x: c.x + 12, y: c.y + 10, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, life: .6, max: .6, c: i % 2 ? '#9bffb0' : '#ffffff', s: 2, g: 0 }); }

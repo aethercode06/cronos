@@ -3,7 +3,7 @@
 // =====================================================================
 const DIFFS = [
   { name: 'FÁCIL',   hp: 150, dmg: .7,  spd: .85, boss: .8,   aggr: .9,  lava: 8,  c: '#5ef08a', extra: 0 },
-  { name: 'NORMAL',  hp: 100, dmg: 1.5, spd: 1,   boss: 1.15,  aggr: 1.15,  lava: 12, c: '#ffd34d', extra: 0 },
+  { name: 'NORMAL',  hp: 100, dmg: 1.25, spd: 1,   boss: 1.15,  aggr: 1.15,  lava: 12, c: '#ffd34d', extra: 0 },
   { name: 'DIFÍCIL', hp: 80,  dmg: 2.1, spd: 1.3, boss: 1.5, aggr: 1.45,lava: 16, c: '#ff5470', extra: 1 },
   { name: 'PESADILLA', hp: 70, dmg: 2.5, spd: 1.42, boss: 1.75, aggr: 1.65, lava: 19, c: '#c45cff', extra: 1, nm: 1 }
 ];
