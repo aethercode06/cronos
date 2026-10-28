@@ -55,6 +55,10 @@ var projs: Array = []
 var waves: Array = []
 var warns: Array = []
 var invert_t := 0.0
+var lives := 4
+var attempt := 1
+var slow_t := 0.0
+const LIVES_BY := [99, 4, 2, 1]
 var parts: Array = []
 var floats: Array = []
 var cam := Vector2.ZERO
@@ -76,6 +80,7 @@ var _hud: Node
 var _bg: Sprite2D
 var _font: Font
 var _shift_btn: TouchScreenButton
+var _time_btn: TouchScreenButton
 
 # ---------------- arranque ----------------
 func _ready() -> void:
@@ -110,7 +115,16 @@ func _ready() -> void:
 		var jb := InputEventJoypadButton.new()
 		jb.button_index = JOY_BUTTON_Y
 		InputMap.action_add_event("shift", jb)
+	if not InputMap.has_action("tiempo"):
+		InputMap.add_action("tiempo")
+		var ev2 := InputEventKey.new()
+		ev2.physical_keycode = KEY_E
+		InputMap.action_add_event("tiempo", ev2)
+		var jb2 := InputEventJoypadButton.new()
+		jb2.button_index = JOY_BUTTON_BACK
+		InputMap.action_add_event("tiempo", jb2)
 	_add_shift_button()
+	_time_btn = _round_button("tiempo", "TIEMPO", Color(0.45, 0.85, 1, 0.25), Vector2(-150, -470))
 	if not launch.is_empty():
 		wi = int(launch.get("wi", wi))
 		act = int(launch.get("act", act))
@@ -190,12 +204,15 @@ func start_stage(a: int, w := -1) -> void:
 	p = {"x": st.x, "y": st.y, "w": PW, "h": PH, "vx": 0.0, "vy": 0.0, "face": 1, "onGround": false, "ground": null, "jumps": 0,
 		"coyote": 0.0, "buf": 0.0, "dashT": 0.0, "dashCD": 0.0, "atkT": 0.0, "atkCD": 0.0, "atkN": 0, "lastAtk": -9.0, "air": false,
 		"hitSet": [], "pogoDone": false, "wall": 0, "wjLock": 0.0, "wjDir": 0, "inv": 0.0, "stun": 0.0, "hp": D.hp, "maxHp": D.hp,
-		"noCut": false, "dead": false, "deadT": 0.0, "anim": 0.0, "respawn": st, "safe": st, "sq": 1.0, "look": 0.0, "combo": 0, "comboT": 0.0}
+		"noCut": false, "time": 0.0, "hook": null, "dead": false, "deadT": 0.0, "anim": 0.0, "respawn": st, "safe": st, "sq": 1.0, "look": 0.0, "combo": 0, "comboT": 0.0}
 	boss = {}
 	projs = []
 	waves = []
 	warns = []
 	invert_t = 0.0
+	slow_t = 0.0
+	lives = LIVES_BY[diff_idx]
+	attempt = 1
 	arena_lock = false
 	boss_intro = 0.0
 	state = "playing"
@@ -235,6 +252,35 @@ func _add_shift_button() -> void:
 	var vs := get_viewport_rect().size
 	btn.position = Vector2(vs.x - 470 - 58, vs.y - 300 - 58)
 	_shift_btn = btn
+
+func _round_button(action: String, text: String, col: Color, anchor: Vector2) -> TouchScreenButton:
+	var layer := CanvasLayer.new()
+	layer.layer = 61
+	add_child(layer)
+	var btn := TouchScreenButton.new()
+	btn.action = action
+	btn.visibility_mode = TouchScreenButton.VISIBILITY_TOUCHSCREEN_ONLY
+	var sh := CircleShape2D.new()
+	sh.radius = 54
+	btn.shape = sh
+	btn.shape_centered = true
+	var img := Image.create(108, 108, false, Image.FORMAT_RGBA8)
+	for y in 108:
+		for x in 108:
+			if Vector2(x - 54, y - 54).length() < 54:
+				img.set_pixel(x, y, col)
+	btn.texture_normal = ImageTexture.create_from_image(img)
+	var l := Label.new()
+	l.text = text
+	l.size = Vector2(108, 108)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 20)
+	btn.add_child(l)
+	layer.add_child(btn)
+	var vs := get_viewport_rect().size
+	btn.position = Vector2(vs.x + anchor.x - 54, vs.y + anchor.y - 54)
+	return btn
 
 func _banner(t: String) -> void:
 	for h in get_tree().get_nodes_in_group("aether_hud"):
@@ -290,7 +336,7 @@ func _process(delta: float) -> void:
 	var dt: float = min(delta, 1.0 / 30.0)
 	if autoplay:
 		_bot()
-	for a in ["jump", "attack", "dash", "shift"]:
+	for a in ["jump", "attack", "dash", "shift", "tiempo"]:
 		_pressed[a] = Input.is_action_just_pressed(a)
 	if hit_stop > 0.0:
 		hit_stop -= dt
@@ -301,9 +347,10 @@ func _process(delta: float) -> void:
 		_update_plats(dt)
 		_update_player(dt)
 		_update_hazards(dt)
-		_update_enemies(dt)
-		_update_projs(dt)
-		_update_boss(dt)
+		var wdt: float = dt * (0.4 if slow_t > 0.0 else 1.0)
+		_update_enemies(wdt)
+		_update_projs(wdt)
+		_update_boss(wdt)
 	elif state == "victory":
 		state_t -= dt
 		if state_t <= -3.0 and ResourceLoader.exists("res://chronos/mapa.tscn") and get_tree().current_scene == owner:
@@ -466,6 +513,44 @@ func _hurt(dmg: float, src_x: float) -> bool:
 		_kill()
 	return true
 
+func _revive() -> void:
+	var s: Vector2 = p.respawn
+	attempt += 1
+	p.merge({"dead": false, "deadT": 0.0, "hp": p.maxHp, "x": s.x, "y": s.y, "vx": 0.0, "vy": 0.0, "inv": 2.2, "stun": 0.0, "dashT": 0.0, "atkT": 0.0, "hook": null, "ground": null, "onGround": false, "combo": 0, "counted": false}, true)
+	projs = []
+	waves = []
+	warns = []
+	invert_t = 0.0
+	slow_t = 0.0
+	score = max(0, score - 250)
+	for z in level.get("seals", []):
+		if z.st == 1:
+			z.st = 0
+			for e in z.live:
+				e.dead = true
+			z.live = []
+			z.plate.on = true
+	for t in level.get("trials", []):
+		if t.st == 1:
+			t.st = 0
+			for e in t.live:
+				e.dead = true
+			t.live = []
+			for q in t.plates:
+				q.on = true
+	for c in level.get("chases", []):
+		if c.st == 1:
+			c.st = 0
+	if arena_lock and not boss.is_empty() and not boss.done and not boss.dying:
+		_spawn_boss()
+		boss_intro = 1.2
+	hp_changed.emit(p.hp, p.maxHp)
+	Aether.sfx("check", 0.7)
+	Aether.sfx("heal", 0.5)
+	var pct := int(100.0 * s.x / max(1.0, float(level.width)))
+	_banner("INTENTO %d · Llegaste al %d %%" % [attempt, pct])
+	_update_camera(0.0, true)
+
 func _kill() -> void:
 	p.hp = 0.0
 	p.dead = true
@@ -520,10 +605,16 @@ func _update_player(dt: float) -> void:
 	p.anim += dt
 	if p.dead:
 		p.deadT -= dt
-		if p.deadT <= 0.0:
-			state = "gameover"
-			state_t = 1.6
-			_banner("¡HAS CAÍDO!")
+		if p.deadT <= 0.7 and not p.get("counted", false):
+			p.counted = true
+			lives -= 1
+		if p.deadT <= 0.7:
+			if lives > 0:
+				_revive()
+			else:
+				state = "gameover"
+				state_t = 1.8
+				_banner("¡SIN VIDAS! La fase empieza de nuevo")
 		return
 	p.sq = lerp(float(p.sq), 1.0, min(1.0, dt * 12.0))
 	p.inv = max(0.0, p.inv - dt)
@@ -540,6 +631,15 @@ func _update_player(dt: float) -> void:
 	if p.onGround and p.ground != null and p.ground.get("conv", 0) != 0:
 		p.x += float(p.ground.conv) * 120.0 * dt
 	shift_cd -= dt
+	slow_t = max(0.0, slow_t - dt)
+	if _time_btn:
+		_time_btn.visible = p.time >= 100.0
+	if _press("tiempo") and p.time >= 100.0 and slow_t <= 0.0 and not p.dead:
+		slow_t = 5.5
+		p.time = 0.0
+		Aether.sfx("slow", 0.9)
+		Aether.flash(Color(0.47, 0.78, 1), 0.25)
+		_float(p.x + p.w / 2, p.y - 24, "¡TIEMPO RALENTIZADO!", Color(0.62, 0.89, 1), 18)
 	if _press("shift") and shift_cd <= 0.0 and not p.dead:
 		if wi == 0:
 			shift_cd = 0.6
@@ -622,7 +722,9 @@ func _update_player(dt: float) -> void:
 		p.atkT = 0.0
 		p.wall = 0
 		Aether.sfx("dash", 0.6)
-	if p.dashT > 0.0:
+	if p.hook != null:
+		_update_hook(dt, dir)
+	elif p.dashT > 0.0:
 		p.dashT -= dt
 		p.vx = p.face * DASH
 		p.vy = 0.0
@@ -651,7 +753,10 @@ func _update_player(dt: float) -> void:
 			if p.vy < -420 and p.y > water.y + 30:
 				p.vy = -420.0
 		elif ctrl and p.buf > 0.0:
-			if p.coyote > 0.0:
+			var anc = _near_anchor() if (not p.onGround and p.coyote <= 0.0) else null
+			if anc != null:
+				_attach_hook(anc)
+			elif p.coyote > 0.0:
 				p.vy = -JUMP
 				p.jumps = 1
 				p.coyote = 0.0
@@ -719,6 +824,71 @@ func _update_player(dt: float) -> void:
 			_do_attack()
 	_move_and_collide(dt)
 	_pickups()
+
+func _near_anchor():
+	var best = null
+	var bd := 160.0
+	if time < float(p.get("hookCD", 0.0)):
+		return null
+	for a in level.anchors:
+		if is_same(a, p.get("lastHook")) and time < float(p.get("hookCD2", 0.0)):
+			continue
+		var d := Vector2(a.x - (p.x + p.w / 2), a.y - (p.y + p.h / 2)).length()
+		if d < bd:
+			bd = d
+			best = a
+	return best
+
+func _attach_hook(a: Dictionary) -> void:
+	var cx: float = p.x + p.w / 2
+	var cy: float = p.y + p.h / 2
+	var dx: float = cx - a.x
+	var dy: float = cy - a.y
+	var length: float = clamp(Vector2(dx, dy).length(), 70.0, 140.0)
+	var ang := atan2(dx, dy)
+	var tv: float = p.vx * cos(ang) - p.vy * sin(ang)
+	p.hook = {"a": a, "len": length, "ang": ang, "av": clamp(tv / length, -6.0, 6.0)}
+	p.buf = 0.0
+	p.dashT = 0.0
+	p.jumps = 1
+	Aether.sfx("lever", 0.5, 1.6)
+	_burst(a.x, a.y, Color(1, 0.83, 0.3), 10, 120, 0, 0.4)
+
+func _update_hook(dt: float, dir: float) -> void:
+	var h: Dictionary = p.hook
+	var gr := GRAV * 0.9
+	h.av += (-(gr / h.len) * sin(h.ang) + dir * 3.2) * dt
+	h.av *= (1.0 - 0.15 * dt)
+	h.av = clamp(h.av, -7.0, 7.0)
+	h.ang += h.av * dt
+	var cx: float = h.a.x + sin(h.ang) * h.len
+	var cy: float = h.a.y + cos(h.ang) * h.len
+	p.vx = cos(h.ang) * h.len * h.av
+	p.vy = -sin(h.ang) * h.len * h.av
+	p.x = cx - p.w / 2
+	p.y = cy - p.h / 2
+	p.onGround = false
+	p.ground = null
+	p.wall = 0
+	if dir != 0.0:
+		p.face = int(dir)
+	elif abs(p.vx) > 40:
+		p.face = int(signf(p.vx))
+	if _press("jump"):
+		p.lastHook = h.a
+		p.hookCD = time + 0.15
+		p.hookCD2 = time + 0.6
+		p.buf = 0.0
+		p.hook = null
+		p.vy = min(p.vy, 0.0) - 300.0
+		p.vx *= 1.15
+		p.jumps = 1
+		p.noCut = true
+		Aether.sfx("jump", 0.5, 1.2)
+
+func _add_time(v: float) -> void:
+	if slow_t <= 0.0:
+		p.time = min(100.0, p.time + v)
 
 func _move_and_collide(dt: float) -> void:
 	var sol: Array = []
@@ -823,12 +993,23 @@ func _pickups() -> void:
 			Aether.sfx("lever", 0.6)
 			_float(q.x + q.w / 2, q.y - 20, "¡PUERTA ABIERTA!", Color(0.6, 1, 0.69), 14)
 	_update_gates()
+	var rl = level.get("relic")
+	if rl is Dictionary and not rl.is_empty() and not rl.get("taken", false) and abs(p.x + p.w / 2 - rl.x) < 16 and abs(p.y + p.h / 2 - rl.y) < 30:
+		rl.taken = true
+		score += 1000
+		p.time = 100.0
+		Aether.sfx("relic", 0.8)
+		Aether.flash(Color(1, 0.86, 0.47), 0.25)
+		_burst(rl.x, rl.y, Color(1, 0.88, 0.5), 30, 220, 0, 0.8)
+		_float(rl.x, rl.y - 20, "¡RELOJ DE ARENA SECRETO!", Color(1, 0.83, 0.3), 20)
+	_update_chases()
 	for gm in level.gems:
 		if gm.taken:
 			continue
 		if p.x < gm.x + 9 and p.x + p.w > gm.x - 9 and p.y < gm.y + 9 and p.y + p.h > gm.y - 9:
 			gm.taken = true
 			score += 100
+			_add_time(3)
 			Aether.sfx("gem", 0.45)
 			_float(gm.x, gm.y - 12, "+100", Color(1, 0.9, 0.4), 16)
 			_burst(gm.x, gm.y, Color(1, 0.95, 0.5), 6, 90, 0, 0.35)
@@ -946,11 +1127,52 @@ func _update_gates() -> void:
 			_banner("¡DESAFÍO SUPERADO!")
 			Aether.sfx("win", 0.5)
 
+const CHASE_LOOK := {1: [Color(0.16, 0.04, 0.24), Color(0.69, 0.44, 1), "LA SOMBRA TE PERSIGUE"], 6: [Color(0.47, 0.08, 0), Color(1, 0.48, 0.19), "EL FUEGO TE PERSIGUE"],
+	11: [Color(0.08, 0, 0.16), Color(1, 0.42, 0.84), "EL VACÍO TE PERSIGUE"], 13: [Color(0.12, 0.12, 0.2), Color(0.56, 0.71, 1), "EL CASTILLO SE DERRUMBA"], 17: [Color(0.08, 0.12, 0.27), Color(0.75, 0.9, 1), "LA TORMENTA TE PERSIGUE"]}
+
+func _update_chases() -> void:
+	var dt := get_process_delta_time()
+	for c in level.get("chases", []):
+		if c.st == 0 and not p.dead and p.x > c.x0 and p.x < c.x1 - 200:
+			c.st = 1
+			c.wx = c.x0 - 260
+			c.sp = 200.0
+			_banner("¡CORRE! " + str(CHASE_LOOK.get(wi, CHASE_LOOK[1])[2]))
+			Aether.sfx("roar", 0.7, 0.7)
+			shake = max(shake, 8.0)
+		if c.st != 1:
+			continue
+		c.sp = min(255.0, c.sp + dt * 22.0)
+		c.wx += c.sp * dt
+		if abs(c.wx - p.x) < 300:
+			shake = max(shake, 2.0)
+		if p.x < c.wx and p.inv <= 0.0:
+			if diff_idx >= 1:
+				p.hp = 0.0
+				hp_changed.emit(0.0, p.maxHp)
+				_kill()
+			else:
+				_hurt(25, c.wx - 100)
+				p.x = c.wx + 30
+		if c.wx >= c.x1:
+			c.st = 2
+			Aether.sfx("relic", 0.5)
+			_float(p.x + p.w / 2, p.y - 30, "¡A SALVO!", Color(0.24, 0.96, 0.63), 20)
+
 func _stage_clear() -> void:
 	if state != "playing":
 		return
 	state = "clear"
-	state_t = 2.6
+	state_t = 3.0
+	var gl: Dictionary = level.goal
+	if not gl.is_empty():
+		var hgt: float = (gl.y + gl.h) - (p.y + p.h)
+		var bonus := 5000 if hgt > 50 else (2000 if hgt > 25 else 500)
+		var txt := "¡SALTO PERFECTO!" if bonus == 5000 else ("¡GRAN SALTO!" if bonus == 2000 else "¡META!")
+		score += bonus
+		_float(p.x + p.w / 2, p.y - 40, "%s +%d" % [txt, bonus], Color(1, 0.83, 0.3), 22)
+	if lives == LIVES_BY[diff_idx] and attempt == 1:
+		_float(p.x + p.w / 2, p.y - 70, "¡PERFECTO! ★★★", Color(1, 0.95, 0.5), 22)
 	Aether.sfx("win", 0.9)
 	Aether.slowmo(0.35, 0.8)
 	Aether.flash(Color(1, 0.95, 0.7), 0.4)
@@ -1028,6 +1250,7 @@ func _damage_enemy(e: Dictionary, hb: Dictionary) -> void:
 		e.x += p.face * 10.0
 	if e.hp <= 0.01:
 		e.dead = true
+		_add_time(8)
 		score += 50
 		Aether.sfx("kill", 0.6)
 		_burst(e.x + e.w / 2, e.y + e.h / 2, Color(0.9, 0.9, 1), 16, 160, 100, 0.5, 3)
@@ -1657,6 +1880,42 @@ func _draw() -> void:
 		var al: float = clamp(f.life / 0.4, 0.0, 1.0)
 		draw_string_outline(_font, Vector2(f.x - 60, f.y), f.t, HORIZONTAL_ALIGNMENT_CENTER, 120, int(f.s * 0.7), 3, Color(0, 0, 0, al))
 		draw_string(_font, Vector2(f.x - 60, f.y), f.t, HORIZONTAL_ALIGNMENT_CENTER, 120, int(f.s * 0.7), Color(f.c.r, f.c.g, f.c.b, al))
+	for a in level.anchors:
+		var near: bool = p.hook == null and not p.onGround and Vector2(a.x - (p.x + p.w / 2), a.y - (p.y + p.h / 2)).length() < 160
+		draw_arc(Vector2(a.x, a.y), 9, 0, TAU, 18, Color(1, 0.83, 0.3), 3)
+		if near:
+			draw_arc(Vector2(a.x, a.y), 14 + sin(time * 8) * 2, 0, TAU, 18, Color(1, 0.95, 0.6, 0.6), 2)
+	if p.hook != null:
+		draw_line(Vector2(p.hook.a.x, p.hook.a.y), Vector2(p.x + p.w / 2, p.y + p.h / 2), Color(1, 0.9, 0.6), 2)
+	var rl = level.get("relic")
+	if rl is Dictionary and not rl.is_empty() and not rl.get("taken", false):
+		var ry: float = rl.y + sin(time * 2) * 3
+		draw_colored_polygon(PackedVector2Array([Vector2(rl.x - 7, ry - 10), Vector2(rl.x + 7, ry - 10), Vector2(rl.x, ry)]), Color(1, 0.85, 0.4))
+		draw_colored_polygon(PackedVector2Array([Vector2(rl.x - 7, ry + 10), Vector2(rl.x + 7, ry + 10), Vector2(rl.x, ry)]), Color(1, 0.85, 0.4))
+		draw_circle(Vector2(rl.x, ry), 16, Color(1, 0.85, 0.4, 0.15 + sin(time * 4) * 0.08))
+	for c in level.get("chases", []):
+		if c.st == 1:
+			var lk: Array = CHASE_LOOK.get(wi, CHASE_LOOK[1])
+			var c0: Color = lk[0]
+			draw_rect(Rect2(c.wx - 600, cam.y - 20, 600, VH + 40), Color(c0.r, c0.g, c0.b, 0.95))
+			for i in 8:
+				var a3 := 0.85 - i * 0.1
+				draw_rect(Rect2(c.wx + i * 4, cam.y - 20, 4, VH + 40), Color(c0.r, c0.g, c0.b, a3))
+			var c1: Color = lk[1]
+			var yy0: float = floor(cam.y / 14.0) * 14.0
+			for k in int(VH / 14) + 3:
+				draw_rect(Rect2(c.wx + sin(time * 9 + k) * 6, yy0 + k * 14, 3, 9), Color(c1.r, c1.g, c1.b, 0.7))
+	if slow_t > 0.0:
+		draw_rect(Rect2(cam.x - 10, cam.y - 10, VW + 20, VH + 20), Color(0.45, 0.75, 1, 0.1))
+	# vidas y poder del tiempo (debajo de la vida)
+	var hx := cam.x + 14
+	var hy := cam.y + 46
+	if LIVES_BY[diff_idx] < 99:
+		for i in LIVES_BY[diff_idx]:
+			var full: bool = i < lives
+			draw_circle(Vector2(hx + i * 14, hy), 5, Color(1, 0.3, 0.4) if full else Color(0.3, 0.3, 0.35))
+	draw_rect(Rect2(hx - 5, hy + 10, 80, 5), Color(0, 0, 0, 0.5))
+	draw_rect(Rect2(hx - 5, hy + 10, 80 * p.get("time", 0.0) / 100.0, 5), Color(0.5, 0.88, 1) if p.get("time", 0.0) >= 100.0 else Color(0.3, 0.55, 0.9))
 	if dim == 1:
 		draw_rect(Rect2(cam.x - 10, cam.y - 10, VW + 20, VH + 20), Color(0.5, 0.2, 0.7, 0.12))
 	if hint_t > 0.0 and hint_txt != "":
