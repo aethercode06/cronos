@@ -56,6 +56,12 @@ func _process(_delta: float) -> void:
 				phase = "arena"
 				frame = 0
 		"arena":
+			# secuencia para revisar el movimiento (no solo capturas sueltas)
+			if shots and frame >= 100 and frame <= 460 and frame % 2 == 0:
+				var im := get_viewport().get_texture().get_image()
+				im.resize(640, 360)
+				DirAccess.make_dir_recursive_absolute(shot_dir.path_join("seq"))
+				im.save_jpg(shot_dir.path_join("seq/s%04d.jpg" % frame), 0.8)
 			if frame == 5:
 				pl.hp = pl.max_hp
 			if frame == 40: _shot("03_jefe_intro")

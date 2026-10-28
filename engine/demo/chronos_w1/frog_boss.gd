@@ -71,7 +71,7 @@ func _process(delta: float) -> void:
 	art.set_p("time_s", _time)
 	art.set_p("flash", _flash)
 	art.set_p("tint", Color(1.25, 0.75, 0.7) if fury else (Color(0.75, 0.85, 1.05) if guard else Color(1, 1, 1)))
-	art.scale.x = -face          # el dibujo mira a la derecha
+	art.scale.x = face           # el dibujo mira a la derecha: face 1 = derecha
 	shadow.global_position = Vector2(global_position.x, floor_y + 4)
 	var hgt: float = clamp((floor_y - global_position.y) / 900.0, 0.0, 1.0)
 	shadow.scale = Vector2(6.5 * (1.0 - hgt * 0.6), 1.2 * (1.0 - hgt * 0.6))
@@ -273,7 +273,7 @@ func _bubble() -> void:
 	Aether.sfx("bounce", 0.6, 1.4)
 
 func _update_tongue() -> void:
-	var start := Vector2(face * 140, -170)
+	var start := Vector2(face * 150, -200)   # la boca está delante, a la altura del ojo
 	var end := start + Vector2(face * _tongue_len, 18)
 	tongue.clear_points()
 	for i in 8:
