@@ -1,0 +1,85 @@
+name: Aether Engine · editor para Android
+# Compila el editor completo de Godot desde su código fuente con la marca
+# Aether Engine y lo publica como APK, junto con el proyecto inicial (Aether Kit).
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'engine/branding/**', '.github/workflows/engine-editor.yml' ]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  GODOT_TAG: 4.7.2-stable
+jobs:
+  editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Herramientas
+        run: pip install scons pillow
+      - name: Código de Godot
+        run: git clone --depth 1 --branch $GODOT_TAG https://github.com/godotengine/godot.git $RUNNER_TEMP/godot
+      - name: Android NDK
+        run: |
+          NDK=$(grep -oP "ndkVersion\s*[:=]\s*['\"]\K[0-9.]+" $RUNNER_TEMP/godot/platform/android/java/app/config.gradle | head -1)
+          echo "NDK $NDK"
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;$NDK" > /dev/null
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+      - name: Marca Aether Engine
+        run: python3 engine/branding/apply_branding.py $RUNNER_TEMP/godot engine/branding | tee branding.log
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/scons_cache
+          key: scons-android-editor-${{ env.GODOT_TAG }}-${{ github.run_id }}
+          restore-keys: scons-android-editor-${{ env.GODOT_TAG }}-
+      - name: Compilar el motor (arm64)
+        working-directory: ${{ runner.temp }}/godot
+        env:
+          SCONS_CACHE: ${{ runner.temp }}/scons_cache
+        run: |
+          scons platform=android target=editor arch=arm64 production=yes lto=none -j$(nproc) > $GITHUB_WORKSPACE/scons.log 2>&1 || { tail -80 $GITHUB_WORKSPACE/scons.log; exit 1; }
+          tail -5 $GITHUB_WORKSPACE/scons.log
+      - name: Empaquetar la app del editor
+        working-directory: ${{ runner.temp }}/godot/platform/android/java
+        run: |
+          ./gradlew generateGodotEditor --no-daemon > $GITHUB_WORKSPACE/gradle.log 2>&1 || { tail -80 $GITHUB_WORKSPACE/gradle.log; exit 1; }
+          find $RUNNER_TEMP/godot/bin -name "*.apk" | tee $GITHUB_WORKSPACE/apks.txt
+      - name: Firmar y preparar
+        run: |
+          APK=$(grep -i "editor" apks.txt | grep -iv "horizon\|pico\|meta" | head -1)
+          [ -n "$APK" ] || APK=$(head -1 apks.txt)
+          BT=$(ls -d $ANDROID_SDK_ROOT/build-tools/* | sort -V | tail -1)
+          mkdir -p build
+          $BT/zipalign -f -p 4 "$APK" build/aligned.apk
+          $BT/apksigner sign --ks engine/keys/debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --out build/AetherEngine-Editor.apk build/aligned.apk
+          $BT/aapt2 dump badging build/AetherEngine-Editor.apk | grep -E "package:|application-label:" | head -3
+          cd engine && zip -qr ../build/AetherEngine-Proyecto.zip . -x ".godot/*" "keys/*" "branding/*" && cd ..
+          ls -la build
+      - name: Publicar en Descargas
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete aether-editor -y --cleanup-tag || true
+          gh release create aether-editor build/AetherEngine-Editor.apk build/AetherEngine-Proyecto.zip \
+            --title "Aether Engine · editor para Android (Godot ${GODOT_TAG%-stable})" \
+            --notes "**AetherEngine-Editor.apk**: el editor completo de Aether Engine para Android. **AetherEngine-Proyecto.zip**: proyecto inicial con Aether Kit y la prueba de Chronos; en el editor pulsa *Importar* y elige este zip." \
+            --latest=false
+          for i in 1 2 3 4 5; do
+            gh release edit aether-editor --draft=false || true
+            sleep 4
+            if [ "$(gh release view aether-editor --json isDraft -q .isDraft)" = "false" ]; then echo "publicada"; break; fi
+          done
+      - name: Guardar registros en la rama aether-logs-editor
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp *.log *.txt /tmp/out/ 2>/dev/null || true
+          for f in /tmp/out/*.log; do tail -300 "$f" > "$f.tail" && mv "$f.tail" "$f"; done
+          cd /tmp/out && git init -q && git checkout -q -b aether-logs-editor
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Registros del editor ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-logs-editor
