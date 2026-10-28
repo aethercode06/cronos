@@ -72,6 +72,25 @@ Las formas 3D sencillas (cajas, esferas, cilindros) se crean con los nodos **CSG
 | Anuncios y compras | `Aether.store.show_rewarded(func(ok): ...)` · `Aether.store.buy("traje", func(ok): ...)`. Sin cuentas funciona en modo prueba; con los plugins de AdMob y Google Play Billing usa los reales. |
 | Menús | Pieza **Menú** en modo título o pausa (música, efectos, idioma). |
 
+### Lógica sin código (panel «Eventos»)
+
+1. Añade **Lógica de la escena** (o una **Zona**) desde el panel Aether.
+2. Selecciónala: en el panel **Eventos** pulsa **+ Nuevo evento**.
+3. Elige **CUANDO** (al empezar, cada X segundos, al pulsar un botón, al entrar en la zona, al recoger algo, cuando una variable llega a un valor, al vencer a un enemigo o al jefe, cuando el jugador cae).
+4. Añade **SI** (condiciones) y **HACER** (sumar, mostrar aviso o cartel, sonar, música, curar, dañar, crear, eliminar, llevar al jugador, punto de control, ir a otra escena, temblor, destello, cámara lenta, logro, guardar, esperar, diálogo, tienda, dar o quitar objetos, efecto, «¡fase superada!», anuncio con premio).
+
+Ejemplo de la plantilla de plataformas: *CUANDO monedas llega a 5 → aviso «¡5 monedas!» + sonido* y una **Zona** al final: *CUANDO el jugador entra → ¡Fase superada!*
+
+Piezas de apoyo: **Objeto recogible** (monedas, gemas, vida), **Contador en pantalla**, **Diálogo con retratos**, **Tienda**, **Misiones**, **Regalo diario**, **Efecto especial** (golpe, magia, explosión, curación, rayo, fuego, portal, nieve, lluvia, hojas, chispas, aura).
+
+### Modo fácil
+
+En el panel Aether, **Modo fácil** oculta lo avanzado del editor para empezar sin agobios. Desactívalo para tener todo Godot.
+
+### Calidad automática
+
+El motor detecta el teléfono y ajusta la calidad (resolución 3D, brillo, 60 fps) para que vaya fluido en gama media.
+
 ## 4. Personajes propios
 
 **Con animaciones en tira:** en el Inspector del Jugador o del Enemigo, en *Aspecto → Anim Set*, crea un **AetherAnimSet** y añade animaciones con estos nombres:
@@ -86,7 +105,13 @@ Las formas 3D sencillas (cajas, esferas, cilindros) se crean con los nodos **CSG
 
 ## 6. Claude (opcional)
 
-En el panel **Claude (opcional)** pon tu clave de Anthropic y pide cosas como «crea un enemigo que lance fuego». Claude propone archivos y **no se escribe nada hasta que pulsas «Aplicar archivos»**. Sin clave, el panel no hace nada.
+El motor funciona completo **sin IA**. Si quieres ayuda, en el panel **Claude (opcional)** pon tu clave de Anthropic y pide cosas como:
+- «Pon 5 monedas y una meta al final»
+- «Haz que el jugador salte más alto»
+- «Cuando tenga 10 monedas, abre la puerta»
+- «Crea un jefe que lance fuego»
+
+Claude **ve tu escena** y puede crear piezas, ajustarlas, borrarlas, crear eventos, abrir plantillas, escribir scripts, guardar y probar el juego. **Nada cambia hasta que pulsas «Aplicar»**, y todo se puede deshacer con *Deshacer*.
 
 ## 7. Ejemplo incluido
 
