@@ -7,7 +7,7 @@ config_version=5
 
 config/name="Aether Engine · Chronos (prueba)"
 config/description="Primer juego de prueba de Aether Engine"
-run/main_scene="res://demo/main.tscn"
+run/main_scene="res://chronos/titulo.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 boot_splash/bg_color=Color(0.027, 0.02, 0.06, 1)

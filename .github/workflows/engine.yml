@@ -104,8 +104,8 @@ jobs:
         run: |
           gh release delete aether-engine -y --cleanup-tag || true
           gh release create aether-engine build/AetherEngine-Chronos.apk \
-            --title "Aether Engine · prueba de Chronos 0.1.${{ github.run_number }}" \
-            --notes "Primera prueba de **Aether Engine** (sobre Godot ${GODOT_VERSION}): Mundo 1 de Chronos y el Gran Sapo Ancestral animado. Toca **AetherEngine-Chronos.apk** para instalarlo (se instala aparte de Chronos)." \
+            --title "Chronos en Aether Engine 0.2.${{ github.run_number }}" \
+            --notes "**Chronos & The Shift hecho con Aether Engine** (sobre Godot ${GODOT_VERSION}): 18 mundos, 54 fases, 18 guardianes, Torre del Tiempo, Boss Rush, Grietas y Reto diario. Toca **AetherEngine-Chronos.apk** para instalarlo (se instala aparte del Chronos actual y no toca su partida)." \
             --latest=false
           for i in 1 2 3 4 5; do
             gh release edit aether-engine --draft=false || true

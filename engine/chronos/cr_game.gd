@@ -136,6 +136,12 @@ func _ready() -> void:
 		var jb2 := InputEventJoypadButton.new()
 		jb2.button_index = JOY_BUTTON_BACK
 		InputMap.action_add_event("tiempo", jb2)
+	for a in [["cr_primeros", "Primeros pasos", "Supera la fase 1-1"], ["cr_guardian1", "Cazador de guardianes", "Vence a tu primer guardián"],
+			["cr_guardian18", "Guardián del Tiempo", "Vence a los 18 guardianes"], ["cr_perfecto", "Sin un rasguño", "Supera una fase sin perder ninguna vida"],
+			["cr_torre10", "Escalador del tiempo", "Llega al piso 10 de la Torre"], ["cr_torre25", "Señor de la Torre", "Llega al piso 25 de la Torre"],
+			["cr_rush6", "Seis seguidos", "Vence a 6 guardianes en el Boss Rush"], ["cr_rush18", "Imparable", "Completa el Boss Rush"],
+			["cr_grieta1", "Explorador de grietas", "Supera una Grieta del Tiempo"], ["cr_diario", "Cita diaria", "Supera un Reto diario"]]:
+		Aether.achievements.define(a[0], a[1], a[2])
 	story = CrStory.new()
 	add_child(story)
 	_add_shift_button()
@@ -332,8 +338,11 @@ func _round_button(action: String, text: String, col: Color, anchor: Vector2) ->
 	return btn
 
 func _banner(t: String) -> void:
+	var parts_t := t.split(" · ")
+	for i in parts_t.size():
+		parts_t[i] = Aether.t(parts_t[i])
 	for h in get_tree().get_nodes_in_group("aether_hud"):
-		h.banner(t, "")
+		h.banner(" · ".join(parts_t), "")
 
 # ---------------- utilidades ----------------
 static func ov(a: Dictionary, b: Dictionary) -> bool:
@@ -1292,6 +1301,18 @@ func _stage_clear() -> void:
 		var txt := "¡SALTO PERFECTO!" if bonus == 5000 else ("¡GRAN SALTO!" if bonus == 2000 else "¡META!")
 		score += bonus
 		_float(p.x + p.w / 2, p.y - 40, "%s +%d" % [txt, bonus], Color(1, 0.83, 0.3), 22)
+	if mode == "historia" and wi == 0 and act == 0:
+		Aether.achievements.unlock("cr_primeros")
+	if mode == "historia" and act == 2:
+		Aether.achievements.unlock("cr_guardian1")
+		var bs: Array = Aether.save.get_value("cr_guardianes", [])
+		if not wi in bs:
+			bs.append(wi)
+			Aether.save.set_value("cr_guardianes", bs)
+		if bs.size() >= 18:
+			Aether.achievements.unlock("cr_guardian18")
+	if lives == LIVES_BY[diff_idx] and attempt == 1 and LIVES_BY[diff_idx] < 99:
+		Aether.achievements.unlock("cr_perfecto")
 	if lives == LIVES_BY[diff_idx] and attempt == 1:
 		_float(p.x + p.w / 2, p.y - 70, "¡PERFECTO! ★★★", Color(1, 0.95, 0.5), 22)
 	Aether.sfx("win", 0.9)
@@ -2418,12 +2439,20 @@ func _mode_clear() -> void:
 		"torre":
 			tower.hp = p.hp
 			score += 500 + int(tower.floor) * 100
+			if int(tower.floor) >= 10:
+				Aether.achievements.unlock("cr_torre10")
+			if int(tower.floor) >= 25:
+				Aether.achievements.unlock("cr_torre25")
 			if int(tower.floor) > int(Aether.save.get_value("cr_torre", 0)):
 				Aether.save.set_value("cr_torre", int(tower.floor))
 			_tower_floor()
 		"rush":
 			rush.i += 1
 			rush.hp = p.hp
+			if int(rush.i) >= 6:
+				Aether.achievements.unlock("cr_rush6")
+			if int(rush.i) >= 18:
+				Aether.achievements.unlock("cr_rush18")
 			if int(rush.i) > int(Aether.save.get_value("cr_rush", 0)):
 				Aether.save.set_value("cr_rush", int(rush.i))
 			_rush_next()
@@ -2434,6 +2463,7 @@ func _mode_clear() -> void:
 			var key := "cr_diario_%d" % int(daily.d)
 			var prev: float = float(Aether.save.get_value(key, 0.0))
 			var first: bool = prev == 0.0
+			Aether.achievements.unlock("cr_diario")
 			if first or t < prev:
 				Aether.save.set_value(key, t)
 			_banner("RETO DIARIO · %.1f s%s" % [t, " · ¡NUEVO RÉCORD!" if (first or t < prev) else ""])
@@ -2495,6 +2525,7 @@ func _leave_rift(won: bool) -> void:
 			sec.append(wi)
 			Aether.save.set_value("cr_grietas", sec)
 		score += got * 100
+		Aether.achievements.unlock("cr_grieta1")
 		_banner("¡GRIETA SUPERADA! · %d fragmentos" % got)
 		Aether.sfx("relic", 0.7)
 	else:
