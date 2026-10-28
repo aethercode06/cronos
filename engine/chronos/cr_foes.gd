@@ -75,7 +75,7 @@ static func update(g, e: Dictionary, dt: float, D: Dictionary, pcx: float, pcy: 
 					e.ty = pcy
 				if e.tt <= 0.0:
 					var o := Vector2(cx + e.dir * 10, e.y + 8)
-					var v := (Vector2(e.tx, e.ty) - o).normalized() * 720.0 * D.spd
+					var v: Vector2 = (Vector2(e.tx, e.ty) - o).normalized() * 720.0 * D.spd
 					g.projs.append({"x": o.x, "y": o.y, "vx": v.x, "vy": v.y, "hw": 6.0, "hh": 4.0, "type": "bolt", "dmg": 14.0, "life": 2.0})
 					Aether.sfx("shoot", 0.45, 0.8)
 					e.st = "idle"
