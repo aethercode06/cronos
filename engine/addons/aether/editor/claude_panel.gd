@@ -38,6 +38,8 @@ const PIECES := {
 	"Personaje": ["res://addons/aether/topdown/aether_npc.gd", "Node2D"],
 	"MapaDeLetras": ["res://addons/aether/topdown/aether_map.gd", "Node2D"],
 	"Linterna": ["res://addons/aether/topdown/aether_flashlight.gd", "PointLight2D"],
+	"Sangre": ["res://addons/aether/gore/aether_bleed.gd", "Node"],
+	"PersonajeAnimado3D": ["res://addons/aether/three_d/aether_animated_3d.gd", "Node3D"],
 	"Coche3D": ["res://addons/aether/three_d/aether_car_3d.gd", "VehicleBody3D"],
 	"JuegoDisparos": ["res://addons/aether/genres/aether_shooter.gd", "Node2D"],
 	"JuegoPuzle": ["res://addons/aether/genres/aether_match3.gd", "Node2D"],

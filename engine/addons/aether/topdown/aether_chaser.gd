@@ -14,6 +14,8 @@ extends CharacterBody2D
 @export var texture: Texture2D
 @export var art_scale := 0.5
 @export var color := Color(0.9, 0.3, 0.35)
+## Sangra al recibir golpes (kit de gore).
+@export var gore := false
 
 var _dir := Vector2.ZERO
 var _wander := 0.0
@@ -90,6 +92,9 @@ func take_hit(dmg: float, _src: Node = null, _heavy := false) -> void:
 		return
 	hp -= dmg
 	_fl = 0.1
+	if gore:
+		var from: Vector2 = (_src as Node2D).global_position if _src is Node2D else global_position
+		AetherGore.spray_2d(get_parent(), global_position, global_position - from, 0.6)
 	Aether.sfx("hit", 0.6)
 	var pl = Aether.player
 	if pl:

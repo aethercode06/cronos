@@ -42,6 +42,7 @@ var vol_music := 1.0
 var vars := {}                      # variables de la lógica sin código (monedas, llaves…)
 var look_delta := Vector2.ZERO       # giro de cámara pedido (táctil o ratón)
 var vol_sfx := 1.0
+var gore := 2                      # sangre: 0 sin, 1 poca, 2 toda (AetherGore)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -74,6 +75,7 @@ func _ready() -> void:
 	save.load_slot(0)
 	vol_music = float(save.get_value("vol_music", 1.0))
 	vol_sfx = float(save.get_value("vol_sfx", 1.0))
+	gore = int(save.get_value("gore", 2))
 	lang.setup()
 	inventory.load_saved()
 	store.setup()

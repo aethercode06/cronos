@@ -79,5 +79,9 @@
 "Muro": "Wall",
 "Poción": "Potion",
 "Tormenta": "Storm",
-"DASH": "DASH"
+"DASH": "DASH",
+"Sangre": "Blood",
+"Sin sangre": "No blood",
+"Poca": "Low",
+"Toda": "Full"
 }

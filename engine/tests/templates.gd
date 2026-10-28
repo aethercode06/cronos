@@ -85,6 +85,16 @@ func _genre_test() -> void:
 		await get_tree().physics_frame
 	Input.action_release("up")
 	print("AETHER: coche km/h = ", int(car.speed_kmh()))
+	# kit de gore en 3D y 2D
+	AetherGore.spray_3d(car_scene, car.global_position + Vector3(0, 1, 0), Vector3.FORWARD)
+	AetherGore.pool_3d(car_scene, Vector3(0, 0.2, -95))
+	var n2 := Node2D.new()
+	add_child(n2)
+	AetherGore.spray_2d(n2, Vector2(300, 300), Vector2.RIGHT)
+	await get_tree().process_frame
+	print("AETHER: gore texturas = ", AetherGore.textures().size(), " manchas 2D = ", n2.get_child_count())
+	ok = ok and AetherGore.textures().size() == 4 and n2.get_child_count() > 0
+	n2.queue_free()
 	ok = ok and car.speed_kmh() > 5.0
 	car_scene.queue_free()
 	await get_tree().process_frame

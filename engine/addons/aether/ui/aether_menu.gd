@@ -13,6 +13,8 @@ extends CanvasLayer
 @export_file("*.tscn") var play_scene := ""
 ## Imagen de fondo del título (opcional).
 @export var background: Texture2D
+## Muestra la opción «Sangre» (sin / poca / toda) en Opciones.
+@export var gore_option := false
 
 var _panel: Control
 var _opts: Control
@@ -163,4 +165,18 @@ func _show_options() -> void:
 			ob.select(i)
 	ob.item_selected.connect(func(i): Aether.lang.set_lang(langs[i]))
 	v.add_child(ob)
+	if gore_option:
+		var gl := Label.new()
+		gl.text = Aether.t("Sangre")
+		gl.add_theme_font_size_override("font_size", 28)
+		v.add_child(gl)
+		var go := OptionButton.new()
+		go.custom_minimum_size = Vector2(440, 60)
+		for t in ["Sin sangre", "Poca", "Toda"]:
+			go.add_item(Aether.t(t))
+		go.select(Aether.gore)
+		go.item_selected.connect(func(i):
+			Aether.gore = i
+			Aether.save.set_value("gore", i))
+		v.add_child(go)
 	_btn(v, "VOLVER", func(): _opts.visible = false)

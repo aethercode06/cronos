@@ -97,6 +97,7 @@ func _ready() -> void:
 						add_child.call_deferred(tp)
 						if horror:
 							tp.add_child(AetherFlashlight.new())
+							tp.add_child(AetherBleed.new())
 					pl.position = p
 				"T":
 					var cs := CollisionShape2D.new()
@@ -109,6 +110,7 @@ func _ready() -> void:
 					var m := AetherChaser.new()
 					m.mode = "acechador" if row[x] == "S" else "perseguir"
 					m.texture = monster_texture
+					m.gore = horror
 					m.position = p
 					add_child(m)
 				"N":
