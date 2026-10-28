@@ -20,6 +20,7 @@ var _boss_ghost_k := 1.0
 
 func _ready() -> void:
 	layer = 50
+	add_to_group("aether_hud")
 	var root := Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE

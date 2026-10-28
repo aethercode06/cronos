@@ -44,7 +44,7 @@ func _rebuild() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_energy = 0.8
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = glow > 0
+	env.glow_enabled = glow > 0 and (Engine.is_editor_hint() or Aether.glow_ok())
 	env.glow_intensity = glow
 	env.fog_enabled = true
 	env.fog_density = p[5]

@@ -134,6 +134,7 @@ func take_hit(dmg: float, from: Node3D, heavy := false) -> void:
 	_burst(Color(2.5, 2.0, 1.0), 14)
 	if hp <= 0:
 		dead = true
+		Aether.enemy_killed.emit()
 		collision_layer = 0
 		Aether.sfx("kill", 0.7, 1.2)
 		_burst(Color(2.0, 1.4, 2.6), 40)

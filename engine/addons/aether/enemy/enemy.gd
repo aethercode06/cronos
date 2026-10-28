@@ -182,6 +182,7 @@ func take_hit(dmg: float, from: Node2D, heavy := false) -> void:
 
 func _die(dir: float) -> void:
 	dead = true
+	Aether.enemy_killed.emit()
 	collision_layer = 0
 	Aether.sfx("kill", 0.7, 1.2)
 	var c := global_position + Vector2(0, -body_size.y * 0.5)

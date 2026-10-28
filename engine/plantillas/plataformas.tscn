@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://addons/aether/world/aether_ground.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/chronos/tx0.webp" id="2"]
@@ -10,6 +10,50 @@
 [ext_resource type="Script" path="res://addons/aether/ui/touch_controls.gd" id="8"]
 [ext_resource type="Texture2D" path="res://assets/chronos/pbg0.webp" id="9"]
 [ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="10"]
+[ext_resource type="Script" path="res://addons/aether/logic/aether_event.gd" id="11"]
+[ext_resource type="Script" path="res://addons/aether/logic/aether_step.gd" id="12"]
+[ext_resource type="Script" path="res://addons/aether/logic/aether_logic.gd" id="13"]
+[ext_resource type="Script" path="res://addons/aether/logic/aether_zone.gd" id="14"]
+[ext_resource type="Script" path="res://addons/aether/logic/aether_pickup.gd" id="15"]
+[ext_resource type="Script" path="res://addons/aether/logic/aether_counter.gd" id="16"]
+
+[sub_resource type="Resource" id="a_hola"]
+script = ExtResource("12")
+kind = "aviso"
+params = {"texto": "¡Recoge las monedas y llega a la meta!"}
+
+[sub_resource type="Resource" id="ev_inicio"]
+script = ExtResource("11")
+trigger = "inicio"
+actions = Array[ExtResource("12")]([SubResource("a_hola")])
+
+[sub_resource type="Resource" id="a_cinco"]
+script = ExtResource("12")
+kind = "aviso"
+params = {"texto": "¡5 monedas!"}
+
+[sub_resource type="Resource" id="a_son"]
+script = ExtResource("12")
+kind = "sonido"
+params = {"sonido": "win"}
+
+[sub_resource type="Resource" id="ev_cinco"]
+script = ExtResource("11")
+trigger = "variable"
+trigger_params = {"var": "monedas", "valor": 5.0}
+actions = Array[ExtResource("12")]([SubResource("a_cinco"), SubResource("a_son")])
+once = true
+
+[sub_resource type="Resource" id="a_ganar"]
+script = ExtResource("12")
+kind = "ganar"
+params = {"escena": ""}
+
+[sub_resource type="Resource" id="ev_meta"]
+script = ExtResource("11")
+trigger = "entra"
+actions = Array[ExtResource("12")]([SubResource("a_ganar")])
+once = true
 
 [node name="FaseDePlataformas" type="Node2D"]
 
@@ -46,6 +90,43 @@ size = Vector2(220, 46)
 fill_texture = ExtResource("2")
 edge_texture = ExtResource("3")
 one_way = true
+
+[node name="Logica" type="Node" parent="."]
+script = ExtResource("13")
+events = Array[ExtResource("11")]([SubResource("ev_inicio"), SubResource("ev_cinco")])
+
+[node name="Meta" type="Area2D" parent="."]
+position = Vector2(2450, 560)
+script = ExtResource("14")
+size = Vector2(120, 260)
+events = Array[ExtResource("11")]([SubResource("ev_meta")])
+
+[node name="Moneda1" type="Area2D" parent="."]
+position = Vector2(400, 540)
+script = ExtResource("15")
+
+[node name="Moneda2" type="Area2D" parent="."]
+position = Vector2(520, 540)
+script = ExtResource("15")
+
+[node name="Moneda3" type="Area2D" parent="."]
+position = Vector2(1100, 380)
+script = ExtResource("15")
+
+[node name="Moneda4" type="Area2D" parent="."]
+position = Vector2(1600, 500)
+script = ExtResource("15")
+
+[node name="Moneda5" type="Area2D" parent="."]
+position = Vector2(1720, 500)
+script = ExtResource("15")
+
+[node name="Moneda6" type="Area2D" parent="."]
+position = Vector2(2100, 500)
+script = ExtResource("15")
+
+[node name="Contador" type="CanvasLayer" parent="."]
+script = ExtResource("16")
 
 [node name="Jugador" type="CharacterBody2D" parent="."]
 position = Vector2(100, 600)

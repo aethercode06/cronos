@@ -5,11 +5,15 @@ extends EditorPlugin
 
 var dock: Control
 var claude: Control
+var events_dock: Control
 
 func _enter_tree() -> void:
 	dock = _build_dock()
 	dock.name = "Aether"
 	add_control_to_dock(DOCK_SLOT_RIGHT_UL, dock)
+	events_dock = preload("res://addons/aether/editor/events_panel.gd").new()
+	events_dock.name = "Eventos"
+	add_control_to_dock(DOCK_SLOT_LEFT_BR, events_dock)
 	claude = preload("res://addons/aether/editor/claude_panel.gd").new()
 	claude.name = "Claude (opcional)"
 	add_control_to_dock(DOCK_SLOT_RIGHT_BL, claude)
@@ -21,6 +25,9 @@ func _exit_tree() -> void:
 	if claude:
 		remove_control_from_docks(claude)
 		claude.queue_free()
+	if events_dock:
+		remove_control_from_docks(events_dock)
+		events_dock.queue_free()
 
 func _build_dock() -> Control:
 	var sc := ScrollContainer.new()
@@ -30,6 +37,15 @@ func _build_dock() -> Control:
 	sc.add_child(v)
 	_title(v, "AETHER ENGINE")
 	_text(v, "Crea juegos sin programar: empieza con una plantilla y añade piezas con un toque.")
+	var mode := Button.new()
+	mode.toggle_mode = true
+	mode.text = "Modo fácil: ACTIVADO" if _is_easy() else "Modo fácil: desactivado"
+	mode.button_pressed = _is_easy()
+	mode.custom_minimum_size.y = 40
+	mode.toggled.connect(func(on: bool) -> void:
+		_set_easy(on)
+		mode.text = "Modo fácil: ACTIVADO" if on else "Modo fácil: desactivado")
+	v.add_child(mode)
 	_title(v, "Crear")
 	_button(v, "Nueva fase de plataformas", func(): _from_template("res://plantillas/plataformas.tscn", "fase"))
 	_button(v, "Nueva arena de jefe", func(): _from_template("res://plantillas/arena_jefe.tscn", "arena"))
@@ -46,6 +62,17 @@ func _build_dock() -> Control:
 	_button(v, "Interfaz (vida y jefe)", func(): _add("res://addons/aether/ui/hud.gd", "Interfaz", "CanvasLayer"))
 	_button(v, "Controles táctiles", func(): _add("res://addons/aether/ui/touch_controls.gd", "ControlesTactiles", "CanvasLayer"))
 	_button(v, "Menú de pausa", func(): _add("res://addons/aether/ui/aether_menu.gd", "MenuPausa", "CanvasLayer"))
+	_title(v, "Lógica sin código")
+	_button(v, "Lógica de la escena (eventos)", func(): _add("res://addons/aether/logic/aether_logic.gd", "Logica", "Node"))
+	_button(v, "Zona (meta, trampa, puerta…)", func(): _add("res://addons/aether/logic/aether_zone.gd", "Zona", "Area2D"))
+	_button(v, "Objeto recogible (moneda, vida…)", func(): _add("res://addons/aether/logic/aether_pickup.gd", "Moneda", "Area2D"))
+	_button(v, "Contador en pantalla", func(): _add("res://addons/aether/logic/aether_counter.gd", "Contador", "CanvasLayer"))
+	_title(v, "Sistemas listos")
+	_button(v, "Diálogo con retratos", func(): _add("res://addons/aether/systems/aether_dialog.gd", "Dialogo", "CanvasLayer"))
+	_button(v, "Tienda", func(): _add("res://addons/aether/systems/aether_shop.gd", "Tienda", "CanvasLayer"))
+	_button(v, "Misiones", func(): _add("res://addons/aether/systems/aether_quests.gd", "Misiones", "CanvasLayer"))
+	_button(v, "Regalo diario", func(): _add("res://addons/aether/systems/aether_daily.gd", "RegaloDiario", "CanvasLayer"))
+	_button(v, "Efecto especial", func(): _add("res://addons/aether/fx/aether_effect.gd", "Efecto", "Node2D"))
 	_title(v, "Añadir en 3D")
 	_button(v, "Jugador 3D", func(): _add("res://addons/aether/three_d/aether_player_3d.gd", "Jugador3D", "CharacterBody3D"))
 	_button(v, "Enemigo 3D", func(): _add("res://addons/aether/three_d/aether_enemy_3d.gd", "Enemigo3D", "CharacterBody3D"))
@@ -109,3 +136,28 @@ func _add(script_path: String, node_name: String, base_type: String) -> void:
 			n.position = vp.get_final_transform().affine_inverse() * (vp.get_visible_rect().size * 0.5)
 	EditorInterface.get_selection().clear()
 	EditorInterface.get_selection().add_node(n)
+
+# ---------------- modo fácil / experto ----------------
+const EASY := "Aether facil"
+const EASY_HIDE := ["Joint2D", "PinJoint2D", "GrooveJoint2D", "DampedSpringJoint2D", "Joint3D", "SoftBody3D", "VehicleBody3D",
+	"NavigationLink2D", "NavigationLink3D", "VoxelGI", "LightmapGI", "ReflectionProbe", "OccluderInstance3D", "VisibleOnScreenEnabler2D",
+	"BackBufferCopy", "RemoteTransform2D", "RemoteTransform3D", "SkeletonIK3D", "XROrigin3D", "XRCamera3D", "XRController3D",
+	"OpenXRHand", "MultiplayerSpawner", "MultiplayerSynchronizer", "ShaderGlobalsOverride", "Marker3D"]
+
+func _is_easy() -> bool:
+	return EditorInterface.get_current_feature_profile() == EASY
+
+func _set_easy(on: bool) -> void:
+	if not on:
+		EditorInterface.set_current_feature_profile("")
+		return
+	var prof := EditorFeatureProfile.new()
+	for f in [EditorFeatureProfile.FEATURE_ASSET_LIB, EditorFeatureProfile.FEATURE_HISTORY_DOCK, EditorFeatureProfile.FEATURE_IMPORT_DOCK]:
+		prof.set_disable_feature(f, true)
+	for c in EASY_HIDE:
+		if ClassDB.class_exists(c):
+			prof.set_disable_class(c, true)
+	var dir := EditorInterface.get_editor_paths().get_config_dir().path_join("feature_profiles")
+	DirAccess.make_dir_recursive_absolute(dir)
+	prof.save_to_file(dir.path_join(EASY + ".profile"))
+	EditorInterface.set_current_feature_profile(EASY)

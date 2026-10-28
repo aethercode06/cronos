@@ -6,6 +6,9 @@ extends Node
 
 signal player_died
 signal boss_defeated
+signal enemy_killed
+signal picked(var_name: String)
+signal var_changed(var_name: String, value: float)
 
 const SFX_DIR := "res://assets/chronos/audio/"
 
@@ -32,7 +35,11 @@ var save := AetherSave.new()
 var lang := AetherLang.new()
 var achievements := AetherAchievements.new()
 var store := AetherStore.new()
+var inventory := AetherInventory.new()
+## Calidad gráfica automática: 0 baja, 1 media, 2 alta (según el teléfono).
+var quality := 2
 var vol_music := 1.0
+var vars := {}                      # variables de la lógica sin código (monedas, llaves…)
 var look_delta := Vector2.ZERO       # giro de cámara pedido (táctil o ratón)
 var vol_sfx := 1.0
 
@@ -63,10 +70,12 @@ func _ready() -> void:
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_toast_box.alignment = BoxContainer.ALIGNMENT_END
 	layer.add_child(_toast_box)
+	_auto_quality()
 	save.load_slot(0)
 	vol_music = float(save.get_value("vol_music", 1.0))
 	vol_sfx = float(save.get_value("vol_sfx", 1.0))
 	lang.setup()
+	inventory.load_saved()
 	store.setup()
 
 # ---------------- controles (teclado, mando y táctil) ----------------
@@ -205,3 +214,35 @@ func toast(text: String, sec := 2.4) -> void:
 	tw.tween_interval(sec)
 	tw.tween_property(l, "modulate:a", 0.0, 0.4)
 	tw.tween_callback(l.queue_free)
+
+# ---------------- variables de la lógica sin código ----------------
+func get_var(n: String, default := 0.0) -> float:
+	return float(vars.get(n, default))
+
+func set_var(n: String, v: float) -> void:
+	vars[n] = v
+	var_changed.emit(n, v)
+
+func add_var(n: String, amount: float) -> float:
+	var v := get_var(n) + amount
+	set_var(n, v)
+	return v
+
+# ---------------- calidad automática ----------------
+func _auto_quality() -> void:
+	var cores := OS.get_processor_count()
+	var mem: int = int(OS.get_memory_info().get("physical", 0))
+	var gb := mem / 1073741824.0
+	if OS.has_feature("mobile"):
+		quality = 0 if (cores <= 4 or (gb > 0 and gb < 3.5)) else (1 if gb < 6.5 else 2)
+		Engine.max_fps = 60
+	else:
+		quality = 2
+	if quality == 0:
+		get_viewport().scaling_3d_scale = 0.7
+	elif quality == 1:
+		get_viewport().scaling_3d_scale = 0.85
+
+## Brillo (glow) recomendado según la calidad.
+func glow_ok() -> bool:
+	return quality >= 1
