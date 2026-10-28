@@ -20,27 +20,35 @@ static func spawn(t: int, A: Dictionary) -> Dictionary:
 		10: return {"w": 70.0, "h": 120.0, "x": cx - 35, "y": f - 330, "st": "float", "cd": 1.5, "n": 0, "invCD": 9.0}
 	return {"w": 170.0, "h": 150.0, "x": cx - 85, "y": f - 345, "st": "float", "cd": 2.0, "n": 0, "summoned": false}
 
-## Multiplicador de daño según el momento del combate (0 = inmune, como en el juego web).
+## Multiplicador de daño según el momento débil de cada guardián (bossfix.js):
+## 0 = inmune o escudo, -1 = bloqueo, -2 = espectral (solo en la dimensión violeta).
 static func hit_rule(g, b: Dictionary, from_above: bool) -> float:
 	var t: int = b.type
+	var st: String = str(b.st)
 	var behind: bool = (g.p.x + g.p.w / 2 - (b.x + b.w / 2)) * b.face < 0
-	if t == 2 and b.vulnT <= 0.0:
+	var skin = b.get("skin")
+	if t == 2 and b.get("vulnT", 0.0) <= 0.0:
 		return 0.0
-	if t == 4 and b.st == "guard" and not behind and not from_above:
+	if t == 4 and st == "guard" and not behind and not from_above:
 		return -1.0
-	if t == 6 and b.st == "rest":
-		return 2.0
-	if t == 3 and b.st == "stun":
-		return 2.0
-	if t == 8:
-		return 2.0 if b.st == "stuck" else (1.0 if b.st == "spit" else 0.0)
-	if t == 9:
-		return 2.0 if b.vulnT > 0.0 else 0.0
-	if t == 10:
-		return 2.0 if b.st == "stun" else 1.0
-	if t >= 11:
-		return 2.0 if b.st == "tired" else 1.0
-	return 1.0
+	if skin == "boss_stag" and g.dim != 1:
+		return -2.0
+	match t:
+		0: return 1.7 if (st == "idle" and b.t < 0.8) else (0.3 if st == "air" else 1.0)
+		1: return 1.8 if st == "down" else 0.3
+		2: return 1.3 if b.vulnT > 0.0 else 0.8
+		3: return 1.8 if st == "stun" else 0.4
+		4: return 1.4 if behind else (0.4 if st == "windup" else 0.7)
+		5: return 1.8 if st == "stagger" else (0.3 if st == "charge" else 0.6)
+		6: return 1.8 if st == "rest" else 0.3
+		7: return 1.7 if st == "recover" else 0.6
+		8:
+			if skin == "boss_king":
+				return (2.0 if behind else 1.0) if st == "stuck" else (0.5 if st == "spit" else 0.0)
+			return 1.8 if st == "stuck" else (0.6 if st == "spit" else 0.0)
+		9: return 1.7 if b.vulnT > 0.0 else 0.0
+		10: return 1.8 if st == "stun" else 0.3
+	return 1.8 if st == "tired" else 0.3
 
 static func _warn(g, x: float, t: float, kind := "") -> void:
 	g.warns.append({"x": x, "t": t, "kind": kind})

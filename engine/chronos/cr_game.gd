@@ -1568,6 +1568,7 @@ func _spawn_boss() -> void:
 	var D: Dictionary = DIFFS[diff_idx]
 	var bt := _boss_type()
 	boss = CrBosses.spawn(bt, A)
+	boss.skin = WD.get("boss", {}).get("skin")
 	boss.merge({"type": bt, "vx": 0.0, "vy": 0.0, "t": 0.0, "face": -1, "anim": 0.0, "hit": 0.0, "dying": false, "done": false, "dieT": 0.0}, false)
 	boss.max = round(BOSS_HP[min(bt, BOSS_HP.size() - 1)] * D.boss)
 	boss.hp = boss.max
@@ -1580,21 +1581,43 @@ func _spawn_boss() -> void:
 
 func _hit_boss(hb: Dictionary, from_above := false) -> void:
 	p.hitSet.append("boss")
-	var rule: float = CrBosses.hit_rule(self, boss, from_above)
+	var b := boss
+	var rule: float = CrBosses.hit_rule(self, b, from_above)
+	if rule == -2.0:
+		Aether.sfx("ghost", 0.6)
+		_float(b.x + b.w / 2, b.y - 10, "ESPECTRAL (usa SHIFT)", Color(0.75, 0.91, 1))
+		return
 	if rule == 0.0:
 		Aether.sfx("clang", 0.7)
-		_float(boss.x + boss.w / 2, boss.y - 10, "ESCUDO" if boss.type in [2, 9] else "INMUNE", Color(0.2, 0.89, 1))
+		_float(b.x + b.w / 2, b.y - 10, "ESCUDO" if b.type in [2, 9] else "INMUNE", Color(0.2, 0.89, 1))
 		return
 	if rule < 0.0:
 		Aether.sfx("clang", 0.8)
 		p.vx = -p.face * 260.0
-		_float(boss.x + boss.w / 2, boss.y - 10, "¡BLOQUEO!", Color.WHITE)
+		_float(b.x + b.w / 2, b.y - 10, "¡BLOQUEO!", Color.WHITE)
 		return
+	if from_above:
+		if float(b.get("pogoCD", 0.0)) > 0.0:
+			return
+		b.pogoCD = 0.75
+		b.pogoN = (int(b.get("pogoN", 0)) if float(b.get("pogoT", 0.0)) > 0.0 else 0) + 1
+		b.pogoT = 2.6
+		if b.pogoN >= 3 and rule < 1.6:
+			_boss_shake()
+			return
+		rule *= 0.6 if rule >= 1.6 else 0.4
 	var dmg: float = (1.6 if p.atkN == 2 else 1.0) * rule
+	if rule >= 1.6:
+		_float(b.x + b.w / 2, b.y - 14, "¡CRÍTICO!", Color(1, 0.83, 0.3), 18)
+		hit_stop = 0.1
+		shake = max(shake, 9.0)
+	elif rule <= 0.4:
+		_float(b.x + b.w / 2, b.y - 10, "DURO", Color(0.66, 0.7, 0.78), 13)
+		Aether.sfx("clang", 0.35, 1.3)
 	boss.hp -= dmg
 	boss.hit = 0.12
 	score += 25
-	hit_stop = 0.06
+	hit_stop = max(hit_stop, 0.06)
 	_slash_fx(hb)
 	Aether.sfx("hit")
 	shake = max(shake, 5.0)
@@ -1611,6 +1634,22 @@ func _hit_boss(hb: Dictionary, from_above := false) -> void:
 		Aether.flash(Color.WHITE, 0.4)
 		Aether.slowmo(0.3, 1.0)
 
+func _boss_shake() -> void:
+	var b := boss
+	var bcx: float = b.x + b.w / 2
+	var dir: float = signf(p.x + p.w / 2 - bcx)
+	if dir == 0.0:
+		dir = 1.0
+	b.pogoN = 0
+	b.pogoCD = 1.2
+	shake = max(shake, 12.0)
+	Aether.sfx("roar", 0.7, 0.8)
+	_hurt(12, bcx)
+	p.vy = -640.0
+	p.vx = dir * 420.0
+	p.hook = null
+	_float(bcx, b.y - 18, "¡TE SACUDE!", Color(1, 0.54, 0.48), 18)
+
 func _update_boss(dt: float) -> void:
 	if boss.is_empty() or boss.done:
 		return
@@ -1619,6 +1658,10 @@ func _update_boss(dt: float) -> void:
 	var b := boss
 	b.hit = max(0.0, b.hit - dt)
 	b.anim += dt
+	if float(b.get("pogoCD", 0.0)) > 0.0:
+		b.pogoCD -= dt
+	if float(b.get("pogoT", 0.0)) > 0.0:
+		b.pogoT -= dt
 	if b.dying:
 		b.dieT -= dt
 		if randf() < 0.25:

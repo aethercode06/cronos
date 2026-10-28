@@ -54,6 +54,7 @@ func _process(_d: float) -> void:
 			if int(game.boss.type) == 8:
 				game.boss.st = "stuck"
 				game.boss.t = 0.0
+			game.dim = 1
 			if f % 3 == 0:
 				game._hit_boss({"x": game.boss.x, "y": game.boss.y, "w": 10.0, "h": 10.0})
 		if game.state == "clear" or f > 4000:
