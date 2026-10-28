@@ -43,7 +43,7 @@ jobs:
           SCONS_CACHE: ${{ runner.temp }}/scons_cache
         run: |
           python misc/scripts/install_swappy_android.py > /dev/null || echo "sin swappy"
-          scons platform=android target=editor arch=arm64 production=yes lto=none -j$(nproc) > $GITHUB_WORKSPACE/scons.log 2>&1 || { tail -80 $GITHUB_WORKSPACE/scons.log; exit 1; }
+          scons platform=android target=editor arch=arm64 production=yes lto=none store_release=yes -j$(nproc) > $GITHUB_WORKSPACE/scons.log 2>&1 || { tail -80 $GITHUB_WORKSPACE/scons.log; exit 1; }
           tail -5 $GITHUB_WORKSPACE/scons.log
       - name: Empaquetar la app del editor
         working-directory: ${{ runner.temp }}/godot/platform/android/java
@@ -56,7 +56,7 @@ jobs:
           find $RUNNER_TEMP/godot/bin -name "*.apk" | tee $GITHUB_WORKSPACE/apks.txt
       - name: Firmar y preparar
         run: |
-          APK=$(grep -i "editor" apks.txt | grep -iv "horizon\|pico\|meta" | head -1)
+          APK=$(grep -i "release" apks.txt | grep -iv "horizon\|pico\|meta" | head -1)
           [ -n "$APK" ] || APK=$(head -1 apks.txt)
           BT=$(ls -d $ANDROID_SDK_ROOT/build-tools/* | sort -V | tail -1)
           mkdir -p build
