@@ -174,7 +174,7 @@ func start_stage(a: int, w := -1) -> void:
 		for k in ["kx", "vx", "vy", "hit", "alert", "cd", "t", "fire"]:
 			if not e.has(k) or e[k] == null:
 				e[k] = 0.0
-		e["air"] = e.get("air", false) == true
+		e["air"] = bool(e.get("air", false)) if typeof(e.get("air", false)) in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT] else false
 	for s in level.plats:
 		for k in ["dx", "dy", "t", "sq", "oy", "vy"]:
 			if not s.has(k):
@@ -1743,7 +1743,8 @@ func _draw_boss() -> void:
 	draw_circle(Vector2(base.x, b.y + b.h + 2 if b.st != "air" else level.arena.floor + 2), b.w * 0.45, Color(0, 0, 0, 0.25))
 	if t:
 		var r := Rect2(base.x - w / 2, base.y - h, w, h)
-		var sfl: bool = WD.get("boss", {}).get("sfl", false) == true
+		var sv = WD.get("boss", {}).get("sfl", false)
+		var sfl: bool = bool(sv) if typeof(sv) in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT] else false
 		if (b.face > 0) != sfl:
 			r = Rect2(base.x + w / 2, base.y - h, -w, h)
 		var dn: float = float(bm.get("d", 1.0))
@@ -1793,7 +1794,8 @@ func _bot() -> void:
 		Input.action_press("attack")
 	else:
 		Input.action_release("attack")
-	if gap and p.dashCD <= 0.0 and randf() < 0.05:
+	var gap_air: bool = not p.onGround and p.vy > -80 and _ground_below(p.x + p.w / 2 + (120.0 if want_right else -120.0), p.y + p.h, 300) == null
+	if (gap_air or (gap and randf() < 0.05)) and p.dashCD <= 0.0 and p.jumps >= 2:
 		Input.action_press("dash")
 	else:
 		Input.action_release("dash")
