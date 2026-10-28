@@ -40,6 +40,7 @@ common/max_physics_steps_per_frame=8
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
 textures/canvas_textures/default_texture_filter=1
+textures/vram_compression/import_etc2_astc=true
 viewport/hdr_2d=true
 environment/defaults/default_clear_color=Color(0.03, 0.05, 0.04, 1)
 anti_aliasing/quality/msaa_2d=0

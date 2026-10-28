@@ -81,7 +81,7 @@ func _build_environment() -> void:
 
 func _build_background() -> void:
 	var tex := Aether.tex("pbg0")
-	var k := 980.0 / tex.get_height()
+	var k := 1250.0 / tex.get_height()
 	var par := Parallax2D.new()
 	par.scroll_scale = Vector2(0.25, 0.1)
 	par.repeat_size = Vector2(tex.get_width() * k, 0)
@@ -91,9 +91,15 @@ func _build_background() -> void:
 	s.texture = tex
 	s.centered = false
 	s.scale = Vector2.ONE * k
-	s.position = Vector2(-600, -420)
+	s.position = Vector2(-600, -560)
 	par.add_child(s)
 	add_child(par)
+	# niebla del abismo bajo el suelo (los vacíos ya no se ven negros)
+	var abyss := Polygon2D.new()
+	abyss.polygon = PackedVector2Array([Vector2(-2000, 520), Vector2(9000, 520), Vector2(9000, 1800), Vector2(-2000, 1800)])
+	abyss.vertex_colors = PackedColorArray([Color(0.55, 0.7, 0.6, 0.0), Color(0.55, 0.7, 0.6, 0.0), Color(0.05, 0.12, 0.1, 1.0), Color(0.05, 0.12, 0.1, 1.0)])
+	abyss.z_index = -10
+	add_child(abyss)
 	# rayos de luz suaves
 	for i in 6:
 		var r := Sprite2D.new()

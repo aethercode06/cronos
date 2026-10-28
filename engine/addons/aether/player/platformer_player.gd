@@ -60,14 +60,14 @@ func _ready() -> void:
 	floor_max_angle = deg_to_rad(50)
 	var shape := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
-	rect.size = Vector2(44, 104)
+	rect.size = Vector2(50, 124)
 	shape.shape = rect
-	shape.position = Vector2(0, -52)
+	shape.position = Vector2(0, -62)
 	add_child(shape)
 	visual = Node2D.new()
 	add_child(visual)
 	sprite = SheetSprite.new()
-	sprite.unit_scale = 0.5
+	sprite.unit_scale = 0.6
 	visual.add_child(sprite)
 	sprite.play("KH_idle", 14.0)
 	light = PointLight2D.new()
@@ -75,7 +75,7 @@ func _ready() -> void:
 	light.texture_scale = 9.0
 	light.energy = 0.55
 	light.color = Color(1.0, 0.85, 0.65)
-	light.position = Vector2(0, -60)
+	light.position = Vector2(0, -72)
 	add_child(light)
 	hp = max_hp
 	checkpoint = global_position
@@ -83,7 +83,7 @@ func _ready() -> void:
 	add_to_group("player")
 
 func hurt_rect() -> Rect2:
-	return Rect2(global_position + Vector2(-22, -104), Vector2(44, 104))
+	return Rect2(global_position + Vector2(-25, -124), Vector2(50, 124))
 
 # ---------------- física y controles ----------------
 func _physics_process(delta: float) -> void:
