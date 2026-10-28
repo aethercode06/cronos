@@ -1,0 +1,45 @@
+; Aether Engine — motor de Aether Code construido sobre Godot 4
+; Proyecto de prueba: Mundo 1 de Chronos & The Shift (Jungla Flotante + Gran Sapo Ancestral)
+
+config_version=5
+
+[application]
+
+config/name="Aether Engine · Chronos (prueba)"
+config/description="Primer juego de prueba de Aether Engine"
+run/main_scene="res://demo/main.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.027, 0.02, 0.06, 1)
+boot_splash/show_image=false
+
+[autoload]
+
+Aether="*res://addons/aether/core/aether.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[physics]
+
+common/physics_ticks_per_second=120
+common/max_physics_steps_per_frame=8
+2d/default_gravity=0.0
+
+[rendering]
+
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="mobile"
+textures/canvas_textures/default_texture_filter=1
+viewport/hdr_2d=true
+environment/defaults/default_clear_color=Color(0.03, 0.05, 0.04, 1)
+anti_aliasing/quality/msaa_2d=0

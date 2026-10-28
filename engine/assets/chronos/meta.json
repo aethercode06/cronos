@@ -1,0 +1,380 @@
+{
+ "KH_run": {
+  "fw": 166,
+  "fh": 232,
+  "n": 23,
+  "ax": 83,
+  "ay": 226,
+  "hd": 4,
+  "file": "KH_run.webp"
+ },
+ "KH_idle": {
+  "fw": 105,
+  "fh": 235,
+  "n": 32,
+  "ax": 57,
+  "ay": 229,
+  "hd": 4,
+  "file": "KH_idle.webp"
+ },
+ "KH_jump": {
+  "fw": 165,
+  "fh": 250,
+  "n": 8,
+  "ax": 91,
+  "ay": 244,
+  "hd": 4,
+  "file": "KH_jump.webp"
+ },
+ "KH_jumpU": {
+  "fw": 117,
+  "fh": 206,
+  "n": 1,
+  "ax": 50,
+  "ay": 200,
+  "hd": 4,
+  "file": "KH_jumpU.webp"
+ },
+ "KH_fallU": {
+  "fw": 120,
+  "fh": 265,
+  "n": 1,
+  "ax": 60,
+  "ay": 259,
+  "hd": 4,
+  "file": "KH_fallU.webp"
+ },
+ "KH_hurt": {
+  "fw": 119,
+  "fh": 214,
+  "n": 1,
+  "ax": 48,
+  "ay": 208,
+  "hd": 4,
+  "file": "KH_hurt.webp"
+ },
+ "KH_atk1": {
+  "fw": 293,
+  "fh": 200,
+  "n": 9,
+  "ax": 108,
+  "ay": 194,
+  "hd": 4,
+  "file": "KH_atk1.webp"
+ },
+ "KH_atk2": {
+  "fw": 337,
+  "fh": 240,
+  "n": 8,
+  "ax": 191,
+  "ay": 234,
+  "hd": 4,
+  "file": "KH_atk2.webp"
+ },
+ "KH_death": {
+  "fw": 200,
+  "fh": 159,
+  "n": 2,
+  "ax": 105,
+  "ay": 153,
+  "hd": 4,
+  "file": "KH_death.webp"
+ },
+ "KH_atk3": {
+  "fw": 275,
+  "fh": 264,
+  "n": 11,
+  "ax": 110,
+  "ay": 258,
+  "hd": 4,
+  "file": "KH_atk3.webp"
+ },
+ "KH_airdown": {
+  "fw": 146,
+  "fh": 357,
+  "n": 1,
+  "ax": 72,
+  "ay": 351,
+  "hd": 4,
+  "file": "KH_airdown.webp"
+ },
+ "KH_airslash": {
+  "fw": 252,
+  "fh": 301,
+  "n": 1,
+  "ax": 123,
+  "ay": 295,
+  "hd": 4,
+  "file": "KH_airslash.webp"
+ },
+ "KH_dash": {
+  "fw": 310,
+  "fh": 242,
+  "n": 1,
+  "ax": 196,
+  "ay": 236,
+  "hd": 4,
+  "file": "KH_dash.webp"
+ },
+ "KH_wall": {
+  "fw": 141,
+  "fh": 382,
+  "n": 1,
+  "ax": 60,
+  "ay": 376,
+  "hd": 4,
+  "file": "KH_wall.webp"
+ },
+ "KH_start": {
+  "fw": 212,
+  "fh": 222,
+  "n": 1,
+  "ax": 120,
+  "ay": 216,
+  "hd": 4,
+  "file": "KH_start.webp"
+ },
+ "KH_guard": {
+  "fw": 174,
+  "fh": 188,
+  "n": 1,
+  "ax": 81,
+  "ay": 182,
+  "hd": 4,
+  "file": "KH_guard.webp"
+ },
+ "KH_guardHit": {
+  "fw": 191,
+  "fh": 187,
+  "n": 1,
+  "ax": 45,
+  "ay": 181,
+  "hd": 4,
+  "file": "KH_guardHit.webp"
+ },
+ "KH_charge": {
+  "fw": 206,
+  "fh": 200,
+  "n": 1,
+  "ax": 115,
+  "ay": 194,
+  "hd": 4,
+  "file": "KH_charge.webp"
+ },
+ "KH_release": {
+  "fw": 273,
+  "fh": 210,
+  "n": 1,
+  "ax": 163,
+  "ay": 204,
+  "hd": 4,
+  "file": "KH_release.webp"
+ },
+ "KH_glide": {
+  "fw": 210,
+  "fh": 186,
+  "n": 1,
+  "ax": 66,
+  "ay": 93,
+  "hd": 4,
+  "file": "KH_glide.webp"
+ },
+ "KH_plunge": {
+  "fw": 126,
+  "fh": 309,
+  "n": 1,
+  "ax": 64,
+  "ay": 154,
+  "hd": 4,
+  "file": "KH_plunge.webp"
+ },
+ "KH_slam": {
+  "fw": 162,
+  "fh": 146,
+  "n": 1,
+  "ax": 72,
+  "ay": 140,
+  "hd": 4,
+  "file": "KH_slam.webp"
+ },
+ "hdb_frog": {
+  "fw": 136,
+  "fh": 120,
+  "n": 1,
+  "ax": 68,
+  "ay": 118,
+  "d": 3,
+  "file": "hdb_frog.webp"
+ },
+ "pbg0": {
+  "d": 2.25,
+  "file": "pbg0.webp"
+ },
+ "tx0": {
+  "fw": 112,
+  "fh": 112,
+  "n": 1,
+  "ax": 0,
+  "ay": 0,
+  "d": 3,
+  "file": "tx0.webp"
+ },
+ "ed0": {
+  "fw": 241,
+  "fh": 44,
+  "n": 1,
+  "gy": 9,
+  "ax": 0,
+  "ay": 0,
+  "d": 3,
+  "file": "ed0.webp"
+ },
+ "pr0_0": {
+  "fw": 109,
+  "fh": 150,
+  "n": 1,
+  "ax": 54,
+  "ay": 149,
+  "d": 3,
+  "file": "pr0_0.webp"
+ },
+ "pr0_1": {
+  "fw": 73,
+  "fh": 61,
+  "n": 1,
+  "ax": 36,
+  "ay": 60,
+  "d": 3,
+  "file": "pr0_1.webp"
+ },
+ "pr0_2": {
+  "fw": 41,
+  "fh": 106,
+  "n": 1,
+  "ax": 20,
+  "ay": 105,
+  "d": 3,
+  "file": "pr0_2.webp"
+ },
+ "pr0_3": {
+  "fw": 52,
+  "fh": 76,
+  "n": 1,
+  "ax": 26,
+  "ay": 75,
+  "d": 3,
+  "file": "pr0_3.webp"
+ },
+ "pr0_4": {
+  "fw": 53,
+  "fh": 54,
+  "n": 1,
+  "ax": 26,
+  "ay": 53,
+  "d": 3,
+  "file": "pr0_4.webp"
+ },
+ "pr0_5": {
+  "fw": 59,
+  "fh": 121,
+  "n": 1,
+  "ax": 29,
+  "ay": 120,
+  "d": 3,
+  "file": "pr0_5.webp"
+ },
+ "pr0_6": {
+  "fw": 47,
+  "fh": 120,
+  "n": 1,
+  "ax": 23,
+  "ay": 119,
+  "d": 3,
+  "file": "pr0_6.webp"
+ },
+ "opossum": {
+  "fw": 34,
+  "fh": 26,
+  "n": 8,
+  "ax": 16,
+  "ay": 26,
+  "d": 3,
+  "file": "opossum.webp"
+ },
+ "frog_idle": {
+  "fw": 24,
+  "fh": 30,
+  "n": 4,
+  "ax": 11,
+  "ay": 30,
+  "d": 3,
+  "file": "frog_idle.webp"
+ },
+ "frog_jump": {
+  "fw": 27,
+  "fh": 40,
+  "n": 2,
+  "ax": 14,
+  "ay": 40,
+  "d": 3,
+  "file": "frog_jump.webp"
+ },
+ "eagle": {
+  "fw": 35,
+  "fh": 51,
+  "n": 8,
+  "ax": 17,
+  "ay": 51,
+  "d": 3,
+  "file": "eagle.webp"
+ },
+ "LW0_glow": {
+  "fw": 79,
+  "fh": 167,
+  "n": 2,
+  "ax": 39,
+  "ay": 164,
+  "hd": 4,
+  "file": "LW0_glow.webp"
+ },
+ "LW0_spring": {
+  "fw": 105,
+  "fh": 114,
+  "n": 2,
+  "ax": 52,
+  "ay": 111,
+  "hd": 4,
+  "file": "LW0_spring.webp"
+ },
+ "LW0_break": {
+  "fw": 83,
+  "fh": 94,
+  "n": 2,
+  "ax": 41,
+  "ay": 91,
+  "hd": 4,
+  "file": "LW0_break.webp"
+ },
+ "pt_kael": {
+  "file": "pt_kael.webp"
+ },
+ "keyart": {
+  "file": "keyart.webp"
+ },
+ "frog_boss_idle": {
+  "fw": 35,
+  "fh": 32,
+  "n": 4,
+  "ax": 17,
+  "ay": 32,
+  "file": "frog_boss_idle.png"
+ },
+ "frog_boss_jump": {
+  "fw": 35,
+  "fh": 32,
+  "n": 2,
+  "ax": 17,
+  "ay": 32,
+  "file": "frog_boss_jump.png"
+ }
+}
