@@ -48,6 +48,25 @@ El asistente **Claude es opcional**: el motor funciona completo sin IA.
 | Corredor infinito | El jugador corre solo; el nivel se genera sin fin y se guarda el récord. |
 | Aventura 3D | Mundo 3D con cielo, sol y sombras, jugador en tercera persona, enemigos, joystick táctil. |
 | Pantalla de título | Menú con JUGAR, OPCIONES (música, efectos, idioma) y SALIR. |
+| + 9 juegos por género | Ver la tabla siguiente. |
+
+### Juegos completos por género (panel Aether → Juegos completos por género)
+
+Cada uno es un juego terminado que se cambia desde el Inspector, sin programar:
+
+| Juego | Qué tiene | Qué puedes cambiar |
+|---|---|---|
+| **Disparos (nave)** | Nave que dispara sola, oleadas, jefe cada 5 oleadas, mejoras (triple disparo, vida). Se mueve arrastrando el dedo. | Imágenes de nave, enemigos y fondo, velocidad, cadencia, vidas, oleadas para ganar. |
+| **Puzle de unir 3** | Desliza gemas, cascadas con combo, sin jugadas = tablero nuevo. | Tamaño del tablero, tipos de gema, imágenes, movimientos y puntos objetivo. |
+| **Defensa de torres** | Camino, oleadas, 3 torres (Arquero, Cañón, Hielo) que se mejoran tocándolas. | Puntos del camino, oro inicial, vidas, oleadas, imagen de enemigos. |
+| **Carreras (vista de arriba)** | Circuito, rivales con IA, vueltas, derrape, puesto final. | Puntos del circuito, vueltas, rivales y su habilidad, velocidad, coche. |
+| **Carreras 3D** | Coche con física real (suspensión, derrape), rampa, conos, cámara detrás. | Potencia, giro, velocidad máxima, tu modelo .glb. |
+| **Lucha 1 contra 1** | Puñetazo, patada, bloqueo, onda de energía, rival con IA, rondas, K.O. | Nombres, colores, dificultad del rival, vida, tiempo, rondas. |
+| **Cartas por turnos** | Energía, mano de 5, intenciones del enemigo, carta nueva tras cada victoria. | Cartas, mazo y enemigos **escritos como texto**. |
+| **RPG / aventura** | Mapa dibujado con letras, personajes que hablan, monstruos, llaves, cofres y salida. | El mapa (letras), lo que dicen los personajes, llaves necesarias. |
+| **Terror con linterna** | Oscuridad, linterna con batería, acechadores que solo se mueven si no los miras. | El mapa, pilas, llaves, imágenes. |
+
+**Mapa de letras:** `#` pared · `.` suelo · `P` jugador · `M` monstruo · `S` acechador · `N` personaje · `$` moneda · `C` cofre · `K` llave · `H` corazón · `B` pilas · `E` salida · `T` árbol.
 
 ### Piezas 3D
 
@@ -99,9 +118,22 @@ El motor detecta el teléfono y ajusta la calidad (resolución 3D, brillo, 60 fp
 
 **Por piezas:** añade un **Personaje por piezas**, y en *Parts* crea una pieza por cada imagen: nombre, imagen, pieza madre, punto de giro y papel (cuerpo, cabeza, mandíbula, brazo…). Elige la animación automática en *Motion* o crea las tuyas con un **AnimationPlayer** animando la rotación de cada pieza.
 
-## 5. Exportar
+## 5. Exportar y publicar (panel «Publicar»)
 
-**Proyecto → Exportar → Android → Exportar proyecto.** Se genera el APK para instalar o publicar.
+1. **Datos del juego:** nombre, paquete (`com.tuempresa.tujuego`), versión, icono y orientación → **Guardar datos**.
+2. **Comprobar:** la lista marca en verde lo que está listo para Google Play.
+3. **Ficha de Google Play:** escribe las descripciones y crea la ficha y la **política de privacidad** (`publicar/privacidad.html`).
+4. **Capturas:** mientras pruebas el juego, toca la pantalla con **3 dedos** (o F12): se guardan en Imágenes/Aether. **Tráiler:** el panel graba un vídeo mientras juegas.
+5. **APK de prueba:** Proyecto → Exportar → Android → Exportar proyecto.
+6. **AAB para Google Play:** Google Play pide AAB firmado con tu clave de subida y el teléfono no puede crearlo, pero GitHub sí (gratis). El panel crea `publicar/google_play.yml` y `COMO_PUBLICAR.txt` con los pasos (repositorio privado, crear la clave una sola vez, obtener el AAB).
+
+## Aprender
+
+El panel **Aprender** tiene 8 lecciones paso a paso con botones «Hazlo por mí»: primer juego, lógica sin código, géneros, mapas de letras, personajes propios, 3D, publicar y Claude.
+
+## Idiomas
+
+El motor y los juegos vienen en español, inglés, portugués, francés, alemán e italiano. Detecta el idioma del teléfono; se cambia en Opciones. Para añadir otro, crea `idiomas/<código>.json` con las traducciones.
 
 ## 6. Claude (opcional)
 

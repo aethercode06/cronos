@@ -112,10 +112,10 @@ func _start_fight() -> void:
 func _start_turn() -> void:
 	block = 0
 	energy = energy_per_turn
-	_draw(hand_size)
+	_draw_cards(hand_size)
 	_refresh()
 
-func _draw(n: int) -> void:
+func _draw_cards(n: int) -> void:
 	for i in n:
 		if draw_pile.is_empty():
 			draw_pile = discard.duplicate()
@@ -203,7 +203,7 @@ func play(i: int) -> void:
 		hp = min(player_hp, hp + int(d["heal"]))
 		Aether.sfx("heal", 0.6)
 	if d["draw"] > 0:
-		_draw(int(d["draw"]))
+		_draw_cards(int(d["draw"]))
 	if foe["hp"] <= 0:
 		_win_fight()
 		return
