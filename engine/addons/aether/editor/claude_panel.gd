@@ -61,13 +61,26 @@ var http: HTTPRequest
 var pending_files := {}
 var pending_actions: Array = []
 var history: Array = []
+var mode_pick: OptionButton
+var free_help: Label
+var free_row: HBoxContainer
+var _primed := false
 
 func _ready() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var info := Label.new()
-	info.text = "Opcional. Conecta con Claude usando tu clave de Anthropic: verá tu escena y podrá crear y cambiar cosas por ti. Sin clave, el motor funciona igual."
+	info.text = "Opcional: el motor funciona igual sin IA. Claude verá tu escena y podrá crear y cambiar cosas por ti."
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(info)
+	mode_pick = OptionButton.new()
+	mode_pick.add_item("Gratis: con la app de Claude (copiar y pegar)")
+	mode_pick.add_item("Directo: con clave de API (de pago)")
+	mode_pick.item_selected.connect(func(_i): _refresh_mode())
+	add_child(mode_pick)
+	free_help = Label.new()
+	free_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	free_help.text = "1. Escribe lo que quieres y pulsa «Copiar para Claude».\n2. Pégalo en la app de Claude (tu plan normal, sin pagar API).\n3. Copia TODA la respuesta de Claude y pulsa «Pegar respuesta»."
+	add_child(free_help)
 	key_edit = LineEdit.new()
 	key_edit.placeholder_text = "Clave de API (sk-ant-…)"
 	key_edit.secret = true
@@ -101,9 +114,27 @@ func _ready() -> void:
 	clear.text = "Nueva charla"
 	clear.pressed.connect(func():
 		history.clear()
+		_primed = false
 		out.text = "")
 	row.add_child(clear)
 	add_child(row)
+	free_row = HBoxContainer.new()
+	var cp := Button.new()
+	cp.text = "Copiar para Claude"
+	cp.custom_minimum_size.y = 44
+	cp.pressed.connect(_copy_for_claude)
+	free_row.add_child(cp)
+	var pa := Button.new()
+	pa.text = "Pegar respuesta"
+	pa.custom_minimum_size.y = 44
+	pa.pressed.connect(_paste_answer)
+	free_row.add_child(pa)
+	var op := Button.new()
+	op.text = "Abrir Claude"
+	op.custom_minimum_size.y = 44
+	op.pressed.connect(func(): OS.shell_open("https://claude.ai/new"))
+	free_row.add_child(op)
+	add_child(free_row)
 	out = RichTextLabel.new()
 	out.bbcode_enabled = true
 	out.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -114,6 +145,39 @@ func _ready() -> void:
 	http.timeout = 240
 	http.request_completed.connect(_on_done)
 	add_child(http)
+	var es2 := EditorInterface.get_editor_settings()
+	mode_pick.select(int(es2.get_setting("aether/claude_mode")) if es2.has_setting("aether/claude_mode") else 0)
+	_refresh_mode()
+
+func _refresh_mode() -> void:
+	var free := mode_pick.selected == 0
+	EditorInterface.get_editor_settings().set_setting("aether/claude_mode", mode_pick.selected)
+	free_help.visible = free
+	free_row.visible = free
+	key_edit.visible = not free
+	model_pick.visible = not free
+	send_btn.visible = not free
+
+## Modo gratis: copia instrucciones + escena + petición para pegarlas en la app de Claude.
+func _copy_for_claude() -> void:
+	var q := prompt.text.strip_edges()
+	if q == "":
+		out.text = "Escribe primero lo que quieres hacer."
+		return
+	var txt := ""
+	if not _primed:
+		txt += "Eres el asistente de Aether Engine (un motor sobre Godot 4). Sigue estas reglas para responder:\n\n" + _system() + "\n\n"
+		_primed = true
+	txt += "PETICIÓN: " + q + "\n\n[ESCENA ABIERTA]\n" + _scene_summary()
+	DisplayServer.clipboard_set(txt)
+	out.text = "Copiado (%d letras). Pégalo en la app de Claude y, cuando responda, copia toda su respuesta y pulsa «Pegar respuesta»." % txt.length()
+
+func _paste_answer() -> void:
+	var answer := DisplayServer.clipboard_get()
+	if answer.strip_edges() == "":
+		out.text = "No hay nada copiado. Copia la respuesta de Claude primero."
+		return
+	_handle_answer(answer)
 
 # ---------------- lo que Claude sabe del motor ----------------
 func _system() -> String:
@@ -210,6 +274,10 @@ func _on_done(result: int, code: int, _h: PackedStringArray, data: PackedByteArr
 			if c.get("type", "") == "text":
 				answer += c["text"]
 	history.append({"role": "assistant", "content": answer})
+	_handle_answer(answer)
+
+## Lee la respuesta de Claude: archivos propuestos y acciones en el editor.
+func _handle_answer(answer: String) -> void:
 	pending_files.clear()
 	pending_actions.clear()
 	var re := RegEx.new()
@@ -222,6 +290,14 @@ func _on_done(result: int, code: int, _h: PackedStringArray, data: PackedByteArr
 		var j = JSON.parse_string(m.get_string(1))
 		if j is Dictionary and j.has("acciones"):
 			pending_actions.append_array(j["acciones"])
+	if pending_actions.is_empty() and answer.contains("\"acciones\""):
+		# respuesta copiada sin las marcas de código: busca el JSON directamente
+		var a0 := answer.find("{")
+		var a1 := answer.rfind("}")
+		if a0 >= 0 and a1 > a0:
+			var j2 = JSON.parse_string(answer.substr(a0, a1 - a0 + 1))
+			if j2 is Dictionary and j2.has("acciones"):
+				pending_actions.append_array(j2["acciones"])
 	var shown := ra.sub(re.sub(answer, "[archivo propuesto]", true), "", true).strip_edges()
 	var note := ""
 	if not pending_files.is_empty():

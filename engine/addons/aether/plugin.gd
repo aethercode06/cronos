@@ -8,6 +8,7 @@ var claude: Control
 var events_dock: Control
 var publish_dock: Control
 var learn_dock: Control
+var sync_dock: Control
 
 func _enter_tree() -> void:
 	dock = _build_dock()
@@ -27,6 +28,9 @@ func _enter_tree() -> void:
 	learn_dock.plugin = self
 	learn_dock.name = "Aprender"
 	add_control_to_dock(DOCK_SLOT_LEFT_UR, learn_dock)
+	sync_dock = preload("res://addons/aether/editor/sync_panel.gd").new()
+	sync_dock.name = "GitHub"
+	add_control_to_dock(DOCK_SLOT_RIGHT_BR, sync_dock)
 
 func _exit_tree() -> void:
 	if dock:
@@ -38,7 +42,7 @@ func _exit_tree() -> void:
 	if events_dock:
 		remove_control_from_docks(events_dock)
 		events_dock.queue_free()
-	for d in [publish_dock, learn_dock]:
+	for d in [publish_dock, learn_dock, sync_dock]:
 		if d:
 			remove_control_from_docks(d)
 			d.queue_free()
