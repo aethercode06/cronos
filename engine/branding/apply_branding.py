@@ -18,10 +18,11 @@ for f in glob.glob(os.path.join(src, "platform/android/java/editor/src/**/res/va
     if n != t:
         open(f, "w", encoding="utf-8").write(n); changed.append(f)
 
-# 2) identificador del paquete (se instala aparte del Godot oficial)
+# 2) identificador del paquete (se instala aparte del Godot oficial) y nombre de la app
 for f in glob.glob(os.path.join(src, "platform/android/java/editor/build.gradle*")):
     t = open(f, encoding="utf-8").read()
     n = re.sub(r'(applicationId\s*=?\s*)"org\.godotengine\.editor\.v4"', r'\1"%s"' % APP_ID, t)
+    n = re.sub(r'editorAppName:\s*"[^"]*"', 'editorAppName: "%s"' % NAME, n)
     if n != t:
         open(f, "w", encoding="utf-8").write(n); changed.append(f)
 
@@ -29,14 +30,16 @@ for f in glob.glob(os.path.join(src, "platform/android/java/editor/build.gradle*
 icon = Image.open(os.path.join(brand, "icon_1024.png")).convert("RGBA")
 fg = Image.open(os.path.join(brand, "icon_foreground.png")).convert("RGBA")
 bg = Image.open(os.path.join(brand, "icon_background.png")).convert("RGBA")
-for f in glob.glob(os.path.join(src, "platform/android/java/editor/src/**/res/mipmap*/*.png"), recursive=True) + \
-         glob.glob(os.path.join(src, "platform/android/java/editor/src/**/res/drawable*/*icon*.png"), recursive=True):
+mono = Image.new("RGBA", fg.size, (0, 0, 0, 0))
+mono.paste((255, 255, 255, 255), (0, 0), fg.split()[3])
+for f in glob.glob(os.path.join(src, "platform/android/java/lib/src/main/res/mipmap*/icon*.webp")) + \
+         glob.glob(os.path.join(src, "platform/android/java/lib/src/main/res/mipmap*/icon*.png")):
     base = os.path.basename(f).lower()
     try:
         w, h = Image.open(f).size
     except Exception:
         continue
-    pick = fg if "foreground" in base else bg if "background" in base else icon
+    pick = mono if "monochrome" in base else fg if "foreground" in base else bg if "background" in base else icon
     pick.resize((w, h), Image.LANCZOS).save(f); changed.append(f)
 
 print("Cambios de marca:")

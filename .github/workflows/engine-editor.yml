@@ -42,10 +42,15 @@ jobs:
         env:
           SCONS_CACHE: ${{ runner.temp }}/scons_cache
         run: |
+          python misc/scripts/install_swappy_android.py > /dev/null || echo "sin swappy"
           scons platform=android target=editor arch=arm64 production=yes lto=none -j$(nproc) > $GITHUB_WORKSPACE/scons.log 2>&1 || { tail -80 $GITHUB_WORKSPACE/scons.log; exit 1; }
           tail -5 $GITHUB_WORKSPACE/scons.log
       - name: Empaquetar la app del editor
         working-directory: ${{ runner.temp }}/godot/platform/android/java
+        env:
+          GODOT_ANDROID_SIGN_KEYSTORE: ${{ github.workspace }}/engine/keys/debug.keystore
+          GODOT_ANDROID_KEYSTORE_ALIAS: androiddebugkey
+          GODOT_ANDROID_SIGN_PASSWORD: android
         run: |
           ./gradlew generateGodotEditor --no-daemon > $GITHUB_WORKSPACE/gradle.log 2>&1 || { tail -80 $GITHUB_WORKSPACE/gradle.log; exit 1; }
           find $RUNNER_TEMP/godot/bin -name "*.apk" | tee $GITHUB_WORKSPACE/apks.txt
