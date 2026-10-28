@@ -33,8 +33,20 @@ const PIECES := {
 	"Camara3D": ["res://addons/aether/three_d/aether_camera_3d.gd", "Node3D"],
 	"Ambiente3D": ["res://addons/aether/three_d/aether_world_3d.gd", "Node3D"],
 	"Joystick": ["res://addons/aether/ui/aether_joystick.gd", "CanvasLayer"],
+	"JugadorVistaArriba": ["res://addons/aether/topdown/aether_topdown_player.gd", "CharacterBody2D"],
+	"CriaturaVistaArriba": ["res://addons/aether/topdown/aether_chaser.gd", "CharacterBody2D"],
+	"Personaje": ["res://addons/aether/topdown/aether_npc.gd", "Node2D"],
+	"MapaDeLetras": ["res://addons/aether/topdown/aether_map.gd", "Node2D"],
+	"Linterna": ["res://addons/aether/topdown/aether_flashlight.gd", "PointLight2D"],
+	"Coche3D": ["res://addons/aether/three_d/aether_car_3d.gd", "VehicleBody3D"],
+	"JuegoDisparos": ["res://addons/aether/genres/aether_shooter.gd", "Node2D"],
+	"JuegoPuzle": ["res://addons/aether/genres/aether_match3.gd", "Node2D"],
+	"JuegoDefensaTorres": ["res://addons/aether/genres/aether_tower_defense.gd", "Node2D"],
+	"JuegoCarreras": ["res://addons/aether/genres/aether_racer.gd", "Node2D"],
+	"JuegoLucha": ["res://addons/aether/genres/aether_fighter.gd", "Node2D"],
+	"JuegoCartas": ["res://addons/aether/genres/aether_cards.gd", "Node2D"],
 }
-const TEMPLATES := ["plataformas", "arena_jefe", "corredor", "aventura_3d", "titulo"]
+const TEMPLATES := ["plataformas", "arena_jefe", "corredor", "aventura_3d", "titulo", "disparos", "puzle", "defensa_torres", "carreras", "carreras_3d", "lucha", "cartas", "rpg", "terror"]
 
 var plugin: EditorPlugin
 var key_edit: LineEdit

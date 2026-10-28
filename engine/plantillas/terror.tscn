@@ -1,0 +1,26 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/topdown/aether_map.gd" id="1"]
+[ext_resource type="Script" path="res://addons/aether/ui/hud.gd" id="2"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_joystick.gd" id="3"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="4"]
+
+[node name="Terror" type="Node2D"]
+
+[node name="Mapa" type="Node2D" parent="."]
+script = ExtResource("1")
+map = "######################\n#P..#.......#.......K#\n#...#..###..#..###...#\n#.B....#S#.....#.#...#\n#...####.####..#.#...#\n#......#...........B.#\n###.#..#..######.#####\n#...#.....#K...#.....#\n#.###..S..#....#..S..#\n#.....###.#..B.......#\n#K..........###.....E#\n######################"
+keys_needed = 3
+horror = true
+npc_lines = ""
+floor_color = Color(0.2, 0.19, 0.2, 1)
+wall_color = Color(0.32, 0.28, 0.3, 1)
+
+[node name="Interfaz" type="CanvasLayer" parent="."]
+script = ExtResource("2")
+
+[node name="Joystick" type="CanvasLayer" parent="."]
+script = ExtResource("3")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("4")

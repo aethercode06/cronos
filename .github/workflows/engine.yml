@@ -58,13 +58,14 @@ jobs:
           grep -q "plantilla carga = true" smoke.log
           grep -q "personaje por piezas = 3 huesos" smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error" smoke.log
-      - name: Prueba de las plantillas (2D, jefe, corredor, 3D, título)
+      - name: Prueba de las plantillas y los juegos por género
         run: |
-          timeout 300 godot --headless --path engine res://tests/templates.tscn > templates.log 2>&1 || true
+          timeout 500 godot --headless --path engine res://tests/templates.tscn > templates.log 2>&1 || true
           tail -30 templates.log
           grep -q "AETHER: TEMPLATES OK" templates.log
           grep -q "AETHER: LOGICA OK" templates.log
           grep -q "AETHER: sistemas OK" templates.log
+          grep -q "AETHER: GENEROS OK" templates.log
           ! grep -E "SCRIPT ERROR|Parse Error" templates.log
       - name: Capturas de pantalla (render por software)
         continue-on-error: true

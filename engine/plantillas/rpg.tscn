@@ -1,0 +1,26 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/topdown/aether_map.gd" id="1"]
+[ext_resource type="Script" path="res://addons/aether/ui/hud.gd" id="2"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_joystick.gd" id="3"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="4"]
+
+[node name="Rpg" type="Node2D"]
+
+[node name="Mapa" type="Node2D" parent="."]
+script = ExtResource("1")
+map = "####################\n#P....T.....T......#\n#..N.......$....M..#\n#.....TT.........$.#\n#..$..TT...####....#\n#..........#C.#..T.#\n#####..#####..#....#\n#K.....M......#.$..#\n#....T.....$..#..N.#\n#..$.....M.........#\n#.........T....K..E#\n####################"
+keys_needed = 2
+horror = false
+npc_lines = "Anciana: ¡Bienvenido a la aldea!\nAnciana: Dos llaves abren la salida del este.\n---\nGuardia: Los monstruos rondan el bosque.\nGuardia: Pulsa ATAQUE para luchar."
+floor_color = Color(0.3, 0.5, 0.28, 1)
+wall_color = Color(0.45, 0.4, 0.36, 1)
+
+[node name="Interfaz" type="CanvasLayer" parent="."]
+script = ExtResource("2")
+
+[node name="Joystick" type="CanvasLayer" parent="."]
+script = ExtResource("3")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("4")

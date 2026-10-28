@@ -2,7 +2,9 @@ extends Node
 ## Prueba de las plantillas: abre cada una, la juega unos segundos y comprueba
 ## que no hay errores. Con --shots guarda una captura de cada una.
 
-const LIST := ["res://plantillas/plataformas.tscn", "res://plantillas/arena_jefe.tscn", "res://plantillas/corredor.tscn", "res://plantillas/aventura_3d.tscn", "res://plantillas/titulo.tscn"]
+const LIST := ["res://plantillas/plataformas.tscn", "res://plantillas/arena_jefe.tscn", "res://plantillas/corredor.tscn", "res://plantillas/aventura_3d.tscn", "res://plantillas/titulo.tscn",
+	"res://plantillas/disparos.tscn", "res://plantillas/puzle.tscn", "res://plantillas/defensa_torres.tscn", "res://plantillas/carreras.tscn", "res://plantillas/carreras_3d.tscn",
+	"res://plantillas/lucha.tscn", "res://plantillas/cartas.tscn", "res://plantillas/rpg.tscn", "res://plantillas/terror.tscn"]
 var i := -1
 var cur: Node
 var f := 0
@@ -17,8 +19,78 @@ func _ready() -> void:
 	Aether.save.set_value("prueba_guardado", 42)
 	print("AETHER: guardado = ", Aether.save.get_value("prueba_guardado"))
 	print("AETHER: idioma = ", Aether.lang.code, " · ", Aether.t("JUGAR"))
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	await _logic_test()
+	await _genre_test()
 	_next()
+
+## Juegos por género: cada uno se monta y se juega solo un momento (selftest).
+func _genre_test() -> void:
+	var ok := true
+	for sc in [AetherShooter, AetherMatch3, AetherTowerDefense, AetherRacer, AetherFighter, AetherCards]:
+		var g = sc.new()
+		add_child(g)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var r: bool = g.selftest()
+		print("AETHER: genero ", g.get_script().get_global_name(), " = ", r)
+		ok = ok and r
+		g.queue_free()
+		await get_tree().process_frame
+	# vista desde arriba: mapa, jugador, criaturas, personaje que habla
+	var rpg: Node = load("res://plantillas/rpg.tscn").instantiate()
+	add_child(rpg)
+	for i in 5:
+		await get_tree().process_frame
+	var map: AetherMap = rpg.get_node("Mapa")
+	var foes := 0
+	var npcs: Array = []
+	var pl: AetherTopDownPlayer = null
+	for c in map.get_children():
+		if c is AetherChaser:
+			foes += 1
+		elif c is AetherNPC:
+			npcs.append(c)
+		elif c is AetherTopDownPlayer:
+			pl = c
+	print("AETHER: mapa criaturas = ", foes, " personajes = ", npcs.size(), " jugador = ", pl != null)
+	ok = ok and foes > 0 and npcs.size() > 0 and pl != null
+	if npcs.size() > 0:
+		var n: AetherNPC = npcs[0]
+		n.talk()
+		await get_tree().process_frame
+		var k := 0
+		while n._dlg != null and k < 10:
+			n._dlg._next()
+			k += 1
+		get_tree().paused = false
+		print("AETHER: dialogo terminado = ", n._dlg == null)
+		ok = ok and n._dlg == null
+	if pl:
+		var p0 := pl.global_position
+		Input.action_press("right")
+		for i in 30:
+			await get_tree().physics_frame
+		Input.action_release("right")
+		print("AETHER: jugador se mueve = ", pl.global_position.x > p0.x)
+		ok = ok and pl.global_position.x > p0.x
+	rpg.queue_free()
+	await get_tree().process_frame
+	# coche 3D con física
+	var car_scene: Node = load("res://plantillas/carreras_3d.tscn").instantiate()
+	add_child(car_scene)
+	var car: AetherCar3D = car_scene.get_node("Coche")
+	Input.action_press("up")
+	for i in 180:
+		await get_tree().physics_frame
+	Input.action_release("up")
+	print("AETHER: coche km/h = ", int(car.speed_kmh()))
+	ok = ok and car.speed_kmh() > 5.0
+	car_scene.queue_free()
+	await get_tree().process_frame
+	Aether.player = null
+	if ok:
+		print("AETHER: GENEROS OK")
 
 ## Lógica sin código: al empezar suma 5 monedas; al llegar a 5 da una llave.
 func _logic_test() -> void:
@@ -62,6 +134,7 @@ func _logic_test() -> void:
 	print("AETHER: sistemas OK")
 
 func _next() -> void:
+	get_tree().paused = false
 	for a in ["left", "right", "up", "down", "jump", "attack", "dash"]:
 		Input.action_release(a)
 	if cur:
@@ -84,7 +157,7 @@ func _process(_d: float) -> void:
 	f += 1
 	if f % 30 < 18: Input.action_press("right") 
 	else: Input.action_release("right")
-	if i == 3:
+	if "3d" in LIST[i]:
 		Input.action_press("up")
 	if f % 45 == 0: Input.action_press("attack")
 	if f % 45 == 3: Input.action_release("attack")

@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/genres/aether_fighter.gd" id="1"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="2"]
+[ext_resource type="Texture2D" path="res://assets/chronos/pbg0.webp" id="3"]
+[ext_resource type="Script" path="res://addons/aether/ui/touch_controls.gd" id="4"]
+
+[node name="Lucha" type="Node2D"]
+
+[node name="Juego" type="Node2D" parent="."]
+script = ExtResource("1")
+background = ExtResource("3")
+
+[node name="ControlesTactiles" type="CanvasLayer" parent="."]
+script = ExtResource("4")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("2")

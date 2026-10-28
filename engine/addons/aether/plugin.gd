@@ -53,6 +53,16 @@ func _build_dock() -> Control:
 	_button(v, "Nuevo corredor infinito", func(): _from_template("res://plantillas/corredor.tscn", "corredor"))
 	_button(v, "Nueva aventura 3D", func(): _from_template("res://plantillas/aventura_3d.tscn", "aventura3d"))
 	_button(v, "Nueva pantalla de título", func(): _from_template("res://plantillas/titulo.tscn", "titulo"))
+	_title(v, "Juegos completos por género")
+	_button(v, "Disparos (nave)", func(): _from_template("res://plantillas/disparos.tscn", "disparos"))
+	_button(v, "Puzle de unir 3", func(): _from_template("res://plantillas/puzle.tscn", "puzle"))
+	_button(v, "Defensa de torres", func(): _from_template("res://plantillas/defensa_torres.tscn", "defensa"))
+	_button(v, "Carreras (vista de arriba)", func(): _from_template("res://plantillas/carreras.tscn", "carreras"))
+	_button(v, "Carreras 3D (coche con física)", func(): _from_template("res://plantillas/carreras_3d.tscn", "carreras3d"))
+	_button(v, "Lucha 1 contra 1", func(): _from_template("res://plantillas/lucha.tscn", "lucha"))
+	_button(v, "Cartas por turnos", func(): _from_template("res://plantillas/cartas.tscn", "cartas"))
+	_button(v, "RPG / aventura (vista de arriba)", func(): _from_template("res://plantillas/rpg.tscn", "rpg"))
+	_button(v, "Terror con linterna", func(): _from_template("res://plantillas/terror.tscn", "terror"))
 	_button(v, "Abrir la prueba de Chronos", func(): EditorInterface.open_scene_from_path("res://demo/main.tscn"))
 	_title(v, "Añadir a la escena")
 	_button(v, "Jugador", func(): _add("res://addons/aether/player/platformer_player.gd", "Jugador", "CharacterBody2D"))
@@ -63,6 +73,12 @@ func _build_dock() -> Control:
 	_button(v, "Interfaz (vida y jefe)", func(): _add("res://addons/aether/ui/hud.gd", "Interfaz", "CanvasLayer"))
 	_button(v, "Controles táctiles", func(): _add("res://addons/aether/ui/touch_controls.gd", "ControlesTactiles", "CanvasLayer"))
 	_button(v, "Menú de pausa", func(): _add("res://addons/aether/ui/aether_menu.gd", "MenuPausa", "CanvasLayer"))
+	_title(v, "Vista desde arriba (RPG, terror)")
+	_button(v, "Mapa de letras", func(): _add("res://addons/aether/topdown/aether_map.gd", "Mapa", "Node2D"))
+	_button(v, "Jugador (vista de arriba)", func(): _add("res://addons/aether/topdown/aether_topdown_player.gd", "Jugador", "CharacterBody2D"))
+	_button(v, "Criatura (persigue / acecha)", func(): _add("res://addons/aether/topdown/aether_chaser.gd", "Criatura", "CharacterBody2D"))
+	_button(v, "Personaje para hablar", func(): _add("res://addons/aether/topdown/aether_npc.gd", "Personaje", "Node2D"))
+	_button(v, "Linterna", func(): _add("res://addons/aether/topdown/aether_flashlight.gd", "Linterna", "PointLight2D"))
 	_title(v, "Lógica sin código")
 	_button(v, "Lógica de la escena (eventos)", func(): _add("res://addons/aether/logic/aether_logic.gd", "Logica", "Node"))
 	_button(v, "Zona (meta, trampa, puerta…)", func(): _add("res://addons/aether/logic/aether_zone.gd", "Zona", "Area2D"))
@@ -79,6 +95,7 @@ func _build_dock() -> Control:
 	_button(v, "Enemigo 3D", func(): _add("res://addons/aether/three_d/aether_enemy_3d.gd", "Enemigo3D", "CharacterBody3D"))
 	_button(v, "Cámara 3D", func(): _add("res://addons/aether/three_d/aether_camera_3d.gd", "Camara3D", "Node3D"))
 	_button(v, "Ambiente 3D (cielo, sol, niebla)", func(): _add("res://addons/aether/three_d/aether_world_3d.gd", "Ambiente", "Node3D"))
+	_button(v, "Coche 3D", func(): _add("res://addons/aether/three_d/aether_car_3d.gd", "Coche", "VehicleBody3D"))
 	_button(v, "Joystick táctil", func(): _add("res://addons/aether/ui/aether_joystick.gd", "Joystick", "CanvasLayer"))
 	_title(v, "Guía rápida")
 	_text(v, "1. «Nueva fase de plataformas».\n2. Pulsa ▶ (arriba a la derecha) para jugar.\n3. Selecciona cualquier pieza y cambia sus ajustes en el Inspector: velocidad, salto, vida, daño…\n4. Mueve suelos y enemigos arrastrándolos.\n5. Para tus propios personajes: crea un AetherAnimSet en el Inspector del jugador y añade sus animaciones.\n6. Exporta a Android en Proyecto → Exportar.")
@@ -140,7 +157,7 @@ func _add(script_path: String, node_name: String, base_type: String) -> void:
 
 # ---------------- modo fácil / experto ----------------
 const EASY := "Aether facil"
-const EASY_HIDE := ["Joint2D", "PinJoint2D", "GrooveJoint2D", "DampedSpringJoint2D", "Joint3D", "SoftBody3D", "VehicleBody3D",
+const EASY_HIDE := ["Joint2D", "PinJoint2D", "GrooveJoint2D", "DampedSpringJoint2D", "Joint3D", "SoftBody3D",
 	"NavigationLink2D", "NavigationLink3D", "VoxelGI", "LightmapGI", "ReflectionProbe", "OccluderInstance3D", "VisibleOnScreenEnabler2D",
 	"BackBufferCopy", "RemoteTransform2D", "RemoteTransform3D", "SkeletonIK3D", "XROrigin3D", "XRCamera3D", "XRController3D",
 	"OpenXRHand", "MultiplayerSpawner", "MultiplayerSynchronizer", "ShaderGlobalsOverride", "Marker3D"]

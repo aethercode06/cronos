@@ -17,6 +17,8 @@ extends Node3D
 @export var sensitivity := 0.25
 ## Suavidad del seguimiento.
 @export var follow_speed := 10.0
+## Se coloca sola detrás del objetivo (coches, naves).
+@export var auto_behind := false
 
 var yaw := 0.0
 var arm: SpringArm3D
@@ -54,6 +56,9 @@ func _process(delta: float) -> void:
 	if target:
 		var want := target.global_position + Vector3(0, height, 0)
 		global_position = global_position.lerp(want, 1.0 - exp(-delta * follow_speed))
+		if auto_behind and Aether.look_delta == Vector2.ZERO:
+			var behind: float = target.global_rotation.y + (PI if target is VehicleBody3D else 0.0)
+			yaw = lerp_angle(yaw, behind, 1.0 - exp(-delta * 3.0))
 	rotation = Vector3(0, yaw, 0)
 	arm.rotation = Vector3(deg_to_rad(pitch), 0, 0)
 	_trauma = max(0.0, _trauma - delta * 1.5)

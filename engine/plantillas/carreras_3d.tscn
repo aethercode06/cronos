@@ -1,0 +1,127 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/three_d/aether_world_3d.gd" id="1"]
+[ext_resource type="Script" path="res://addons/aether/three_d/aether_car_3d.gd" id="2"]
+[ext_resource type="Script" path="res://addons/aether/three_d/aether_camera_3d.gd" id="3"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_joystick.gd" id="4"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="5"]
+
+[sub_resource type="StandardMaterial3D" id="asfalto"]
+albedo_color = Color(0.22, 0.22, 0.25, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="cesped"]
+albedo_color = Color(0.3, 0.55, 0.28, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="rampa"]
+albedo_color = Color(1, 0.6, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="cono"]
+albedo_color = Color(1, 0.35, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.3, 0.05, 1)
+
+[node name="Carreras3D" type="Node3D"]
+
+[node name="Ambiente" type="Node3D" parent="."]
+script = ExtResource("1")
+preset = "atardecer"
+
+[node name="Cesped" type="CSGBox3D" parent="."]
+use_collision = true
+size = Vector3(400, 1, 400)
+material = SubResource("cesped")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="Pista" type="CSGBox3D" parent="."]
+use_collision = true
+size = Vector3(14, 0.2, 240)
+material = SubResource("asfalto")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+
+[node name="Pista2" type="CSGBox3D" parent="."]
+use_collision = true
+size = Vector3(240, 0.2, 14)
+material = SubResource("asfalto")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 110)
+
+[node name="Rampa" type="CSGBox3D" parent="."]
+use_collision = true
+size = Vector3(10, 0.5, 14)
+material = SubResource("rampa")
+transform = Transform3D(1, 0, 0, 0, 0.966, 0.259, 0, -0.259, 0.966, 0, 1.6, 50)
+
+[node name="Cono0" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.6, 20)
+
+[node name="Cono1" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.6, 30)
+
+[node name="Cono2" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.6, 70)
+
+[node name="Cono3" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.6, 80)
+
+[node name="Cono4" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.6, 104)
+
+[node name="Cono5" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.6, 116)
+
+[node name="Cono6" type="CSGCylinder3D" parent="."]
+use_collision = true
+radius = 0.4
+height = 1.2
+cone = true
+material = SubResource("cono")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 0.6, 104)
+
+[node name="Coche" type="VehicleBody3D" parent="."]
+script = ExtResource("2")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -100)
+
+[node name="Camara" type="Node3D" parent="." node_paths=PackedStringArray("target")]
+script = ExtResource("3")
+target = NodePath("../Coche")
+distance = 8.0
+height = 1.4
+pitch = -14.0
+auto_behind = true
+
+[node name="Joystick" type="CanvasLayer" parent="."]
+script = ExtResource("4")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("5")
