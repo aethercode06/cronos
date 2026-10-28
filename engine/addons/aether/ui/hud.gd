@@ -124,7 +124,7 @@ func banner(t: String, sub := "", dur := 2.4) -> void:
 	_banner.text = t
 	_sub.text = sub
 	for l in [_banner, _sub]:
-		var tw := l.create_tween()
+		var tw: Tween = l.create_tween()
 		l.scale = Vector2.ONE
 		tw.tween_property(l, "modulate:a", 1.0, 0.25)
 		tw.tween_interval(dur)

@@ -147,7 +147,7 @@ static func slash(parent: Node, pos: Vector2, face: float, col := Color(2.2, 1.9
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	line.material = mat
 	for i in 14:
-		var a := deg_to_rad(lerp(arc_from, arc_to, i / 13.0))
+		var a: float = deg_to_rad(lerp(arc_from, arc_to, i / 13.0))
 		line.add_point(Vector2(cos(a) * radius * face, sin(a) * radius * 0.8))
 	line.z_index = 20
 	_add(parent, line)

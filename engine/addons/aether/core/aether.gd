@@ -120,7 +120,7 @@ func flash(col := Color(1, 1, 1), a := 0.5) -> void:
 
 func _process(delta: float) -> void:
 	_apply_time()
-	var real_dt := delta / max(Engine.time_scale, 0.001)
+	var real_dt: float = delta / max(Engine.time_scale, 0.001)
 	if _flash_a > 0.0:
 		_flash_a = max(0.0, _flash_a - real_dt * 2.5)
 		_flash_rect.color.a = _flash_a
