@@ -1,7 +1,7 @@
-extends SceneTree
+extends Node
 ## Carga todos los scripts del motor para que Godot muestre cada error con su línea.
 
-func _init() -> void:
+func _ready() -> void:
 	var bad := 0
 	for f in _all("res://addons"):
 		var s = load(f)
@@ -9,7 +9,7 @@ func _init() -> void:
 			print("AETHER: script con error ", f)
 			bad += 1
 	print("AETHER: scripts revisados, errores = ", bad)
-	quit(0)
+	get_tree().quit(0)
 
 func _all(dir: String) -> PackedStringArray:
 	var out := PackedStringArray()

@@ -118,7 +118,7 @@ func _process(d: float) -> void:
 		if c["ai"]:
 			var loc := _locate(c["p"])
 			var target: Vector2 = _point_at(loc.x + 320.0) + _point_at(loc.x + 320.0).direction_to(_point_at(loc.x + 380.0)).orthogonal() * c["lane"] * road_width
-			var want := (target - c["p"]).angle()
+			var want: float = (target - c["p"]).angle()
 			steer = clamp(wrapf(want - c["a"], -PI, PI) * 2.5, -1.0, 1.0)
 			gas = 1.0
 			top = max_speed * rival_skill * (1.0 - 0.3 * abs(steer))

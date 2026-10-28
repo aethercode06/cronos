@@ -52,7 +52,7 @@ jobs:
           ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" import.log
       - name: Revisar todos los scripts
         run: |
-          godot --headless --path engine -s res://tests/check_scripts.gd > check.log 2>&1 || true
+          godot --headless --path engine res://tests/check_scripts.tscn > check.log 2>&1 || true
           grep -E "SCRIPT ERROR|Parse Error|AETHER" check.log | head -60
       - name: Prueba automática (nivel + jefe)
         run: |
