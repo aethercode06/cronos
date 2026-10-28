@@ -456,7 +456,7 @@ func _move_and_collide(dt: float) -> void:
 	var land = null
 	for s in sol:
 		if p.x < s.x + s.w and p.x + p.w > s.x and p.y + p.h > s.y and p.y < s.y + s.h:
-			var tol := 8.0 + abs(float(s.get("dy", 0.0)))
+			var tol: float = 8.0 + abs(float(s.get("dy", 0.0)))
 			if p.vy >= 0.0 and prev_y + p.h <= s.y + tol:
 				p.y = s.y - p.h
 				p.vy = 0.0
