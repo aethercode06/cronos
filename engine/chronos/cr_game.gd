@@ -1220,7 +1220,7 @@ func _do_attack() -> void:
 func _hit_enemies(hb: Dictionary) -> bool:
 	var hit := false
 	for e in level.enemies:
-		if not e.dead and not p.hitSet.has(e) and ov(hb, e) and not (e.b == "ghost" and dim == 0) and not (e.b == "riser" and str(e.get("st", "")) == "buried"):
+		if not e.dead and not p.hitSet.has(e) and ov(hb, e) and not (e.b == "ghost" and dim == 0) and not (e.b == "riser" and str(e.get("st", "")) == "buried") and not (e.b in ["dormant", "revive"]) and not (e.b == "burrower" and str(e.get("st", "")) in ["under", "tele"]):
 			p.hitSet.append(e)
 			_damage_enemy(e, hb)
 			hit = true
@@ -1248,6 +1248,27 @@ func _damage_enemy(e: Dictionary, hb: Dictionary) -> void:
 		e.kx = p.face * 220.0
 	else:
 		e.x += p.face * 10.0
+	if e.hp > 0.01 and e.b == "rammer" and str(e.get("st", "")) == "aim":
+		e.st = "stun"
+		e.tt = 0.6
+	if e.hp <= 0.01 and str(e.get("v", "")) == "reviver" and not e.get("revived", false):
+		if dim == 1:
+			_float(e.x + e.w / 2, e.y - 14, "¡DESTRUIDO!", Color(0.85, 0.63, 1), 13)
+		else:
+			e.revived = true
+			e.b0 = "riser"
+			e.b = "revive"
+			e.tt = 2.2
+			e.hp = float(e.d.get("hp", 2))
+			e.gy = e.y + e.h
+			_float(e.x + e.w / 2, e.y - 14, "SE RECOMPONE…", Color(0.91, 0.86, 0.75), 13)
+			return
+	if e.hp <= 0.01 and str(e.get("v", "")) == "splitter" and not e.get("mini", false):
+		for sgn in [-1, 1]:
+			var m: Dictionary = e.duplicate()
+			m.merge({"dead": false, "mini": true, "v": "mini", "b": "walker", "hp": 1.0, "w": 20.0, "h": 14.0, "x": e.x + e.w / 2 - 10 + sgn * 8, "y": e.y + e.h - 14, "dir": sgn, "minX": e.x - 120, "maxX": e.x + 120, "kx": sgn * 180.0, "hit": 0.2}, true)
+			level.enemies.append(m)
+			p.hitSet.append(m)
 	if e.hp <= 0.01:
 		e.dead = true
 		_add_time(8)
@@ -1277,6 +1298,15 @@ func _shoot(e: Dictionary, tx: float, ty: float, kind := "") -> void:
 			projs.append({"x": cx + e.dir * 14, "y": e.y + 8, "vx": e.dir * 300.0 * D.spd, "vy": 0.0, "hw": 6.0, "hh": 4.0, "type": "bolt", "dmg": 12.0, "life": 3.0})
 		_:
 			projs.append({"x": cx, "y": cy, "vx": d.x / l * sp, "vy": d.y / l * sp, "hw": 5.0, "hh": 5.0, "type": "orb", "dmg": 12.0, "life": 4.0})
+	if str(e.get("v", "")) == "spread" and projs.size() > 0:
+		var q: Dictionary = projs[projs.size() - 1]
+		var vq := Vector2(q.vx, q.vy)
+		for da in [-0.32, 0.32]:
+			var q2: Dictionary = q.duplicate()
+			var r2 := vq.rotated(da)
+			q2.vx = r2.x
+			q2.vy = r2.y
+			projs.append(q2)
 
 ## Comportamientos nuevos de foes.js que todavía usan el más parecido.
 const B_MAP := {"rammer": "chaser", "brute": "chaser", "burrower": "chaser", "dormant": "chaser", "book": "ghost", "sniper": "shooter", "dropper": "flyer", "pulse": "bob", "splitter": "walker", "spread": "shooter"}
@@ -1306,6 +1336,16 @@ func _update_enemies(dt: float) -> void:
 			e.kx *= max(0.0, 1.0 - 9.0 * dt)
 			if abs(e.kx) < 8:
 				e.kx = 0.0
+		if e.b in CrFoes.OWN:
+			for k in ["tt", "run", "cd"]:
+				if not e.has(k) or e[k] == null:
+					e[k] = 0.0
+			CrFoes.update(self, e, dt, D, pcx, pcy)
+			if not p.dead and ov(p, e) and not (e.b in ["dormant", "revive"]) and not (e.b == "burrower" and str(e.get("st", "")) in ["under", "tele"]):
+				_hurt(15.0, e.x + e.w / 2)
+			continue
+		if str(e.get("v", "")) == "pulse":
+			CrFoes.pulse(self, e, dt, D, pcx, pcy)
 		var b: String = B_MAP.get(e.b, e.b)
 		match b:
 			"walker":
@@ -1947,10 +1987,17 @@ func _sheet_frame(key: String, frame: int, pos: Vector2, flip: bool, scale_k := 
 
 func _draw_enemy(e: Dictionary) -> void:
 	var d: Dictionary = e.d
+	if e.b in ["revive"] or (e.b == "burrower" and str(e.get("st", "")) in ["under", "tele"]):
+		draw_rect(Rect2(e.x, float(e.get("gy", e.y + e.h)) - 3, e.w, 3), Color(0.55, 0.43, 0.25, 0.8))
+		return
+	if float(e.get("pq", 0.0)) > 0.0 or float(e.get("pr", 0.0)) > 0.0:
+		draw_circle(Vector2(e.x + e.w / 2, e.y + e.h / 2), 66 if float(e.get("pr", 0.0)) > 0.0 else 30 + sin(time * 30) * 6, Color(0.6, 0.9, 1, 0.25))
 	if e.b == "riser" and str(e.get("st", "")) == "buried":
 		draw_rect(Rect2(e.x, e.y + e.h - 3, e.w, 3), Color(0.3, 0.25, 0.2, 0.7))
 		return
 	var key: String = d.anim
+	if e.b == "brute" and str(e.get("st", "")) in ["wind", "hit"] and d.has("atk"):
+		key = d.atk
 	if e.b == "jumper" and e.air:
 		key = d.get("jump", key)
 	var fr := int(e.t * 10)
