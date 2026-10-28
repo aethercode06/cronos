@@ -1,0 +1,26 @@
+Cambios de marca:
+   platform/android/java/editor/build.gradle
+   platform/android/java/lib/src/main/res/mipmap/icon.webp
+   platform/android/java/lib/src/main/res/mipmap/icon_foreground.webp
+   platform/android/java/lib/src/main/res/mipmap/icon_monochrome.webp
+   platform/android/java/lib/src/main/res/mipmap/icon_background.webp
+   platform/android/java/lib/src/main/res/mipmap-xhdpi/icon.webp
+   platform/android/java/lib/src/main/res/mipmap-xhdpi/icon_foreground.webp
+   platform/android/java/lib/src/main/res/mipmap-xhdpi/icon_monochrome.webp
+   platform/android/java/lib/src/main/res/mipmap-xhdpi/icon_background.webp
+   platform/android/java/lib/src/main/res/mipmap-xxhdpi/icon.webp
+   platform/android/java/lib/src/main/res/mipmap-xxhdpi/icon_foreground.webp
+   platform/android/java/lib/src/main/res/mipmap-xxhdpi/icon_monochrome.webp
+   platform/android/java/lib/src/main/res/mipmap-xxhdpi/icon_background.webp
+   platform/android/java/lib/src/main/res/mipmap-hdpi/icon.webp
+   platform/android/java/lib/src/main/res/mipmap-hdpi/icon_foreground.webp
+   platform/android/java/lib/src/main/res/mipmap-hdpi/icon_monochrome.webp
+   platform/android/java/lib/src/main/res/mipmap-hdpi/icon_background.webp
+   platform/android/java/lib/src/main/res/mipmap-xxxhdpi/icon.webp
+   platform/android/java/lib/src/main/res/mipmap-xxxhdpi/icon_foreground.webp
+   platform/android/java/lib/src/main/res/mipmap-xxxhdpi/icon_monochrome.webp
+   platform/android/java/lib/src/main/res/mipmap-xxxhdpi/icon_background.webp
+   platform/android/java/lib/src/main/res/mipmap-mdpi/icon.webp
+   platform/android/java/lib/src/main/res/mipmap-mdpi/icon_foreground.webp
+   platform/android/java/lib/src/main/res/mipmap-mdpi/icon_monochrome.webp
+   platform/android/java/lib/src/main/res/mipmap-mdpi/icon_background.webp
