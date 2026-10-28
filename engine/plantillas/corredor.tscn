@@ -1,0 +1,50 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/world/aether_runner.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/chronos/tx0.webp" id="2"]
+[ext_resource type="Texture2D" path="res://assets/chronos/ed0.webp" id="3"]
+[ext_resource type="Script" path="res://addons/aether/player/platformer_player.gd" id="4"]
+[ext_resource type="Script" path="res://addons/aether/core/aether_camera.gd" id="5"]
+[ext_resource type="Script" path="res://addons/aether/ui/touch_controls.gd" id="6"]
+[ext_resource type="Texture2D" path="res://assets/chronos/pbg0.webp" id="7"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="8"]
+[ext_resource type="Script" path="res://addons/aether/ui/hud.gd" id="9"]
+
+[node name="Corredor" type="Node2D"]
+
+[node name="Fondo" type="Parallax2D" parent="."]
+z_index = -20
+scroll_scale = Vector2(0.25, 0.1)
+repeat_size = Vector2(2916, 0)
+repeat_times = 3
+
+[node name="Imagen" type="Sprite2D" parent="Fondo"]
+position = Vector2(-600, -560)
+scale = Vector2(1.157, 1.157)
+texture = ExtResource("7")
+centered = false
+
+[node name="Generador" type="Node2D" parent="."]
+script = ExtResource("1")
+fill_texture = ExtResource("2")
+edge_texture = ExtResource("3")
+
+[node name="Jugador" type="CharacterBody2D" parent="."]
+position = Vector2(0, 560)
+script = ExtResource("4")
+auto_run = true
+auto_respawn = false
+
+[node name="Camara" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
+position = Vector2(0, 500)
+script = ExtResource("5")
+target = NodePath("../Jugador")
+
+[node name="Interfaz" type="CanvasLayer" parent="."]
+script = ExtResource("9")
+
+[node name="ControlesTactiles" type="CanvasLayer" parent="."]
+script = ExtResource("6")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("8")

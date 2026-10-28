@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/chronos/keyart.webp" id="2"]
+
+[node name="Titulo" type="Node"]
+
+[node name="Menu" type="CanvasLayer" parent="."]
+script = ExtResource("1")
+mode = "titulo"
+game_title = "MI JUEGO"
+play_scene = "res://plantillas/plataformas.tscn"
+background = ExtResource("2")

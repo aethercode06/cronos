@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://addons/aether/world/aether_ground.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/chronos/tx0.webp" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://addons/aether/ui/hud.gd" id="7"]
 [ext_resource type="Script" path="res://addons/aether/ui/touch_controls.gd" id="8"]
 [ext_resource type="Texture2D" path="res://assets/chronos/pbg0.webp" id="9"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="10"]
 
 [node name="FaseDePlataformas" type="Node2D"]
 
@@ -72,3 +73,6 @@ script = ExtResource("7")
 
 [node name="ControlesTactiles" type="CanvasLayer" parent="."]
 script = ExtResource("8")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("10")

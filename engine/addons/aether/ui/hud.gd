@@ -114,7 +114,7 @@ func show_boss(name: String) -> void:
 	_boss_box.visible = true
 	_boss_box.modulate.a = 0
 	create_tween().tween_property(_boss_box, "modulate:a", 1.0, 0.6)
-	banner(name, "Guardián del Mundo 1")
+	banner(name, Aether.t("¡PREPÁRATE!"))
 
 func set_boss_hp(hp: float, max_hp: float) -> void:
 	_boss_k = clamp(hp / max_hp, 0.0, 1.0)
@@ -132,12 +132,21 @@ func banner(t: String, sub := "", dur := 2.4) -> void:
 		tw.tween_property(l, "modulate:a", 0.0, 0.5)
 
 var _bound: Node = null
+var _boss_bound: Node = null
 
 func _process(delta: float) -> void:
 	# se conecta solo al jugador activo (no hace falta programar nada)
 	if Aether.player and _bound != Aether.player and Aether.player.has_signal("hp_changed"):
 		_bound = Aether.player
 		_bound.hp_changed.connect(set_hp)
+	# barra del jefe automática
+	if _boss_bound == null:
+		for b in get_tree().get_nodes_in_group("boss"):
+			if b.get("active"):
+				_boss_bound = b
+				show_boss(b.boss_name)
+				b.hp_changed.connect(set_boss_hp)
+				break
 	_hp_fill.size.x = 300.0 * _hp_k
 	_hp_ghost_k = max(_hp_k, _hp_ghost_k - delta * 0.6)
 	_hp_ghost.size.x = 300.0 * _hp_ghost_k

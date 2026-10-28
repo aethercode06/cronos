@@ -8,10 +8,18 @@ extends CharacterBody2D
 signal hp_changed(hp: float, max_hp: float)
 signal defeated
 
+## Nombre que aparece en la barra del jefe.
 @export var boss_name := "JEFE"
+## Vida total.
 @export var max_hp := 60.0
+## Daño al tocar al jugador.
 @export var contact_damage := 20.0
+## Tamaño del cuerpo para los golpes.
 @export var body_size := Vector2(220, 200)
+## Empieza solo cuando el jugador se acerca.
+@export var auto_start := true
+## Distancia a la que empieza el combate.
+@export var start_distance := 650.0
 
 var hp := 60.0
 var face := -1.0
@@ -47,6 +55,11 @@ func set_state(s: String) -> void:
 
 func _physics_process(delta: float) -> void:
 	if not active:
+		var pl0 = Aether.player
+		if auto_start and pl0 and abs(pl0.global_position.x - global_position.x) < start_distance:
+			active = true
+			set_state("intro")
+			Aether.music("boss")
 		return
 	state_t += delta
 	_contact_cd = max(0.0, _contact_cd - delta)

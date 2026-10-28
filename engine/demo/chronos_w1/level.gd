@@ -37,6 +37,7 @@ func _ready() -> void:
 	for pr in PROPS:
 		_prop(pr[0], pr[1])
 	player = PlatformerPlayer.new()
+	player.auto_respawn = false
 	player.position = Vector2(80, FLOOR)
 	add_child(player)
 	for e in ENEMIES:
@@ -215,8 +216,8 @@ func _spawn_boss() -> void:
 	boss = FrogBoss.new()
 	boss.position = Vector2(arena.position.x + 1450, FLOOR)
 	boss.arena = Rect2(arena.position.x, FLOOR - 1000, 1900, 1000)
+	boss.auto_start = false
 	add_child(boss)
-	boss.hp_changed.connect(func(h, m): hud.set_boss_hp(h, m))
 	boss.defeated.connect(_on_boss_defeated)
 
 func _physics_process(_delta: float) -> void:
@@ -239,7 +240,6 @@ func _start_boss() -> void:
 		_arena_walls.append(wall)
 	Aether.music("boss")
 	Aether.sfx("v_fight", 0.9)
-	hud.show_boss(boss.boss_name)
 	boss.active = true
 	boss.set_state("intro")
 

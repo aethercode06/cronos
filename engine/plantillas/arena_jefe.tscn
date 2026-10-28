@@ -1,0 +1,67 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://addons/aether/world/aether_ground.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/chronos/tx0.webp" id="2"]
+[ext_resource type="Texture2D" path="res://assets/chronos/ed0.webp" id="3"]
+[ext_resource type="Script" path="res://addons/aether/player/platformer_player.gd" id="4"]
+[ext_resource type="Script" path="res://addons/aether/core/aether_camera.gd" id="5"]
+[ext_resource type="Script" path="res://demo/chronos_w1/frog_boss.gd" id="6"]
+[ext_resource type="Script" path="res://addons/aether/ui/hud.gd" id="7"]
+[ext_resource type="Script" path="res://addons/aether/ui/touch_controls.gd" id="8"]
+[ext_resource type="Texture2D" path="res://assets/chronos/pbg0.webp" id="9"]
+[ext_resource type="Script" path="res://addons/aether/ui/aether_menu.gd" id="10"]
+
+[node name="ArenaDeJefe" type="Node2D"]
+
+[node name="Fondo" type="Parallax2D" parent="."]
+z_index = -20
+scroll_scale = Vector2(0.25, 0.1)
+repeat_size = Vector2(2916, 0)
+repeat_times = 3
+
+[node name="Imagen" type="Sprite2D" parent="Fondo"]
+position = Vector2(-600, -560)
+scale = Vector2(1.157, 1.157)
+texture = ExtResource("9")
+centered = false
+
+[node name="Suelo" type="StaticBody2D" parent="."]
+position = Vector2(-200, 600)
+script = ExtResource("1")
+size = Vector2(2400, 600)
+fill_texture = ExtResource("2")
+edge_texture = ExtResource("3")
+
+[node name="ParedIzquierda" type="StaticBody2D" parent="."]
+position = Vector2(-240, -1400)
+script = ExtResource("1")
+size = Vector2(40, 2000)
+
+[node name="ParedDerecha" type="StaticBody2D" parent="."]
+position = Vector2(2200, -1400)
+script = ExtResource("1")
+size = Vector2(40, 2000)
+
+[node name="Jugador" type="CharacterBody2D" parent="."]
+position = Vector2(200, 600)
+script = ExtResource("4")
+
+[node name="GranSapo" type="CharacterBody2D" parent="."]
+position = Vector2(1500, 600)
+script = ExtResource("6")
+arena = Rect2(-200, -400, 2400, 1000)
+
+[node name="Camara" type="Camera2D" parent="." node_paths=PackedStringArray("target")]
+position = Vector2(200, 500)
+script = ExtResource("5")
+target = NodePath("../Jugador")
+lock_rect = Rect2(-200, -300, 2400, 1100)
+
+[node name="Interfaz" type="CanvasLayer" parent="."]
+script = ExtResource("7")
+
+[node name="ControlesTactiles" type="CanvasLayer" parent="."]
+script = ExtResource("8")
+
+[node name="MenuPausa" type="CanvasLayer" parent="."]
+script = ExtResource("10")

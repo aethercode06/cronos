@@ -58,12 +58,20 @@ jobs:
           grep -q "plantilla carga = true" smoke.log
           grep -q "personaje por piezas = 3 huesos" smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error" smoke.log
+      - name: Prueba de las plantillas (2D, jefe, corredor, 3D, título)
+        run: |
+          timeout 300 godot --headless --path engine res://tests/templates.tscn > templates.log 2>&1 || true
+          tail -30 templates.log
+          grep -q "AETHER: TEMPLATES OK" templates.log
+          ! grep -E "SCRIPT ERROR|Parse Error" templates.log
       - name: Capturas de pantalla (render por software)
         continue-on-error: true
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-vulkan-drivers > /dev/null
           timeout 600 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 res://tests/smoke.tscn -- --shots > shots.log 2>&1 || true
           tail -40 shots.log
+          timeout 300 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 res://tests/templates.tscn -- --shots > shots2.log 2>&1 || true
+          tail -20 shots2.log
           ls -la engine_shots || true
       - name: Exportar APK de Android
         env:

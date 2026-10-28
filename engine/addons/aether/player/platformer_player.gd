@@ -33,6 +33,10 @@ const LAYER_ENEMY := 4
 @export var double_jump_speed := 1080.0
 ## Velocidad máxima de caída.
 @export var max_fall := 1500.0
+## Corre solo hacia la derecha (juegos tipo corredor).
+@export var auto_run := false
+## Vuelve a aparecer en el último punto de control al caer.
+@export var auto_respawn := true
 @export_group("Dash")
 ## Velocidad del dash.
 @export var dash_speed := 1500.0
@@ -132,6 +136,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		coyote = max(0.0, coyote - delta)
 	var dir := Input.get_axis("left", "right")
+	if auto_run:
+		dir = 1.0
 	if Input.is_action_just_pressed("jump"):
 		jump_buffer = 0.13
 	guarding = Input.is_action_pressed("guard") and on_floor and dash_t <= 0 and atk_t <= 0 and stun <= 0
@@ -333,6 +339,11 @@ func _die() -> void:
 	Aether.sfx("kill", 0.8, 0.7)
 	died.emit()
 	Aether.player_died.emit()
+	if auto_respawn:
+		await get_tree().create_timer(1.4, true, false, true).timeout
+		respawn()
+		if Aether.camera and Aether.camera.has_method("snap"):
+			Aether.camera.snap()
 
 func respawn() -> void:
 	dead = false
