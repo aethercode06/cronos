@@ -78,7 +78,7 @@ func _process(_delta: float) -> void:
 		"die":
 			if frame == 20: _shot("06_derrota")
 			if frame == 90: _shot("07_derrota2")
-			if frame > 360:
+			if (ok_boss and frame > 300) or frame > 8000:
 				_shot("08_final")
 				print("AETHER: jefe derrotado = ", ok_boss)
 				print("AETHER: SMOKE OK" if ok_boss else "AETHER: ERROR sin señal de derrota")
