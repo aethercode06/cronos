@@ -110,6 +110,7 @@ func _ready() -> void:
 	_bg.texture = Aether.tex("pbg0")
 	_bg.centered = false
 	bgl.add_child(_bg)
+	add_child(CrFx.new())
 	_kael = SheetSprite.new()
 	_kael.unit_scale = 0.25
 	_kael.z_index = 5
