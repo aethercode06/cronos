@@ -246,3 +246,41 @@ func _auto_quality() -> void:
 ## Brillo (glow) recomendado según la calidad.
 func glow_ok() -> bool:
 	return quality >= 1
+
+# ---------------- capturas para la tienda ----------------
+var _touches := {}
+
+func _input(e: InputEvent) -> void:
+	# Solo mientras se prueba desde el editor: 3 dedos o F12 = captura.
+	if not OS.has_feature("editor"):
+		return
+	if e is InputEventScreenTouch:
+		if e.pressed:
+			_touches[e.index] = true
+			if _touches.size() >= 3:
+				_touches.clear()
+				screenshot()
+		else:
+			_touches.erase(e.index)
+	elif e is InputEventKey and e.pressed and not e.echo and e.physical_keycode == KEY_F12:
+		screenshot()
+
+## Guarda una captura en Imágenes/Aether (o en user://capturas si no se puede).
+func screenshot() -> void:
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	var name := "captura_%d.png" % int(Time.get_unix_time_from_system() * 10.0)
+	var dir := OS.get_system_dir(OS.SYSTEM_DIR_PICTURES)
+	var path := ""
+	if dir != "":
+		dir = dir.path_join("Aether")
+		DirAccess.make_dir_recursive_absolute(dir)
+		path = dir.path_join(name)
+		if img.save_png(path) != OK:
+			path = ""
+	if path == "":
+		DirAccess.make_dir_recursive_absolute("user://capturas")
+		path = "user://capturas/" + name
+		img.save_png(path)
+	flash(Color(1, 1, 1), 0.6)
+	toast("📷 " + path.get_file())

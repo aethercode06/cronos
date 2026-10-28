@@ -6,6 +6,8 @@ extends RefCounted
 
 signal changed(code: String)
 
+const NAMES := {"es": "Español", "en": "English", "pt": "Português", "fr": "Français", "de": "Deutsch", "it": "Italiano", "ja": "日本語", "zh": "中文", "ko": "한국어", "ru": "Русский"}
+
 var code := "es"
 var table := {}
 
@@ -36,3 +38,7 @@ func set_lang(c: String) -> void:
 
 func t(text: String) -> String:
 	return table.get(text, text)
+
+## Nombre del idioma para mostrarlo en menús.
+func display_name(c: String) -> String:
+	return NAMES.get(c, c)

@@ -158,7 +158,7 @@ func _show_options() -> void:
 	ob.custom_minimum_size = Vector2(440, 60)
 	var langs := Aether.lang.available()
 	for i in langs.size():
-		ob.add_item(langs[i])
+		ob.add_item(Aether.lang.display_name(langs[i]))
 		if langs[i] == Aether.lang.code:
 			ob.select(i)
 	ob.item_selected.connect(func(i): Aether.lang.set_lang(langs[i]))

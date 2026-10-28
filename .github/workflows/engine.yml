@@ -108,6 +108,24 @@ jobs:
         run: |
           cd engine && zip -qr ../AetherEngine-Proyecto.zip . -x ".godot/*" "keys/*" "branding/*" && cd ..
           gh release upload aether-editor AetherEngine-Proyecto.zip --clobber || echo "aún no existe la versión del editor"
+      - name: Prueba del asistente de publicación e idiomas
+        run: |
+          timeout 200 godot --headless --path engine res://tests/publish.tscn > publish.log 2>&1 || true
+          tail -30 publish.log
+          grep -q "AETHER: PUBLICAR OK" publish.log
+          ! grep -E "SCRIPT ERROR|Parse Error" publish.log
+      - name: Prueba del AAB para Google Play (gradle)
+        continue-on-error: true
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ github.workspace }}/engine/keys/debug.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: android
+        run: |
+          godot --headless --path engine --install-android-build-template > aab.log 2>&1 || true
+          timeout 1200 godot --headless --path engine --export-release "Android AAB" ../build/prueba.aab >> aab.log 2>&1 || true
+          tail -40 aab.log
+          ls -la build
+          test -s build/prueba.aab && echo "AETHER: AAB OK" | tee -a aab.log
       - name: Guardar registros y capturas en la rama aether-logs
         if: always()
         run: |

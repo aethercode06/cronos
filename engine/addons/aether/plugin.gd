@@ -6,6 +6,8 @@ extends EditorPlugin
 var dock: Control
 var claude: Control
 var events_dock: Control
+var publish_dock: Control
+var learn_dock: Control
 
 func _enter_tree() -> void:
 	dock = _build_dock()
@@ -18,6 +20,13 @@ func _enter_tree() -> void:
 	claude.plugin = self
 	claude.name = "Claude (opcional)"
 	add_control_to_dock(DOCK_SLOT_RIGHT_BL, claude)
+	publish_dock = preload("res://addons/aether/editor/publish_panel.gd").new()
+	publish_dock.name = "Publicar"
+	add_control_to_dock(DOCK_SLOT_RIGHT_BR, publish_dock)
+	learn_dock = preload("res://addons/aether/editor/learn_panel.gd").new()
+	learn_dock.plugin = self
+	learn_dock.name = "Aprender"
+	add_control_to_dock(DOCK_SLOT_LEFT_UR, learn_dock)
 
 func _exit_tree() -> void:
 	if dock:
@@ -29,6 +38,10 @@ func _exit_tree() -> void:
 	if events_dock:
 		remove_control_from_docks(events_dock)
 		events_dock.queue_free()
+	for d in [publish_dock, learn_dock]:
+		if d:
+			remove_control_from_docks(d)
+			d.queue_free()
 
 func _build_dock() -> Control:
 	var sc := ScrollContainer.new()
@@ -132,6 +145,12 @@ func _from_template(path: String, base: String) -> void:
 	EditorInterface.get_resource_filesystem().scan()
 	await get_tree().create_timer(0.5).timeout
 	EditorInterface.open_scene_from_path(dest)
+
+## Añade una pieza por su nombre del catálogo (lo usan Aprender y Claude).
+func add_piece(piece: String) -> void:
+	var cat: Dictionary = preload("res://addons/aether/editor/claude_panel.gd").PIECES
+	if cat.has(piece):
+		_add(cat[piece][0], piece, cat[piece][1])
 
 func _add(script_path: String, node_name: String, base_type: String) -> void:
 	var root := EditorInterface.get_edited_scene_root()
