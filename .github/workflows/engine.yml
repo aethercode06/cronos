@@ -63,6 +63,8 @@ jobs:
           timeout 300 godot --headless --path engine res://tests/templates.tscn > templates.log 2>&1 || true
           tail -30 templates.log
           grep -q "AETHER: TEMPLATES OK" templates.log
+          grep -q "AETHER: LOGICA OK" templates.log
+          grep -q "AETHER: sistemas OK" templates.log
           ! grep -E "SCRIPT ERROR|Parse Error" templates.log
       - name: Capturas de pantalla (render por software)
         continue-on-error: true
