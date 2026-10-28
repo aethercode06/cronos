@@ -58,6 +58,13 @@ var waves: Array = []
 var warns: Array = []
 var invert_t := 0.0
 var lives := 4
+## Modo de juego: historia, torre, rush, grieta, diario.
+var mode := "historia"
+var tower := {}
+var rush := {}
+var rift_ret := {}
+var daily := {}
+var level_time := 0.0
 var attempt := 1
 var slow_t := 0.0
 const LIVES_BY := [99, 4, 2, 1]
@@ -137,7 +144,11 @@ func _ready() -> void:
 		wi = int(launch.get("wi", wi))
 		act = int(launch.get("act", act))
 		diff_idx = int(launch.get("diff", diff_idx))
+		mode = str(launch.get("mode", "historia"))
 		launch = {}
+		if mode != "historia":
+			start_mode(mode)
+			return
 	if wi == 0 and act == 0 and not Aether.save.get_value("cr_intro", false) and not autoplay and not no_story:
 		start_stage(act, wi)
 		story.play_cut("intro", func() -> void:
@@ -182,12 +193,23 @@ static func _resolve(o, ids: Dictionary):
 			o[i] = _resolve(o[i], ids)
 	return o
 
-func start_stage(a: int, w := -1) -> void:
+func start_stage(a: int, w := -1, file := "") -> void:
 	act = a
 	if w >= 0:
 		wi = w
 	WD = data().worlds[wi]
-	level = load_level(diff_idx, wi, act)
+	if file != "":
+		var raw = JSON.parse_string(FileAccess.get_file_as_string("res://chronos/niveles/%s.json" % file))
+		level = {}
+		if raw is Dictionary:
+			var ids := {}
+			_collect(raw, ids)
+			level = _resolve(raw, ids)
+			wi = int(level.get("wi", wi))
+			act = int(level.get("act", act))
+			WD = data().worlds[wi]
+	else:
+		level = load_level(diff_idx, wi, act)
 	if level.is_empty():
 		level = CrLevel.new().build(0, act, diff_idx)
 	for k in ["arena", "goal", "lava"]:
@@ -239,10 +261,15 @@ func start_stage(a: int, w := -1) -> void:
 	if _story_on():
 		var H: Dictionary = CrStory.data()
 		var L0: Array = []
+		if mode != "historia":
+			L0 = [["TIC", ""]]
 		if act == 0:
 			L0.append(["NARR", H.lore[wi]])
 		L0.append(["TIC", H.ticl[wi][act]])
 		story.say(L0, false)
+	level_time = 0.0
+	if mode != "historia":
+		return
 	var pos: int = data().order.find(wi) + 1
 	_banner("MUNDO %d-%d · %s" % [pos, act + 1, ("GUARDIÁN: " + str(WD.boss.name)) if act == 2 else str(WD.name)])
 
@@ -385,7 +412,9 @@ func _process(delta: float) -> void:
 	elif state in ["clear", "gameover"]:
 		state_t -= dt
 		if state_t <= 0.0:
-			if state == "clear":
+			if state == "clear" and mode != "historia":
+				_mode_clear()
+			elif state == "clear":
 				var order: Array = data().order
 				var idx: int = order.find(wi) * 3 + act + 1
 				var prog: int = int(Aether.save.get_value("cr_prog", 1))
@@ -410,7 +439,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _story_on() -> bool:
-	return story != null and not autoplay and not no_story
+	return story != null and not autoplay and not no_story and mode == "historia"
 
 func _update_tic(dt: float) -> void:
 	var tx: float = p.x + p.w / 2 - p.face * 26
@@ -684,6 +713,15 @@ func _update_player(dt: float) -> void:
 		if p.deadT <= 0.7 and not p.get("counted", false):
 			p.counted = true
 			lives -= 1
+		if p.deadT <= 0.7 and mode in ["torre", "rush"]:
+			_mode_over()
+			return
+		if p.deadT <= 0.7 and mode == "grieta":
+			_leave_rift(false)
+			return
+		if p.deadT <= 0.7 and mode == "diario":
+			daily.deaths = int(daily.get("deaths", 0)) + 1
+			lives = 99
 		if p.deadT <= 0.7:
 			if lives > 0:
 				_revive()
@@ -1079,6 +1117,10 @@ func _pickups() -> void:
 		_burst(rl.x, rl.y, Color(1, 0.88, 0.5), 30, 220, 0, 0.8)
 		_float(rl.x, rl.y - 20, "¡RELOJ DE ARENA SECRETO!", Color(1, 0.83, 0.3), 20)
 	_update_chases()
+	level_time += get_process_delta_time()
+	var rf = level.get("rift")
+	if mode == "historia" and rf is Dictionary and not rf.is_empty() and ov(p, rf):
+		_enter_rift()
 	for gm in level.gems:
 		if gm.taken:
 			continue
@@ -2057,6 +2099,12 @@ func _draw() -> void:
 		var al: float = clamp(f.life / 0.4, 0.0, 1.0)
 		draw_string_outline(_font, Vector2(f.x - 60, f.y), f.t, HORIZONTAL_ALIGNMENT_CENTER, 120, int(f.s * 0.7), 3, Color(0, 0, 0, al))
 		draw_string(_font, Vector2(f.x - 60, f.y), f.t, HORIZONTAL_ALIGNMENT_CENTER, 120, int(f.s * 0.7), Color(f.c.r, f.c.g, f.c.b, al))
+	var rf = level.get("rift")
+	if rf is Dictionary and not rf.is_empty():
+		var c2 := Vector2(rf.x + rf.w / 2, rf.y + rf.h / 2)
+		for k in 3:
+			draw_arc(c2, 14 + k * 6 + sin(time * 3 + k) * 2, 0, TAU, 24, Color(0.78, 0.47, 1, 0.7 - k * 0.2), 3)
+		draw_circle(c2, 10, Color(0.9, 0.7, 1, 0.5 + sin(time * 5) * 0.2))
 	for a in level.anchors:
 		var near: bool = p.hook == null and not p.onGround and Vector2(a.x - (p.x + p.w / 2), a.y - (p.y + p.h / 2)).length() < 160
 		draw_arc(Vector2(a.x, a.y), 9, 0, TAU, 18, Color(1, 0.83, 0.3), 3)
@@ -2308,3 +2356,149 @@ func _update_flying_boss(dt: float, b: Dictionary, A: Dictionary, ag: float, pcx
 			if b.t > 2.0 / sqrt(ag):
 				b.st = "idle"
 				b.t = 0.0
+
+# ---------------- modos: Torre, Boss Rush, Grietas, Reto diario ----------------
+func start_mode(m: String) -> void:
+	mode = m
+	score = 0
+	match m:
+		"torre":
+			tower = {"floor": 0, "v": randi() % 2, "hp": -1.0}
+			_tower_floor()
+		"rush":
+			rush = {"i": 0, "hp": -1.0}
+			_rush_next()
+		"diario":
+			var d := int(Time.get_unix_time_from_system() / 86400.0)
+			var fl: int = 1 + d % 9
+			daily = {"d": d, "deaths": 0}
+			start_stage(0, -1, "torre_v%d_%d" % [d % 2, fl])
+			lives = 99
+			_banner("RETO DIARIO · La misma fase para todos hoy")
+
+func _tower_floor() -> void:
+	tower.floor += 1
+	var f: int = (int(tower.floor) - 1) % 40 + 1
+	var hp_keep: float = tower.hp
+	start_stage(0, -1, "torre_v%d_%d" % [tower.v, f])
+	var k: float = 1.0 + tower.floor * 0.07
+	for e in level.enemies:
+		e.hp = ceil(e.hp * k)
+	if hp_keep > 0.0:
+		p.hp = min(p.maxHp, hp_keep + 25.0)
+		hp_changed.emit(p.hp, p.maxHp)
+	lives = 1
+	var boss_floor: bool = int(tower.floor) % 10 == 0
+	_banner("TORRE DEL TIEMPO · %sPISO %d · %s" % ["¡GUARDIÁN! · " if boss_floor else "", tower.floor, WD.name])
+
+func _rush_next() -> void:
+	var order: Array = data().order
+	if rush.i >= order.size():
+		_banner("¡BOSS RUSH COMPLETADO!")
+		Aether.save.set_value("cr_rush", order.size())
+		state = "victory"
+		state_t = 0.0
+		return
+	var hp_keep: float = rush.hp
+	start_stage(2, int(order[rush.i]))
+	var A: Dictionary = level.arena
+	p.x = A.x1 + 100
+	p.y = A.floor - PH
+	p.respawn = Vector2(p.x, p.y)
+	p.safe = p.respawn
+	if hp_keep > 0.0:
+		p.hp = min(p.maxHp, hp_keep + 30.0)
+		hp_changed.emit(p.hp, p.maxHp)
+	lives = 1
+	_update_camera(0.0, true)
+	_banner("BOSS RUSH · %d / %d" % [rush.i + 1, order.size()])
+
+func _mode_clear() -> void:
+	match mode:
+		"torre":
+			tower.hp = p.hp
+			score += 500 + int(tower.floor) * 100
+			if int(tower.floor) > int(Aether.save.get_value("cr_torre", 0)):
+				Aether.save.set_value("cr_torre", int(tower.floor))
+			_tower_floor()
+		"rush":
+			rush.i += 1
+			rush.hp = p.hp
+			if int(rush.i) > int(Aether.save.get_value("cr_rush", 0)):
+				Aether.save.set_value("cr_rush", int(rush.i))
+			_rush_next()
+		"grieta":
+			_leave_rift(true)
+		"diario":
+			var t: float = level_time + int(daily.get("deaths", 0)) * 5.0
+			var key := "cr_diario_%d" % int(daily.d)
+			var prev: float = float(Aether.save.get_value(key, 0.0))
+			var first: bool = prev == 0.0
+			if first or t < prev:
+				Aether.save.set_value(key, t)
+			_banner("RETO DIARIO · %.1f s%s" % [t, " · ¡NUEVO RÉCORD!" if (first or t < prev) else ""])
+			state = "victory"
+			state_t = 0.0
+
+func _mode_over() -> void:
+	match mode:
+		"torre":
+			_banner("FIN DE LA TORRE · PISO %d (récord %d)" % [tower.floor, int(Aether.save.get_value("cr_torre", 0))])
+		"rush":
+			_banner("FIN DEL BOSS RUSH · %d guardianes" % rush.i)
+	state = "victory"
+	state_t = 0.0
+	p.dead = true
+	p.deadT = 99.0
+
+func _enter_rift() -> void:
+	rift_ret = {"level": level, "p": p.duplicate(), "act": act, "wi": wi, "score": score, "dim": dim}
+	Aether.sfx("portal", 0.8)
+	Aether.flash(Color(0.78, 0.47, 1), 0.5)
+	var w := wi
+	mode = "grieta"
+	start_stage(1, -1, "grieta_%d" % w)
+	for s in level.plats:
+		if s.get("float", false) and s.w >= 48:
+			var x: float = s.x + 14
+			while x < s.x + s.w - 10:
+				level.gems.append({"x": x, "y": s.y - 26, "taken": false, "ph": randf() * 6.0})
+				x += 30
+	for e in level.enemies:
+		e.hp = max(1.0, e.hp - 1)
+	level.rift = {}
+	score = rift_ret.score
+	lives = 99
+	_banner("GRIETA DEL TIEMPO · ¡recoge todo lo que puedas!")
+
+func _leave_rift(won: bool) -> void:
+	var got := 0
+	for g in level.gems:
+		if g.taken:
+			got += 1
+	var R := rift_ret
+	mode = "historia"
+	wi = R.wi
+	act = R.act
+	WD = data().worlds[wi]
+	level = R.level
+	p = R.p
+	p.dead = false
+	p.inv = 1.5
+	dim = R.dim
+	level.rift = {}
+	state = "playing"
+	_bg.texture = Aether.tex("pbg%d" % wi)
+	if won:
+		var sec: Array = Aether.save.get_value("cr_grietas", [])
+		if not wi in sec:
+			sec.append(wi)
+			Aether.save.set_value("cr_grietas", sec)
+		score += got * 100
+		_banner("¡GRIETA SUPERADA! · %d fragmentos" % got)
+		Aether.sfx("relic", 0.7)
+	else:
+		score = R.score
+		_banner("La grieta te expulsa…")
+	hp_changed.emit(p.hp, p.maxHp)
+	_update_camera(0.0, true)

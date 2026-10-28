@@ -8,6 +8,7 @@ var _grid: GridContainer
 var _diff := 1
 var _diff_btn: Button
 var _info: Label
+var _modes: HBoxContainer
 
 func _ready() -> void:
 	var D: Dictionary = CrGame.data()
@@ -43,6 +44,9 @@ func _ready() -> void:
 	_info = Label.new()
 	_info.add_theme_font_size_override("font_size", 20)
 	root.add_child(_info)
+	_modes = HBoxContainer.new()
+	_modes.add_theme_constant_override("separation", 12)
+	root.add_child(_modes)
 	var sc := ScrollContainer.new()
 	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(sc)
@@ -69,6 +73,20 @@ func _build() -> void:
 	if OS.has_feature("editor") or Aether.save.get_value("cr_todo_abierto", false):
 		prog = 999
 	_info.text = "%s: %d / 54   ·   %s %d" % [Aether.t("Fases"), min(prog - 1, 54), Aether.t("Récord"), int(Aether.save.get_value("cr_score", 0))]
+	for c in _modes.get_children():
+		c.queue_free()
+	var today := int(Time.get_unix_time_from_system() / 86400.0)
+	var dbest: float = float(Aether.save.get_value("cr_diario_%d" % today, 0.0))
+	for m in [["torre", "TORRE DEL TIEMPO", "Récord: piso %d" % int(Aether.save.get_value("cr_torre", 0)), 4],
+			["rush", "BOSS RUSH", "Récord: %d guardianes" % int(Aether.save.get_value("cr_rush", 0)), 10],
+			["diario", "RETO DIARIO", ("Hoy: %.1f s" % dbest) if dbest > 0.0 else "¡Juega el de hoy!", 2]]:
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(250, 72)
+		b.add_theme_font_size_override("font_size", 20)
+		b.text = "%s\n%s" % [Aether.t(m[1]), m[2]]
+		b.disabled = prog < int(m[3])
+		b.pressed.connect(_play_mode.bind(m[0]))
+		_modes.add_child(b)
 	var order: Array = D.order
 	for i in order.size():
 		var w: Dictionary = D.worlds[int(order[i])]
@@ -96,5 +114,10 @@ func _build() -> void:
 
 func _play(w: int, a: int) -> void:
 	CrGame.launch = {"wi": w, "act": a, "diff": _diff}
+	Aether.sfx("check", 0.6)
+	get_tree().change_scene_to_file("res://chronos/chronos.tscn")
+
+func _play_mode(m: String) -> void:
+	CrGame.launch = {"mode": m, "diff": _diff}
 	Aether.sfx("check", 0.6)
 	get_tree().change_scene_to_file("res://chronos/chronos.tscn")

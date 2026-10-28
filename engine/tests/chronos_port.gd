@@ -65,10 +65,64 @@ func _process(_d: float) -> void:
 				return
 			boss_i += 1
 			if boss_i >= bosses.size():
-				print("CHRONOS PORT OK")
-				get_tree().quit(0)
+				phase = 3
+				f = 0
 				return
 			_boss_start()
+
+	elif phase == 3:
+		_modes_test()
+
+var _modes_done := false
+func _modes_test() -> void:
+	if _modes_done:
+		return
+	_modes_done = true
+	var ok := true
+	game.start_mode("torre")
+	await get_tree().create_timer(0.3).timeout
+	game._mode_clear()
+	await get_tree().process_frame
+	print("CHRONOS: torre piso = ", game.tower.floor, " mundo ", game.wi)
+	ok = ok and int(game.tower.floor) == 2
+	game.start_mode("rush")
+	await get_tree().process_frame
+	game._mode_clear()
+	print("CHRONOS: rush guardián = ", game.rush.i, " mundo ", game.wi, " arena ", game.arena_lock or game.p.x > game.level.arena.x1)
+	ok = ok and int(game.rush.i) == 1
+	game.start_mode("diario")
+	await get_tree().create_timer(0.3).timeout
+	print("CHRONOS: diario mundo ", game.wi, " fase ", game.act)
+	game.mode = "historia"
+	game.start_stage(1, 0)
+	await get_tree().process_frame
+	var had_rift: bool = game.level.get("rift") is Dictionary and not game.level.rift.is_empty()
+	game._enter_rift()
+	await get_tree().create_timer(0.3).timeout
+	var gems_in: int = game.level.gems.size()
+	game._leave_rift(true)
+	print("CHRONOS: grieta = ", had_rift, " gemas dentro = ", gems_in, " vuelta al modo ", game.mode)
+	ok = ok and had_rift and game.mode == "historia"
+	# historia: diálogo con espera y escena ilustrada
+	game.no_story = false
+	var st: CrStory = game.story
+	var fin := [false]
+	st.say([["TIC", "Hola"], ["KAEL", "Adiós"]], true, func() -> void: fin[0] = true)
+	for k in 6:
+		st._advance()
+	var cut_done := [false]
+	st.play_cut("intro", func() -> void: cut_done[0] = true)
+	for k in 60:
+		if cut_done[0]:
+			break
+		st._advance_cut()
+	print("CHRONOS: historia diálogo = ", fin[0], " escena = ", cut_done[0])
+	ok = ok and fin[0] and cut_done[0]
+	if ok:
+		print("CHRONOS PORT OK")
+		get_tree().quit(0)
+	else:
+		get_tree().quit(1)
 
 func _next_stage() -> void:
 	var order: Array = CrGame.data().order
