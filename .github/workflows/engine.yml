@@ -47,27 +47,22 @@ jobs:
           cat ~/.config/godot/editor_settings-4.tres
       - name: Importar el proyecto
         run: |
-          godot --headless --path engine --import 2>&1 | tee import.log || true
+          godot --headless --path engine --import > import.log 2>&1 || true
+          tail -60 import.log
           ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" import.log
       - name: Prueba automática (nivel + jefe)
         run: |
-          timeout 300 godot --headless --path engine res://tests/smoke.tscn 2>&1 | tee smoke.log
+          timeout 300 godot --headless --path engine res://tests/smoke.tscn > smoke.log 2>&1 || true
+          tail -40 smoke.log
           grep -q "AETHER: SMOKE OK" smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error" smoke.log
       - name: Capturas de pantalla (render por software)
         continue-on-error: true
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-vulkan-drivers > /dev/null
-          timeout 600 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 res://tests/smoke.tscn -- --shots 2>&1 | tail -40
+          timeout 600 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 res://tests/smoke.tscn -- --shots > shots.log 2>&1 || true
+          tail -40 shots.log
           ls -la engine_shots || true
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: aether-shots
-          path: |
-            engine_shots/
-            smoke.log
-            import.log
       - name: Exportar APK de Android
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/engine/keys/debug.keystore
@@ -76,7 +71,8 @@ jobs:
         run: |
           mkdir -p build
           sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/; s/^version\/name=.*/version\/name=\"0.1.${{ github.run_number }}\"/" engine/export_presets.cfg
-          godot --headless --path engine --export-debug "Android" ../build/AetherEngine-Chronos.apk 2>&1 | tail -30
+          godot --headless --path engine --export-debug "Android" ../build/AetherEngine-Chronos.apk > export.log 2>&1 || true
+          tail -30 export.log
           ls -la build
           test -s build/AetherEngine-Chronos.apk
       - name: Publicar en Descargas
@@ -93,3 +89,12 @@ jobs:
             sleep 4
             if [ "$(gh release view aether-engine --json isDraft -q .isDraft)" = "false" ]; then echo "publicada"; break; fi
           done
+      - name: Guardar registros y capturas en la rama aether-logs
+        if: always()
+        run: |
+          mkdir -p /tmp/out && cp -r engine_shots /tmp/out/ 2>/dev/null || true
+          cp *.log /tmp/out/ 2>/dev/null || true
+          cd /tmp/out && git init -q && git checkout -q -b aether-logs
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Registros de la ejecución ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-logs
