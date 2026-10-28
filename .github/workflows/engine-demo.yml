@@ -2,7 +2,7 @@ name: Aether Engine (vídeo de demostración)
 on:
   push:
     branches: [ main ]
-    paths: [ 'engine/demo/personaje_3d/**', 'engine/addons/aether/three_d/aether_animated_3d.gd', '.github/workflows/engine-demo.yml' ]
+    paths: [ 'engine/demo/personaje_3d/**', 'engine/chronos/**', 'engine/addons/aether/three_d/aether_animated_3d.gd', '.github/workflows/engine-demo.yml' ]
   workflow_dispatch:
 permissions:
   contents: write
@@ -29,6 +29,9 @@ jobs:
             timeout 900 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 --write-movie $PWD/out/demo.avi --fixed-fps 30 --quit-after 700 res://demo/personaje_3d/demo.tscn >> out/movie.log 2>&1 || true
           fi
           tail -30 out/movie.log
+          timeout 900 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-driver vulkan --write-movie $PWD/out/chronos.avi --fixed-fps 30 --quit-after 1500 res://chronos/chronos.tscn -- --autoplay >> out/movie.log 2>&1 || true
+          ffmpeg -y -loglevel error -i out/chronos.avi -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart out/chronos_aether.mp4 || true
+          rm -f out/chronos.avi
           ffmpeg -y -loglevel error -i out/demo.avi -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart out/aether_personaje_3d.mp4
           rm -f out/demo.avi
           ls -la out

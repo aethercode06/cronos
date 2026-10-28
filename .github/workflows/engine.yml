@@ -62,6 +62,12 @@ jobs:
           grep -q "plantilla carga = true" smoke.log
           grep -q "personaje por piezas = 3 huesos" smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error" smoke.log
+      - name: Prueba de Chronos en Aether (Mundo 1)
+        run: |
+          timeout 400 godot --headless --path engine --fixed-fps 60 res://tests/chronos_port.tscn > chronos.log 2>&1 || true
+          grep -E "CHRONOS|SCRIPT ERROR|Parse Error" chronos.log | head -40
+          grep -q "CHRONOS PORT OK" chronos.log
+          ! grep -E "SCRIPT ERROR|Parse Error" chronos.log
       - name: Prueba de las plantillas y los juegos por género
         run: |
           timeout 500 godot --headless --path engine res://tests/templates.tscn > templates.log 2>&1 || true
