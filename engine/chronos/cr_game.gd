@@ -53,6 +53,8 @@ var p := {}
 var boss := {}
 var projs: Array = []
 var waves: Array = []
+var warns: Array = []
+var invert_t := 0.0
 var parts: Array = []
 var floats: Array = []
 var cam := Vector2.ZERO
@@ -192,6 +194,8 @@ func start_stage(a: int, w := -1) -> void:
 	boss = {}
 	projs = []
 	waves = []
+	warns = []
+	invert_t = 0.0
 	arena_lock = false
 	boss_intro = 0.0
 	state = "playing"
@@ -590,6 +594,9 @@ func _update_player(dt: float) -> void:
 		p.sinkT = 0.0
 	var dir := Input.get_axis("left", "right")
 	dir = 0.0 if abs(dir) < 0.3 else signf(dir)
+	invert_t = max(0.0, invert_t - dt)
+	if invert_t > 0.0:
+		dir = -dir
 	if p.wjLock > 0.0:
 		dir = p.wjDir
 	if p.stun > 0.0:
@@ -963,7 +970,7 @@ func _do_attack() -> void:
 				_pogo()
 				break
 		if not boss.is_empty() and not boss.dying and boss_intro <= 0.0 and ov(db, boss) and not p.hitSet.has("boss"):
-			_hit_boss(db)
+			_hit_boss(db, true)
 			_pogo()
 	for q in projs.duplicate():
 		if ov(hb, {"x": q.x - q.hw, "y": q.y - q.hh, "w": q.hw * 2, "h": q.hh * 2}):
@@ -971,6 +978,20 @@ func _do_attack() -> void:
 			score += 10
 			Aether.sfx("clang", 0.5)
 			_float(q.x, q.y - 10, "PARRY", Color(0.2, 0.89, 1), 15)
+	for l in level.levers:
+		if not l.get("on", false) and ov(hb, l):
+			l.on = true
+			Aether.sfx("lever")
+			_float(l.x + l.w / 2, l.y - 14, "¡PALANCA!", Color(0.6, 1, 0.69), 16)
+			var all_on := true
+			for v in level.levers:
+				if not v.get("on", false):
+					all_on = false
+			if all_on and not boss.is_empty() and boss.type == 2 and not boss.dying:
+				boss.vulnT = 5.5
+				shake = 12.0
+				Aether.sfx("shield")
+				_float(boss.x + boss.w / 2, boss.y - 24, "¡ESCUDO ROTO!", Color(0.2, 0.89, 1), 24)
 	if not boss.is_empty() and not boss.dying and not boss.done and boss_intro <= 0.0 and not p.hitSet.has("boss") and ov(hb, boss):
 		_hit_boss(hb)
 
@@ -1219,6 +1240,15 @@ func _update_enemies(dt: float) -> void:
 func _update_projs(dt: float) -> void:
 	for q in projs.duplicate():
 		q.life -= dt
+		if q.type == "clock" and not boss.is_empty():
+			var dd := Vector2(p.x + p.w / 2 - q.x, p.y + p.h / 2 - q.y).normalized()
+			q.vx += dd.x * 300 * dt
+			q.vy += dd.y * 300 * dt
+			var vv := Vector2(q.vx, q.vy)
+			if vv.length() > 260:
+				vv = vv.normalized() * 260
+				q.vx = vv.x
+				q.vy = vv.y
 		if q.has("grav"):
 			q.vy += q.grav * dt
 		q.x += q.vx * dt
@@ -1237,6 +1267,19 @@ func _update_projs(dt: float) -> void:
 		if rem:
 			projs.erase(q)
 	var A: Dictionary = level.arena
+	for w in warns.duplicate():
+		w.t -= dt
+		if w.t <= 0.0 and not A.is_empty():
+			match str(w.get("kind", "")):
+				"sand":
+					projs.append({"x": w.x, "y": A.floor - 560, "vx": 0.0, "vy": 150.0, "grav": 1000.0, "hw": 10.0, "hh": 10.0, "type": "sandblock", "dmg": 15.0, "life": 3.0})
+				"feather":
+					projs.append({"x": w.x, "y": A.floor - 560, "vx": randf_range(-30, 30), "vy": 420.0, "hw": 4.0, "hh": 10.0, "type": "feather", "dmg": 12.0, "life": 3.0})
+				"ice":
+					projs.append({"x": w.x, "y": A.floor - 540, "vx": 0.0, "vy": 200.0, "grav": 1200.0, "hw": 6.0, "hh": 12.0, "type": "icicle", "dmg": 15.0, "life": 3.0})
+				_:
+					projs.append({"x": w.x, "y": A.floor - 560, "vx": 0.0, "vy": 150.0, "grav": 900.0, "hw": 9.0, "hh": 9.0, "type": "fire", "dmg": 15.0, "life": 3.0})
+			warns.erase(w)
 	for w in waves.duplicate():
 		w.x += w.dir * w.spd * dt
 		if A.is_empty() or w.x < A.x1 - 30 or w.x > A.x2 + 30:
@@ -1261,24 +1304,30 @@ func _spawn_boss() -> void:
 	var A: Dictionary = level.arena
 	var D: Dictionary = DIFFS[diff_idx]
 	var bt := _boss_type()
-	var flying: bool = bt in [1, 3, 6, 8, 10, 11] and WD.get("boss", {}).get("skin") == null
-	var bm: Dictionary = Aether.sheet(_boss_art())
-	var bw: float = clamp(float(bm.get("fw", 116)) * 0.85, 60.0, 170.0)
-	var bh: float = clamp(float(bm.get("fh", 92)) * 0.8, 56.0, 150.0)
-	if bt == 0:
-		bw = 116.0
-		bh = 92.0
-	boss = {"w": bw, "h": bh, "x": A.x2 - 260, "y": (A.floor - 300 if flying else A.floor - bh), "vx": 0.0, "vy": 0.0, "st": "idle", "t": 0.0, "face": -1, "anim": 0.0, "hit": 0.0, "dying": false, "done": false, "dieT": 0.0, "fly": flying, "shots": 0}
+	boss = CrBosses.spawn(bt, A)
+	boss.merge({"type": bt, "vx": 0.0, "vy": 0.0, "t": 0.0, "face": -1, "anim": 0.0, "hit": 0.0, "dying": false, "done": false, "dieT": 0.0}, false)
 	boss.max = round(BOSS_HP[min(bt, BOSS_HP.size() - 1)] * D.boss)
 	boss.hp = boss.max
+	for l in level.levers:
+		l.on = false
 	for e in level.enemies:
 		if e.x > A.x1 - 300:
 			e.dead = true
 	_boss_proxy.activate(str(WD.get("boss", {}).get("name", "GUARDIÁN")), boss.max)
 
-func _hit_boss(hb: Dictionary) -> void:
+func _hit_boss(hb: Dictionary, from_above := false) -> void:
 	p.hitSet.append("boss")
-	var dmg := 1.6 if p.atkN == 2 else 1.0
+	var rule: float = CrBosses.hit_rule(self, boss, from_above)
+	if rule == 0.0:
+		Aether.sfx("clang", 0.7)
+		_float(boss.x + boss.w / 2, boss.y - 10, "ESCUDO" if boss.type in [2, 9] else "INMUNE", Color(0.2, 0.89, 1))
+		return
+	if rule < 0.0:
+		Aether.sfx("clang", 0.8)
+		p.vx = -p.face * 260.0
+		_float(boss.x + boss.w / 2, boss.y - 10, "¡BLOQUEO!", Color.WHITE)
+		return
+	var dmg: float = (1.6 if p.atkN == 2 else 1.0) * rule
 	boss.hp -= dmg
 	boss.hit = 0.12
 	score += 25
@@ -1313,6 +1362,8 @@ func _update_boss(dt: float) -> void:
 			_burst(b.x + randf() * b.w, b.y + randf() * b.h, Color(0.9, 0.95, 0.8), 10, 160, 100, 0.6, 3)
 			shake = max(shake, 5.0)
 			Aether.sfx("boom", 0.4)
+		if int(b.type) in [1, 3, 6, 10, 11]:
+			b.y = min(A.floor - b.h, b.y + 120 * dt)
 		if b.dieT <= 0.0:
 			b.done = true
 			_burst(b.x + b.w / 2, b.y + b.h / 2, Color.WHITE, 50, 380, 100, 1.2, 3)
@@ -1328,9 +1379,9 @@ func _update_boss(dt: float) -> void:
 	var pcx: float = p.x + p.w / 2
 	var bcx: float = b.x + b.w / 2
 	var ag: float = D.aggr * (1.2 if b.hp <= b.max / 2 else 1.0)
-	if b.fly:
-		_update_flying_boss(dt, b, A, ag, pcx)
-		if not p.dead and ov(p, b) and b.st == "dive":
+	if int(b.type) != 0:
+		var contact: bool = CrBosses.update(self, b, dt, A, ag, pcx, p.y + p.h / 2, bcx)
+		if contact and not p.dead and ov(p, b) and int(b.type) != 7:
 			_hurt(20.0, bcx)
 		return
 	if b.st != "air":
@@ -1567,9 +1618,34 @@ func _draw() -> void:
 		_draw_boss()
 	for w in waves:
 		draw_colored_polygon(PackedVector2Array([Vector2(w.x - 14, w.y), Vector2(w.x, w.y - 26), Vector2(w.x + 14, w.y)]), Color(0.75, 0.62, 0.42, 0.85))
+	for w in warns:
+		var a2: float = 0.4 + 0.4 * sin(time * 30)
+		draw_rect(Rect2(w.x - 12, level.arena.get("floor", GY) - 3, 24, 3), Color(1, 0.24, 0.35, a2))
+		draw_line(Vector2(w.x, level.arena.get("floor", GY) - 3), Vector2(w.x, level.arena.get("floor", GY) - 40), Color(1, 0.24, 0.35, a2 * 0.5), 2)
 	for q in projs:
-		draw_circle(Vector2(q.x, q.y), 7, Color(1, 0.5, 0.9, 0.35))
-		draw_circle(Vector2(q.x, q.y), 4, Color(1, 0.75, 1))
+		match str(q.type):
+			"laser":
+				draw_rect(Rect2(q.x - q.hw, q.y - q.hh, q.hw * 2, q.hh * 2), Color(1, 0.3, 0.35))
+				draw_rect(Rect2(q.x - q.hw, q.y - 1, q.hw * 2, 2), Color(1, 0.9, 0.9))
+			"fire", "hfire":
+				draw_circle(Vector2(q.x, q.y), q.hw + 3, Color(1, 0.45, 0.1, 0.4))
+				draw_circle(Vector2(q.x, q.y), q.hw * 0.7, Color(1, 0.85, 0.3))
+			"bubble":
+				draw_arc(Vector2(q.x, q.y), q.hw, 0, TAU, 16, Color(0.75, 0.96, 1), 2)
+			"clock":
+				draw_circle(Vector2(q.x, q.y), q.hw, Color(1, 0.85, 0.4))
+				draw_line(Vector2(q.x, q.y), Vector2(q.x + cos(time * 6) * 6, q.y + sin(time * 6) * 6), Color(0.2, 0.15, 0.1), 2)
+			"ring":
+				draw_arc(Vector2(q.x, q.y), q.hw, 0, TAU, 20, Color(1, 1, 0.9), 3)
+			"feather", "icicle", "sandblock":
+				draw_rect(Rect2(q.x - q.hw, q.y - q.hh, q.hw * 2, q.hh * 2), Color(0.95, 0.95, 1) if q.type != "sandblock" else Color(0.85, 0.7, 0.4))
+			_:
+				draw_circle(Vector2(q.x, q.y), q.hw + 2, Color(1, 0.5, 0.9, 0.35))
+				draw_circle(Vector2(q.x, q.y), q.hw * 0.8, Color(1, 0.75, 1))
+	for l in level.levers:
+		draw_rect(Rect2(l.x, l.y + l.h - 8, l.w, 8), Color(0.35, 0.3, 0.3))
+		var ang: float = -0.6 if l.get("on", false) else 0.6
+		draw_line(Vector2(l.x + l.w / 2, l.y + l.h - 6), Vector2(l.x + l.w / 2 + sin(ang) * 22, l.y + l.h - 6 - cos(ang) * 22), Color(0.6, 1, 0.69) if l.get("on", false) else Color(1, 0.7, 0.3), 4)
 	for q in parts:
 		var a: float = clamp(q.life / q.max * 1.5, 0.0, 1.0)
 		var c: Color = q.c
@@ -1630,6 +1706,22 @@ func _draw_enemy(e: Dictionary) -> void:
 
 func _draw_boss() -> void:
 	var b := boss
+	if int(b.type) == 7:
+		var kk: String = "KH_dash" if b.st == "dash" else ("KH_jump" if b.st == "jump" else ("KH_atk2" if b.st == "clocks" else ("KH_run" if abs(float(b.get("vx", 0.0))) > 10 else "KH_idle")))
+		var mod7: Color = Color(3, 3, 3) if b.hit > 0.0 else Color(0.75, 0.45, 1.0)
+		var m7: Dictionary = Aether.sheet(kk)
+		var t7 := Aether.tex(kk)
+		if t7:
+			var n7: int = int(m7.get("n", 1))
+			var fw7: float = float(m7.fw)
+			var fh7: float = float(m7.fh)
+			var fr7: int = int(time * 14) % n7
+			var w7 := fw7 * 0.27
+			var h7 := fh7 * 0.27
+			var bx7: float = b.x + b.w / 2 - float(m7.ax) * 0.27 * b.face
+			var r7 := Rect2(bx7, b.y + b.h + 2 - float(m7.ay) * 0.27, w7 * b.face, h7)
+			draw_texture_rect_region(t7, r7, Rect2(fr7 * fw7, 0, fw7, fh7), mod7)
+		return
 	var art := _boss_art()
 	var t := Aether.tex(art)
 	var mod := Color(3, 3, 3) if b.hit > 0.0 else Color.WHITE
@@ -1651,10 +1743,16 @@ func _draw_boss() -> void:
 	draw_circle(Vector2(base.x, b.y + b.h + 2 if b.st != "air" else level.arena.floor + 2), b.w * 0.45, Color(0, 0, 0, 0.25))
 	if t:
 		var r := Rect2(base.x - w / 2, base.y - h, w, h)
-		if b.face > 0:
+		var sfl: bool = WD.get("boss", {}).get("sfl", false) == true
+		if (b.face > 0) != sfl:
 			r = Rect2(base.x + w / 2, base.y - h, -w, h)
 		var dn: float = float(bm.get("d", 1.0))
-		draw_texture_rect_region(t, r, Rect2(0, 0, float(bm.get("fw", t.get_width())) * dn, float(bm.get("fh", t.get_height())) * dn), mod)
+		var bn: int = int(bm.get("n", 1))
+		var bf: int = int(time * 9) % bn if bn > 1 else 0
+		var fwp: float = float(bm.get("fw", t.get_width())) * dn
+		draw_texture_rect_region(t, r, Rect2(bf * fwp, 0, fwp, float(bm.get("fh", t.get_height())) * dn), mod)
+		if (int(b.type) == 2 and b.get("vulnT", 0.0) <= 0.0) or (int(b.type) == 9 and b.get("vulnT", 0.0) <= 0.0):
+			draw_arc(Vector2(base.x, base.y - h * 0.5), max(w, h) * 0.55, 0, TAU, 40, Color(0.3, 0.85, 1, 0.45 + sin(time * 4) * 0.15), 3)
 	else:
 		draw_rect(Rect2(b.x, b.y, b.w, b.h), Color(0.3, 0.6, 0.3))
 

@@ -7,7 +7,7 @@ var f := 0
 var phase := 0
 var stage_i := 0
 var max_x := 0.0
-var bosses := [0, 1, 4]
+var bosses := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 var boss_i := 0
 
 func _ready() -> void:
@@ -47,8 +47,16 @@ func _process(_d: float) -> void:
 		if f > 10 and not game.boss.is_empty() and game.boss_intro <= 0.0 and not game.boss.dying:
 			game.p.atkN = 0
 			game.p.hitSet = []
-			game._hit_boss({"x": game.boss.x, "y": game.boss.y, "w": 10.0, "h": 10.0})
-		if game.state == "clear" or f > 2400:
+			if game.boss.has("vulnT"):
+				game.boss.vulnT = 5.0
+			if game.boss.st == "guard":
+				game.boss.st = "walk"
+			if int(game.boss.type) == 8:
+				game.boss.st = "stuck"
+				game.boss.t = 0.0
+			if f % 3 == 0:
+				game._hit_boss({"x": game.boss.x, "y": game.boss.y, "w": 10.0, "h": 10.0})
+		if game.state == "clear" or f > 4000:
 			print("CHRONOS: guardián del mundo %d vencido = %s" % [game.wi, game.state == "clear"])
 			if game.state != "clear":
 				get_tree().quit(1)
