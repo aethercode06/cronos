@@ -39,6 +39,8 @@ const HINTS := {
 @export_range(0, 3) var diff_idx := 1
 ## Juega solo (para vídeos y pruebas).
 @export var autoplay := false
+## Sin diálogos ni escenas (pruebas).
+@export var no_story := false
 
 var level := {}
 var WD := {}
@@ -81,6 +83,10 @@ var _bg: Sprite2D
 var _font: Font
 var _shift_btn: TouchScreenButton
 var _time_btn: TouchScreenButton
+var story: CrStory
+var tic := {"x": 0.0, "y": 0.0, "vx": 0.0, "vy": 0.0, "face": 1}
+var tic_cd := 6.0
+var tic_idle := 0.0
 
 # ---------------- arranque ----------------
 func _ready() -> void:
@@ -123,6 +129,8 @@ func _ready() -> void:
 		var jb2 := InputEventJoypadButton.new()
 		jb2.button_index = JOY_BUTTON_BACK
 		InputMap.action_add_event("tiempo", jb2)
+	story = CrStory.new()
+	add_child(story)
 	_add_shift_button()
 	_time_btn = _round_button("tiempo", "TIEMPO", Color(0.45, 0.85, 1, 0.25), Vector2(-150, -470))
 	if not launch.is_empty():
@@ -130,6 +138,12 @@ func _ready() -> void:
 		act = int(launch.get("act", act))
 		diff_idx = int(launch.get("diff", diff_idx))
 		launch = {}
+	if wi == 0 and act == 0 and not Aether.save.get_value("cr_intro", false) and not autoplay and not no_story:
+		start_stage(act, wi)
+		story.play_cut("intro", func() -> void:
+			Aether.save.set_value("cr_intro", true)
+			start_stage(0, 0))
+		return
 	start_stage(act, wi)
 
 static func data() -> Dictionary:
@@ -221,6 +235,14 @@ func start_stage(a: int, w := -1) -> void:
 	_update_camera(0.0, true)
 	hp_changed.emit(p.hp, p.maxHp)
 	Aether.music(str(WD.get("music", "w0")))
+	tic = {"x": st.x - 30, "y": st.y - 30, "vx": 0.0, "vy": 0.0, "face": 1}
+	if _story_on():
+		var H: Dictionary = CrStory.data()
+		var L0: Array = []
+		if act == 0:
+			L0.append(["NARR", H.lore[wi]])
+		L0.append(["TIC", H.ticl[wi][act]])
+		story.say(L0, false)
 	var pos: int = data().order.find(wi) + 1
 	_banner("MUNDO %d-%d · %s" % [pos, act + 1, ("GUARDIÁN: " + str(WD.boss.name)) if act == 2 else str(WD.name)])
 
@@ -343,7 +365,12 @@ func _process(delta: float) -> void:
 		queue_redraw()
 		return
 	time += dt
+	if story and story.busy():
+		_update_camera(dt, false)
+		queue_redraw()
+		return
 	if state == "playing":
+		_update_tic(dt)
 		_update_plats(dt)
 		_update_player(dt)
 		_update_hazards(dt)
@@ -381,6 +408,55 @@ func _process(delta: float) -> void:
 		hint_t -= dt
 	_update_kael()
 	queue_redraw()
+
+func _story_on() -> bool:
+	return story != null and not autoplay and not no_story
+
+func _update_tic(dt: float) -> void:
+	var tx: float = p.x + p.w / 2 - p.face * 26
+	var ty: float = p.y - 18 + sin(time * 3) * 5
+	if boss.is_empty():
+		var bd := 120.0
+		for gm in level.gems:
+			if gm.taken:
+				continue
+			var d := Vector2(gm.x - tic.x, gm.y - tic.y).length()
+			if d < bd and Vector2(gm.x - p.x, gm.y - p.y).length() < 170:
+				bd = d
+				tx = gm.x
+				ty = gm.y
+	tic.vx += (tx - tic.x) * 14 * dt
+	tic.vy += (ty - tic.y) * 14 * dt
+	tic.vx *= 1 - 5 * dt
+	tic.vy *= 1 - 5 * dt
+	tic.x += tic.vx * dt
+	tic.y += tic.vy * dt
+	tic.face = int(signf(tic.vx)) if abs(tic.vx) > 20 else p.face
+	for gm in level.gems:
+		if not gm.taken and Vector2(gm.x - tic.x, gm.y - tic.y).length() < 16:
+			gm.taken = true
+			score += 100
+			_add_time(3)
+			Aether.sfx("gem", 0.45)
+			_float(gm.x, gm.y - 12, "+100", Color(1, 0.9, 0.4), 16)
+	# frases de Tic
+	tic_cd -= dt
+	if abs(p.vx) < 10 and p.onGround and p.atkT <= 0:
+		tic_idle += dt
+	else:
+		tic_idle = 0.0
+	if _story_on() and not story._box.visible and tic_cd <= 0.0 and boss.is_empty():
+		var Q: Dictionary = CrStory.data().ticq
+		var k := ""
+		if tic_idle > 7:
+			k = "idle"
+		elif p.hp < p.maxHp * 0.3 and Q.has("low"):
+			k = "low"
+		if k != "":
+			var arr: Array = Q[k]
+			story.say([["TIC", arr[randi() % arr.size()]]], false)
+			tic_cd = 14.0
+			tic_idle = 0.0
 
 func _update_particles(dt: float) -> void:
 	for q in parts.duplicate():
@@ -1050,6 +1126,9 @@ func _pickups() -> void:
 		_spawn_boss()
 		boss_intro = 2.8
 		dim = 0
+		if _story_on():
+			story.set_meta("boss_name", str(WD.get("boss", {}).get("name", "")))
+			story.say(CrStory.data().bossl[wi], true)
 		Aether.music("final" if wi >= 6 else "boss")
 		Aether.sfx("roar", 0.8)
 		shake = 8.0
@@ -1673,9 +1752,24 @@ func _update_boss(dt: float) -> void:
 		if b.dieT <= 0.0:
 			b.done = true
 			_burst(b.x + b.w / 2, b.y + b.h / 2, Color.WHITE, 50, 380, 100, 1.2, 3)
-			_stage_clear()
+			if _story_on():
+				state = "story"
+				var after := func() -> void:
+					state = "playing"
+					_stage_clear()
+				var cut_id: String = {7: "mid", 10: "veil", 17: "late", 11: "ending"}.get(wi, "")
+				story.say(CrStory.data().fragl[wi], true, func() -> void:
+					if cut_id != "":
+						story.play_cut(cut_id, after)
+					else:
+						after.call())
+			else:
+				_stage_clear()
 		return
 	if boss_intro > 0.0:
+		if story and story.busy():
+			boss_intro = max(boss_intro, 0.6)
+			return
 		boss_intro -= dt
 		if boss_intro <= 0.0:
 			hint_txt = Aether.t(str(WD.get("boss", {}).get("hint", "")))
@@ -1988,6 +2082,18 @@ func _draw() -> void:
 			var yy0: float = floor(cam.y / 14.0) * 14.0
 			for k in int(VH / 14) + 3:
 				draw_rect(Rect2(c.wx + sin(time * 9 + k) * 6, yy0 + k * 14, 3, 9), Color(c1.r, c1.g, c1.b, 0.7))
+	if not p.dead:
+		var tt := Aether.tex("TicHD")
+		var tm: Dictionary = Aether.sheet("TicHD")
+		if tt and not tm.is_empty():
+			var tn: int = int(tm.get("n", 1))
+			var tfw: float = float(tm.fw)
+			var tfh: float = float(tm.fh)
+			var tf: int = int(time * 12) % tn
+			var sc: float = 0.25
+			var dst := Rect2(tic.x - float(tm.get("ax", tfw / 2)) * sc * tic.face, tic.y + sin(time * 3) * 1.5 - float(tm.get("ay", tfh / 2)) * sc, tfw * sc * tic.face, tfh * sc)
+			draw_texture_rect_region(tt, dst, Rect2(tf * tfw, 0, tfw, tfh))
+		draw_circle(Vector2(tic.x, tic.y), 14, Color(1, 0.78, 0.43, 0.12))
 	if slow_t > 0.0:
 		draw_rect(Rect2(cam.x - 10, cam.y - 10, VW + 20, VH + 20), Color(0.45, 0.75, 1, 0.1))
 	# vidas y poder del tiempo (debajo de la vida)

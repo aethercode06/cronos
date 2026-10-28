@@ -14,6 +14,7 @@ func _ready() -> void:
 	var sc: Node = load("res://chronos/chronos.tscn").instantiate()
 	game = sc.get_node("Juego")
 	game.autoplay = true
+	game.no_story = true
 	add_child(sc)
 	var mp: Node = load("res://chronos/mapa.tscn").instantiate()
 	add_child(mp)
