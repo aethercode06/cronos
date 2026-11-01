@@ -3,7 +3,16 @@ Uso: python hf3d.py <imagen> <carpeta_salida>
 Prueba varios Spaces y guarda cada GLB que consiga, más un registro con lo que pasó."""
 import os, sys, json, shutil, traceback, time
 
-from gradio_client import Client, handle_file
+from gradio_client import Client as _Client, handle_file
+import inspect
+
+
+def Client(space, hf_token=None):
+    ps = inspect.signature(_Client.__init__).parameters
+    kw = {}
+    if hf_token:
+        kw["token" if "token" in ps else "hf_token"] = hf_token
+    return _Client(space, **kw)
 
 IMG, OUT = sys.argv[1], sys.argv[2]
 os.makedirs(OUT, exist_ok=True)
