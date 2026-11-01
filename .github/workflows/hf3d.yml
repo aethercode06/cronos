@@ -1,0 +1,43 @@
+name: Imagen a 3D (Hugging Face)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "engine/tools/hf3d/**"
+      - ".github/workflows/hf3d.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  modelos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/hf3d
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar cliente
+        run: pip install -q gradio_client pillow
+      - name: Generar modelos
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p out
+          for img in engine/tools/hf3d/entrada/*.png; do
+            n=$(basename "$img" .png)
+            python engine/tools/hf3d/hf3d.py "$img" "out/$n" || true
+          done
+          find out -type f | head -50
+      - name: Guardar en la rama aether-3d
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-3d
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Modelos 3D ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-3d
