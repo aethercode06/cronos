@@ -66,41 +66,28 @@ def try_trellis(space):
         log("  start_session:", str(e)[:200])
     img = c.predict(image=handle_file(IMG), api_name="/preprocess_image")
     log("  preprocesada:", str(img)[:120])
-    res = c.predict(image=handle_file(img if isinstance(img, str) else IMG), multiimages=[], seed=7,
-                    ss_guidance_strength=7.5, ss_sampling_steps=12, slat_guidance_strength=3.0,
-                    slat_sampling_steps=12, multiimage_algo="stochastic", api_name="/image_to_3d")
-    save("trellis_preview", res)
-    glb = c.predict(mesh_simplify=0.9, texture_size=1024, api_name="/extract_glb")
-    return save("trellis", glb)
+    src = handle_file(img if isinstance(img, str) else IMG)
+    res = c.predict(image=src, multiimages=[], seed=7, ss_guidance_strength=7.5, ss_sampling_steps=12,
+                    slat_guidance_strength=3.0, slat_sampling_steps=12, multiimage_algo="stochastic",
+                    mesh_simplify=0.92, texture_size=1024, api_name="/generate_and_extract_glb")
+    return save("trellis", res)
 
 
 def try_hunyuan(space):
     c = Client(space, hf_token=TOKEN)
-    info = api(c, "hunyuan")
-    names = list((info or {}).get("named_endpoints", {}).keys())
-    log("  endpoints:", names)
-    for ep in ("/generation_all", "/shape_generation"):
-        if ep in names:
-            params = info["named_endpoints"][ep]["parameters"]
-            kw = {}
-            for p in params:
-                n = p["parameter_name"]
-                if n == "image":
-                    kw[n] = handle_file(IMG)
-                elif n in ("check_box_rembg",):
-                    kw[n] = True
-                elif n in ("randomize_seed",):
-                    kw[n] = False
-                elif p.get("parameter_has_default"):
-                    continue
-                else:
-                    kw[n] = None
-            log("  llamando", ep, list(kw))
-            res = c.predict(**kw, api_name=ep)
-            got = save("hunyuan" + ep.replace("/", "_"), res)
+    api(c, "hunyuan")
+    got = []
+    for ep, steps, octree in (("/generation_all", 20, 256), ("/shape_generation", 20, 256), ("/shape_generation", 12, 192)):
+        try:
+            log("  llamando", ep, steps, octree)
+            res = c.predict(image=handle_file(IMG), steps=steps, guidance_scale=5.0, seed=7, octree_resolution=octree,
+                            check_box_rembg=True, num_chunks=8000, randomize_seed=False, api_name=ep)
+            got = save("hunyuan" + ep.replace("/", "_") + f"_{steps}", res)
             if got:
                 return got
-    return []
+        except Exception as e:
+            log("   fallo:", str(e)[:300])
+    return got
 
 
 def try_triposr(space):
@@ -113,8 +100,8 @@ def try_triposr(space):
 
 TRIES = [
     ("TRELLIS", try_trellis, ["trellis-community/TRELLIS", "JeffreyXiang/TRELLIS"]),
-    ("Hunyuan3D-2", try_hunyuan, ["tencent/Hunyuan3D-2", "tencent/Hunyuan3D-2.1"]),
-    ("TripoSR", try_triposr, ["stabilityai/TripoSR"]),
+    ("Hunyuan3D-2", try_hunyuan, ["tencent/Hunyuan3D-2.1", "tencent/Hunyuan3D-2", "tencent/Hunyuan3D-2mini-Turbo"]),
+    ("TripoSR", try_triposr, ["stabilityai/TripoSR", "VAST-AI/TripoSG"]),
 ]
 ok = {}
 for label, fn, spaces in TRIES:
