@@ -121,12 +121,15 @@ static func update(g, b: Dictionary, dt: float, A: Dictionary, ag: float, pcx: f
 					Aether.sfx("shield", 0.6, 0.7)
 					g._float(bcx, b.y - 24, "ESCUDO RESTAURADO", Color(1, 0.56, 0.23), 20)
 			b.throwA = max(0.0, b.throwA - dt)
+			b.sumA = max(0.0, float(b.get("sumA", 0.0)) - dt)
+			b.hurtA = max(0.0, float(b.get("hurtA", 0.0)) - dt)
 			b.cd -= dt
 			if b.cd <= 0.0:
 				b.atk += 1
 				b.cd = (2.6 if b.vulnT > 0.0 else 1.8) / ag
 				b.throwA = 0.6
 				if b.atk % 3 == 0:
+					b.sumA = 1.2
 					var cnt := 5 if di >= 2 else 4
 					for i in cnt:
 						_warn(g, pcx if i == 0 else randf_range(A.x1 + 40, A.x2 - 40), 0.9 + i * 0.15)

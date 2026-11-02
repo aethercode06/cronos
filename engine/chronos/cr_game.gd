@@ -2317,6 +2317,9 @@ func _draw_boss() -> void:
 	if int(b.type) == 0 and not Aether.sheet("sapo_quieto").is_empty():
 		_draw_sapo(b)
 		return
+	if int(b.type) == 2 and _boss_art() == "hdb_wizard" and not Aether.sheet("hech_quieto").is_empty():
+		_draw_hech(b)
+		return
 	var art := _boss_art()
 	var t := Aether.tex(art)
 	var mod := Color(3, 3, 3) if b.hit > 0.0 else Color.WHITE
@@ -2392,7 +2395,10 @@ func _draw_sapo(b: Dictionary) -> void:
 	else:
 		n = int(Aether.sheet("sapo_quieto").get("n", 1))
 		fr = int(float(b.anim) * 12.0) % n
-	var key := "sapo_" + anim
+	_draw_sheet_boss(b, "sapo_" + anim, fr)
+
+## Dibuja un jefe animado en Blender: hoja `key`, fotograma `fr`, sombra en el suelo y destello al recibir golpes.
+func _draw_sheet_boss(b: Dictionary, key: String, fr: int, die_fade := 1.0) -> void:
 	var m: Dictionary = Aether.sheet(key)
 	var t := Aether.tex(key)
 	if not t:
@@ -2409,7 +2415,7 @@ func _draw_sapo(b: Dictionary) -> void:
 	draw_set_transform(Vector2.ZERO)
 	var mod := Color(1.8, 1.8, 1.8) if b.hit > 0.0 else Color.WHITE
 	if b.dying:
-		mod.a = clamp(float(b.dieT) / 1.0, 0.0, 1.0)
+		mod.a = clamp(float(b.dieT) / die_fade, 0.0, 1.0)
 	var sv = WD.get("boss", {}).get("sfl", false)
 	var sfl: bool = bool(sv) if typeof(sv) in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT] else false
 	var flip: bool = (b.face > 0) != sfl
@@ -2419,6 +2425,48 @@ func _draw_sapo(b: Dictionary) -> void:
 	if flip:
 		r = Rect2(base.x + ax, base.y - ay, -fw, fh)
 	draw_texture_rect_region(t, r, Rect2(fr * fw * d, 0, fw * d, fh * d), mod)
+
+## Hechicero de Lava animado en Blender.
+func _draw_hech(b: Dictionary) -> void:
+	var anim := "quieto"
+	var fr := 0
+	var nq: int = int(Aether.sheet("hech_quieto").get("n", 1))
+	if b.dying:
+		anim = "muerte"
+		var nm: int = int(Aether.sheet("hech_muerte").get("n", 1))
+		fr = int(clamp((2.8 - float(b.dieT)) / 1.2, 0.0, 1.0) * (nm - 1))
+		if randf() < 0.5:
+			_burst(b.x + randf() * b.w, b.y + randf() * b.h, Color(1, 0.45, 0.12), 3, 120, -60, 0.7, 2)
+	elif b.hit > 0.0 or float(b.get("hurtA", 0.0)) > 0.0:
+		if b.hit > 0.0 and float(b.get("hurtA", 0.0)) <= 0.0:
+			b.hurtA = 0.3
+		anim = "golpe"
+		var ng: int = int(Aether.sheet("hech_golpe").get("n", 1))
+		fr = int(clamp(1.0 - float(b.get("hurtA", 0.0)) / 0.3, 0.0, 0.999) * ng)
+	elif float(b.get("sumA", 0.0)) > 0.0:
+		anim = "invocar"
+		var ni: int = int(Aether.sheet("hech_invocar").get("n", 1))
+		fr = int(clamp(1.0 - float(b.sumA) / 1.2, 0.0, 0.999) * ni)
+	elif float(b.get("throwA", 0.0)) > 0.0:
+		anim = "lanzar"
+		var nl: int = int(Aether.sheet("hech_lanzar").get("n", 1))
+		fr = int(clamp(1.0 - float(b.throwA) / 0.6, 0.0, 0.999) * nl)
+	elif float(b.get("vulnT", 0.0)) > 0.0:
+		anim = "aturdido"
+		fr = int(float(b.anim) * 8.0) % int(Aether.sheet("hech_aturdido").get("n", 1))
+	else:
+		fr = int(float(b.anim) * 10.0) % nq
+	_draw_sheet_boss(b, "hech_" + anim, fr, 1.2)
+	# escudo de fuego mientras no esté roto
+	if float(b.get("vulnT", 0.0)) <= 0.0 and not b.dying:
+		var c := Vector2(b.x + b.w / 2, b.y + b.h * 0.5)
+		var pulse: float = 0.45 + sin(time * 4) * 0.15
+		draw_arc(c, b.h * 0.72, 0, TAU, 48, Color(1, 0.55, 0.2, pulse), 3)
+		draw_arc(c, b.h * 0.76, time * 2.0, time * 2.0 + 2.2, 16, Color(1, 0.85, 0.5, pulse), 2)
+	# llama viva en la mano del fuego (por encima de la pintura)
+	if not b.dying and randf() < 0.6:
+		var hx: float = b.x + b.w / 2 + (b.w * 0.75) * (1.0 if b.face > 0 else -1.0)
+		parts.append({"x": hx + randf_range(-5, 5), "y": b.y + b.h * 0.18 + randf_range(-4, 4), "vx": randf_range(-12, 12), "vy": randf_range(-70, -30), "life": 0.45, "max": 0.45, "c": Color(1, randf_range(0.4, 0.8), 0.15), "s": 2.0, "g": -40.0})
 
 # ---------------- jugador automático (vídeos y pruebas) ----------------
 var _bot_jump_t := 0.0

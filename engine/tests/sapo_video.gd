@@ -11,7 +11,11 @@ func _ready() -> void:
 	game.no_story = true
 	game.all_powers = true
 	add_child(sc)
-	game.start_stage(2, 0)
+	var mundo := 0
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--mundo="):
+			mundo = int(a.split("=")[1])
+	game.start_stage(2, mundo)
 
 func _process(_d: float) -> void:
 	f += 1
