@@ -1941,7 +1941,8 @@ func _update_camera(dt: float, snap: bool) -> void:
 		right = max(right, float(boss.x + boss.w) + 70.0)
 	var want_vh: float = 270.0
 	if arena_lock:
-		want_vh = clamp((right - left) / aspect, 420.0, 600.0)
+		# la acción ocupa como mucho el 70 % del ancho: los botones táctiles tapan la esquina derecha
+		want_vh = clamp((right - left) / (aspect * 0.7), 360.0, 560.0)
 	VH = want_vh if snap else lerp(VH, want_vh, min(1.0, dt * 3.0))
 	VW = round(aspect * VH / 2.0) * 2.0
 	var tx := 0.0
@@ -1954,7 +1955,10 @@ func _update_camera(dt: float, snap: bool) -> void:
 			var focus: float = (left + right) / 2.0
 			if has_boss and boss_intro > 0:
 				focus = lerp(focus, float(boss.x + boss.w / 2), 0.6)
-			tx = clamp(focus - VW / 2, A.x1 - 40, A.x2 + 40 - VW)
+			# centro de la acción al 44 % de la pantalla; se puede ver un poco más allá de las paredes
+			var lo: float = A.x1 - 220.0
+			var hi: float = max(lo, min(float(level.width), A.x2 + 260.0) - VW)
+			tx = clamp(focus - VW * 0.44, lo, hi)
 		ty = A.floor - VH + 56
 		if has_boss:
 			ty = min(ty, float(boss.y) - 50.0)

@@ -19,6 +19,11 @@ func _ready() -> void:
 
 func _process(_d: float) -> void:
 	f += 1
+	if f % 60 == 0 and "--debug" in OS.get_cmdline_user_args():
+		var bb: Dictionary = game.boss
+		print("f=%d st=%s lock=%s p=(%d,%d) hp=%d boss=%s cam=(%d,%d) VH=%d VW=%d hs=%.2f ts=%.2f guard=%s plunge=%s" % [f, game.state, game.arena_lock, game.p.x, game.p.y, game.p.hp,
+			("(%d,%d %s hp %.2f dy=%s dn=%s)" % [bb.x, bb.y, bb.st, bb.hp, bb.dying, bb.done]) if not bb.is_empty() else "-", game.cam.x, game.cam.y, game.VH, game.VW,
+			game.hit_stop, Engine.time_scale, game.p.get("guard", false), game.p.get("plunge", false)])
 	var A: Dictionary = game.level.arena
 	if f == 3 or (game.boss.is_empty() and f % 60 == 0):
 		game.p.x = A.x1 + 140
@@ -67,5 +72,9 @@ func _process(_d: float) -> void:
 	game.p.hp = max(game.p.hp, 60.0)
 	if f > 1500 and not b.dying:
 		b.hp = 0.5
-	if f > 1900 or b.get("done", false) and f > 400:
+	var mx := 1900
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--max="):
+			mx = int(a.split("=")[1])
+	if f > mx or b.get("done", false) and f > 400:
 		get_tree().quit()
