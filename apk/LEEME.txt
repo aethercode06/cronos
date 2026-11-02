@@ -1,0 +1,5 @@
+GRAVITY THIEF v6 - como instalar
+1. Descarga los 2 archivos: GravityThief-v6.7z.001 y GravityThief-v6.7z.002 (en la misma carpeta).
+2. Instala la app gratuita ZArchiver desde Play Store.
+3. En ZArchiver abre GravityThief-v6.7z.001 y elige "Extraer aqui". Sale GravityThief.apk.
+4. Toca GravityThief.apk para instalarlo.
