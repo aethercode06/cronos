@@ -84,6 +84,7 @@ var hint_t := 0.0
 var _pressed := {}
 var _camera: Camera2D
 var _kael: SheetSprite
+var _vfx: CrVfx
 var _boss_proxy: Node
 var _hud: Node
 var _bg: Sprite2D
@@ -111,6 +112,8 @@ func _ready() -> void:
 	_bg.centered = false
 	bgl.add_child(_bg)
 	add_child(CrFx.new())
+	_vfx = CrVfx.new()
+	add_child(_vfx)
 	_kael = SheetSprite.new()
 	_kael.unit_scale = 0.25
 	_kael.z_index = 5
@@ -845,6 +848,7 @@ func _update_player(dt: float) -> void:
 			p.face = int(dir)
 		p.dashT = 0.17
 		p.dashCD = 0.7
+		_fx_sheet("dash_fantasma", p.x + p.w / 2 - p.face * 30.0, p.y + p.h * 0.5, 120.0, p.face < 0, 40.0)
 		p.inv = max(p.inv, 0.17)
 		p.vy = 0.0
 		p.atkT = 0.0
@@ -942,6 +946,7 @@ func _update_player(dt: float) -> void:
 		if p.atkN == 2:
 			p.vx += p.face * 220.0
 			Aether.sfx("swing", 1.0, 0.75)
+			_fx_sheet("media_luna", p.x + p.w / 2 + p.face * 26.0, p.y + p.h * 0.42, 118.0, p.face < 0, 36.0)
 		else:
 			Aether.sfx("swing", 0.7, 1.12 if p.atkN else 1.0)
 		if p.air and p.vy > 0.0:
@@ -1376,6 +1381,7 @@ func _hit_enemies(hb: Dictionary) -> bool:
 func _slash_fx(hb: Dictionary) -> void:
 	var cx: float = hb.x + hb.w / 2
 	var cy: float = hb.y + hb.h * 0.45
+	_fx_sheet("impacto", cx + p.face * 8.0, cy, 70.0 if p.atkN == 2 else 54.0, p.face < 0, 34.0)
 	for i in 10:
 		var a := (randf() - 0.5) * 1.2
 		var v := randf_range(160, 380)
@@ -1756,6 +1762,7 @@ func _hit_boss(hb: Dictionary, from_above := false) -> void:
 	var dmg: float = (1.6 if p.atkN == 2 else 1.0) * rule
 	if rule >= 1.6:
 		_float(b.x + b.w / 2, b.y - 14, "¡CRÍTICO!", Color(1, 0.83, 0.3), 18)
+		_fx_sheet("parada", b.x + b.w / 2, b.y + b.h * 0.45, 110.0, false, 30.0)
 		hit_stop = 0.1
 		shake = max(shake, 9.0)
 	elif rule <= 0.4:
@@ -1852,6 +1859,10 @@ func _update_boss(dt: float) -> void:
 		if contact and not p.dead and ov(p, b) and int(b.type) != 7:
 			_hurt(20.0, bcx)
 		return
+	if float(b.get("landT", 0.0)) > 0.0:
+		b.landT -= dt
+	if float(b.get("hurtA", 0.0)) > 0.0:
+		b.hurtA -= dt
 	if b.st != "air":
 		b.face = -1 if pcx < bcx else 1
 	if b.st == "idle":
@@ -1875,6 +1886,9 @@ func _update_boss(dt: float) -> void:
 			b.y = A.floor - b.h
 			b.st = "idle"
 			b.t = 0.0
+			b.landT = 0.25
+			b.cycle = int(b.get("cycle", 0)) + 1
+			_fx_sheet("sismo", b.x + b.w / 2, A.floor - 20.0, 260.0, false, 30.0)
 			shake = 16.0
 			Aether.sfx("stomp")
 			Aether.sfx("boom", 0.6)
@@ -2251,6 +2265,9 @@ func _draw_boss() -> void:
 			var r7 := Rect2(bx7, b.y + b.h + 2 - float(m7.ay) * 0.27, w7 * b.face, h7)
 			draw_texture_rect_region(t7, r7, Rect2(fr7 * fw7, 0, fw7, fh7), mod7)
 		return
+	if int(b.type) == 0 and not Aether.sheet("sapo_quieto").is_empty():
+		_draw_sapo(b)
+		return
 	var art := _boss_art()
 	var t := Aether.tex(art)
 	var mod := Color(3, 3, 3) if b.hit > 0.0 else Color.WHITE
@@ -2285,6 +2302,74 @@ func _draw_boss() -> void:
 			draw_arc(Vector2(base.x, base.y - h * 0.5), max(w, h) * 0.55, 0, TAU, 40, Color(0.3, 0.85, 1, 0.45 + sin(time * 4) * 0.15), 3)
 	else:
 		draw_rect(Rect2(b.x, b.y, b.w, b.h), Color(0.3, 0.6, 0.3))
+
+## Lanza un efecto de Blender (hojas fx_*).
+func _fx_sheet(fx: String, x: float, y: float, size: float, flip := false, fps := 24.0) -> void:
+	if _vfx:
+		_vfx.spawn(fx, x, y, size, flip, fps)
+
+## Gran Sapo animado en Blender: elige animación y fotograma según su estado.
+func _draw_sapo(b: Dictionary) -> void:
+	var anim := "quieto"
+	var fr := 0
+	var n := 1
+	if b.dying:
+		anim = "muerte"
+		n = int(Aether.sheet("sapo_muerte").get("n", 1))
+		fr = int(clamp((2.8 - float(b.dieT)) / 1.3, 0.0, 1.0) * (n - 1))
+	elif b.hit > 0.0 or float(b.get("hurtA", 0.0)) > 0.0:
+		if b.hit > 0.0:
+			b.hurtA = 0.3
+		anim = "golpe"
+		n = int(Aether.sheet("sapo_golpe").get("n", 1))
+		fr = int(clamp(1.0 - float(b.get("hurtA", 0.0)) / 0.3, 0.0, 0.999) * n)
+	elif b.st == "crouch":
+		anim = "salto"
+		fr = int(clamp(float(b.t) / 0.45, 0.0, 0.999) * 3.0)
+	elif b.st == "air":
+		anim = "salto"
+		fr = 3 + int(clamp((float(b.vy) + 900.0) / 1800.0, 0.0, 0.999) * 6.0)
+	elif float(b.get("landT", 0.0)) > 0.0:
+		anim = "salto"
+		fr = 9 + int(clamp(1.0 - float(b.landT) / 0.25, 0.0, 0.999) * 3.0)
+	elif b.hp <= b.max / 2 and fmod(float(b.anim), 7.0) < 0.9:
+		anim = "furia"
+		n = int(Aether.sheet("sapo_furia").get("n", 1))
+		fr = int(fmod(float(b.anim), 7.0) / 0.9 * n)
+	elif b.st == "idle" and float(b.t) > 0.55 and int(b.get("cycle", 0)) % 2 == 1:
+		anim = "hincharse"
+		n = int(Aether.sheet("sapo_hincharse").get("n", 1))
+		fr = int(clamp((float(b.t) - 0.55) / 0.6, 0.0, 0.999) * n)
+	else:
+		n = int(Aether.sheet("sapo_quieto").get("n", 1))
+		fr = int(float(b.anim) * 12.0) % n
+	var key := "sapo_" + anim
+	var m: Dictionary = Aether.sheet(key)
+	var t := Aether.tex(key)
+	if not t:
+		return
+	var d: float = float(m.get("d", 3.0))
+	var fw: float = float(m.fw)
+	var fh: float = float(m.fh)
+	fr = clamp(fr, 0, int(m.get("n", 1)) - 1)
+	var base := Vector2(b.x + b.w / 2, b.y + b.h + 2)
+	var gy: float = level.arena.floor + 2 if b.st == "air" else base.y
+	var sh_k: float = clamp(1.0 - (gy - base.y) / 400.0, 0.3, 1.0)
+	draw_set_transform(Vector2(base.x, gy), 0.0, Vector2(1.0, 0.28))
+	draw_circle(Vector2.ZERO, b.w * 0.5 * sh_k, Color(0, 0, 0, 0.3 * sh_k))
+	draw_set_transform(Vector2.ZERO)
+	var mod := Color(1.8, 1.8, 1.8) if b.hit > 0.0 else Color.WHITE
+	if b.dying:
+		mod.a = clamp(float(b.dieT) / 1.0, 0.0, 1.0)
+	var sv = WD.get("boss", {}).get("sfl", false)
+	var sfl: bool = bool(sv) if typeof(sv) in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT] else false
+	var flip: bool = (b.face > 0) != sfl
+	var ax: float = float(m.ax)
+	var ay: float = float(m.ay)
+	var r := Rect2(base.x - ax, base.y - ay, fw, fh)
+	if flip:
+		r = Rect2(base.x + ax, base.y - ay, -fw, fh)
+	draw_texture_rect_region(t, r, Rect2(fr * fw * d, 0, fw * d, fh * d), mod)
 
 # ---------------- jugador automático (vídeos y pruebas) ----------------
 var _bot_jump_t := 0.0

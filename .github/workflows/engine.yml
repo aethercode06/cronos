@@ -86,6 +86,18 @@ jobs:
           timeout 300 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 res://tests/templates.tscn -- --shots > shots2.log 2>&1 || true
           tail -20 shots2.log
           ls -la engine_shots || true
+      - name: Vídeo del Gran Sapo animado (Blender)
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y -qq ffmpeg > /dev/null || true
+          mkdir -p engine_shots/sapo
+          timeout 900 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 --resolution 1280x720 --fixed-fps 30 --write-movie "$PWD/engine_shots/sapo/f.png" res://tests/sapo_video.tscn > sapo.log 2>&1 || true
+          tail -20 sapo.log
+          ls engine_shots/sapo | wc -l
+          ffmpeg -y -loglevel error -framerate 30 -i engine_shots/sapo/f%08d.png -vf "scale=960:-2" -c:v libx264 -preset veryfast -crf 26 -pix_fmt yuv420p engine_shots/sapo_combate.mp4 || true
+          for n in 0060 0180 0300 0420 0600 0800; do cp engine_shots/sapo/f0000$n.png engine_shots/sapo_$n.png 2>/dev/null || true; done
+          rm -rf engine_shots/sapo
+          ls -la engine_shots
       - name: Exportar APK de Android
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/engine/keys/debug.keystore
