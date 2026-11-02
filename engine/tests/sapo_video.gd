@@ -14,14 +14,15 @@ func _ready() -> void:
 
 func _process(_d: float) -> void:
 	f += 1
+	var A: Dictionary = game.level.arena
+	if f == 3 or (game.boss.is_empty() and f % 60 == 0):
+		game.p.x = A.x1 + 140
+		game.p.y = A.floor - 48
 	if game.boss.is_empty():
+		Input.action_press("right")
 		if f > 900:
 			get_tree().quit()
 		return
-	var A: Dictionary = game.level.arena
-	if f == 3:
-		game.p.x = A.x1 + 140
-		game.p.y = A.floor - 48
 	if game.boss_intro > 0.0:
 		return
 	var b: Dictionary = game.boss
