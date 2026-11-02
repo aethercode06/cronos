@@ -241,11 +241,14 @@ func _process(_delta: float) -> void:
 		for z in g.level.zones:
 			if z.k == "water" and CrGame.ov(g.p, z):
 				in_water = true
-		_post_mat.set_shader_parameter("violeta", move_toward(float(_post_mat.get_shader_parameter("violeta")), 1.0 if g.dim == 1 else 0.0, _delta * 4.0))
+		_post_mat.set_shader_parameter("violeta", move_toward(_num(_post_mat.get_shader_parameter("violeta")), 1.0 if g.dim == 1 else 0.0, _delta * 4.0))
 		_post_mat.set_shader_parameter("calor", 1.0 if g.wi in [2, 6] else 0.0)
 		_post_mat.set_shader_parameter("agua", 1.0 if in_water else 0.0)
 		_post_mat.set_shader_parameter("tiempo_lento", 1.0 if g.slow_t > 0.0 else 0.0)
 	_fog.queue_redraw()
+
+static func _num(v) -> float:
+	return float(v) if typeof(v) in [TYPE_FLOAT, TYPE_INT, TYPE_BOOL] else 0.0
 
 func _draw_fog() -> void:
 	var w: String = str(g.WD.get("weather", ""))
