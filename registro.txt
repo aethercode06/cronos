@@ -1,0 +1,6 @@
+modelos https://image.pollinations.ai/models 200 ["sana"]
+modelos https://gen.pollinations.ai/image/models 200 [{"name":"tongyi-mai/z-image-turbo","aliases":["z-image","z-image-turbo","zimage"],"category":"image","publisher":"Alibaba","community":false,"per_user_rpm":60,"pricing":{"currency":"pollen","completionImageTokens":"0.004"},"title":"Z-Image Turbo","description":"Instant, budget-friendly images with crisp upscaled output","input_modalities":["text"],"output_modalities":["image"],"supported_endpoints":["/v1/images/generations","/image/{prompt}","/v1/responses","/v1/chat/completions"],"capabilities":[],"paid_only":false,"flat_rate":true,"added_date":1765152000000,"health":{"status":"healthy","suc
+OK prueba_burbuja 33119 4s https://image.pollinations.ai/prompt/single%20glossy%20trans
+ERROR prueba_duende 0 HTTPError HTTP Error 402: Payment Required
+ERROR prueba_duende 1 HTTPError HTTP Error 402: Payment Required
+ERROR prueba_duende 2 HTTPError HTTP Error 402: Payment Required
