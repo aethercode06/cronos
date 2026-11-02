@@ -1,0 +1,35 @@
+name: Imágenes (Pollinations)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "engine/tools/pollinations/**"
+      - ".github/workflows/pollinations.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  imagenes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/pollinations
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generar
+        env:
+          POLLINATIONS_KEY: ${{ secrets.POLLINATIONS_KEY }}
+        run: python engine/tools/pollinations/poll.py engine/tools/pollinations/pedidos.json out
+      - name: Guardar en la rama aether-img
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-img
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Imágenes ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-img
