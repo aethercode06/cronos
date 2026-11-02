@@ -9,6 +9,7 @@ func _ready() -> void:
 	var sc: Node = load("res://chronos/chronos.tscn").instantiate()
 	game = sc.get_node("Juego")
 	game.no_story = true
+	game.all_powers = true
 	add_child(sc)
 	game.start_stage(2, 0)
 
@@ -40,7 +41,21 @@ func _process(_d: float) -> void:
 		Input.action_press("dash")
 	else:
 		Input.action_release("dash")
-	if near and f % 9 == 0:
+	# guion de poderes: combo normal, golpe cargado, guardia al aterrizar y picado sísmico
+	var cyc: int = f % 240
+	Input.action_release("guard")
+	if b.st == "air" and b.vy > 200 and near and cyc < 120:
+		Input.action_press("guard")
+	if cyc >= 120 and cyc < 165:
+		Input.action_press("attack")
+	elif cyc >= 165 and cyc < 175:
+		Input.action_release("attack")
+	elif cyc == 190 and game.p.onGround:
+		Input.action_press("jump")
+	elif cyc == 205:
+		Input.action_release("jump")
+		Input.action_press("guard")
+	elif near and f % 9 == 0:
 		Input.action_press("attack")
 	else:
 		Input.action_release("attack")

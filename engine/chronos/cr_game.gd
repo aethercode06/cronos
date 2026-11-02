@@ -85,6 +85,8 @@ var _pressed := {}
 var _camera: Camera2D
 var _kael: SheetSprite
 var _vfx: CrVfx
+## Todos los poderes de Kael activos (vídeos y pruebas).
+var all_powers := false
 var _boss_proxy: Node
 var _hud: Node
 var _bg: Sprite2D
@@ -257,6 +259,8 @@ func start_stage(a: int, w := -1, file := "") -> void:
 		"noCut": false, "time": 0.0, "hook": null, "dead": false, "deadT": 0.0, "anim": 0.0, "respawn": st, "safe": st, "sq": 1.0, "look": 0.0, "combo": 0, "comboT": 0.0}
 	boss = {}
 	projs = []
+	if _vfx:
+		_vfx.clear()
 	waves = []
 	warns = []
 	invert_t = 0.0
@@ -402,7 +406,7 @@ func _process(delta: float) -> void:
 	var dt: float = min(delta, 1.0 / 30.0)
 	if autoplay:
 		_bot()
-	for a in ["jump", "attack", "dash", "shift", "tiempo"]:
+	for a in ["jump", "attack", "dash", "shift", "tiempo", "guard"]:
 		_pressed[a] = Input.is_action_just_pressed(a)
 	if hit_stop > 0.0:
 		hit_stop -= dt
@@ -611,9 +615,14 @@ func _update_hazards(dt: float) -> void:
 			_hazard_respawn(15)
 
 # ---------------- Kael ----------------
-func _hurt(dmg: float, src_x: float) -> bool:
+func _hurt(dmg: float, src_x: float, proj = null) -> bool:
 	if p.inv > 0.0 or p.dead:
 		return false
+	if p.get("guard", false) and CrPowers.front_of(self, src_x):
+		if CrPowers.block(self, dmg, src_x, proj):
+			return true
+		dmg *= 0.5
+	p.lastHurt = time
 	var D: Dictionary = DIFFS[diff_idx]
 	p.hp -= dmg * D.dmg
 	p.inv = 0.8
@@ -674,6 +683,8 @@ func _revive() -> void:
 	_update_camera(0.0, true)
 
 func _kill() -> void:
+	if CrPowers.try_rewind(self):
+		return
 	p.hp = 0.0
 	p.dead = true
 	p.deadT = 1.3
@@ -724,6 +735,17 @@ func _pogo() -> void:
 	_burst(p.x + p.w / 2, p.y + p.h + 8, Color.WHITE, 8, 140, 200, 0.3)
 
 func _update_player(dt: float) -> void:
+	if p.dead or state != "playing":
+		_update_player_base(dt)
+		return
+	var st: Dictionary = CrPowers.pre(self, dt)
+	_update_player_base(dt)
+	if not p.dead:
+		CrPowers.post(self, dt, st)
+	if _vfx:
+		_vfx.prune(projs)
+
+func _update_player_base(dt: float) -> void:
 	p.anim += dt
 	if p.dead:
 		p.deadT -= dt
@@ -946,7 +968,8 @@ func _update_player(dt: float) -> void:
 		if p.atkN == 2:
 			p.vx += p.face * 220.0
 			Aether.sfx("swing", 1.0, 0.75)
-			_fx_sheet("media_luna", p.x + p.w / 2 + p.face * 26.0, p.y + p.h * 0.42, 118.0, p.face < 0, 36.0)
+			if not CrPowers.has_ab(self, "luz"):
+				_fx_sheet("media_luna", p.x + p.w / 2 + p.face * 26.0, p.y + p.h * 0.42, 118.0, p.face < 0, 36.0)
 		else:
 			Aether.sfx("swing", 0.7, 1.12 if p.atkN else 1.0)
 		if p.air and p.vy > 0.0:
@@ -1347,6 +1370,8 @@ func _do_attack() -> void:
 			_hit_boss(db, true)
 			_pogo()
 	for q in projs.duplicate():
+		if q.get("friendly", false):
+			continue
 		if ov(hb, {"x": q.x - q.hw, "y": q.y - q.hh, "w": q.hw * 2, "h": q.hh * 2}):
 			projs.erase(q)
 			score += 10
@@ -1677,9 +1702,12 @@ func _update_projs(dt: float) -> void:
 					_burst(q.x, q.y, Color(1, 0.7, 0.4), 6, 100, 200, 0.3)
 					break
 		var rr := {"x": q.x - q.hw, "y": q.y - q.hh, "w": q.hw * 2, "h": q.hh * 2}
-		if not rem and not p.dead and ov(rr, p):
-			if _hurt(q.dmg, q.x):
+		if q.get("friendly", false):
+			if not rem and CrPowers.friendly(self, q):
 				rem = true
+		elif not rem and not p.dead and ov(rr, p):
+			if _hurt(q.dmg, q.x, q):
+				rem = not q.get("friendly", false)
 		if rem:
 			projs.erase(q)
 	var A: Dictionary = level.arena
@@ -1902,21 +1930,35 @@ func _update_boss(dt: float) -> void:
 # ---------------- cámara ----------------
 func _update_camera(dt: float, snap: bool) -> void:
 	var vsz := get_viewport_rect().size
-	VH = 420.0 if arena_lock else 270.0
-	VW = round(vsz.x / vsz.y * VH / 2.0) * 2.0
+	var aspect: float = vsz.x / max(1.0, vsz.y)
+	var A: Dictionary = level.arena
+	var has_boss: bool = arena_lock and not boss.is_empty() and not boss.done
+	# en la arena: Kael y el jefe siempre a la vista; la cámara se aleja si están lejos
+	var left: float = p.x - 90.0
+	var right: float = p.x + p.w + 90.0
+	if has_boss:
+		left = min(left, float(boss.x) - 70.0)
+		right = max(right, float(boss.x + boss.w) + 70.0)
+	var want_vh: float = 270.0
+	if arena_lock:
+		want_vh = clamp((right - left) / aspect, 420.0, 600.0)
+	VH = want_vh if snap else lerp(VH, want_vh, min(1.0, dt * 3.0))
+	VW = round(aspect * VH / 2.0) * 2.0
 	var tx := 0.0
 	var ty := 0.0
-	var A: Dictionary = level.arena
 	if arena_lock:
 		var span: float = A.x2 - A.x1 + 80
 		if VW >= span:
 			tx = A.x1 - 40 - (VW - span) / 2
 		else:
-			var focus: float = p.x + p.w / 2
-			if not boss.is_empty() and not boss.done:
-				focus = lerp(focus, float(boss.x + boss.w / 2), 0.7 if boss_intro > 0 else 0.35)
+			var focus: float = (left + right) / 2.0
+			if has_boss and boss_intro > 0:
+				focus = lerp(focus, float(boss.x + boss.w / 2), 0.6)
 			tx = clamp(focus - VW / 2, A.x1 - 40, A.x2 + 40 - VW)
 		ty = A.floor - VH + 56
+		if has_boss:
+			ty = min(ty, float(boss.y) - 50.0)
+			ty = max(ty, A.floor + 30.0 - VH)
 	else:
 		p.look = p.face * 60.0 if snap else lerp(float(p.look), p.face * 60.0 + p.vx * 0.12, min(1.0, dt * 2.5))
 		tx = clamp(p.x + p.w / 2 - VW / 2 + p.look, 0.0, level.width - VW)
@@ -1942,7 +1984,12 @@ func _update_kael() -> void:
 	var k := "KH_idle"
 	var fps := 10.0
 	var loop := true
-	if p.dead:
+	var pw: Array = [] if p.dead else CrPowers.kael_anim(self)
+	if not pw.is_empty() and p.stun <= 0.0 and p.dashT <= 0.0 and p.atkT <= 0.0:
+		k = pw[0]
+		fps = pw[1]
+		loop = pw[2]
+	elif p.dead:
 		k = "KH_death"
 		loop = false
 	elif p.stun > 0.0:
@@ -2106,6 +2153,8 @@ func _draw() -> void:
 		draw_line(Vector2(w.x, level.arena.get("floor", GY) - 3), Vector2(w.x, level.arena.get("floor", GY) - 40), Color(1, 0.24, 0.35, a2 * 0.5), 2)
 	for q in projs:
 		match str(q.type):
+			"lightwave":
+				pass
 			"laser":
 				draw_rect(Rect2(q.x - q.hw, q.y - q.hh, q.hw * 2, q.hh * 2), Color(1, 0.3, 0.35))
 				draw_rect(Rect2(q.x - q.hw, q.y - 1, q.hw * 2, 2), Color(1, 0.9, 0.9))
