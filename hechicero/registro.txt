@@ -1,0 +1,48 @@
+== TRELLIS :: trellis-community/TRELLIS
+  preprocesada: /tmp/gradio/669b9c53234f04e1166481d3c7adc3c4378ca8ac16d520dbada8739538a3d801/image.png
+  guardado out/hechicero/trellis_0.mp4 629784
+  guardado out/hechicero/trellis_1.glb 2231696
+  guardado out/hechicero/trellis_2.glb 2231696
+  resultado: 3 archivos en 25s
+== Hunyuan3D-2 :: tencent/Hunyuan3D-2.1
+  llamando /generation_all 20 256
+   fallo: 'The requested GPU duration (270s) is larger than the maximum allowedSubscribe to Hugging Face PRO to allow GPU tasks up to 40 min - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  llamando /shape_generation 20 256
+  guardado out/hechicero/hunyuan_shape_generation_20_0.glb 13556932
+  resultado: 1 archivos en 19s
+== TripoSR :: stabilityai/TripoSR
+  ERROR: ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+Traceback (most recent call last):
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 156, in <module>
+    got = fn(sp)
+          ^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 98, in try_triposr
+    c = Client(space, hf_token=TOKEN)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 15, in Client
+    return _Client(space, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gradio_client/client.py", line 162, in __init__
+    raise ValueError(
+ValueError: The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+
+== TripoSR :: VAST-AI/TripoSG
+  ERROR: ValueError Cannot find a function with `api_name`: /preprocess.
+Traceback (most recent call last):
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 156, in <module>
+    got = fn(sp)
+          ^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 100, in try_triposr
+    pre = c.predict(handle_file(IMG), True, 0.85, api_name="/preprocess")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gradio_client/client.py", line 604, in predict
+    return self.submit(
+           ^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gradio_client/client.py", line 650, in submit
+    inferred_fn_index = self._infer_fn_index(api_name, fn_index)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/gradio_client/client.py", line 994, in _infer_fn_index
+    raise ValueError(error_message)
+ValueError: Cannot find a function with `api_name`: /preprocess.
+
+RESUMEN: {"TRELLIS": "trellis-community/TRELLIS", "Hunyuan3D-2": "tencent/Hunyuan3D-2.1"}
