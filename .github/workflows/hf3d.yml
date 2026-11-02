@@ -27,11 +27,20 @@ jobs:
       - name: Generar modelos
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          SOLO: ${{ vars.HF3D_SOLO || 'chico' }}
         run: |
           mkdir -p out
           for img in engine/tools/hf3d/entrada/*.png; do
+            [ -e "$img" ] || continue
             n=$(basename "$img" .png)
+            [ -n "$SOLO" ] && [ "$n" != "$SOLO" ] && continue
             python engine/tools/hf3d/hf3d.py "$img" "out/$n" || true
+          done
+          for dir in engine/tools/hf3d/entrada_mv/*/; do
+            [ -d "$dir" ] || continue
+            n=$(basename "$dir")
+            [ -n "$SOLO" ] && [ "$n" != "$SOLO" ] && continue
+            python engine/tools/hf3d/hf3d.py "$dir" "out/$n" || true
           done
           find out -type f | head -50
       - name: Guardar en la rama aether-3d

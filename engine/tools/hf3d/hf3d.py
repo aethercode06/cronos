@@ -15,6 +15,10 @@ def Client(space, hf_token=None):
     return _Client(space, **kw)
 
 IMG, OUT = sys.argv[1], sys.argv[2]
+MV = None
+if os.path.isdir(IMG):
+    MV = {k: os.path.join(IMG, k + ".png") for k in ("front", "back", "right", "left") if os.path.exists(os.path.join(IMG, k + ".png"))}
+    IMG = MV["front"]
 os.makedirs(OUT, exist_ok=True)
 TOKEN = os.environ.get("HF_TOKEN") or None
 LOG = []
@@ -98,11 +102,51 @@ def try_triposr(space):
     return save("triposr", res)
 
 
+def try_mv(space):
+    c = Client(space, hf_token=TOKEN)
+    info = api(c, "mv_" + space.split("/")[-1])
+    eps = (info or {}).get("named_endpoints", {})
+    log("  endpoints:", list(eps))
+    for ep in ("/shape_generation", "/generation_all"):
+        if ep not in eps:
+            continue
+        kw = {}
+        for prm in eps[ep]["parameters"]:
+            n = prm["parameter_name"]
+            if n == "image":
+                kw[n] = handle_file(MV["front"]) if "mv_image_front" not in [q["parameter_name"] for q in eps[ep]["parameters"]] else None
+            elif n.startswith("mv_image_"):
+                side = n.replace("mv_image_", "")
+                kw[n] = handle_file(MV[side]) if side in MV else None
+            elif n == "steps":
+                kw[n] = 20
+            elif n == "octree_resolution":
+                kw[n] = 256
+            elif n == "check_box_rembg":
+                kw[n] = True
+            elif n == "randomize_seed":
+                kw[n] = False
+            elif n == "seed":
+                kw[n] = 7
+        try:
+            log("  llamando", ep, {k: (v if not hasattr(v, "keys") else "img") for k, v in kw.items()})
+            res = c.predict(**kw, api_name=ep)
+            got = save("mv" + ep.replace("/", "_"), res)
+            if got:
+                return got
+        except Exception as e:
+            log("   fallo:", str(e)[:300])
+    return []
+
+
 TRIES = [
     ("TRELLIS", try_trellis, ["trellis-community/TRELLIS", "JeffreyXiang/TRELLIS"]),
     ("Hunyuan3D-2", try_hunyuan, ["tencent/Hunyuan3D-2.1", "tencent/Hunyuan3D-2", "tencent/Hunyuan3D-2mini-Turbo"]),
     ("TripoSR", try_triposr, ["stabilityai/TripoSR", "VAST-AI/TripoSG"]),
 ]
+if MV:
+    TRIES = [("Hunyuan3D-2mv", try_mv, ["tencent/Hunyuan3D-2mv"]),
+             ("Hunyuan3D-2.1 frente", try_hunyuan, ["tencent/Hunyuan3D-2.1"])]
 ok = {}
 for label, fn, spaces in TRIES:
     for sp in spaces:
@@ -117,6 +161,8 @@ for label, fn, spaces in TRIES:
         except Exception as e:
             log("  ERROR:", type(e).__name__, str(e)[:600])
             LOG.append(traceback.format_exc()[-1500:])
+    if MV and ok:
+        break
 log("RESUMEN:", json.dumps(ok))
 with open(os.path.join(OUT, "registro.txt"), "w") as f:
     f.write("\n".join(LOG))
