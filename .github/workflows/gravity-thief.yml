@@ -14,7 +14,7 @@ jobs:
       - name: Unir las partes en un solo APK
         run: |
           sudo apt-get install -y p7zip-full >/dev/null
-          7z x apk/GravityThief-v6.7z.001 -oout -y
+          7z x apk/GravityThief-v7.7z.001 -oout -y
           ls -la out
       - name: Publicar en la release gravity-thief
         env:
@@ -23,5 +23,5 @@ jobs:
           gh release delete gravity-thief -y --cleanup-tag || true
           gh release create gravity-thief out/GravityThief.apk \
             --target "${GITHUB_SHA}" \
-            --title "Gravity Thief v6" \
+            --title "Gravity Thief v1.6.0" \
             --notes "APK completo de Gravity Thief (Aether Code). Descarga GravityThief.apk e instalalo."
