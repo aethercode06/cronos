@@ -1,34 +1,26 @@
 [
  {
-  "nombre": "elena_blanca_0",
-  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
-  "w": 768,
-  "h": 1344,
-  "seed": 3,
-  "space": "black-forest-labs/FLUX.1-schnell"
+  "nombre": "fachada",
+  "w": 1344,
+  "h": 768,
+  "seed": 7,
+  "space": "black-forest-labs/FLUX.1-schnell",
+  "prompt": "beautiful grand victorian mansion at night in the middle of a dense pine forest, ornate gothic victorian architecture, tall corner tower with conical roof, steep gabled roofs, decorative carved wooden trim, wraparound porch with columns, tall narrow arched windows with warm candle light, stone fountain in front garden, fog, full moon, elegant and eerie, cinematic, photorealistic, unreal engine 5"
  },
  {
-  "nombre": "elena_blanca_1",
-  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
-  "w": 768,
-  "h": 1344,
-  "seed": 17,
-  "space": "black-forest-labs/FLUX.1-schnell"
+  "nombre": "vestibulo",
+  "w": 1344,
+  "h": 768,
+  "seed": 11,
+  "space": "black-forest-labs/FLUX.1-schnell",
+  "prompt": "interior of a beautiful victorian mansion grand hall at night, wide carved dark wood staircase, crystal chandelier with warm dim light, rich damask wallpaper, dark wood wainscoting, ornate ceiling moldings, family portraits in golden frames, persian rug, antique furniture, elegant, mysterious, slightly abandoned with dust, cinematic lighting, photorealistic, unreal engine 5"
  },
  {
-  "nombre": "elena_blanca_2",
-  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
-  "w": 768,
-  "h": 1344,
-  "seed": 41,
-  "space": "black-forest-labs/FLUX.1-schnell"
- },
- {
-  "nombre": "elena_blanca_3",
-  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
-  "w": 768,
-  "h": 1344,
-  "seed": 88,
-  "space": "black-forest-labs/FLUX.1-schnell"
+  "nombre": "salon",
+  "w": 1344,
+  "h": 768,
+  "seed": 21,
+  "space": "black-forest-labs/FLUX.1-schnell",
+  "prompt": "interior of a beautiful victorian parlor at night, marble fireplace with glowing embers, velvet armchairs, grand piano, tall windows with heavy red curtains and moonlight, damask wallpaper, oil lamps, bookshelves, elegant and eerie atmosphere, a few furniture pieces covered with white sheets, cinematic, photorealistic, unreal engine 5"
  }
 ]
