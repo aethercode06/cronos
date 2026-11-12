@@ -1,30 +1,26 @@
 [
  {
-  "nombre": "elena_0",
-  "prompt": "full body character concept of Elena, a possessed pale emaciated young woman, horror video game character, standing straight facing the camera, front view, arms hanging slightly away from the body, very long straight dark red hair falling over part of her face, sunken black eyes, grey cracked skin, torn dirty burlap sack dress with dried blood stains, barefoot dirty feet, 1974 asylum, photorealistic 3D character render, unreal engine 5, dramatic soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
+  "nombre": "elena_terror_0",
+  "prompt": "full body horror character concept, a demonically possessed emaciated young woman standing facing the camera, front view, arms hanging slightly away from the body, long matted wet tangled dark red hair in greasy clumps, stringy and knotted, hanging over most of her face, terrifying face: rotting cracked grey skin, completely black eyes, black veins spreading across her face and neck, bloody tears, split cracked lips, sunken cheeks, torn filthy burlap sack dress soaked with old blood, bony limbs, long broken fingernails, dirty bare feet, photorealistic dark horror video game character, gritty, scary, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
   "w": 768,
   "h": 1344,
-  "seed": 11
+  "seed": 5,
+  "space": "black-forest-labs/FLUX.1-schnell"
  },
  {
-  "nombre": "elena_1",
-  "prompt": "full body character concept of Elena, a possessed pale emaciated young woman, horror video game character, standing straight facing the camera, front view, arms hanging slightly away from the body, very long straight dark red hair falling over part of her face, sunken black eyes, grey cracked skin, torn dirty burlap sack dress with dried blood stains, barefoot dirty feet, 1974 asylum, photorealistic 3D character render, unreal engine 5, dramatic soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
+  "nombre": "elena_terror_1",
+  "prompt": "full body horror character concept, a demonically possessed emaciated young woman standing facing the camera, front view, arms hanging slightly away from the body, long matted wet tangled dark red hair in greasy clumps, stringy and knotted, hanging over most of her face, terrifying face: rotting cracked grey skin, completely black eyes, black veins spreading across her face and neck, bloody tears, split cracked lips, sunken cheeks, torn filthy burlap sack dress soaked with old blood, bony limbs, long broken fingernails, dirty bare feet, photorealistic dark horror video game character, gritty, scary, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
   "w": 768,
   "h": 1344,
-  "seed": 23
+  "seed": 66,
+  "space": "black-forest-labs/FLUX.1-schnell"
  },
  {
-  "nombre": "elena_2",
-  "prompt": "full body character concept of Elena, a possessed pale emaciated young woman, horror video game character, standing straight facing the camera, front view, arms hanging slightly away from the body, very long straight dark red hair falling over part of her face, sunken black eyes, grey cracked skin, torn dirty burlap sack dress with dried blood stains, barefoot dirty feet, 1974 asylum, photorealistic 3D character render, unreal engine 5, dramatic soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
+  "nombre": "elena_terror_2",
+  "prompt": "full body horror character concept, a demonically possessed emaciated young woman standing facing the camera, front view, arms hanging slightly away from the body, long matted wet tangled dark red hair in greasy clumps, stringy and knotted, hanging over most of her face, terrifying face: rotting cracked grey skin, completely black eyes, black veins spreading across her face and neck, bloody tears, split cracked lips, sunken cheeks, torn filthy burlap sack dress soaked with old blood, bony limbs, long broken fingernails, dirty bare feet, photorealistic dark horror video game character, gritty, scary, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
   "w": 768,
   "h": 1344,
-  "seed": 47
- },
- {
-  "nombre": "elena_3",
-  "prompt": "full body character concept of Elena, a possessed pale emaciated young woman, horror video game character, standing straight facing the camera, front view, arms hanging slightly away from the body, very long straight dark red hair falling over part of her face, sunken black eyes, grey cracked skin, torn dirty burlap sack dress with dried blood stains, barefoot dirty feet, 1974 asylum, photorealistic 3D character render, unreal engine 5, dramatic soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
-  "w": 768,
-  "h": 1344,
-  "seed": 74
+  "seed": 99,
+  "space": "black-forest-labs/FLUX.1-schnell"
  }
 ]
