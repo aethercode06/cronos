@@ -17,13 +17,17 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -q pillow
       - run: |
+          set +e
           mkdir -p out
           python engine/tools/modelos/polyhaven.py lista out 2>&1 | tail -20
-          python engine/tools/modelos/polyhaven.py bajar engine/tools/modelos/pedidos.json out/modelos 2>&1 | tail -80 | tee out/registro.txt
+          python engine/tools/modelos/polyhaven.py bajar engine/tools/modelos/pedidos.json out/modelos > out/registro.txt 2>&1 || true
+          du -sh out/modelos/* >> out/registro.txt 2>&1 || true
+          find out -size +90M >> out/registro.txt
       - name: Guardar en la rama aether-modelos
         if: always()
         run: |
           cd out && git init -q && git checkout -q -b aether-modelos
           git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git config http.postBuffer 1048576000
           git add -A && git commit -qm "Modelos ${{ github.run_number }}" || true
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-modelos
