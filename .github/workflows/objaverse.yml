@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["engine/tools/objaverse/consultas.json", "engine/tools/objaverse/buscar.py", ".github/workflows/objaverse.yml"]
+    paths: ["engine/tools/objaverse/pedidos.json", "engine/tools/objaverse/bajar.py", ".github/workflows/objaverse.yml"]
 permissions:
   contents: write
 jobs:
@@ -23,12 +23,23 @@ jobs:
         run: |
           set +e
           mkdir -p out
-          python engine/tools/objaverse/buscar.py engine/tools/objaverse/consultas.json out > out/registro.txt 2>&1
-          tail -30 out/registro.txt
+          if [ -s engine/tools/objaverse/pedidos.json ] && [ "$(cat engine/tools/objaverse/pedidos.json)" != "[]" ]; then
+            python engine/tools/objaverse/bajar.py engine/tools/objaverse/pedidos.json out/glb > out/registro_bajada.txt 2>&1
+            tar czf /tmp/objaverse.tar.gz -C out glb
+          fi
+          python engine/tools/objaverse/buscar.py engine/tools/objaverse/consultas.json out > out/registro.txt 2>&1 || true
+      - name: Subir modelos a la release «objaverse»
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f /tmp/objaverse.tar.gz ] || exit 0
+          gh release view objaverse -R ${{ github.repository }} >/dev/null 2>&1 || gh release create objaverse -R ${{ github.repository }} -t "Modelos Objaverse (CC-BY/CC0)" -n "Modelos de época para la Mansión Varela; créditos en creditos.json"
+          gh release upload objaverse /tmp/objaverse.tar.gz -R ${{ github.repository }} --clobber
       - name: Guardar en la rama aether-objaverse
         if: always()
         run: |
-          cd out && git init -q && git checkout -q -b aether-objaverse
+          rm -rf out/glb; cd out && git init -q && git checkout -q -b aether-objaverse
           git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
           git add -A && git commit -qm "Objaverse ${{ github.run_number }}" || true
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-objaverse
