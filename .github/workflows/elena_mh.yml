@@ -34,9 +34,12 @@ jobs:
             for p in aa ab ac ad; do git show aether-mh:$z.zip.part_$p 2>/dev/null; done > /tmp/zips/$z.zip
             ls -la /tmp/zips/$z.zip; unzip -qo /tmp/zips/$z.zip -d /tmp/rec; echo "unzip $z $?"
           done
-          for u in faceunits01 visemes01 clothes01 clothes02 clothes03; do
-            curl -sSfL --retry 2 -o /tmp/zips/$u.zip http://files.makehumancommunity.org/asset_packs/$u/${u}_cc0.zip && unzip -qo /tmp/zips/$u.zip -d /tmp/rec && echo "OK $u" || echo "FALLO $u"
-          done
+          bajar() { curl -sSfL --retry 2 -o /tmp/zips/$1.zip "$2" || curl -sSfL --retry 2 -o /tmp/zips/$1.zip "${2/files2./files.}"; unzip -qo /tmp/zips/$1.zip -d /tmp/rec && echo "OK $1" || echo "FALLO $1"; }
+          bajar faceunits01 https://files2.makehumancommunity.org/functional/faceunits01.zip
+          for u in dress01 skirts01; do bajar $u https://files2.makehumancommunity.org/asset_packs/$u/${u}_cc0.zip; done
+          for u in dress02 dress03; do bajar $u https://files2.makehumancommunity.org/asset_packs/$u/${u}_ccby.zip; done
+          mkdir -p out/elena/miniaturas; for f in /tmp/rec/clothes/*/*.thumb; do cp "$f" "out/elena/miniaturas/$(basename $(dirname $f)).png"; done
+          find /tmp/rec -maxdepth 2 -type d | sort | head -150
           ls /tmp/rec
           python engine/tools/elena_mh/instalar_mpfb.py /tmp/mpfb.zip /tmp/rec 2>&1 | tail -20
           exit 0
