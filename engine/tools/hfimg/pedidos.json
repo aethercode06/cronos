@@ -1,26 +1,34 @@
 [
  {
-  "nombre": "elena_terror_0",
-  "prompt": "full body horror character concept, a demonically possessed emaciated young woman standing facing the camera, front view, arms hanging slightly away from the body, long matted wet tangled dark red hair in greasy clumps, stringy and knotted, hanging over most of her face, terrifying face: rotting cracked grey skin, completely black eyes, black veins spreading across her face and neck, bloody tears, split cracked lips, sunken cheeks, torn filthy burlap sack dress soaked with old blood, bony limbs, long broken fingernails, dirty bare feet, photorealistic dark horror video game character, gritty, scary, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
+  "nombre": "elena_blanca_0",
+  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
   "w": 768,
   "h": 1344,
-  "seed": 5,
+  "seed": 3,
   "space": "black-forest-labs/FLUX.1-schnell"
  },
  {
-  "nombre": "elena_terror_1",
-  "prompt": "full body horror character concept, a demonically possessed emaciated young woman standing facing the camera, front view, arms hanging slightly away from the body, long matted wet tangled dark red hair in greasy clumps, stringy and knotted, hanging over most of her face, terrifying face: rotting cracked grey skin, completely black eyes, black veins spreading across her face and neck, bloody tears, split cracked lips, sunken cheeks, torn filthy burlap sack dress soaked with old blood, bony limbs, long broken fingernails, dirty bare feet, photorealistic dark horror video game character, gritty, scary, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
+  "nombre": "elena_blanca_1",
+  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
   "w": 768,
   "h": 1344,
-  "seed": 66,
+  "seed": 17,
   "space": "black-forest-labs/FLUX.1-schnell"
  },
  {
-  "nombre": "elena_terror_2",
-  "prompt": "full body horror character concept, a demonically possessed emaciated young woman standing facing the camera, front view, arms hanging slightly away from the body, long matted wet tangled dark red hair in greasy clumps, stringy and knotted, hanging over most of her face, terrifying face: rotting cracked grey skin, completely black eyes, black veins spreading across her face and neck, bloody tears, split cracked lips, sunken cheeks, torn filthy burlap sack dress soaked with old blood, bony limbs, long broken fingernails, dirty bare feet, photorealistic dark horror video game character, gritty, scary, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text",
+  "nombre": "elena_blanca_2",
+  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
   "w": 768,
   "h": 1344,
-  "seed": 99,
+  "seed": 41,
+  "space": "black-forest-labs/FLUX.1-schnell"
+ },
+ {
+  "nombre": "elena_blanca_3",
+  "prompt": "full body horror character concept of a demonically possessed young woman standing facing the camera, front view, arms hanging slightly away from the body, wearing a long old off-white cream nightgown dress that covers her body from shoulders to below the knees, dirty, with grime stains and a few small dried blood marks, long messy disheveled tangled black hair, partly over her face, terrifying demonic face: pale grey cracked skin, completely black eyes with tiny white pupils, dark veins around the eyes, unnaturally wide grin with blackened teeth, dark sunken eye sockets, thin bony arms, long dirty fingernails, dirty bare feet, photorealistic dark horror video game character, scary, gritty, unreal engine 5 render, soft studio light, entire body visible from head to feet, centered, plain neutral grey background, no text, no logo",
+  "w": 768,
+  "h": 1344,
+  "seed": 88,
   "space": "black-forest-labs/FLUX.1-schnell"
  }
 ]
