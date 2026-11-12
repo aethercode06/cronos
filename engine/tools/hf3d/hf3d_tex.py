@@ -49,7 +49,7 @@ def save(tag, res):
     return got
 
 
-SKIP = ("example", "clear", "end_session", "lambda", "unload", "reset", "update_", "on_change", "toggle", "show", "hide", "upload")
+SKIP = ("txt2img", "preprocess_image_1", "example", "clear", "end_session", "lambda", "unload", "reset", "update_", "on_change", "toggle", "show", "hide", "upload")
 ORDER = ("start_session", "preprocess", "image_to_3d", "generate", "generation_all", "shape", "texture", "paint", "extract_glb", "extract")
 
 OVR = {"seed": 7, "randomize_seed": False, "texture_size": 2048, "check_box_rembg": True, "remove_bg": True,
