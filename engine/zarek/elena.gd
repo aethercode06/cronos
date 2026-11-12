@@ -69,7 +69,7 @@ func setup(m: ZarekMansion, p: AetherPlayerFP) -> void:
 	mansion = m
 	player = p
 	_ray = PhysicsRayQueryParameters3D.new()
-	_ray.collision_mask = 1
+	_ray.collision_mask = 3
 	_snd_loop = AudioStreamPlayer3D.new()
 	_snd_loop.stream = AetherSynth.make("aliento")
 	_snd_loop.unit_size = 3.0
@@ -390,13 +390,15 @@ func vanish(sec: float) -> void:
 	global_position = mansion.random_floor(player.global_position, 18.0)
 
 func wake_far() -> void:
-	global_position = mansion.random_floor(player.global_position, 16.0, mansion.region.get(mansion.to_cell(player.global_position), -1))
+	global_position = mansion.random_floor(player.global_position, 16.0, mansion.room_at(player.global_position))
 	set_state(S.WANDER)
 
 func hear(pos: Vector3, loud: float) -> void:
 	if state in [S.DORMANT, S.FLEE, S.GHOST] or player_hidden:
 		return
 	var d := global_position.distance_to(pos)
+	if absf(global_position.y - pos.y) > 3.0:
+		d *= 2.0
 	if d < loud * (1.0 + aggro * 0.15):
 		if state != S.CHASE:
 			last_seen = pos
@@ -412,6 +414,8 @@ func _can_see_player() -> bool:
 	if player_hidden or player == null:
 		return false
 	var pp := player.global_position
+	if absf(pp.y - global_position.y) > 2.5:
+		return false
 	var to := pp - global_position
 	to.y = 0
 	var d := to.length()
@@ -449,6 +453,8 @@ func _physics_process(delta: float) -> void:
 				var bias := 0.25 + aggro * 0.17
 				if randf() < bias:
 					target = player.global_position + Vector3(randf_range(-6, 6), 0, randf_range(-6, 6))
+					if mansion.room_at(target) < 0:
+						target = mansion.random_floor(Vector3(-9999, 0, -9999), 0.0, -1, mansion.level_of(player.global_position.y + 0.3))
 				else:
 					target = mansion.random_floor()
 				path = _safe_path(target)
@@ -475,7 +481,7 @@ func _physics_process(delta: float) -> void:
 			if repath <= 0.0:
 				repath = 0.35
 				if sees_player and global_position.distance_to(last_seen) < 7.0:
-					path = [Vector3(last_seen.x, 0, last_seen.z)]
+					path = [last_seen]
 				else:
 					path = mansion.path(global_position, last_seen)
 			if mansion.is_lit(player.global_position) and aggro < 2 and global_position.distance_to(player.global_position) > 2.0:
@@ -503,7 +509,7 @@ func _physics_process(delta: float) -> void:
 	# atrapar
 	if can_catch and state in [S.CHASE, S.INVESTIGATE, S.WANDER, S.SEARCH] and not player_hidden:
 		var dd := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z).length()
-		if dd < 1.05:
+		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2:
 			caught.emit()
 	# puertas: las abre de golpe al pasar
 	var d := mansion.door_near(global_position, 1.3)
@@ -543,8 +549,8 @@ func _move(delta: float) -> void:
 	if not path.is_empty():
 		var wp: Vector3 = path[0]
 		var to := wp - global_position
-		to.y = 0
-		if to.length() < 0.35:
+		var flat := Vector3(to.x, 0, to.z)
+		if flat.length() < 0.35 and absf(to.y) < 0.6:
 			path.remove_at(0)
 		else:
 			# movimiento a tirones cuando persigue (da más miedo)
@@ -556,13 +562,12 @@ func _move(delta: float) -> void:
 			if step.length() > to.length():
 				step = to
 			global_position += step
-			var yaw := atan2(-to.x, -to.z)
+			var yaw := atan2(-flat.x, -flat.z)
 			rotation.y = lerp_angle(rotation.y, yaw, minf(1.0, delta * (9.0 if state == S.CHASE else 4.0)))
 			moving = _speed * k
 	elif state == S.CHASE:
 		var to := player.global_position - global_position
 		rotation.y = lerp_angle(rotation.y, atan2(-to.x, -to.z), minf(1.0, delta * 8.0))
-	global_position.y = 0.0
 	_animate(delta, moving)
 
 func _process(delta: float) -> void:

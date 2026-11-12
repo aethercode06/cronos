@@ -33,7 +33,7 @@ var _scare_t := 30.0
 var _halluc_t := 20.0
 var _ghost_t := 0.0
 var _ghost_move := Vector3.ZERO
-var _intro_glimpse := 26.0
+var _intro_glimpse := -1.0
 var _msg_t := 0.0
 var _catch_t := 0.0
 var _hide_seen := false
@@ -41,6 +41,9 @@ var _danger := 0.0
 var _saw_enter_t := -10.0
 var _flicker_t := 0.0
 var _sanity_zero_cd := 0.0
+var respawn_pos := Vector3.ZERO
+var entered := false
+var _forest_events := {}
 
 # sonido
 var snd_drone: AudioStreamPlayer
@@ -87,10 +90,13 @@ func _ready() -> void:
 	mansion = ZarekMansion.new()
 	add_child(mansion)
 	mansion.build(Aether.quality)
+	mansion.bake_nav()
 	for l in mansion.lamps:
 		mansion.set_lamp(l, true)
+	respawn_pos = mansion.cell_to_world("baja", 9.0, 11.2)
 	player = AetherPlayerFP.new()
 	add_child(player)
+	player.collision_mask = 3  # suelo/paredes + puertas
 	player.global_position = mansion.start_pos
 	player.set_look(0.0, 0.0)
 	player.step.connect(_on_step)
@@ -100,7 +106,7 @@ func _ready() -> void:
 	elena.setup(mansion, player)
 	elena.caught.connect(_on_caught)
 	elena.global_position = mansion.circle_pos
-	elena.set_state(ZarekElena.S.DORMANT, 40.0)
+	elena.set_state(ZarekElena.S.DORMANT, 99999.0)
 	elena.visible = false
 	ghost = ZarekElena.new()
 	ghost.only_visual = true
@@ -159,8 +165,25 @@ func _environment() -> void:
 	env.adjustment_enabled = true
 	env.adjustment_saturation = 1.0
 	env.adjustment_contrast = 1.06
+	var sky := Sky.new()
+	var sm := ProceduralSkyMaterial.new()
+	sm.sky_top_color = Color(0.02, 0.03, 0.06)
+	sm.sky_horizon_color = Color(0.06, 0.07, 0.1)
+	sm.ground_bottom_color = Color(0.0, 0.0, 0.0)
+	sm.ground_horizon_color = Color(0.05, 0.05, 0.07)
+	sm.sun_angle_max = 2.0
+	sky.sky_material = sm
+	env.sky = sky
+	env.background_mode = Environment.BG_SKY
 	we.environment = env
 	add_child(we)
+	var moon := DirectionalLight3D.new()
+	moon.light_color = Color(0.55, 0.65, 0.95)
+	moon.light_energy = 0.45
+	moon.rotation_degrees = Vector3(-38, 30, 0)
+	moon.shadow_enabled = true
+	moon.directional_shadow_max_distance = 60.0
+	add_child(moon)
 
 func _flashlight() -> void:
 	flash_node = Node3D.new()
@@ -207,7 +230,7 @@ func _audio() -> void:
 	snd_box.unit_size = 3.0
 	snd_box.max_distance = 26.0
 	add_child(snd_box)
-	snd_box.global_position = mansion.to_world(Vector2i(4, 3), 1.0)
+	snd_box.global_position = mansion.musicbox_pos
 	snd_radio = AudioStreamPlayer3D.new()
 	snd_radio.stream = _s("estatica")
 	snd_radio.unit_size = 2.5
@@ -447,7 +470,10 @@ func _update_hud() -> void:
 	bar_san.value = sanity
 	bar_bat.value = battery
 	lbl_salt.text = "Sal: %d   Sellos: %d/%d" % [salt, seals, SEALS_NEEDED]
-	if seals < SEALS_NEEDED:
+	if not entered:
+		var dist := int(player.global_position.distance_to(mansion.front_door))
+		lbl_obj.text = "Llega a la mansión Varela (%d m)" % dist
+	elif seals < SEALS_NEEDED:
 		var near := _nearest_seal()
 		var where := ""
 		if not near.is_empty():
@@ -488,9 +514,9 @@ func start_game(quick := false) -> void:
 	_black_target = 1.0
 	await get_tree().create_timer(0.6).timeout
 	var lines := [
-		"Mansión Varela. 3:00 de la madrugada.",
-		"Aquí, en 1974, Elena mató a su familia en una sola noche.\nAlgo vivía dentro de ella. Algo llamado Zarek.",
-		"Cuatro sellos de la dinastía siguen escondidos en la casa.\nCon ellos puedo expulsarlo en el Epicentro.",
+		"3:00 de la madrugada. El coche se apagó en medio del bosque.",
+		"Al final del camino está la mansión Varela.\nAquí, en 1974, Elena mató a su familia en una sola noche.",
+		"Algo vivía dentro de ella. Algo llamado Zarek.\nCuatro sellos de la dinastía pueden expulsarlo.",
 	]
 	for l in lines:
 		message(l, 3.6)
@@ -498,13 +524,10 @@ func start_game(quick := false) -> void:
 	_black_target = 0.0
 	message("", 0.1)
 	await get_tree().create_timer(1.2).timeout
-	# la puerta principal se cierra sola detrás de ti
-	sound_behind("portazo", 3.5, 4.0)
-	player.shake(10.0)
 	state = "juego"
 	player.frozen = false
-	await get_tree().create_timer(0.9).timeout
-	message("La puerta se cerró detrás de mí.", 2.6)
+	await get_tree().create_timer(0.6).timeout
+	message("Tengo que llegar a la mansión.", 2.6)
 
 func _restart() -> void:
 	get_tree().paused = false
@@ -623,6 +646,7 @@ func _play(delta: float) -> void:
 			_exit_wardrobe(false)
 			_on_caught()
 			return
+	_events(pp)
 	# vistazo de guion al principio
 	if _intro_glimpse > 0.0 and state == "juego":
 		_intro_glimpse -= delta
@@ -640,7 +664,7 @@ func _play(delta: float) -> void:
 	if Input.is_action_just_pressed("sal"):
 		_throw_salt()
 	# ritual
-	if seals >= SEALS_NEEDED and Vector2(pp.x - mansion.circle_pos.x, pp.z - mansion.circle_pos.z).length() < 1.9:
+	if seals >= SEALS_NEEDED and _in_circle(pp):
 		if Input.is_action_pressed("usar") or (autotest and state == "ritual"):
 			if state != "ritual":
 				state = "ritual"
@@ -659,6 +683,36 @@ func _play(delta: float) -> void:
 		player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
 		if state == "ritual":
 			state = "juego"
+
+func _events(pp: Vector3) -> void:
+	if not entered and mansion.inside_house(pp):
+		entered = true
+		sound_behind("portazo", 3.0, 4.0)
+		player.shake(10.0)
+		message("La puerta se cerró detrás de mí.\nYa no hay vuelta atrás.", 3.5)
+		elena.timer = 30.0
+	# sustos del bosque: una sola vez cada uno
+	var pts := {"puente": mansion.cell_to_world("exterior", 31.0, 87.0), "columpio": mansion.cell_to_world("exterior", 12.0, 61.0),
+		"porton": mansion.cell_to_world("exterior", 44.0, 71.0), "cuervos": mansion.cell_to_world("exterior", 79.0, 21.0)}
+	for k in pts:
+		if _forest_events.has(k):
+			continue
+		if Vector2(pp.x - pts[k].x, pp.z - pts[k].z).length() < 9.0:
+			_forest_events[k] = true
+			match k:
+				"puente":
+					_glimpse(true)
+				"columpio":
+					sound_at("risa", pts[k] + Vector3(0, 2, 0), 0.0)
+					message("El columpio se mueve solo…", 2.5)
+				"porton":
+					sound_at("crujido", pts[k] + Vector3(0, 2, 0), 4.0)
+					sound_behind("susurro", 2.0, 0.0)
+				"cuervos":
+					sound_at("risa", pts[k] + Vector3(0, 6, 0), 2.0)
+
+func _in_circle(pp: Vector3) -> bool:
+	return absf(pp.y - mansion.circle_pos.y) < 1.5 and Vector2(pp.x - mansion.circle_pos.x, pp.z - mansion.circle_pos.z).length() < 1.9
 
 func _in_view(p: Vector3) -> bool:
 	var cam := player.camera
@@ -692,8 +746,11 @@ func _target() -> Dictionary:
 	for k in mansion.pickups:
 		if not k.taken and Vector2(pp.x - k.pos.x, pp.z - k.pos.z).length() < 1.6:
 			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + ("las pilas" if k.kind == "pila" else "la sal")}
-	if seals >= SEALS_NEEDED and Vector2(pp.x - mansion.circle_pos.x, pp.z - mansion.circle_pos.z).length() < 1.9:
+	if seals >= SEALS_NEEDED and _in_circle(pp):
 		return {"kind": "ritual", "text": "MANTÉN USAR: recitar la oración"}
+	var pt := mansion.portal_near(pp, 1.7)
+	if not pt.is_empty():
+		return {"kind": "portal", "obj": pt, "text": "USAR: " + str(pt.text)}
 	var wd := mansion.wardrobe_near(pp, 1.5)
 	if not wd.is_empty():
 		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse en el armario"}
@@ -723,7 +780,7 @@ func _use() -> void:
 		"pick":
 			var k: Dictionary = t.obj
 			k.taken = true
-			k.node.get_child(1).visible = false
+			k.item.visible = false
 			if k.kind == "pila":
 				battery = minf(100.0, battery + 55.0)
 				message("Pilas nuevas para la linterna.", 2.0)
@@ -742,9 +799,26 @@ func _use() -> void:
 			elena.hear(player.global_position, 5.0)
 		"cerrada":
 			sound_at("golpes", t.obj.pos + Vector3(0, 1.4, 0), 2.0)
+		"portal":
+			_use_portal(t.obj)
 		"lampara":
 			mansion.set_lamp(t.obj, not t.obj.on)
 			_click()
+
+func _use_portal(pt: Dictionary) -> void:
+	player.frozen = true
+	_black_target = 1.0
+	black.color.a = 0.6
+	sound_at("crujido", player.global_position + Vector3(0, 1, 0), -2.0)
+	await get_tree().create_timer(0.45).timeout
+	var to: Vector3 = pt.to
+	player.global_position = to + Vector3(0.9, 0.05, 0.9)
+	player.velocity = Vector3.ZERO
+	await get_tree().create_timer(0.25).timeout
+	_black_target = 0.0
+	player.frozen = false
+	if state == "juego":
+		message(mansion.room_name(player.global_position).capitalize(), 1.8)
 
 func _take_seal(s: Dictionary) -> void:
 	s.taken = true
@@ -881,8 +955,8 @@ func _on_caught() -> void:
 		return
 	if not hidden_in.is_empty():
 		_exit_wardrobe(false)
-	player.global_position = mansion.start_pos
-	player.set_look(0.0, 0.0)
+	player.global_position = respawn_pos
+	player.set_look(PI, 0.0)
 	sanity = maxf(sanity, 60.0)
 	elena.vanish(14.0)
 	elena.can_catch = true
@@ -915,7 +989,7 @@ func _win() -> void:
 	elena.set_state(ZarekElena.S.GHOST)
 	var fwd := -player.global_transform.basis.z
 	elena.global_position = player.global_position + fwd * 2.2
-	elena.global_position.y = 0.0
+	elena.global_position.y = player.global_position.y
 	elena.look_at(Vector3(player.global_position.x, 0.0, player.global_position.z), Vector3.UP)
 	elena.play_anim("attack", 1.0)
 	elena.visible = true
@@ -1021,7 +1095,7 @@ func _glimpse(scripted: bool) -> void:
 	dist = clampf(dist, 4.0, 13.0)
 	var side := dir.cross(Vector3.UP)
 	var p := base + dir * dist
-	p.y = 0.0
+	p.y = player.global_position.y
 	ghost.visible = true
 	ghost.global_position = p - side * 2.0
 	ghost.look_at(ghost.global_position + side, Vector3.UP)

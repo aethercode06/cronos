@@ -73,7 +73,7 @@ def dim(d, a, b, txt, vertical=False):
 
 def floor_plan(key, plate):
     p = P[key]
-    C = 40  # px por celda (3 m)
+    C = 60 if p["w"] <= 18 else 40  # px por celda (3 m)
     ppm = C / 3.0
     zones = [z for z in p["zonas"]]
     W = p["w"] * C + 260
