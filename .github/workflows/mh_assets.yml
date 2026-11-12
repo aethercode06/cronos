@@ -1,0 +1,35 @@
+name: Descargar recursos de MakeHuman (CC0)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/mh_assets.yml"]
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar
+        run: |
+          mkdir -p out && cd out
+          for u in \
+            http://files.makehumancommunity.org/asset_packs/makehuman_system_assets/makehuman_system_assets_cc0.zip \
+            http://files.makehumancommunity.org/asset_packs/hair01/hair01_cc0.zip \
+            http://files.makehumancommunity.org/asset_packs/hair02/hair02_cc0.zip \
+            http://files.makehumancommunity.org/asset_packs/clothes01/clothes01_cc0.zip \
+            http://files.makehumancommunity.org/asset_packs/clothes02/clothes02_cc0.zip \
+            http://files.makehumancommunity.org/asset_packs/skins01/skins01_cc0.zip \
+            http://files.makehumancommunity.org/asset_packs/eyes01/eyes01_cc0.zip ; do
+            n=$(basename $u); curl -sSfL --retry 3 -o "$n" "$u" && echo "OK $n $(stat -c%s $n)" || echo "FALLO $n"
+          done
+          ls -la
+          # partir en trozos de 90 MB para poder subirlos a git
+          mkdir -p ../rama && for f in *.zip; do split -b 90m "$f" "../rama/$f.part_"; done
+          ls -la ../rama
+      - name: Subir a la rama aether-mh
+        run: |
+          cd rama && git init -q && git checkout -q -b aether-mh
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Recursos MakeHuman CC0" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-mh
