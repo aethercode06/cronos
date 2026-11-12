@@ -1,0 +1,49 @@
+name: Elena con MakeHuman (MPFB)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/elena_mh/**", ".github/workflows/elena_mh.yml"]
+permissions:
+  contents: write
+jobs:
+  crear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/elena_mh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Blender (bpy) y librerías del sistema
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libxrender1 libxi6 libxkbcommon0 libsm6 libgl1 libegl1 >/dev/null
+          pip install -q bpy
+      - name: MPFB y recursos CC0
+        run: |
+          git clone -q --depth 1 https://github.com/makehumancommunity/mpfb2 /tmp/mpfb2
+          (cd /tmp/mpfb2/src && zip -qr /tmp/mpfb.zip mpfb)
+          mkdir -p /tmp/rec /tmp/zips && cd /tmp/zips
+          git fetch -q --depth 1 "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-mh
+          git -C $GITHUB_WORKSPACE fetch -q origin aether-mh:aether-mh || true
+          for z in makehuman_system_assets_cc0 hair01_cc0 skins01_cc0; do
+            for p in aa ab ac ad; do git -C $GITHUB_WORKSPACE show aether-mh:$z.zip.part_$p 2>/dev/null; done > $z.zip
+            unzip -qo $z.zip -d /tmp/rec && echo "OK $z"
+          done
+          for u in faceunits01 visemes01 clothes01 clothes02 clothes03; do
+            curl -sSfL --retry 2 -o $u.zip http://files.makehumancommunity.org/asset_packs/$u/${u}_cc0.zip && unzip -qo $u.zip -d /tmp/rec && echo "OK $u" || echo "FALLO $u"
+          done
+          ls /tmp/rec
+          python engine/tools/elena_mh/instalar_mpfb.py /tmp/mpfb.zip /tmp/rec 2>&1 | tail -5
+        working-directory: ${{ github.workspace }}
+      - name: Crear a Elena
+        run: python engine/tools/elena_mh/crear_elena.py out/elena 2>&1 | grep -vE "^Fra|Sample" | tail -80
+      - name: Guardar en la rama aether-elena
+        if: always()
+        run: |
+          mkdir -p out && cd out && git init -q && git checkout -q -b aether-elena
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Elena MH ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-elena

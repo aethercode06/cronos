@@ -1,0 +1,14 @@
+{
+ "macros": {"gender": 1.0, "age": 0.45, "muscle": 0.3, "weight": 0.25, "height": 0.55, "proportions": 0.6, "cupsize": 0.4, "african": 0.0, "asian": 0.0, "caucasian": 1.0},
+ "targets": {},
+ "piel": "onlytheghosts_young_eurasian_female.mhmat",
+ "rig": "game_engine",
+ "recursos": [
+  ["eyes", "high-poly.mhclo", "Eyes"],
+  ["eyebrows", "eyebrow010.mhclo", "Eyebrows"],
+  ["eyelashes", "eyelashes01.mhclo", "Eyelashes"],
+  ["teeth", "teeth_base.mhclo", "Teeth"],
+  ["tongue", "tongue01.mhclo", "Tongue"],
+  ["hair", "o4saken_long01.mhclo", "Hair"]
+ ]
+}
