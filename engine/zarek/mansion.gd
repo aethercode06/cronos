@@ -4,7 +4,7 @@ extends Node3D
 ## del plano de arquitecto (res://zarek/plano/plano.json). 1 celda = 3 m.
 ## Plantas: sótano (-1), baja (0), primer piso (1), ático (2).
 
-const CELL := 3.0
+const CELL := 2.4
 const LEVEL_H := 4.2
 const WALL_H := 4.0
 const WT := 0.25
@@ -357,7 +357,7 @@ func cyl(r_top: float, r_bot: float, h: float, pos: Vector3, mat: Material, pare
 var stairs_spec := [
 	{"key": "baja", "r": [8.0, 7.0, 10.0, 9.4], "low": "s", "from": 0, "to": 1},
 	{"key": "baja", "r": [16.0, 5.6, 17.0, 8.0], "low": "s", "from": 0, "to": 1},
-	{"key": "baja", "r": [16.0, 9.6, 17.0, 12.0], "low": "s", "from": -1, "to": 0},
+	{"key": "baja", "r": [16.0, 9.9, 17.0, 12.0], "low": "s", "from": -1, "to": 0},
 ]
 
 func _stairs_plan() -> void:
@@ -368,6 +368,15 @@ func _stairs_plan() -> void:
 		if not _hole.has(top_level):
 			_hole[top_level] = []
 		_hole[top_level].append(Rect2(a.x, a.z, b.x - a.x, b.z - a.z))
+
+## Zonas de escalera (con rellano a cada lado) donde no se puede poner nada.
+func stair_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for st in stairs_spec:
+		var a := cell_to_world(st.key, st.r[0], st.r[1])
+		var b := cell_to_world(st.key, st.r[2], st.r[3])
+		out.append(Rect2(a.x, a.z, b.x - a.x, b.z - a.z).grow(1.6))
+	return out
 
 func _build_stairs() -> void:
 	for s in stairs_spec:
@@ -1324,6 +1333,9 @@ func portal_near(p: Vector3, dist := 1.7) -> Dictionary:
 
 # ---------------- decorado victoriano ----------------
 func _decorate() -> void:
+	var deco := ZarekDecorado.new(self)
+	for r in rooms:
+		deco.vestir(r)
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect
@@ -1341,7 +1353,7 @@ func _decorate() -> void:
 		var lname := name.to_lower()
 		if "baile" in lname:
 			for k in 6:
-				_chair_real(c + Vector3(-9 + (k % 3) * 9, 0, -6 + (k / 3) * 12), _rng.randf() * TAU, "ArmChair_01" if k % 2 == 0 else "Rockingchair_01")
+				_chair_real(c + Vector3((-0.35 + (k % 3) * 0.35) * rect.size.x, 0, (-0.35 + (k / 3) * 0.7) * rect.size.y), _rng.randf() * TAU, "ArmChair_01" if k % 2 == 0 else "Rockingchair_01")
 			_prop("vintage_grandfather_clock_01", Vector3(rect.position.x + 0.6, y, rect.position.y + 0.5), 0.0)
 			_prop("gothic_statue", Vector3(rect.end.x - 2.0, y, rect.position.y + 2.0), -PI * 0.75, 0.9)
 		elif "biblioteca" in lname:
@@ -1424,13 +1436,17 @@ var _props := {}
 var _props_info := {}
 ## Coloca un mueble de res://zarek/muebles/<nombre>.glb (origen en la base, frente hacia +Z).
 func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true, parent: Node3D = null) -> Node3D:
-	if _props_info.is_empty() and FileAccess.file_exists("res://zarek/muebles/muebles.json"):
-		_props_info = JSON.parse_string(FileAccess.get_file_as_string("res://zarek/muebles/muebles.json"))
+	_load_props_info()
 	var path := "res://zarek/muebles/%s.glb" % nombre
+	if not ResourceLoader.exists(path):
+		path = "res://zarek/objetos/%s.glb" % nombre
 	if not _props.has(nombre):
 		_props[nombre] = load(path) if ResourceLoader.exists(path) else null
 	var ps: PackedScene = _props[nombre]
 	if ps == null:
+		return null
+	# nada que choque puede quedar sobre una escalera o su rellano (bloquearía el paso)
+	if choca and _sobre_escalera(p, _prop_size(nombre).length() * 0.5):
 		return null
 	var n: Node3D = ps.instantiate()
 	n.position = p
@@ -1451,9 +1467,25 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 		n.add_child(sb)
 	return n
 
+func _load_props_info() -> void:
+	if not _props_info.is_empty():
+		return
+	for f in ["res://zarek/muebles/muebles.json", "res://zarek/objetos/objetos.json"]:
+		if FileAccess.file_exists(f):
+			var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(f))
+			_props_info.merge(d)
+
+var _stairs_cache: Array[Rect2] = []
+func _sobre_escalera(p: Vector3, radio := 0.5) -> bool:
+	if _stairs_cache.is_empty():
+		_stairs_cache = stair_rects()
+	for sr in _stairs_cache:
+		if sr.grow(radio).has_point(Vector2(p.x, p.z)):
+			return true
+	return false
+
 func _prop_size(nombre: String) -> Vector3:
-	if _props_info.is_empty() and FileAccess.file_exists("res://zarek/muebles/muebles.json"):
-		_props_info = JSON.parse_string(FileAccess.get_file_as_string("res://zarek/muebles/muebles.json"))
+	_load_props_info()
 	if not _props_info.has(nombre):
 		return Vector3.ONE
 	var t: Array = _props_info[nombre].tam
@@ -1578,9 +1610,15 @@ func _crates(r: Dictionary) -> void:
 		var p := Vector3(_rng.randf_range(rect.position.x + 1, rect.end.x - 1), y, _rng.randf_range(rect.position.y + 1, rect.end.y - 1))
 		if not door_near(p, 2.5).is_empty() or not portal_near(p, 2.5).is_empty():
 			continue
-		var cosas := ["cardboard_box_01", "Barrel_01", "vintage_suitcase", "treasure_chest", "cardboard_box_01"]
+		var en_escalera := false
+		for sr in stair_rects():
+			if sr.has_point(Vector2(p.x, p.z)):
+				en_escalera = true
+		if en_escalera:
+			continue
+		var cosas := ["terr_old_and_dusty_multi_crate_st", "vintage_suitcase", "treasure_chest", "terr_old_and_dusty_multi_crate_st"]
 		if "cava" in String(r.name).to_lower():
-			cosas = ["Barrel_01"]
+			cosas = ["terr_old_and_dusty_multi_crate_st"]
 		if _prop(cosas[_rng.randi_range(0, cosas.size() - 1)], p, _rng.randf() * TAU) == null:
 			var s := _rng.randf_range(0.5, 1.0)
 			var b := box(Vector3(s, s, s), p + Vector3(0, s * 0.5, 0), _mat.madera, true)
