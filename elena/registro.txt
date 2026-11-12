@@ -1,0 +1,111 @@
+== TRELLIS :: trellis-community/TRELLIS
+  preprocesada: /tmp/gradio/17ce271a63af66f058fbcc3de2ddea1a94d8667ea852c2555b0c8f6706e3ac14/image.png
+  ERROR: AppError You have exceeded your free ZeroGPU quota (120s requested vs. 126s left). Try again in 23:25:07. Subscribe to Hugging Face PRO to get 25 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+che/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 606, in predict
+    ).result()
+      ^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1707, in result
+    return super().result(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1233, in _inner
+    predictions = _predict(*data, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1356, in _predict
+    raise AppError(message=message, **result)
+gradio_client.exceptions.AppError: You have exceeded your free ZeroGPU quota (120s requested vs. 126s left). Try again in 23:25:07. Subscribe to Hugging Face PRO to get 25 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+
+== TRELLIS :: JeffreyXiang/TRELLIS
+  ERROR: ValueError The current space is in the invalid state: CONFIG_ERROR. Please contact the owner to fix this.
+Traceback (most recent call last):
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 156, in <module>
+    got = fn(sp)
+          ^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 65, in try_trellis
+    c = Client(space, hf_token=TOKEN)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 15, in Client
+    return _Client(space, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 162, in __init__
+    raise ValueError(
+ValueError: The current space is in the invalid state: CONFIG_ERROR. Please contact the owner to fix this.
+
+== Hunyuan3D-2 :: tencent/Hunyuan3D-2.1
+  llamando /generation_all 20 256
+   fallo: 'You have exceeded your free ZeroGPU quota (270s requested vs. 36s left). Try again in 23:25:06. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  llamando /shape_generation 20 256
+   fallo: 'You have exceeded your free ZeroGPU quota (90s requested vs. 36s left). Try again in 23:25:05. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  llamando /shape_generation 12 192
+   fallo: 'You have exceeded your free ZeroGPU quota (90s requested vs. 36s left). Try again in 23:25:05. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  resultado: 0 archivos en 2s
+== Hunyuan3D-2 :: tencent/Hunyuan3D-2
+  llamando /generation_all 20 256
+   fallo: 'You have exceeded your free ZeroGPU quota (135s requested vs. 36s left). Try again in 23:25:04. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  llamando /shape_generation 20 256
+   fallo: 'You have exceeded your free ZeroGPU quota (60s requested vs. 36s left). Try again in 23:25:03. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  llamando /shape_generation 12 192
+   fallo: 'You have exceeded your free ZeroGPU quota (60s requested vs. 36s left). Try again in 23:25:03. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU'
+  resultado: 0 archivos en 2s
+== Hunyuan3D-2 :: tencent/Hunyuan3D-2mini-Turbo
+  ERROR: ValueError Could not fetch api info for https://tencent-hunyuan3d-2mini-turbo.hf.space: Internal Server Error
+Traceback (most recent call last):
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 156, in <module>
+    got = fn(sp)
+          ^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 81, in try_hunyuan
+    c = Client(space, hf_token=TOKEN)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 15, in Client
+    return _Client(space, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 199, in __init__
+    self._info = self._get_api_info()
+                 ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 714, in _get_api_info
+    raise ValueError(f"Could not fetch api info for {self.src}: {r.text}")
+ValueError: Could not fetch api info for https://tencent-hunyuan3d-2mini-turbo.hf.space: Internal Server Error
+
+== TripoSR :: stabilityai/TripoSR
+  ERROR: ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+Traceback (most recent call last):
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 156, in <module>
+    got = fn(sp)
+          ^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 98, in try_triposr
+    c = Client(space, hf_token=TOKEN)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 15, in Client
+    return _Client(space, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 162, in __init__
+    raise ValueError(
+ValueError: The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+
+== TripoSR :: VAST-AI/TripoSG
+  ERROR: ValueError Cannot find a function with `api_name`: /preprocess.
+Traceback (most recent call last):
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 156, in <module>
+    got = fn(sp)
+          ^^^^^^
+  File "/home/runner/work/cronos/cronos/engine/tools/hf3d/hf3d.py", line 100, in try_triposr
+    pre = c.predict(handle_file(IMG), True, 0.85, api_name="/preprocess")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 604, in predict
+    return self.submit(
+           ^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 650, in submit
+    inferred_fn_index = self._infer_fn_index(api_name, fn_index)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.18/x64/lib/python3.11/site-packages/gradio_client/client.py", line 994, in _infer_fn_index
+    raise ValueError(error_message)
+ValueError: Cannot find a function with `api_name`: /preprocess.
+
+RESUMEN: {}
