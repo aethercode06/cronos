@@ -23,11 +23,11 @@ jobs:
           python engine/tools/modelos/polyhaven.py bajar engine/tools/modelos/pedidos.json out/modelos > out/registro.txt 2>&1 || true
           du -sh out/modelos/* >> out/registro.txt 2>&1 || true
           find out -size +90M >> out/registro.txt
-      - name: Guardar en la rama aether-modelos
+      - name: Subir como paquete a la release «modelos-cc0»
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cd out && git init -q && git checkout -q -b aether-modelos
-          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
-          git config http.postBuffer 1048576000
-          git add -A && git commit -qm "Modelos ${{ github.run_number }}" || true
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-modelos
+          cd out && tar czf /tmp/modelos.tar.gz modelos registro.txt modelos.json hoja.jpg 2>/dev/null; ls -la /tmp/modelos.tar.gz
+          gh release view modelos-cc0 -R ${{ github.repository }} >/dev/null 2>&1 || gh release create modelos-cc0 -R ${{ github.repository }} -t "Modelos CC0 (Poly Haven)" -n "Muebles y decorado CC0 para La Sombra de Zarek"
+          gh release upload modelos-cc0 /tmp/modelos.tar.gz registro.txt -R ${{ github.repository }} --clobber
