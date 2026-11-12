@@ -1,0 +1,196 @@
+-rw-r--r-- 1 runner runner 44955283 Nov 12 23:12 /tmp/mpfb.zip
+fetch 0
+-rw-r--r-- 1 runner runner 280737770 Nov 12 23:12 /tmp/zips/makehuman_system_assets_cc0.zip
+unzip makehuman_system_assets_cc0 0
+-rw-r--r-- 1 runner runner 227775853 Nov 12 23:12 /tmp/zips/hair01_cc0.zip
+unzip hair01_cc0 0
+-rw-r--r-- 1 runner runner 104227958 Nov 12 23:12 /tmp/zips/skins01_cc0.zip
+unzip skins01_cc0 0
+OK faceunits01
+OK dress01
+OK skirts01
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+unzip:  cannot find or open /tmp/zips/dress02.zip, /tmp/zips/dress02.zip.zip or /tmp/zips/dress02.zip.ZIP.
+FALLO dress02
+curl: (22) The requested URL returned error: 404
+curl: (22) The requested URL returned error: 404
+unzip:  cannot find or open /tmp/zips/dress03.zip, /tmp/zips/dress03.zip.zip or /tmp/zips/dress03.zip.ZIP.
+FALLO dress03
+/tmp/rec
+/tmp/rec/clothes
+/tmp/rec/clothes/aethelraed_flapper_dress
+/tmp/rec/clothes/fedora01
+/tmp/rec/clothes/fedora_cocked
+/tmp/rec/clothes/female_casualsuit01
+/tmp/rec/clothes/female_casualsuit02
+/tmp/rec/clothes/female_elegantsuit01
+/tmp/rec/clothes/female_sportsuit01
+/tmp/rec/clothes/frankyaye_mini_skirt_01
+/tmp/rec/clothes/frankyaye_mini_skirt_02
+/tmp/rec/clothes/male_casualsuit01
+/tmp/rec/clothes/male_casualsuit02
+/tmp/rec/clothes/male_casualsuit03
+/tmp/rec/clothes/male_casualsuit04
+/tmp/rec/clothes/male_casualsuit05
+/tmp/rec/clothes/male_casualsuit06
+/tmp/rec/clothes/male_elegantsuit01
+/tmp/rec/clothes/male_worksuit01
+/tmp/rec/clothes/mindfront_kimono
+/tmp/rec/clothes/shoes01
+/tmp/rec/clothes/shoes02
+/tmp/rec/clothes/shoes03
+/tmp/rec/clothes/shoes04
+/tmp/rec/clothes/shoes05
+/tmp/rec/clothes/shoes06
+/tmp/rec/clothes/toigo_bodice_dress_with_lace_ruffle_skirt
+/tmp/rec/clothes/toigo_camisole_dress_with_full_skirt
+/tmp/rec/clothes/toigo_cut_out_dress
+/tmp/rec/clothes/toigo_dress_with_tiered_skirt
+/tmp/rec/clothes/toigo_halter_dress_knee_length
+/tmp/rec/clothes/toigo_halter_dress_midi
+/tmp/rec/clothes/toigo_halter_dress_with_fluted_skirt
+/tmp/rec/clothes/toigo_keyhole_neck_dress
+/tmp/rec/clothes/toigo_long_full_skirt
+/tmp/rec/clothes/toigo_shift_dress
+/tmp/rec/clothes/toigo_skirt_with_lace_ruffle
+/tmp/rec/clothes/toigo_strapless_ruffle_top_dress
+/tmp/rec/clothes/toigo_tiered_mini_skirt
+/tmp/rec/clothes/toigo_tiered_skirt
+/tmp/rec/clothes/wdg_mycenaean_tunic
+/tmp/rec/eyebrows
+/tmp/rec/eyebrows/eyebrow001
+/tmp/rec/eyebrows/eyebrow002
+/tmp/rec/eyebrows/eyebrow003
+/tmp/rec/eyebrows/eyebrow004
+/tmp/rec/eyebrows/eyebrow005
+/tmp/rec/eyebrows/eyebrow006
+/tmp/rec/eyebrows/eyebrow007
+/tmp/rec/eyebrows/eyebrow008
+/tmp/rec/eyebrows/eyebrow009
+/tmp/rec/eyebrows/eyebrow010
+/tmp/rec/eyebrows/eyebrow011
+/tmp/rec/eyebrows/eyebrow012
+/tmp/rec/eyelashes
+/tmp/rec/eyelashes/eyelashes01
+/tmp/rec/eyelashes/eyelashes02
+/tmp/rec/eyelashes/eyelashes03
+/tmp/rec/eyelashes/eyelashes04
+/tmp/rec/eyes
+/tmp/rec/eyes/high-poly
+/tmp/rec/eyes/low-poly
+/tmp/rec/eyes/materials
+/tmp/rec/hair
+/tmp/rec/hair/afro01
+/tmp/rec/hair/bob01
+/tmp/rec/hair/bob02
+/tmp/rec/hair/braid01
+/tmp/rec/hair/cortu_shaggy_green_hair
+/tmp/rec/hair/cortu_short_messy_hair
+/tmp/rec/hair/cortu_straight_bangs
+/tmp/rec/hair/cortu_strawberry_cloud_hair
+/tmp/rec/hair/culturalibre_hair_01
+/tmp/rec/hair/culturalibre_hair_02
+/tmp/rec/hair/culturalibre_hair_05
+/tmp/rec/hair/culturalibre_hair_06
+/tmp/rec/hair/elvs_double_mh_braid
+/tmp/rec/hair/elvs_french_braid_variation
+/tmp/rec/hair/elvs_reverse_french_braid_bun
+/tmp/rec/hair/elvs_unkempt_french_braid
+/tmp/rec/hair/faydaen_hair_1
+/tmp/rec/hair/learning_anime_hair
+/tmp/rec/hair/littleright_bobcut_hair
+/tmp/rec/hair/long01
+/tmp/rec/hair/o4saken_long01
+/tmp/rec/hair/ponytail01
+/tmp/rec/hair/rehmanpolanski_hair_bun_brown
+/tmp/rec/hair/short01
+/tmp/rec/hair/short02
+/tmp/rec/hair/short03
+/tmp/rec/hair/short04
+/tmp/rec/hair/sonntag78_blond_with_headband
+/tmp/rec/hair/sonntag78_junglebook_hair
+/tmp/rec/hair/toigo_blunt_bob
+/tmp/rec/hair/toigo_blunt_bob_with_bangs
+/tmp/rec/hair/toigo_curled_under_bob
+/tmp/rec/hair/toigo_curled_under_bob_with_bangs
+/tmp/rec/hair/toigo_inverted_bob
+/tmp/rec/hair/toigo_inverted_bob_with_bangs
+/tmp/rec/packs
+/tmp/rec/proxymeshes
+/tmp/rec/proxymeshes/female1605
+/tmp/rec/proxymeshes/female_generic
+/tmp/rec/proxymeshes/female_muscle_13442
+/tmp/rec/proxymeshes/male1591
+/tmp/rec/proxymeshes/male_generic
+/tmp/rec/proxymeshes/male_muscle_13290
+/tmp/rec/proxymeshes/proxy741
+/tmp/rec/skins
+/tmp/rec/skins/blindsaypatten_uniform_skin_texture
+/tmp/rec/skins/bobby_03_young_female_hairless
+/tmp/rec/skins/callharvey3d_midtoned_female
+/tmp/rec/skins/cutoff3d_indian_female_enhanced
+/tmp/rec/skins/cutoff3d_indian_female_skin
+/tmp/rec/skins/darthfurby_caucasian_female
+/tmp/rec/skins/flower-angel_red_head_skin
+/tmp/rec/skins/middleage_african_female
+/tmp/rec/skins/middleage_african_male
+/tmp/rec/skins/middleage_asian_female
+/tmp/rec/skins/middleage_asian_male
+/tmp/rec/skins/middleage_caucasian_female
+/tmp/rec/skins/middleage_caucasian_male
+/tmp/rec/skins/nyloseth_zoeyskin
+/tmp/rec/skins/old_african_female
+/tmp/rec/skins/old_african_male
+/tmp/rec/skins/old_asian_female
+/tmp/rec/skins/old_asian_male
+/tmp/rec/skins/old_caucasian_female
+/tmp/rec/skins/old_caucasian_male
+/tmp/rec/skins/onlytheghosts_middle_aged_eurasian_female
+/tmp/rec/skins/onlytheghosts_old_eurasian_female
+/tmp/rec/skins/onlytheghosts_young_eurasian_female
+/tmp/rec/skins/saltycowdawg_genuine_caucasian_female_with_genitals
+/tmp/rec/skins/skalldyrssuppe_creamy_female
+/tmp/rec/skins/spreadcore_alana_caucasian_female_with_genitals_skin
+/tmp/rec/skins/toigo_light_skin_female_bronze
+/tmp/rec/skins/toigo_light_skin_female_bronze_with_makeup
+/tmp/rec/skins/toigo_light_skin_female_freckles
+/tmp/rec/skins/toigo_light_skin_female_ginger
+/tmp/rec/skins/toigo_light_skin_female_ginger_2
+/tmp/rec/skins/toigo_light_skin_female_ginger_with_makeup
+/tmp/rec/skins/toigo_light_skin_female_with_violet_makeup
+/tmp/rec/skins/toigo_light_skin_with_makeup
+/tmp/rec/skins/toigo_light_skin_with_natural_makeup
+/tmp/rec/skins/toon01
+/tmp/rec/skins/young_african_female
+/tmp/rec/skins/young_african_male
+/tmp/rec/skins/young_asian_female
+/tmp/rec/skins/young_asian_male
+/tmp/rec/skins/young_caucasian_female
+clothes
+eyebrows
+eyelashes
+eyes
+hair
+packs
+proxymeshes
+skins
+targets
+teeth
+tongue
+00:02.513  blend            | Writing user preferences: "/home/runner/.config/blender/5.3/config/userpref.blend" 
+STATUS Installed "mpfb"
+Log config does not exist. Creating empty template.
+Will rewrite log config /home/runner/.config/blender/5.3/mpfb/config/log_levels.json
+[WARN ] services.locationservice ...............: User home directory does not exist /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb
+[INFO ] services.locationservice ...............: Not adding link to MakeHuman user data, since neither explicit path nor auto-discovery is set in preferences.
+[INFO ] services.locationservice ...............: Creating relevant directory: /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb
+[INFO ] services.locationservice ...............: Creating relevant directory: /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb/data
+[INFO ] services.locationservice ...............: Creating relevant directory: /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb/config
+[INFO ] services.locationservice ...............: Creating relevant directory: /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb/cache
+[INFO ] services.locationservice ...............: Creating relevant directory: /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb/logs
+[INFO ] mpfb.init ..............................: Build info FROM_SOURCE
+[INFO ] mpfb.init ..............................: Online access preference is not enabled. Not checking if MakeHuman is online.
+[INFO ] mpfb.init ..............................: MPFB initialization has finished.
+Info: Preferences saved
+MPFB INSTALADO /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb ['clothes', 'eyebrows', 'eyelashes', 'eyes', 'hair', 'packs', 'proxymeshes', 'skins', 'targets', 'teeth', 'tongue']

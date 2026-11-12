@@ -1,0 +1,150 @@
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+ERROR Draco is not available because library could not be found at /opt/hostedtoolcache/Python/3.13.18/x64/lib/python3.13/site-packages/bpy/lib/libbf_intern_draco_bridge.so
+ERROR MeshOptimizer is not available because library could not be found at /opt/hostedtoolcache/Python/3.13.18/x64/lib/python3.13/site-packages/bpy/lib/libbf_intern_meshopt_bridge.so
+23:26:40 | INFO: Starting glTF 2.0 export
+23:26:40 | INFO: Extracting primitive: eyebrow010.001
+23:26:40 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:40 | INFO: Primitives created: 1
+23:26:40 | INFO: Extracting primitive: eyelashes01.001
+23:26:40 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:40 | INFO: Primitives created: 1
+23:26:40 | INFO: Extracting primitive: high-poly.001
+23:26:40 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:40 | INFO: Primitives created: 1
+23:26:40 | INFO: Extracting primitive: o4saken_long01.001
+23:26:41 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:41 | INFO: Primitives created: 1
+23:26:41 | WARNING: There are more than 4 joint vertex influences.The 4 with highest weight will be used (and normalized).
+23:26:41 | INFO: Extracting primitive: teeth_base.001
+23:26:41 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:41 | INFO: Primitives created: 1
+23:26:41 | INFO: Extracting primitive: skirt_full_long.001
+23:26:41 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:41 | INFO: Primitives created: 1
+23:26:41 | INFO: Extracting primitive: tongue01.001
+23:26:41 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:41 | INFO: Primitives created: 1
+23:26:41 | INFO: Extracting primitive: mycenaean_tunic.001
+23:26:41 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:41 | INFO: Primitives created: 1
+23:26:41 | INFO: Extracting primitive: base.002
+23:26:42 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+23:26:43 | INFO: Primitives created: 1
+23:26:43 | INFO: Finished glTF 2.0 export in 2.8770840167999268 s
+
+GLB exportado
+Info: Packed 10 file(s)
+Info: Saved as "elena_mh_export.blend"
+obj Human MESH 19158 91
+obj Human.eyebrow010 MESH 124 26
+obj Human.eyebrow010_export MESH 124 26
+obj Human.eyelashes01 MESH 250 26
+obj Human.eyelashes01_export MESH 250 26
+obj Human.high-poly MESH 1064 9
+obj Human.high-poly_export MESH 1064 9
+obj Human.o4saken_long01 MESH 15007 52
+obj Human.o4saken_long01_export MESH 15007 52
+obj Human.rig ARMATURE  0
+obj Human.rig_export ARMATURE  0
+obj Human.teeth_base MESH 3868 5
+obj Human.teeth_base_export MESH 3868 5
+obj Human.toigo_long_full_skirt MESH 2992 1
+obj Human.toigo_long_full_skirt_export MESH 2992 1
+obj Human.tongue01 MESH 226 6
+obj Human.tongue01_export MESH 226 6
+obj Human.wdg_mycenaean_tunic MESH 1371 1
+obj Human.wdg_mycenaean_tunic_export MESH 1371 1
+obj Human_export MESH 10709 91
+FORMAS ['Basis', '$md-$ca-$ma-$yn', '$md-universal-$ma-$yn-$av$mu-$av$wg', '$md-$ca-$ma-$ch', '$md-universal-$ma-$ch-min$mu-min$wg', '$md-universal-$ma-$ch-min$mu-$av$wg', '$md-universal-$ma-$ch-$av$mu-min$wg', '$md-universal-$ma-$ch-$av$mu-$av$wg', '$md-universal-$ma-$yn-min$mu-min$wg', '$md-universal-$ma-$yn-min$mu-$av$wg', '$md-universal-$ma-$yn-$av$mu-min$wg', '$md-$ma-$ch-min$mu-min$wg-max$hg', '$md-$ma-$ch-$av$mu-min$wg-max$hg', '$md-$ma-$yn-min$mu-min$wg-max$hg', '$md-$ma-$yn-min$mu-$av$wg-max$hg', '$md-$ma-$yn-$av$mu-min$wg-max$hg', '$md-$ma-$yn-$av$mu-$av$wg-max$hg', '$md-$fe-$yn-min$mu-min$wg-maxcup-$av$fi', '$md-$fe-$yn-$av$mu-min$wg-maxcup-$av$fi', '$md-$ma-$yn-min$mu-min$wg-$id$pr', '$md-$ma-$yn-$av$mu-min$wg-$id$pr', 'l-cheek-volume-decr', 'r-cheek-volume-decr', 'l-cheek-bones-incr', 'r-cheek-bones-incr', 'l-eye-bag-incr', 'r-eye-bag-incr', 'l-upperarm-fat-decr', 'r-upperarm-fat-decr', 'l-lowerarm-fat-decr', 'r-lowerarm-fat-decr', 'measure-lowerarm-length-incr', 'measure-upperarm-length-incr', 'l-hand-fingers-length-incr', 'r-hand-fingers-length-incr', 'l-hand-fingers-diameter-decr', 'r-hand-fingers-diameter-decr', 'measure-neck-circ-decr', 'measure-neck-height-incr', 'browDownLeft', 'browDownRight', 'browInnerUp', 'browOuterUpLeft', 'browOuterUpRight', 'cheekPuff', 'cheekSquintLeft', 'cheekSquintRight', 'eyeBlinkLeft', 'eyeBlinkRight', 'eyeLookDownLeft', 'eyeLookDownRight', 'eyeLookInLeft', 'eyeLookInRight', 'eyeLookOutLeft', 'eyeLookOutRight', 'eyeLookUpLeft', 'eyeLookUpRight', 'eyeSquintLeft', 'eyeSquintRight', 'eyeWideLeft', 'eyeWideRight', 'jawForward', 'jawLeft', 'jawOpen', 'jawRight', 'mouthClose', 'mouthDimpleLeft', 'mouthDimpleRight', 'mouthFrownLeft', 'mouthFrownRight', 'mouthFunnel', 'mouthLeft', 'mouthLowerDownLeft', 'mouthLowerDownRight', 'mouthPressLeft', 'mouthPressRight', 'mouthPucker', 'mouthRight', 'mouthRollLower', 'mouthRollUpper', 'mouthShrugLower', 'mouthShrugUpper', 'mouthSmileLeft', 'mouthSmileRight', 'mouthStretchLeft', 'mouthStretchRight', 'mouthUpperUpLeft', 'mouthUpperUpRight', 'noseSneerLeft', 'noseSneerRight', 'tongueOut']
+/home/runner/work/cronos/cronos/engine/tools/elena_mh/crear_elena.py:83: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True; w.node_tree.nodes['Background'].inputs[1].default_value = 0.7
+00:39.896  render           | Saved: 'out/elena/vista_0.png'
+01:00.323  render           | Saved: 'out/elena/vista_1.png'
+01:53.244  render           | Saved: 'out/elena/vista_2.png'
+02:46.823  render           | Saved: 'out/elena/vista_3.png'
+ELENA MH OK
+OBJ import of 'base.obj' took 15.87 ms
+OBJ import of 'high-poly.obj' took 1.93 ms
+OBJ import of 'eyebrow010.obj' took 0.36 ms
+OBJ import of 'eyelashes01.obj' took 0.50 ms
+OBJ import of 'teeth_base.obj' took 3.10 ms
+OBJ import of 'tongue01.obj' took 0.54 ms
+OBJ import of 'o4saken_long01.obj' took 6.29 ms
+OBJ import of 'mycenaean_tunic.obj' took 1.73 ms
+OBJ import of 'skirt_full_long.obj' took 2.49 ms

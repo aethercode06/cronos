@@ -1,0 +1,51 @@
+target l-cheek-volume-decr 0.9
+target r-cheek-volume-decr 0.9
+target l-cheek-bones-incr 0.6
+target r-cheek-bones-incr 0.6
+target l-eye-bag-incr 0.7
+target r-eye-bag-incr 0.7
+target l-upperarm-fat-decr 1.0
+target r-upperarm-fat-decr 1.0
+target l-lowerarm-fat-decr 1.0
+target r-lowerarm-fat-decr 1.0
+target measure-lowerarm-length-incr 0.6
+target measure-upperarm-length-incr 0.35
+target l-hand-fingers-length-incr 1.0
+target r-hand-fingers-length-incr 1.0
+target l-hand-fingers-diameter-decr 0.7
+target r-hand-fingers-diameter-decr 0.7
+target measure-neck-circ-decr 0.6
+target measure-neck-height-incr 0.4
+piel /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb/data/skins/onlytheghosts_young_eurasian_female/onlytheghosts_young_eurasian_female.mhmat
+rig Human.rig
+recurso high-poly.mhclo
+recurso eyebrow010.mhclo
+recurso eyelashes01.mhclo
+recurso teeth_base.mhclo
+recurso tongue01.mhclo
+recurso o4saken_long01.mhclo
+recurso wdg_mycenaean_tunic.mhclo
+recurso toigo_long_full_skirt.mhclo
+gestos ARKit cargados
+GLB exportado
+obj Human MESH 19158 91
+obj Human.eyebrow010 MESH 124 26
+obj Human.eyebrow010_export MESH 124 26
+obj Human.eyelashes01 MESH 250 26
+obj Human.eyelashes01_export MESH 250 26
+obj Human.high-poly MESH 1064 9
+obj Human.high-poly_export MESH 1064 9
+obj Human.o4saken_long01 MESH 15007 52
+obj Human.o4saken_long01_export MESH 15007 52
+obj Human.rig ARMATURE  0
+obj Human.rig_export ARMATURE  0
+obj Human.teeth_base MESH 3868 5
+obj Human.teeth_base_export MESH 3868 5
+obj Human.toigo_long_full_skirt MESH 2992 1
+obj Human.toigo_long_full_skirt_export MESH 2992 1
+obj Human.tongue01 MESH 226 6
+obj Human.tongue01_export MESH 226 6
+obj Human.wdg_mycenaean_tunic MESH 1371 1
+obj Human.wdg_mycenaean_tunic_export MESH 1371 1
+obj Human_export MESH 10709 91
+FORMAS ['Basis', '$md-$ca-$ma-$yn', '$md-universal-$ma-$yn-$av$mu-$av$wg', '$md-$ca-$ma-$ch', '$md-universal-$ma-$ch-min$mu-min$wg', '$md-universal-$ma-$ch-min$mu-$av$wg', '$md-universal-$ma-$ch-$av$mu-min$wg', '$md-universal-$ma-$ch-$av$mu-$av$wg', '$md-universal-$ma-$yn-min$mu-min$wg', '$md-universal-$ma-$yn-min$mu-$av$wg', '$md-universal-$ma-$yn-$av$mu-min$wg', '$md-$ma-$ch-min$mu-min$wg-max$hg', '$md-$ma-$ch-$av$mu-min$wg-max$hg', '$md-$ma-$yn-min$mu-min$wg-max$hg', '$md-$ma-$yn-min$mu-$av$wg-max$hg', '$md-$ma-$yn-$av$mu-min$wg-max$hg', '$md-$ma-$yn-$av$mu-$av$wg-max$hg', '$md-$fe-$yn-min$mu-min$wg-maxcup-$av$fi', '$md-$fe-$yn-$av$mu-min$wg-maxcup-$av$fi', '$md-$ma-$yn-min$mu-min$wg-$id$pr', '$md-$ma-$yn-$av$mu-min$wg-$id$pr', 'l-cheek-volume-decr', 'r-cheek-volume-decr', 'l-cheek-bones-incr', 'r-cheek-bones-incr', 'l-eye-bag-incr', 'r-eye-bag-incr', 'l-upperarm-fat-decr', 'r-upperarm-fat-decr', 'l-lowerarm-fat-decr', 'r-lowerarm-fat-decr', 'measure-lowerarm-length-incr', 'measure-upperarm-length-incr', 'l-hand-fingers-length-incr', 'r-hand-fingers-length-incr', 'l-hand-fingers-diameter-decr', 'r-hand-fingers-diameter-decr', 'measure-neck-circ-decr', 'measure-neck-height-incr', 'browDownLeft', 'browDownRight', 'browInnerUp', 'browOuterUpLeft', 'browOuterUpRight', 'cheekPuff', 'cheekSquintLeft', 'cheekSquintRight', 'eyeBlinkLeft', 'eyeBlinkRight', 'eyeLookDownLeft', 'eyeLookDownRight', 'eyeLookInLeft', 'eyeLookInRight', 'eyeLookOutLeft', 'eyeLookOutRight', 'eyeLookUpLeft', 'eyeLookUpRight', 'eyeSquintLeft', 'eyeSquintRight', 'eyeWideLeft', 'eyeWideRight', 'jawForward', 'jawLeft', 'jawOpen', 'jawRight', 'mouthClose', 'mouthDimpleLeft', 'mouthDimpleRight', 'mouthFrownLeft', 'mouthFrownRight', 'mouthFunnel', 'mouthLeft', 'mouthLowerDownLeft', 'mouthLowerDownRight', 'mouthPressLeft', 'mouthPressRight', 'mouthPucker', 'mouthRight', 'mouthRollLower', 'mouthRollUpper', 'mouthShrugLower', 'mouthShrugUpper', 'mouthSmileLeft', 'mouthSmileRight', 'mouthStretchLeft', 'mouthStretchRight', 'mouthUpperUpLeft', 'mouthUpperUpRight', 'noseSneerLeft', 'noseSneerRight', 'tongueOut']
