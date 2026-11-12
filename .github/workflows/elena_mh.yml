@@ -14,6 +14,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: engine/tools/elena_mh
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -23,22 +24,24 @@ jobs:
           pip install -q bpy
       - name: MPFB y recursos CC0
         run: |
+          set +e
+          mkdir -p out/elena; exec > >(tee out/elena/instalacion.txt) 2>&1
           git clone -q --depth 1 https://github.com/makehumancommunity/mpfb2 /tmp/mpfb2
-          (cd /tmp/mpfb2/src && zip -qr /tmp/mpfb.zip mpfb)
-          mkdir -p /tmp/rec /tmp/zips && cd /tmp/zips
-          git -C $GITHUB_WORKSPACE fetch -q origin aether-mh:aether-mh || true
+          (cd /tmp/mpfb2/src && zip -qr /tmp/mpfb.zip mpfb) ; ls -la /tmp/mpfb.zip
+          mkdir -p /tmp/rec /tmp/zips
+          git fetch -q origin aether-mh:aether-mh; echo "fetch $?"
           for z in makehuman_system_assets_cc0 hair01_cc0 skins01_cc0; do
-            for p in aa ab ac ad; do git -C $GITHUB_WORKSPACE show aether-mh:$z.zip.part_$p 2>/dev/null; done > $z.zip
-            unzip -qo $z.zip -d /tmp/rec && echo "OK $z"
+            for p in aa ab ac ad; do git show aether-mh:$z.zip.part_$p 2>/dev/null; done > /tmp/zips/$z.zip
+            ls -la /tmp/zips/$z.zip; unzip -qo /tmp/zips/$z.zip -d /tmp/rec; echo "unzip $z $?"
           done
           for u in faceunits01 visemes01 clothes01 clothes02 clothes03; do
-            curl -sSfL --retry 2 -o $u.zip http://files.makehumancommunity.org/asset_packs/$u/${u}_cc0.zip && unzip -qo $u.zip -d /tmp/rec && echo "OK $u" || echo "FALLO $u"
+            curl -sSfL --retry 2 -o /tmp/zips/$u.zip http://files.makehumancommunity.org/asset_packs/$u/${u}_cc0.zip && unzip -qo /tmp/zips/$u.zip -d /tmp/rec && echo "OK $u" || echo "FALLO $u"
           done
           ls /tmp/rec
-          python engine/tools/elena_mh/instalar_mpfb.py /tmp/mpfb.zip /tmp/rec 2>&1 | tail -5
-        working-directory: ${{ github.workspace }}
+          python engine/tools/elena_mh/instalar_mpfb.py /tmp/mpfb.zip /tmp/rec 2>&1 | tail -20
+          exit 0
       - name: Crear a Elena
-        run: python engine/tools/elena_mh/crear_elena.py out/elena 2>&1 | grep -vE "^Fra|Sample" | tail -80
+        run: python engine/tools/elena_mh/crear_elena.py out/elena 2>&1 | grep -vE "^Fra|Sample" | tail -150 | tee out/elena/creacion.txt
       - name: Guardar en la rama aether-elena
         if: always()
         run: |
