@@ -1,0 +1,34 @@
+name: Buscar modelos en Objaverse
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/objaverse/consultas.json", "engine/tools/objaverse/buscar.py", ".github/workflows/objaverse.yml"]
+permissions:
+  contents: write
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/objaverse
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -q objaverse pillow
+      - name: Buscar
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set +e
+          mkdir -p out
+          python engine/tools/objaverse/buscar.py engine/tools/objaverse/consultas.json out > out/registro.txt 2>&1
+          tail -30 out/registro.txt
+      - name: Guardar en la rama aether-objaverse
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-objaverse
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Objaverse ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-objaverse
