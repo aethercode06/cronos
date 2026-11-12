@@ -287,7 +287,8 @@ func _materials() -> void:
 	_mat["oscuro"] = _plain(Color(0.05, 0.04, 0.04), 0.8)
 	_mat["tela_roja"] = _pbr("Fabric028", 1.2, Color(0.75, 0.2, 0.2), 1.0)
 	_mat["tela_verde"] = _pbr("Fabric028", 1.2, Color(0.25, 0.5, 0.32), 1.0)
-	_mat["sabana"] = _plain(Color(0.8, 0.78, 0.72), 1.0)
+	_mat["sabana"] = _pbr("Fabric028", 1.5, Color(0.95, 0.92, 0.85), 1.0, 1.5)
+	_mat["alfombra"] = _pbr("Fabric028", 0.8, Color(0.45, 0.3, 0.55), 1.0, 1.2)
 	_mat["metal"] = _plain(Color(0.4, 0.36, 0.3), 0.35, 0.85)
 	_mat["oro"] = _plain(Color(0.9, 0.66, 0.25), 0.3, 1.0)
 	_mat["marmol"] = _pbr("Marble012", 0.4, Color(0.95, 0.93, 0.9), 0.5)
@@ -1335,32 +1336,49 @@ func _decorate() -> void:
 			_tunnel_props(r)
 			continue
 		if t in ["sala", "dormitorio", "epicentro"] and rect.size.x > 9 and rect.size.y > 9:
-			box(Vector3(rect.size.x * 0.55, 0.02, rect.size.y * 0.55), c + Vector3(0, 0.01, 0), _plain(Color(0.36, 0.07, 0.08), 0.95), false, null, false)
-			box(Vector3(rect.size.x * 0.5, 0.025, rect.size.y * 0.5), c + Vector3(0, 0.012, 0), _plain(Color(0.14, 0.09, 0.22), 0.95), false, null, false)
+			box(Vector3(rect.size.x * 0.55, 0.02, rect.size.y * 0.55), c + Vector3(0, 0.01, 0), _mat.tela_roja, false, null, false)
+			box(Vector3(rect.size.x * 0.5, 0.025, rect.size.y * 0.5), c + Vector3(0, 0.012, 0), _mat.alfombra, false, null, false)
 		var lname := name.to_lower()
 		if "baile" in lname:
 			for k in 6:
-				_chair(c + Vector3(-9 + (k % 3) * 9, 0, -6 + (k / 3) * 12), _rng.randf() * TAU)
+				_chair_real(c + Vector3(-9 + (k % 3) * 9, 0, -6 + (k / 3) * 12), _rng.randf() * TAU, "ArmChair_01" if k % 2 == 0 else "Rockingchair_01")
+			_prop("vintage_grandfather_clock_01", Vector3(rect.position.x + 0.6, y, rect.position.y + 0.5), 0.0)
+			_prop("gothic_statue", Vector3(rect.end.x - 2.0, y, rect.position.y + 2.0), -PI * 0.75, 0.9)
 		elif "biblioteca" in lname:
 			_shelves_around(r, 0.6)
 		elif "comedor" in lname:
-			box(Vector3(2.0, 0.08, 9.0), c + Vector3(0, 0.82, 0), _mat.madera, true)
-			box(Vector3(1.6, 0.78, 8.6), c + Vector3(0, 0.39, 0), _mat.madera, false)
-			for k in 6:
-				_chair(c + Vector3(-1.4, 0, -3.6 + k * 1.45), PI * 0.5)
-				_chair(c + Vector3(1.4, 0, -3.6 + k * 1.45), -PI * 0.5)
-			for k in 3:
-				cyl(0.05, 0.12, 0.6, c + Vector3(0, 1.15, -3 + k * 3), _mat.oro, null, 8)
+			if _prop("dining_table", c + Vector3(0, 0, -1.2), PI * 0.5) != null:
+				_prop("dining_table", c + Vector3(0, 0, 1.2), PI * 0.5)
+				for k in 4:
+					_prop("dining_chair_02", c + Vector3(-1.05, 0, -2.4 + k * 1.6), PI * 0.5)
+					_prop("dining_chair_02", c + Vector3(1.05, 0, -2.4 + k * 1.6), -PI * 0.5)
+				_prop("brass_candleholders", c + Vector3(0, 0.88, 0), PI * 0.5, 0.8, false)
+				_prop("GothicCabinet_01", Vector3(rect.position.x + 0.7, y, c.z), PI * 0.5)
+			else:
+				box(Vector3(2.0, 0.08, 9.0), c + Vector3(0, 0.82, 0), _mat.madera, true)
+				box(Vector3(1.6, 0.78, 8.6), c + Vector3(0, 0.39, 0), _mat.madera, false)
 		elif "cocina" in lname:
 			box(Vector3(rect.size.x - 1.0, 0.95, 0.8), Vector3(c.x, y + 0.48, rect.position.y + 0.5), _mat.madera, true)
 			box(Vector3(1.6, 1.0, 0.9), Vector3(rect.position.x + 1.3, y + 0.5, rect.end.y - 0.6), _mat.oscuro, true)
 		elif t == "dormitorio":
-			_bed(Vector3(rect.position.x + 2.4, y, c.z), 0.0)
+			var cama := "GothicBed_01" if ("padres" in lname or "principal" in lname) else "old_bed_frame"
+			var bp := Vector3(rect.position.x + 1.2, y, c.z)
+			if _prop(cama, bp, PI * 0.5) != null:
+				_prop("ClassicNightstand_01", bp + Vector3(-0.85, 0, -1.4), PI * 0.5)
+				_prop("vintage_oil_lamp", bp + Vector3(-0.85, 0.7, -1.4), 0.0, 0.6, false)
+				_prop("GothicCommode_01", Vector3(rect.end.x - 0.4, y, c.z + 1.5), -PI * 0.5)
+				_prop("ornate_mirror_01", Vector3(rect.end.x - 0.05, y + 1.6, c.z + 1.5), -PI * 0.5, 1.0, false)
+				_prop("vintage_suitcase", Vector3(rect.end.x - 1.2, y, rect.position.y + 1.0), 0.3)
+			else:
+				_bed(Vector3(rect.position.x + 2.4, y, c.z), 0.0)
 			_shelves_around(r, 0.12)
 		elif "estudio" in lname:
-			box(Vector3(2.2, 0.08, 1.1), c + Vector3(0, 0.8, 0), _mat.madera, true)
-			box(Vector3(2.0, 0.76, 0.9), c + Vector3(0, 0.38, 0), _mat.madera, false)
-			_chair(c + Vector3(0, 0, 1.2), PI)
+			if _prop("WoodenTable_01", c, 0.0) != null:
+				_prop("book_encyclopedia_set_01", c + Vector3(-0.4, 0.55, 0), 0.2, 1.0, false)
+				_prop("vintage_oil_lamp", c + Vector3(0.6, 0.55, 0.1), 0.0, 0.6, false)
+				_prop("Rockingchair_01", c + Vector3(0, 0, 1.3), PI)
+			else:
+				box(Vector3(2.2, 0.08, 1.1), c + Vector3(0, 0.8, 0), _mat.madera, true)
 			_shelves_around(r, 0.35)
 		elif "billar" in lname:
 			box(Vector3(2.6, 0.85, 4.6), c + Vector3(0, 0.42, 0), _mat.madera, true)
@@ -1371,14 +1389,26 @@ func _decorate() -> void:
 				for k in 6:
 					var sp := Vector3(_rng.randf_range(rect.position.x + 2, rect.end.x - 2), y, _rng.randf_range(rect.position.y + 2, rect.end.y - 2))
 					box(Vector3(0.8, 1.6, 0.8), sp + Vector3(0, 0.8, 0), _mat.sabana, true)
+		if t == "sala" and not ("baile" in lname or "comedor" in lname or "biblioteca" in lname or "billar" in lname) and rect.size.x > 7 and rect.size.y > 7:
+			var cc := c + Vector3(0, 0, 1.0)
+			if _prop("Sofa_01", cc + Vector3(0, 0, 1.6), PI) != null:
+				_prop("ArmChair_01", cc + Vector3(-1.9, 0, 0), PI * 0.5)
+				_prop("ArmChair_01", cc + Vector3(1.9, 0, 0), -PI * 0.5)
+				_prop("gothic_coffee_table", cc, 0.0, 0.6)
+				_prop("chess_set", cc + Vector3(0, 0.34, 0), 0.4, 0.8, false)
+				_prop("side_table_01", Vector3(rect.end.x - 0.6, y, rect.position.y + 0.6), 0.0)
+				_prop("marble_bust_01", Vector3(rect.end.x - 0.6, y + 0.55, rect.position.y + 0.6), PI * 0.8, 1.0, false)
 		if t in ["sala", "dormitorio", "pasillo"] and level_of(y) >= 0:
 			_portraits(r)
 		if t in ["sala", "dormitorio"] and rect.size.x > 6 and not ("baile" in lname):
 			for k in 2:
 				var sp := Vector3(_rng.randf_range(rect.position.x + 2, rect.end.x - 2), y, _rng.randf_range(rect.position.y + 2, rect.end.y - 2))
 				if door_near(sp, 2.5).is_empty() and portal_near(sp, 2.5).is_empty():
-					var sheet := box(Vector3(1.6, 0.9, 1.0), sp + Vector3(0, 0.45, 0), _mat.sabana, true)
-					sheet.rotation.y = _rng.randf() * TAU
+					var cubierto := _prop(["ArmChair_01", "Sofa_01", "GothicCommode_01"][_rng.randi_range(0, 2)], sp, _rng.randf() * TAU)
+					if cubierto:
+						# sábana polvorienta encima del mueble
+						for mi in cubierto.find_children("*", "MeshInstance3D", true, false):
+							(mi as MeshInstance3D).material_override = _mat.sabana
 		# aplique tenue en salas sin lámpara (nunca negro total)
 		if not r.has("lamps"):
 			var lp := OmniLight3D.new()
@@ -1388,6 +1418,53 @@ func _decorate() -> void:
 			lp.position = Vector3(rect.position.x + 0.5, y + 2.4, c.z)
 			_house.add_child(lp)
 			cyl(0.06, 0.1, 0.3, lp.position, _mat.ventana_luz, null, 8)
+
+# ---------------- muebles reales (Poly Haven, CC0) ----------------
+var _props := {}
+var _props_info := {}
+## Coloca un mueble de res://zarek/muebles/<nombre>.glb (origen en la base, frente hacia +Z).
+func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true, parent: Node3D = null) -> Node3D:
+	if _props_info.is_empty() and FileAccess.file_exists("res://zarek/muebles/muebles.json"):
+		_props_info = JSON.parse_string(FileAccess.get_file_as_string("res://zarek/muebles/muebles.json"))
+	var path := "res://zarek/muebles/%s.glb" % nombre
+	if not _props.has(nombre):
+		_props[nombre] = load(path) if ResourceLoader.exists(path) else null
+	var ps: PackedScene = _props[nombre]
+	if ps == null:
+		return null
+	var n: Node3D = ps.instantiate()
+	n.position = p
+	n.rotation.y = yaw
+	n.scale = Vector3.ONE * escala
+	(parent if parent else _house).add_child(n)
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	if choca and _props_info.has(nombre):
+		var t: Array = _props_info[nombre].tam
+		var sb := StaticBody3D.new()
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = Vector3(float(t[0]), float(t[1]), float(t[2])) * escala
+		cs.shape = bs
+		cs.position.y = float(t[1]) * escala * 0.5
+		sb.add_child(cs)
+		n.add_child(sb)
+	return n
+
+func _prop_size(nombre: String) -> Vector3:
+	if _props_info.is_empty() and FileAccess.file_exists("res://zarek/muebles/muebles.json"):
+		_props_info = JSON.parse_string(FileAccess.get_file_as_string("res://zarek/muebles/muebles.json"))
+	if not _props_info.has(nombre):
+		return Vector3.ONE
+	var t: Array = _props_info[nombre].tam
+	return Vector3(float(t[0]), float(t[1]), float(t[2]))
+
+func _chair_real(p: Vector3, yaw: float, tipo := "") -> void:
+	var opciones := ["dining_chair_02", "ArmChair_01", "Rockingchair_01"]
+	if tipo == "":
+		tipo = opciones[_rng.randi_range(0, opciones.size() - 1)]
+	if _prop(tipo, p, yaw) == null:
+		_chair(p, yaw)
 
 func _chair(p: Vector3, yaw: float) -> void:
 	var n := Node3D.new()
@@ -1441,6 +1518,8 @@ func _shelves_around(r: Dictionary, density: float) -> void:
 			k += 1.8
 
 func _bookshelf(p: Vector3, yaw: float) -> void:
+	if _prop("wooden_bookshelf_worn", p - Vector3(0, 0, 0), yaw) != null:
+		return
 	var n := Node3D.new()
 	n.position = p
 	n.rotation.y = yaw
@@ -1483,9 +1562,14 @@ func _portraits(r: Dictionary) -> void:
 				size = Vector3(0.06, 1.3, 1.0)
 		if not door_near(p - Vector3(0, 2.3, 0), 1.9).is_empty():
 			continue
-		box(size, p, _mat.oro, false, null, false)
-		var inner := size * (Vector3(0.82, 0.85, 1.4) if size.x > 0.5 else Vector3(1.4, 0.85, 0.82))
-		box(inner, p, face, false, null, false)
+		var yaw: float = [0.0, PI, PI * 0.5, -PI * 0.5][side]
+		var marcos := ["fancy_picture_frame_01", "fancy_picture_frame_02", "hanging_picture_frame_01", "ornate_mirror_01"]
+		var mk: String = marcos[_rng.randi_range(0, marcos.size() - 1)]
+		var off := Vector3(0, 0, 0.12).rotated(Vector3.UP, yaw) * -1.0
+		if _prop(mk, p - Vector3(0, 0.5, 0) + off, yaw, 1.6 if mk != "ornate_mirror_01" else 1.3, false) == null:
+			box(size, p, _mat.oro, false, null, false)
+			var inner := size * (Vector3(0.82, 0.85, 1.4) if size.x > 0.5 else Vector3(1.4, 0.85, 0.82))
+			box(inner, p, face, false, null, false)
 
 func _crates(r: Dictionary) -> void:
 	var rect: Rect2 = r.rect
@@ -1494,9 +1578,13 @@ func _crates(r: Dictionary) -> void:
 		var p := Vector3(_rng.randf_range(rect.position.x + 1, rect.end.x - 1), y, _rng.randf_range(rect.position.y + 1, rect.end.y - 1))
 		if not door_near(p, 2.5).is_empty() or not portal_near(p, 2.5).is_empty():
 			continue
-		var s := _rng.randf_range(0.5, 1.0)
-		var b := box(Vector3(s, s, s), p + Vector3(0, s * 0.5, 0), _mat.madera, true)
-		b.rotation.y = _rng.randf() * TAU
+		var cosas := ["cardboard_box_01", "Barrel_01", "vintage_suitcase", "treasure_chest", "cardboard_box_01"]
+		if "cava" in String(r.name).to_lower():
+			cosas = ["Barrel_01"]
+		if _prop(cosas[_rng.randi_range(0, cosas.size() - 1)], p, _rng.randf() * TAU) == null:
+			var s := _rng.randf_range(0.5, 1.0)
+			var b := box(Vector3(s, s, s), p + Vector3(0, s * 0.5, 0), _mat.madera, true)
+			b.rotation.y = _rng.randf() * TAU
 
 func _tunnel_props(r: Dictionary) -> void:
 	var rect: Rect2 = r.rect
