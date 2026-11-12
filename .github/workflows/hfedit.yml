@@ -1,0 +1,45 @@
+name: Mejorar imagen (Hugging Face)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "engine/tools/hfedit/**"
+      - ".github/workflows/hfedit.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  mejorar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            engine/tools/hfedit
+            engine/tools/hf3d
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q gradio_client pillow
+      - name: Mejorar
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF3D_SPACES: "finegrain/finegrain-image-enhancer"
+        run: |
+          mkdir -p out
+          for img in engine/tools/hfedit/entrada/*.png; do
+            n=$(basename "$img" .png)
+            python engine/tools/hf3d/hf3d_tex.py "$img" "out/$n" || true
+          done
+          find out -type f
+      - name: Guardar en la rama aether-hfedit
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-hfedit
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Imagenes ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-hfedit
