@@ -41,6 +41,8 @@ for img in sorted(glob.glob(os.path.join(D, "*.png"))):
                     elif pn == "seed": kw[pn] = seed
                     elif "randomize" in pn: kw[pn] = False
                     elif pn in ("width", "height"): kw[pn] = 1024
+                    elif "guidance" in pn: kw[pn] = 30
+                    elif "steps" in pn: kw[pn] = 28
                     elif p.get("parameter_has_default"): kw[pn] = p["parameter_default"]
                 log(" llamando", ep, {k: (v if not isinstance(v, dict) else "<img>") for k, v in kw.items()})
                 t = time.time()
