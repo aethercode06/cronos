@@ -1,0 +1,20 @@
+{
+ "suelo_madera": {"q": "wood floor", "n": 5},
+ "papel_tapiz": {"q": "wallpaper", "n": 6},
+ "yeso": {"q": "plaster", "n": 4},
+ "ladrillo": {"q": "bricks", "n": 4},
+ "piedra": {"q": "rock wall", "n": 4},
+ "tejado": {"q": "roofing tiles", "n": 4},
+ "marmol": {"q": "marble", "n": 3},
+ "alfombra": {"q": "carpet", "n": 3},
+ "tela": {"q": "fabric", "n": 4},
+ "cesped": {"q": "grass", "n": 3},
+ "tierra": {"q": "ground forest", "n": 4},
+ "grava": {"q": "gravel", "n": 3},
+ "madera": {"q": "wood", "n": 4},
+ "tablas": {"q": "planks", "n": 4},
+ "azulejo": {"q": "tiles", "n": 4},
+ "metal": {"q": "rust", "n": 3},
+ "corteza": {"q": "bark", "n": 2},
+ "hormigon": {"q": "concrete", "n": 3}
+}

@@ -1,0 +1,26 @@
+name: Texturas CC0 (ambientCG)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/texturas/**", ".github/workflows/texturas.yml"]
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/texturas
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q pillow
+      - run: python engine/tools/texturas/bajar.py engine/tools/texturas/pedidos.json out 2>&1 | tail -100 | tee out_log.txt; mkdir -p out; mv out_log.txt out/registro.txt
+      - name: Guardar en la rama aether-tex
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-tex
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Texturas ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-tex
