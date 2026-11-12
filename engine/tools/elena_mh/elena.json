@@ -1,6 +1,16 @@
 {
- "macros": {"gender": 1.0, "age": 0.45, "muscle": 0.3, "weight": 0.25, "height": 0.55, "proportions": 0.6, "cupsize": 0.4, "african": 0.0, "asian": 0.0, "caucasian": 1.0},
- "targets": {},
+ "macros": {"gender": 1.0, "age": 0.42, "muscle": 0.25, "weight": 0.12, "height": 0.62, "proportions": 0.55, "cupsize": 0.55, "firmness": 0.5, "african": 0.0, "asian": 0.0, "caucasian": 1.0},
+ "targets": {
+  "l-cheek-volume-decr": 0.9, "r-cheek-volume-decr": 0.9,
+  "l-cheek-bones-incr": 0.6, "r-cheek-bones-incr": 0.6,
+  "l-eye-bag-incr": 0.7, "r-eye-bag-incr": 0.7,
+  "l-upperarm-fat-decr": 1.0, "r-upperarm-fat-decr": 1.0,
+  "l-lowerarm-fat-decr": 1.0, "r-lowerarm-fat-decr": 1.0,
+  "measure-lowerarm-length-incr": 0.6, "measure-upperarm-length-incr": 0.35,
+  "l-hand-fingers-length-incr": 1.0, "r-hand-fingers-length-incr": 1.0,
+  "l-hand-fingers-diameter-decr": 0.7, "r-hand-fingers-diameter-decr": 0.7,
+  "measure-neck-circ-decr": 0.6, "measure-neck-height-incr": 0.4
+ },
  "piel": "onlytheghosts_young_eurasian_female.mhmat",
  "rig": "game_engine",
  "recursos": [
@@ -9,6 +19,8 @@
   ["eyelashes", "eyelashes01.mhclo", "Eyelashes"],
   ["teeth", "teeth_base.mhclo", "Teeth"],
   ["tongue", "tongue01.mhclo", "Tongue"],
-  ["hair", "o4saken_long01.mhclo", "Hair"]
+  ["hair", "o4saken_long01.mhclo", "Hair"],
+  ["clothes", "wdg_mycenaean_tunic.mhclo", "Clothes"],
+  ["clothes", "toigo_long_full_skirt.mhclo", "Clothes"]
  ]
 }

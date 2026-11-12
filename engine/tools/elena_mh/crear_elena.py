@@ -27,7 +27,9 @@ for k, v in CFG["macros"].items():
 TargetService.reapply_macro_details(h)
 for t, v in CFG.get("targets", {}).items():
     try:
-        TargetService.load_target(h, TargetService.target_full_path(t), weight=v, name=t); log("target", t, v)
+        fp = TargetService.target_full_path(t)
+        if fp is None: log("target no existe", t); continue
+        TargetService.load_target(h, fp, weight=v, name=t); log("target", t, v)
     except Exception as e:
         log("target falla", t, e)
 try:
@@ -69,6 +71,8 @@ except Exception as e:
     log("export falla", e, traceback.format_exc()[-1500:])
 for o in bpy.data.objects:
     log("obj", o.name, o.type, (len(o.data.vertices) if o.type == 'MESH' else ""), (len(o.data.shape_keys.key_blocks) if o.type == 'MESH' and o.data.shape_keys else 0))
+if h.data.shape_keys:
+    log("FORMAS", [k.name for k in h.data.shape_keys.key_blocks])
 # capturas
 sc = bpy.context.scene; sc.render.engine = 'CYCLES'; sc.cycles.samples = 64; sc.cycles.device = 'CPU'
 w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True; w.node_tree.nodes['Background'].inputs[1].default_value = 0.7
