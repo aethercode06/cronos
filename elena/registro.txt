@@ -1,0 +1,25 @@
+== microsoft/TRELLIS.2
+  endpoints: ['/start_session', '/preprocess_image', '/get_seed', '/lambda', '/image_to_3d', '/lambda_1', '/extract_glb']
+  orden: ['/start_session', '/preprocess_image', '/image_to_3d', '/extract_glb']
+  llamando /start_session {}
+   ok en 0s: ()
+  llamando /preprocess_image {'input': '<img>'}
+   ok en 1s: /tmp/gradio/5574f95ab579bd1c3b1845161e86529451c358e9674e910a0f2c088629beb855/image.png
+  llamando /image_to_3d {'image': '<img>', 'seed': 7, 'resolution': '1024', 'ss_guidance_strength': 7.5, 'ss_guidance_rescale': 0.7, 'ss_sampling_steps': 12, 'ss_rescale_t': 5.0, 'shape_slat_guidance_strength': 7.5, 'shape_slat_guidance_rescale': 0.5, 'shape_slat_sampling_steps': 12, 'shape_slat_rescale_t': 3.0, 'tex_slat_guidance_strength': 1.0, 'tex_slat_guidance_rescale': 0.0, 'tex_slat_sampling_steps': 12, 'tex_slat_rescale_t': 3.0}
+   fallo: You have exceeded your free ZeroGPU quota (120s requested vs. 132s left). Try again in 23:25:21. Subscribe to Hugging Face PRO to get 25 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+  llamando /extract_glb {'decimation_target': 300000, 'texture_size': 2048}
+   fallo: You have exceeded your free ZeroGPU quota (120s requested vs. 132s left). Try again in 23:25:21. Subscribe to Hugging Face PRO to get 25 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+  resultado: 0 archivos en 2s
+== henrybit/TRELLIS-2-4B-Demo
+  endpoints: ['/start_session', '/preprocess_image', '/get_seed', '/lambda', '/image_to_3d', '/lambda_1', '/extract_glb']
+  orden: ['/start_session', '/preprocess_image', '/image_to_3d', '/extract_glb']
+  llamando /start_session {}
+   ok en 0s: ()
+  llamando /preprocess_image {'input': '<img>'}
+   ok en 0s: /tmp/gradio/5574f95ab579bd1c3b1845161e86529451c358e9674e910a0f2c088629beb855/image.png
+  llamando /image_to_3d {'image': '<img>', 'seed': 7, 'resolution': '1024', 'ss_guidance_strength': 7.5, 'ss_guidance_rescale': 0.7, 'ss_sampling_steps': 12, 'ss_rescale_t': 5.0, 'shape_slat_guidance_strength': 7.5, 'shape_slat_guidance_rescale': 0.5, 'shape_slat_sampling_steps': 12, 'shape_slat_rescale_t': 3.0, 'tex_slat_guidance_strength': 1.0, 'tex_slat_guidance_rescale': 0.0, 'tex_slat_sampling_steps': 12, 'tex_slat_rescale_t': 3.0}
+   fallo: You have exceeded your free ZeroGPU quota (180s requested vs. 42s left). Try again in 23:25:20. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+  llamando /extract_glb {'decimation_target': 300000, 'texture_size': 2048}
+   fallo: You have exceeded your free ZeroGPU quota (180s requested vs. 42s left). Try again in 23:25:20. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+  resultado: 0 archivos en 1s
+RESUMEN: {}
