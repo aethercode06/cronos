@@ -26,7 +26,6 @@ jobs:
           git clone -q --depth 1 https://github.com/makehumancommunity/mpfb2 /tmp/mpfb2
           (cd /tmp/mpfb2/src && zip -qr /tmp/mpfb.zip mpfb)
           mkdir -p /tmp/rec /tmp/zips && cd /tmp/zips
-          git fetch -q --depth 1 "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-mh
           git -C $GITHUB_WORKSPACE fetch -q origin aether-mh:aether-mh || true
           for z in makehuman_system_assets_cc0 hair01_cc0 skins01_cc0; do
             for p in aa ab ac ad; do git -C $GITHUB_WORKSPACE show aether-mh:$z.zip.part_$p 2>/dev/null; done > $z.zip
