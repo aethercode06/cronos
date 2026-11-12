@@ -69,6 +69,11 @@ try:
     log("GLB exportado")
 except Exception as e:
     log("export falla", e, traceback.format_exc()[-1500:])
+try:
+    bpy.ops.file.pack_all()
+except Exception as e:
+    log("pack falla", e)
+bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "elena_mh_export.blend"))
 for o in bpy.data.objects:
     log("obj", o.name, o.type, (len(o.data.vertices) if o.type == 'MESH' else ""), (len(o.data.shape_keys.key_blocks) if o.type == 'MESH' and o.data.shape_keys else 0))
 if h.data.shape_keys:
