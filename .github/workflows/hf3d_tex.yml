@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "engine/tools/hf3d/hf3d_tex.py"
+      - "engine/tools/hf3d/buscar_spaces.py"
       - "engine/tools/hf3d/entrada_tex/**"
       - ".github/workflows/hf3d_tex.yml"
 
@@ -23,7 +24,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -q gradio_client pillow
+      - run: pip install -q gradio_client pillow huggingface_hub
+      - name: Buscar Spaces
+        run: timeout 900 python engine/tools/hf3d/buscar_spaces.py out || true
       - name: Generar modelos con textura
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
