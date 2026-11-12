@@ -87,6 +87,8 @@ func _ready() -> void:
 	mansion = ZarekMansion.new()
 	add_child(mansion)
 	mansion.build(Aether.quality)
+	for l in mansion.lamps:
+		mansion.set_lamp(l, true)
 	player = AetherPlayerFP.new()
 	add_child(player)
 	player.global_position = mansion.start_pos
@@ -141,21 +143,22 @@ func _environment() -> void:
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color(0, 0, 0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.22, 0.25, 0.34)
-	env.ambient_light_energy = 0.11
+	env.ambient_light_color = Color(0.42, 0.38, 0.34)
+	env.ambient_light_energy = 0.55
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.05
+	env.tonemap_exposure = 1.35
+	env.tonemap_white = 6.0
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.03, 0.035, 0.045)
-	env.fog_density = 0.05
+	env.fog_light_color = Color(0.07, 0.065, 0.07)
+	env.fog_density = 0.016
 	env.fog_sky_affect = 0.0
 	env.glow_enabled = Aether.glow_ok()
-	env.glow_intensity = 0.7
-	env.glow_bloom = 0.04
-	env.glow_hdr_threshold = 1.1
+	env.glow_intensity = 0.8
+	env.glow_bloom = 0.06
+	env.glow_hdr_threshold = 0.9
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 0.78
-	env.adjustment_contrast = 1.12
+	env.adjustment_saturation = 1.0
+	env.adjustment_contrast = 1.06
 	we.environment = env
 	add_child(we)
 
@@ -164,19 +167,19 @@ func _flashlight() -> void:
 	add_child(flash_node)
 	flash = SpotLight3D.new()
 	flash.light_color = Color(1.0, 0.9, 0.72)
-	flash.light_energy = 3.2
-	flash.spot_range = 24.0
-	flash.spot_angle = 30.0
-	flash.spot_angle_attenuation = 0.8
-	flash.spot_attenuation = 1.1
+	flash.light_energy = 6.0
+	flash.spot_range = 32.0
+	flash.spot_angle = 40.0
+	flash.spot_angle_attenuation = 0.6
+	flash.spot_attenuation = 0.8
 	flash.shadow_enabled = true
 	flash.shadow_bias = 0.04
 	flash_node.add_child(flash)
 	# halo cercano para que se vea el entorno inmediato
 	var near := OmniLight3D.new()
 	near.light_color = Color(1.0, 0.88, 0.7)
-	near.omni_range = 2.6
-	near.light_energy = 0.25
+	near.omni_range = 4.5
+	near.light_energy = 0.7
 	near.name = "cerca"
 	flash_node.add_child(near)
 
@@ -552,7 +555,7 @@ func _update_flash(delta: float) -> void:
 	var target := cam.global_transform.basis.get_rotation_quaternion()
 	flash_node.quaternion = flash_node.quaternion.slerp(target, minf(1.0, delta * 14.0))
 	var on := flash_on and battery > 0.0 and hidden_in.is_empty()
-	var e := 3.2
+	var e := 6.0
 	if battery < 15.0:
 		e *= 0.5 + 0.5 * float(randf() > 0.08)
 	# parpadea cuando Elena está cerca
@@ -759,13 +762,13 @@ func _take_seal(s: Dictionary) -> void:
 			if elena.state == ZarekElena.S.DORMANT:
 				elena.timer = minf(elena.timer, 4.0)
 		2:
-			message("Segundo sello.\nLa radio del vestíbulo se encendió sola.", 4.0)
+			message("Segundo sello.\nLa radio se encendió sola. Elena ya no le teme a la luz.", 4.5)
 			snd_radio.play()
 			for l in mansion.lamps:
 				mansion.flicker_lamp(l, 1.5)
 			sound_behind("susurro", 2.0, 2.0)
 		3:
-			message("Tercer sello.\nElena ya no le teme a la luz.", 4.0)
+			message("Tercer sello.\nLas luces de la casa empiezan a morir.", 4.0)
 			for l in mansion.lamps:
 				if l.on:
 					mansion.break_lamp(l)
@@ -856,7 +859,8 @@ func _on_caught() -> void:
 	var cam := player.camera
 	var fwd := -player.global_transform.basis.z
 	elena.global_position = player.global_position + fwd * 0.62
-	elena.global_position.y = player.global_position.y + (player.eye_height - 1.86)
+	elena.global_position.y = player.global_position.y + (player.eye_height - elena.eye_height)
+	elena.play_anim("attack", 1.6)
 	elena.look_at(Vector3(player.global_position.x, elena.global_position.y, player.global_position.z), Vector3.UP)
 	player.set_look(player.rotation.y, 0.05)
 	flash_on = true
@@ -913,6 +917,7 @@ func _win() -> void:
 	elena.global_position = player.global_position + fwd * 2.2
 	elena.global_position.y = 0.0
 	elena.look_at(Vector3(player.global_position.x, 0.0, player.global_position.z), Vector3.UP)
+	elena.play_anim("attack", 1.0)
 	elena.visible = true
 	snd_ui.stream = _s("grito")
 	snd_ui.volume_db = 2.0
@@ -945,6 +950,7 @@ func _director(delta: float) -> void:
 	_scare_t = randf_range(26.0, 48.0) - seals * 3.0
 	var pp := player.global_position
 	var pool := ["golpes", "susurro", "pasos", "portazo", "vistazo", "risa"]
+	pool.append("apagon")
 	if seals >= 1:
 		pool.append("lampara")
 	match pool[randi() % pool.size()]:
@@ -972,6 +978,21 @@ func _director(delta: float) -> void:
 			for l in mansion.lamps:
 				if l.on:
 					mansion.flicker_lamp(l, 2.2)
+		"apagon":
+			# una lámpara cercana se apaga sola (se puede volver a encender)
+			var best := {}
+			var bd := 1e9
+			for l in mansion.lamps:
+				if l.on and not l.broken:
+					var dd: float = pp.distance_to(l.pos)
+					if dd < bd:
+						bd = dd
+						best = l
+			if not best.is_empty() and bd < 20.0:
+				mansion.flicker_lamp(best, 1.2)
+				await get_tree().create_timer(1.2).timeout
+				mansion.set_lamp(best, false)
+				sound_at("crujido", best.pos + Vector3(0, 2.5, 0), 0.0)
 
 func _footsteps_above() -> void:
 	for i in 6:

@@ -101,14 +101,15 @@ func build(q := 2) -> void:
 				"K": _pickup(c, "sal")
 				"R": _radio(c)
 	hall_region = int(region.get(to_cell(start_pos), -1))
+	_sconces()
 	_epicentro()
 	_props()
 
 # ---------------- materiales (texturas hechas por código) ----------------
 func _materials() -> void:
-	mat_wall = _tri_mat(_tex_wallpaper(), Color(1, 1, 1), 0.92, 0.33)
-	mat_floor = _tri_mat(_tex_planks(), Color(1, 1, 1), 0.7, 0.4)
-	mat_ceil = _tri_mat(_tex_plaster(), Color(0.75, 0.72, 0.68), 0.95, 0.25)
+	mat_wall = _tri_mat(_tex_wallpaper(), Color(1.25, 1.18, 1.05), 0.85, 0.33)
+	mat_floor = _tri_mat(_tex_planks(), Color(1.1, 1.05, 1.0), 0.55, 0.2)
+	mat_ceil = _tri_mat(_tex_plaster(), Color(1.0, 0.96, 0.9), 0.95, 0.25)
 	mat_wood = _tri_mat(_tex_planks(true), Color(0.55, 0.4, 0.3), 0.6, 0.8)
 	mat_dark = _plain(Color(0.06, 0.05, 0.05), 0.8)
 	mat_cloth = _plain(Color(0.28, 0.08, 0.09), 0.95)
@@ -155,20 +156,20 @@ func _noise(freq: float, seed_v: int, oct := 4) -> FastNoiseLite:
 	return n
 
 func _tex_planks(dark := false) -> Image:
-	var s := 256
+	var s := 512
 	var img := Image.create(s, s, true, Image.FORMAT_RGB8)
 	var grain := _noise(0.02, 3)
 	var stain := _noise(0.01, 9, 3)
 	for y in s:
-		var plank := y / 32
+		var plank := y / 64
 		var off := (plank * 97) % s
 		for x in s:
 			var gx := float((x + off) % s)
 			var g := grain.get_noise_2d(gx * 0.15, y * 3.0) * 0.5 + 0.5
 			var st := stain.get_noise_2d(x, y) * 0.5 + 0.5
-			var base := 0.30 + 0.10 * float((plank * 37) % 5) / 4.0
+			var base := 0.42 + 0.12 * float((plank * 37) % 5) / 4.0
 			var v := base * (0.75 + 0.35 * g) * (0.7 + 0.4 * st)
-			if y % 32 < 1 or (x + off) % 128 < 1:
+			if y % 64 < 2 or (x + off) % 256 < 2:
 				v *= 0.35
 			var c := Color(v * 1.0, v * 0.68, v * 0.45) if not dark else Color(v * 0.9, v * 0.62, v * 0.42)
 			img.set_pixel(x, y, c)
@@ -176,7 +177,7 @@ func _tex_planks(dark := false) -> Image:
 	return img
 
 func _tex_wallpaper() -> Image:
-	var s := 256
+	var s := 512
 	var img := Image.create(s, s, true, Image.FORMAT_RGB8)
 	var stain := _noise(0.012, 21, 5)
 	var fine := _noise(0.08, 5, 2)
@@ -188,11 +189,11 @@ func _tex_wallpaper() -> Image:
 			var dam := 0.5 + 0.5 * sin(u * TAU * 8.0) * sin(vv * TAU * 6.0 + sin(u * TAU * 8.0))
 			var st := stain.get_noise_2d(x, y) * 0.5 + 0.5
 			var f := fine.get_noise_2d(x, y) * 0.5 + 0.5
-			var v := (0.32 + 0.08 * stripe + 0.07 * dam) * (0.55 + 0.6 * st) * (0.9 + 0.15 * f)
+			var v := (0.42 + 0.08 * stripe + 0.08 * dam) * (0.7 + 0.45 * st) * (0.9 + 0.15 * f)
 			# manchas de humedad que caen
 			var drip := maxf(0.0, stain.get_noise_2d(x * 4.0, y * 0.4)) * 0.5
 			v *= 1.0 - drip
-			img.set_pixel(x, y, Color(v * 0.86, v * 0.92, v * 0.78))
+			img.set_pixel(x, y, Color(v * 0.95, v * 0.86, v * 0.68))
 	img.generate_mipmaps()
 	return img
 
@@ -487,15 +488,15 @@ func _lamp(c: Vector2i) -> void:
 	var light := OmniLight3D.new()
 	light.position.y = -1.3
 	light.light_color = Color(1.0, 0.72, 0.45)
-	light.omni_range = 10.0
-	light.omni_attenuation = 1.4
-	light.light_energy = 1.6
+	light.omni_range = 14.0
+	light.omni_attenuation = 1.1
+	light.light_energy = 2.6
 	light.shadow_enabled = quality >= 1
 	light.visible = false
 	n.add_child(light)
 	# interruptor en la pared más cercana
 	var r := int(region.get(c, -1))
-	var l := {"node": n, "light": light, "bulb": bm, "cell": c, "region": r, "on": false, "broken": false, "base": 1.6, "flicker": 0.0, "pos": p}
+	var l := {"node": n, "light": light, "bulb": bm, "cell": c, "region": r, "on": false, "broken": false, "base": 2.6, "flicker": 0.0, "pos": p}
 	lamps.append(l)
 	if not region_lamp.has(r):
 		region_lamp[r] = []
@@ -649,6 +650,25 @@ func _epicentro() -> void:
 	# cama de Elena con correas en el Epicentro
 	_box(Vector3(1.2, 0.5, 2.2), circle_pos + Vector3(0, 0.25, -4.3), mat_metal)
 	_box(Vector3(1.1, 0.12, 2.0), circle_pos + Vector3(0, 0.56, -4.3), mat_cloth, false)
+
+## Apliques de pared con luz tenue en las habitaciones sin lámpara.
+func _sconces() -> void:
+	var done := {}
+	for c in region:
+		var r := int(region[c])
+		if done.has(r) or region_lamp.has(r) or r == epicentro_region:
+			continue
+		done[r] = true
+		var wd := _face_wall(c)
+		var p := to_world(c) + Vector3(wd.x, 0, wd.y) * (CELL * 0.5 - 0.12)
+		var l := OmniLight3D.new()
+		l.position = p + Vector3(0, 2.1, 0)
+		l.light_color = Color(1.0, 0.62, 0.35)
+		l.omni_range = 7.0
+		l.light_energy = 0.8
+		add_child(l)
+		var b := _box(Vector3(0.12, 0.2, 0.12), l.position, mat_gold, false)
+		b.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 # ---------------- muebles (decorado) ----------------
 func _props() -> void:

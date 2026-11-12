@@ -45,6 +45,11 @@ var hair: Array[MeshInstance3D] = []
 var dress_mat: StandardMaterial3D
 var eye_mat: StandardMaterial3D
 var only_visual := false
+const MODEL := "res://zarek/modelos/elena.glb"
+var model: Node3D
+var anim: AnimationPlayer
+var eye_height := 1.86
+var _cur_anim := ""
 
 func setup(m: ZarekMansion, p: AetherPlayerFP) -> void:
 	mansion = m
@@ -112,6 +117,9 @@ func _stain_tex() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 func build_body() -> void:
+	if ResourceLoader.exists(MODEL):
+		_build_model()
+		return
 	body = Node3D.new()
 	add_child(body)
 	var skin := _mat(Color(0.5, 0.52, 0.5), 0.75)
@@ -203,6 +211,48 @@ func build_body() -> void:
 	fore_r = arm_r.get_child(1)
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+## Modelo 3D real (TRELLIS + Blender) con animaciones idle/walk/run/attack.
+func _build_model() -> void:
+	var ps: PackedScene = load(MODEL)
+	model = ps.instantiate()
+	model.rotation.y = PI  # el modelo mira a +Z; Elena mira a -Z
+	add_child(model)
+	eye_height = 1.67
+	var found := model.find_children("*", "AnimationPlayer", true, false)
+	if found.size() > 0:
+		anim = found[0]
+		for n in ["idle", "walk", "run"]:
+			if anim.has_animation(n):
+				anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
+		play_anim("idle")
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		for i in m.get_surface_override_material_count():
+			var base: Material = m.mesh.surface_get_material(i)
+			if base is StandardMaterial3D:
+				var sm: StandardMaterial3D = base.duplicate()
+				sm.roughness = 0.9
+				sm.metallic = 0.0
+				sm.emission_enabled = true
+				sm.emission_texture = sm.albedo_texture
+				sm.emission = Color(1, 1, 1)
+				sm.emission_energy_multiplier = 0.06
+				m.set_surface_override_material(i, sm)
+	# ojos rojos que brillan en la oscuridad
+	eye_mat = _mat(Color(0.1, 0.0, 0.0), 0.3)
+	eye_mat.emission_enabled = true
+	eye_mat.emission = Color(1.0, 0.08, 0.03)
+	eye_mat.emission_energy_multiplier = 0.0
+
+func play_anim(n: String, speed := 1.0) -> void:
+	if anim == null or not anim.has_animation(n):
+		return
+	anim.speed_scale = speed
+	if _cur_anim != n:
+		_cur_anim = n
+		anim.play(n, 0.25)
 
 func _arm(side: float, skin: Material) -> Node3D:
 	var sh := Node3D.new()
@@ -337,7 +387,7 @@ func _physics_process(delta: float) -> void:
 					path = [Vector3(last_seen.x, 0, last_seen.z)]
 				else:
 					path = mansion.path(global_position, last_seen)
-			if mansion.is_lit(player.global_position) and aggro < 3 and global_position.distance_to(player.global_position) > 2.0:
+			if mansion.is_lit(player.global_position) and aggro < 2 and global_position.distance_to(player.global_position) > 2.0:
 				# la luz la detiene: se aleja
 				set_state(S.SEARCH, 3.0)
 		S.SEARCH:
@@ -388,10 +438,10 @@ func _start_chase() -> void:
 
 ## Camino que evita habitaciones iluminadas (le temen a la luz).
 func _safe_path(target: Vector3) -> Array[Vector3]:
-	if aggro < 3 and mansion.is_lit(target):
+	if aggro < 2 and mansion.is_lit(target):
 		return [] as Array[Vector3]
 	var p := mansion.path(global_position, target)
-	if aggro < 3:
+	if aggro < 2:
 		for wp in p:
 			if mansion.is_lit(wp):
 				return [] as Array[Vector3]
@@ -430,6 +480,16 @@ func _process(delta: float) -> void:
 
 # ---------------- animación procedural ----------------
 func _animate(delta: float, spd: float) -> void:
+	if model != null:
+		if state == S.GHOST and not only_visual and _cur_anim == "attack":
+			return
+		if state == S.CHASE or state == S.FLEE:
+			play_anim("run", 1.15)
+		elif spd > 0.2:
+			play_anim("walk", clampf(spd / 1.6, 0.7, 1.6))
+		else:
+			play_anim("idle")
+		return
 	if body == null:
 		return
 	_anim_t += delta * (1.0 + spd * 1.6)

@@ -50,7 +50,9 @@ func _ready() -> void:
 	_check(g.elena.state == ZarekElena.S.FLEE, "la sal la ahuyenta")
 	await _wait(3.0)
 	_check(g.elena.state == ZarekElena.S.DORMANT, "tras huir desaparece")
-	# te atrapa si estás cerca
+	# te atrapa si estás cerca (a oscuras)
+	for lp in m.lamps:
+		m.set_lamp(lp, false)
 	var lives0 := g.lives
 	g.player.global_position = m.start_pos
 	g.elena.global_position = m.start_pos + Vector3(0, 0, -4.0)
