@@ -27,7 +27,7 @@ jobs:
       - name: Generar modelos con textura
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF3D_SPACES: ${{ vars.HF3D_SPACES || 'microsoft/TRELLIS.2,tencent/Hunyuan3D-2,tencent/Hunyuan3D-2.1' }}
+          HF3D_SPACES: ${{ vars.HF3D_SPACES || 'microsoft/TRELLIS.2' }}
         run: |
           mkdir -p out
           for img in engine/tools/hf3d/entrada_tex/*.png; do

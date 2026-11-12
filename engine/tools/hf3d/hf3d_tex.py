@@ -68,9 +68,6 @@ def pick_value(p, img_path):
         return []
     if n in OVR:
         return OVR[n]
-    for k, v in OVR.items():
-        if k in n:
-            return v
     if "resolution" in n and p.get("parameter_has_default"):
         return p.get("parameter_default")
     if p.get("parameter_has_default"):
