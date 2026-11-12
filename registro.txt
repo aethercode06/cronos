@@ -1,0 +1,4 @@
+ERROR fachada black-forest-labs/FLUX.1-schnell 0 AppError No GPU was available after 60s. <a style="white-space: nowrap;text-underline-offset: 2px;color: var(--body-text-color)" href="https://huggingface.co/join">Create a free account</a> to get a higher priority in ZeroGPU queues.
+OK fachada black-forest-labs/FLUX.1-schnell 28s 101756
+OK vestibulo black-forest-labs/FLUX.1-schnell 68s 119584
+OK salon black-forest-labs/FLUX.1-schnell 5s 69282
