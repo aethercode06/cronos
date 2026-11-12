@@ -40,6 +40,12 @@ jobs:
             done
           done
           find out -type f
+      - name: Rellenar zonas (inpainting)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          mkdir -p out/inpaint
+          ls engine/tools/hfedit/inpaint/*.png >/dev/null 2>&1 && python engine/tools/hfedit/inpaint.py engine/tools/hfedit/inpaint out/inpaint || true
       - name: Guardar en la rama aether-hfedit
         if: always()
         run: |
