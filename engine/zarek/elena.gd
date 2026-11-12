@@ -46,6 +46,20 @@ var dress_mat: StandardMaterial3D
 var eye_mat: StandardMaterial3D
 var only_visual := false
 const MODEL := "res://zarek/modelos/elena.glb"
+const USAR_NORMAL := 0.0
+const PIEL := preload("res://zarek/elena_piel.gdshader")
+## Expresiones faciales: si falta alguna se usa la de reserva.
+const EXPRS := {"mirada": "sonrisa", "sonrisa": "sonrisa", "furia": "sonrisa", "grito": "sonrisa", "poseida": "poseida"}
+var piel: ShaderMaterial
+var skel: Skeleton3D
+var jaw_bone := -1
+var jaw_rest := Quaternion()
+var jaw_open := 0.0
+var jaw_target := 0.0
+var expr := ""
+var _expr_tex := {}
+var _mix := 1.0
+var _parpadeo := 3.0
 var model: Node3D
 var anim: AnimationPlayer
 var eye_height := 1.86
@@ -231,20 +245,97 @@ func _build_model() -> void:
 		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		for i in m.get_surface_override_material_count():
 			var base: Material = m.mesh.surface_get_material(i)
+			var tex: Texture2D = null
+			var nt: Texture2D = null
+			var rt: Texture2D = null
 			if base is StandardMaterial3D:
-				var sm: StandardMaterial3D = base.duplicate()
-				sm.roughness = 0.9
-				sm.metallic = 0.0
-				sm.emission_enabled = true
-				sm.emission_texture = sm.albedo_texture
-				sm.emission = Color(1, 1, 1)
-				sm.emission_energy_multiplier = 0.06
-				m.set_surface_override_material(i, sm)
+				var bm := base as StandardMaterial3D
+				tex = bm.albedo_texture
+				nt = bm.normal_texture
+				rt = bm.roughness_texture
+			var sm := ShaderMaterial.new()
+			sm.shader = PIEL
+			sm.set_shader_parameter("albedo_tex", tex)
+			if nt:
+				sm.set_shader_parameter("normal_tex", nt)
+				sm.set_shader_parameter("usar_normal", USAR_NORMAL)
+			else:
+				sm.set_shader_parameter("usar_normal", 0.0)
+			if rt:
+				sm.set_shader_parameter("mr_tex", rt)
+			m.set_surface_override_material(i, sm)
+			piel = sm
+	var sk := model.find_children("*", "Skeleton3D", true, false)
+	if sk.size() > 0:
+		skel = sk[0]
+		jaw_bone = skel.find_bone("jaw")
+		if jaw_bone >= 0:
+			jaw_rest = skel.get_bone_pose_rotation(jaw_bone)
+	set_expr("mirada", true)
 	# ojos rojos que brillan en la oscuridad
 	eye_mat = _mat(Color(0.1, 0.0, 0.0), 0.3)
 	eye_mat.emission_enabled = true
 	eye_mat.emission = Color(1.0, 0.08, 0.03)
 	eye_mat.emission_energy_multiplier = 0.0
+
+func _cara(nombre: String) -> Texture2D:
+	if _expr_tex.has(nombre):
+		return _expr_tex[nombre]
+	var t: Texture2D = null
+	var p := "res://zarek/modelos/cara/%s.png" % nombre
+	if ResourceLoader.exists(p):
+		t = load(p)
+	elif EXPRS.has(nombre) and EXPRS[nombre] != nombre:
+		t = _cara(EXPRS[nombre])
+	_expr_tex[nombre] = t
+	return t
+
+## Cambia la expresión con un fundido corto (o al instante).
+func set_expr(nombre: String, instant := false) -> void:
+	if piel == null or nombre == expr:
+		return
+	var t := _cara(nombre)
+	if t == null:
+		return
+	if instant or expr == "":
+		piel.set_shader_parameter("cara_a", t)
+		piel.set_shader_parameter("cara_b", t)
+		_mix = 1.0
+	else:
+		piel.set_shader_parameter("cara_a", _cara(expr))
+		piel.set_shader_parameter("cara_b", t)
+		_mix = 0.0
+	expr = nombre
+	jaw_target = 0.42 if nombre == "grito" else (0.08 if nombre == "furia" else 0.0)
+	piel.set_shader_parameter("ojos_brillo", 1.4 if nombre == "poseida" else 0.0)
+
+## Elige la expresión según lo que hace Elena; la mandíbula y el fundido se animan aquí.
+func _cara_process(delta: float) -> void:
+	if piel == null:
+		return
+	var want := "mirada"
+	match state:
+		S.CHASE:
+			want = "grito" if _cur_anim == "attack" else "furia"
+		S.INVESTIGATE, S.SEARCH:
+			want = "sonrisa"
+		S.GHOST:
+			want = "poseida"
+		S.FLEE:
+			want = "grito"
+		_:
+			want = "mirada"
+	if _cur_anim == "attack":
+		want = "grito"
+	set_expr(want)
+	if _mix < 1.0:
+		_mix = minf(1.0, _mix + delta * 4.0)
+		piel.set_shader_parameter("mezcla", _mix)
+	# boca: se abre del todo al gritar y tiembla un poco
+	var tgt := jaw_target + (0.04 * sin(Time.get_ticks_msec() * 0.03) if expr == "grito" else 0.0)
+	jaw_open = lerpf(jaw_open, tgt, minf(1.0, delta * 10.0))
+	if skel and jaw_bone >= 0:
+		skel.set_bone_pose_rotation(jaw_bone, jaw_rest * Quaternion(Vector3.RIGHT, jaw_open))
 
 func play_anim(n: String, speed := 1.0) -> void:
 	if anim == null or not anim.has_animation(n):
@@ -475,6 +566,7 @@ func _move(delta: float) -> void:
 	_animate(delta, moving)
 
 func _process(delta: float) -> void:
+	_cara_process(delta)
 	if only_visual:
 		_animate(delta, 0.0)
 

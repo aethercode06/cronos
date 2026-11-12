@@ -19,7 +19,7 @@ for poly in me.polygons:
         v = me.vertices[me.loops[li].vertex_index]
         mx = 390.0 + (v.co.x - xmid) * ppu; my = 12 + (zmax - v.co.z) * ppu
         px = 390.0 + (mx - MX) / SC; py = 157.5 + (my - MY) / SC
-        ok = ((px - CX) / RX) ** 2 + ((py - CY) / RY) ** 2 < 1.0 and v.normal.y < -0.05
+        ok = ((px - CX) / RX) ** 2 + ((py - CY) / RY) ** 2 < 1.0 and v.normal.y < -0.3
         if ok:
             uv.data[li].uv = ((px - 270) / 240.0, 1 - (py - 30) / 240.0); n_in += 1
         else:

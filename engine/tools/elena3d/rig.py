@@ -23,6 +23,10 @@ def bone(name,a,b,parent=None,conn=False,roll=0.0):
     e=eb.new(name); e.head=Vector((a[0]*H,0,a[1]*H)); e.tail=Vector((b[0]*H,0,b[1]*H)); e.roll=roll
     if parent: e.parent=eb[parent]; e.use_connect=conn
     return e
+# brazos (x,z normalizados): hombro, codo, muñeca, punta de la mano; y separación brazo/vestido
+import os
+AX=[float(v) for v in os.environ.get('RIG_ARM','0.085,0.795,0.112,0.625,0.125,0.475,0.128,0.39').split(',')]
+GAP=[float(v) for v in os.environ.get('RIG_GAP','0.068,0.09,0.78').split(',')]
 bone('root',(0,0.0),(0,0.12))
 bone('hips',(0,0.50),(0,0.60),'root')
 bone('spine',(0,0.60),(0,0.72),'hips',True)
@@ -30,10 +34,10 @@ bone('chest',(0,0.72),(0,0.81),'spine',True)
 bone('neck',(0,0.81),(0,0.87),'chest',True)
 bone('head',(0,0.87),(0,1.0),'neck',True)
 for s,sx in (('L',1),('R',-1)):
-    bone('shoulder.'+s,(0.02*sx,0.80),(0.085*sx,0.795),'chest')
-    bone('upper_arm.'+s,(0.085*sx,0.795),(0.112*sx,0.625),'shoulder.'+s,True)
-    bone('forearm.'+s,(0.112*sx,0.625),(0.125*sx,0.475),'upper_arm.'+s,True)
-    bone('hand.'+s,(0.125*sx,0.475),(0.128*sx,0.39),'forearm.'+s,True)
+    bone('shoulder.'+s,(0.02*sx,0.80),(AX[0]*sx,AX[1]),'chest')
+    bone('upper_arm.'+s,(AX[0]*sx,AX[1]),(AX[2]*sx,AX[3]),'shoulder.'+s,True)
+    bone('forearm.'+s,(AX[2]*sx,AX[3]),(AX[4]*sx,AX[5]),'upper_arm.'+s,True)
+    bone('hand.'+s,(AX[4]*sx,AX[5]),(AX[6]*sx,AX[7]),'forearm.'+s,True)
     bone('thigh.'+s,(0.045*sx,0.50),(0.045*sx,0.27),'hips')
     bone('shin.'+s,(0.045*sx,0.27),(0.042*sx,0.045),'thigh.'+s,True)
     e=bone('foot.'+s,(0.042*sx,0.045),(0.045*sx,0.01),'shin.'+s,True)
@@ -59,7 +63,9 @@ for v in me.vertices:
         if n in ('spine','chest','neck','head') and p.z < hd.z-0.04: w=0
         isarm=any(k in n for k in ('upper_arm','forearm','hand'))
         if isarm:
-            if p.z < 0.78*H:
+            if p.z < GAP[2]*H:
+                w*=sstep(GAP[0]*H,GAP[1]*H,ax)
+            elif p.z < 0.78*H:
                 w*=sstep(0.068*H,0.09*H,ax)
                 if d > (0.065 if 'hand' in n else 0.048): w=0
             if (n.endswith('.L') and p.x<0) or (n.endswith('.R') and p.x>0): w=0
@@ -144,7 +150,7 @@ for f in range(0,33,4):
     key('neck',f,fwd=0.15); key('head',f,fwd=0.2,side=0.45+0.06*math.sin(ph*2))
     for s,sx in (('L',1),('R',-1)):
         sw=k*sx
-        key('thigh.'+s,f,fwd=0.14*sw); key('shin.'+s,f,fwd=-0.2*max(0.0,-sw))
+        key('thigh.'+s,f,fwd=0.09*sw); key('shin.'+s,f,fwd=-0.12*max(0.0,-sw))
         key('upper_arm.'+s,f,fwd=-0.15*sw,side=-0.06*sx); key('forearm.'+s,f,fwd=0.25); key('hand.'+s,f,fwd=0.3)
 # RUN: persecución, inclinada y con los brazos estirados hacia delante
 a=new_action('run'); all_bones_key(0)
@@ -154,14 +160,14 @@ for f in range(0,21,2):
     key('neck',f,fwd=-0.25); key('head',f,fwd=-0.1,side=0.35+0.25*random.uniform(-1,1))
     for s,sx in (('L',1),('R',-1)):
         sw=k*sx
-        key('thigh.'+s,f,fwd=0.24*sw); key('shin.'+s,f,fwd=-0.3*max(0.0,-sw))
-        key('upper_arm.'+s,f,fwd=1.25+0.15*sw,side=0.12*sx); key('forearm.'+s,f,fwd=0.25+0.1*random.uniform(-1,1)); key('hand.'+s,f,fwd=-0.2)
+        key('thigh.'+s,f,fwd=0.13*sw); key('shin.'+s,f,fwd=-0.16*max(0.0,-sw))
+        key('upper_arm.'+s,f,fwd=0.28+0.1*sw,side=0.04*sx); key('forearm.'+s,f,fwd=0.25+0.1*random.uniform(-1,1)); key('hand.'+s,f,fwd=-0.2)
 # ATTACK: se abalanza y agarra
 a=new_action('attack'); all_bones_key(0)
-for f,(sp,ua,fa,hd) in ((0,(0.1,0.2,0.2,0.1)),(6,(-0.15,1.9,0.1,-0.3)),(12,(0.55,1.45,0.5,-0.15)),(20,(0.5,1.35,0.7,-0.1)),(24,(0.5,1.35,0.7,-0.1))):
+for f,(sp,ua,fa,hd) in ((0,(0.1,0.1,0.2,0.1)),(6,(-0.2,0.45,0.2,-0.45)),(12,(0.6,0.55,0.45,-0.2)),(20,(0.55,0.5,0.5,-0.15)),(24,(0.55,0.5,0.5,-0.15))):
     key('spine',f,fwd=sp); key('chest',f,fwd=sp*0.6); key('neck',f,fwd=hd); key('head',f,fwd=hd,side=0.2)
     for s,sx in (('L',1),('R',-1)):
-        key('upper_arm.'+s,f,fwd=ua,side=0.2*sx); key('forearm.'+s,f,fwd=fa); key('hand.'+s,f,fwd=-0.3)
+        key('upper_arm.'+s,f,fwd=ua,side=0.06*sx); key('forearm.'+s,f,fwd=fa); key('hand.'+s,f,fwd=-0.3)
         key('thigh.'+s,f,fwd=0.12 if s=='L' else -0.05); key('shin.'+s,f,fwd=-0.08)
 for act in bpy.data.actions:
     for fc in act.fcurves if hasattr(act,'fcurves') else []:
