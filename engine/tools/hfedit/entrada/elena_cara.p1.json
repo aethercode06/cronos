@@ -1,0 +1,8 @@
+{
+ "prompt": "photorealistic demonic woman, horror movie, rotten yellow-brown jagged broken teeth with gaps, dark decayed gums, bloodshot red demonic eyes, cracked pale grey dead skin, wrinkles, dirt, highly detailed skin pores, cinematic",
+ "negative_prompt": "white teeth, perfect teeth, clean teeth, straight teeth, healthy, beauty, makeup, smooth skin, cartoon",
+ "upscale_factor": 2,
+ "denoise_strength": 0.4,
+ "condition_scale": 6,
+ "seed": 7
+}

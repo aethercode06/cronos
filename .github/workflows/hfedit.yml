@@ -33,7 +33,11 @@ jobs:
           mkdir -p out
           for img in engine/tools/hfedit/entrada/*.png; do
             n=$(basename "$img" .png)
-            python engine/tools/hf3d/hf3d_tex.py "$img" "out/$n" || true
+            for v in 1 2 3; do
+              f="engine/tools/hfedit/entrada/$n.p$v.json"
+              [ -e "$f" ] || continue
+              HF_PARAMS="$(cat $f)" python engine/tools/hf3d/hf3d_tex.py "$img" "out/${n}_v$v" || true
+            done
           done
           find out -type f
       - name: Guardar en la rama aether-hfedit
