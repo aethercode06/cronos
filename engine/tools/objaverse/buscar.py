@@ -14,6 +14,7 @@ def lic(a):
 cons = json.load(open(Q))
 res = {}
 for cat, cfg in cons.items():
+    if cat.startswith('_'): continue
     kws = [k.lower() for k in cfg["k"]]
     excl = [k.lower() for k in cfg.get("no", [])] + ["low poly", "lowpoly", "cartoon", "stylized", "toon", "minecraft", "voxel", "anime"]
     hits = []
