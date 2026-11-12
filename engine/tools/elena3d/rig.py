@@ -38,11 +38,16 @@ for s,sx in (('L',1),('R',-1)):
     bone('shin.'+s,(0.045*sx,0.27),(0.042*sx,0.045),'thigh.'+s,True)
     e=bone('foot.'+s,(0.042*sx,0.045),(0.045*sx,0.01),'shin.'+s,True)
     e.tail.y=-0.12
+JAW = '--jaw' in sys.argv or True
+if JAW:
+    ys=[v.co.y for v in ob.data.vertices if abs(v.co.x)<0.03*H and 0.85*H<v.co.z<0.88*H]
+    yf=min(ys) if ys else -0.06
+    e=eb.new('jaw'); e.head=Vector((0, yf*0.25, 0.884*H)); e.tail=Vector((0, yf+0.004, 0.856*H)); e.parent=eb['head']
 bpy.ops.object.mode_set(mode='OBJECT')
 # pesos propios: distancia a cada hueso con reglas (brazos solo fuera del torso)
 def seg_d(p,a,b):
     ab=b-a; t=max(0.0,min(1.0,(p-a).dot(ab)/ab.length_squared)); return (p-(a+ab*t)).length
-bones=[(bn.name, rig.matrix_world@bn.head_local, rig.matrix_world@bn.tail_local) for bn in rig.data.bones if bn.name!='root']
+bones=[(bn.name, rig.matrix_world@bn.head_local, rig.matrix_world@bn.tail_local) for bn in rig.data.bones if bn.name not in ('root','jaw')]
 groups={n:ob.vertex_groups.new(name=n) for n,_,_ in bones}
 def sstep(e0,e1,x):
     t=max(0.0,min(1.0,(x-e0)/(e1-e0))); return t*t*(3-2*t)
@@ -68,6 +73,19 @@ for v in me.vertices:
     ws.sort(reverse=True); ws=ws[:3]; tot=sum(w for w,_ in ws) or 1
     for w,n in ws:
         if w/tot>0.02: groups[n].add([v.index], w/tot, 'REPLACE')
+# mandíbula: parte baja de la cara (bajo la línea de la boca, por delante)
+if JAW:
+    gj=ob.vertex_groups.new(name='jaw'); nj=0
+    yc=sum(ys)/len(ys) if ys else -0.05
+    for v in me.vertices:
+        p=v.co
+        if not (0.835*H < p.z < 0.878*H) or p.y > 0.0: continue
+        w=sstep(0.878*H,0.871*H,p.z)*sstep(0.835*H,0.848*H,p.z)*sstep(0.047*H,0.036*H,abs(p.x))*sstep(0.0,-0.02*H,p.y)
+        if w<0.02: continue
+        for g in v.groups:
+            ob.vertex_groups[g.group].add([v.index], g.weight*(1-w), 'REPLACE')
+        gj.add([v.index], w, 'REPLACE'); nj+=1
+    print('MANDIBULA', nj)
 ob.parent=rig
 am=ob.modifiers.new('Armature','ARMATURE'); am.object=rig
 unw=sum(1 for v in me.vertices if not any(g.weight>0.01 for g in v.groups))
@@ -87,7 +105,7 @@ def calib(name, axis, target):
 FWD=Vector((0,-1,0)); SIDE=Vector((1,0,0))
 S={}
 for b in pb:
-    if b.name=='root': continue
+    if b.name in ('root','jaw'): continue
     S[b.name]=(calib(b.name,0,FWD), calib(b.name,2,SIDE))
 def key(name, f, fwd=0.0, side=0.0, twist=0.0):
     b=pb[name]; sf,ss=S[name]
