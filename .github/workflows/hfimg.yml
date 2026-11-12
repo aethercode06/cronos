@@ -1,0 +1,36 @@
+name: Imágenes gratis (Hugging Face)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "engine/tools/hfimg/**"
+      - ".github/workflows/hfimg.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  imagenes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/hfimg
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q gradio_client
+      - name: Generar
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python engine/tools/hfimg/hfimg.py engine/tools/hfimg/pedidos.json out
+      - name: Guardar en la rama aether-hfimg
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-hfimg
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Imágenes ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-hfimg
