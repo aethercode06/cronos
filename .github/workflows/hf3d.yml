@@ -27,7 +27,7 @@ jobs:
       - name: Generar modelos
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          SOLO: ${{ vars.HF3D_SOLO || '' }}
+          SOLO: ${{ vars.HF3D_SOLO || 'elena' }}
         run: |
           mkdir -p out
           for img in engine/tools/hf3d/entrada/*.png; do
