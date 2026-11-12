@@ -1,0 +1,29 @@
+name: Modelos CC0 (Poly Haven)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/modelos/**", ".github/workflows/modelos.yml"]
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/modelos
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q pillow
+      - run: |
+          mkdir -p out
+          python engine/tools/modelos/polyhaven.py lista out 2>&1 | tail -20
+          python engine/tools/modelos/polyhaven.py bajar engine/tools/modelos/pedidos.json out/modelos 2>&1 | tail -80 | tee out/registro.txt
+      - name: Guardar en la rama aether-modelos
+        if: always()
+        run: |
+          cd out && git init -q && git checkout -q -b aether-modelos
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Modelos ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-modelos
