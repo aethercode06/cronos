@@ -9,7 +9,7 @@ const RATE := 22050
 static var _cache := {}
 
 ## Nombres disponibles: drone, latido, paso, portazo, golpes, susurro, grito,
-## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa
+## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera
 static func make(kind: String) -> AudioStreamWAV:
 	if not _cache.has(kind):
 		_cache[kind] = _build(kind)
@@ -32,6 +32,9 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"crujido": return _creak()
 		"campana": return _bell()
 		"risa": return _laugh()
+		"vidrio": return _glass_break()
+		"tintineo": return _clink()
+		"golpe_madera": return _wood_hit()
 	return _chime()
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -264,4 +267,47 @@ static func _laugh() -> AudioStreamWAV:
 		var tri := absf(fmod(ph, 1.0) * 2.0 - 1.0) * 2.0 - 1.0
 		b[i] = (tri * 0.6 + (randf() * 2.0 - 1.0) * 0.4) * hh * hh * exp(-t * 1.2)
 	_normalize(b, 0.7)
+	return _wav(b)
+
+
+## Vidrio que se rompe: golpe seco y muchos fragmentos que tintinean y caen.
+static func _glass_break() -> AudioStreamWAV:
+	var b := _buf(1.3)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var n := randf() * 2.0 - 1.0
+		lp += (n - lp) * 0.6
+		b[i] = (n - lp) * exp(-t * 18.0) * 1.2 + sin(TAU * 180.0 * t) * exp(-t * 40.0) * 0.6
+	for k in 46:
+		var t0 := randf() * 0.9 * randf() + 0.01
+		var f := randf_range(2600.0, 7800.0)
+		var amp := randf_range(0.08, 0.35) * (1.0 - t0)
+		var d := randf_range(18.0, 60.0)
+		var s0 := int(t0 * RATE)
+		for i in range(s0, mini(b.size(), s0 + int(0.25 * RATE))):
+			var t := float(i - s0) / RATE
+			b[i] += sin(TAU * f * t) * amp * exp(-t * d) + sin(TAU * f * 1.51 * t) * amp * 0.5 * exp(-t * d * 1.4)
+	_normalize(b, 0.95)
+	return _wav(b)
+
+## Botella que choca con otra sin romperse.
+static func _clink() -> AudioStreamWAV:
+	var b := _buf(0.5)
+	var f := 3100.0
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = (sin(TAU * f * t) + sin(TAU * f * 2.37 * t) * 0.5 + sin(TAU * f * 0.61 * t) * 0.3) * exp(-t * 11.0)
+	_normalize(b, 0.6)
+	return _wav(b)
+
+## Mueble de madera que cae o golpea el suelo.
+static func _wood_hit() -> AudioStreamWAV:
+	var b := _buf(0.6)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp += (randf() * 2.0 - 1.0 - lp) * 0.18
+		b[i] = lp * exp(-t * 22.0) * 1.3 + sin(TAU * (120.0 - t * 40.0) * t) * exp(-t * 14.0) + sin(TAU * 310.0 * t) * exp(-t * 30.0) * 0.4
+	_normalize(b, 0.85)
 	return _wav(b)

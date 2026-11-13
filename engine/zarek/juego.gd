@@ -96,7 +96,8 @@ func _ready() -> void:
 	respawn_pos = mansion.cell_to_world("baja", 9.0, 11.2)
 	player = AetherPlayerFP.new()
 	add_child(player)
-	player.collision_mask = 3  # suelo/paredes + puertas
+	player.collision_mask = 3 | 8  # suelo/paredes + puertas + objetos con física
+	add_to_group("zarek_oyentes")
 	player.global_position = mansion.start_pos
 	player.set_look(0.0, 0.0)
 	player.step.connect(_on_step)
@@ -570,6 +571,37 @@ func _unhandled_input(e: InputEvent) -> void:
 			_pause()
 	if e is InputEventMouseButton and e.pressed and state == "juego" and not DisplayServer.is_touchscreen_available():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+## Ruidos del mundo (botellas rotas, muebles que caen): Elena los oye si está cerca.
+func oir_ruido(pos: Vector3, fuerza: float) -> void:
+	if elena:
+		elena.hear(pos, fuerza)
+
+func _physics_process(_delta: float) -> void:
+	if player == null:
+		return
+	# el jugador empuja lo que toca
+	for i in player.get_slide_collision_count():
+		var col := player.get_slide_collision(i)
+		var rb := col.get_collider() as RigidBody3D
+		if rb and not rb.freeze:
+			var empuje := -col.get_normal()
+			empuje.y = 0.0
+			rb.apply_impulse(empuje.normalized() * clampf(4.5 / maxf(rb.mass, 0.5), 0.15, 2.2) * rb.mass * 0.35, col.get_position() - rb.global_position)
+	# Elena, al correr, arrolla sillas y botellas
+	if elena and elena.visible and elena.state == ZarekElena.S.CHASE:
+		var sq := PhysicsShapeQueryParameters3D.new()
+		var esf := SphereShape3D.new()
+		esf.radius = 0.55
+		sq.shape = esf
+		sq.transform = Transform3D(Basis(), elena.global_position + Vector3(0, 0.6, 0))
+		sq.collision_mask = 8
+		for h in get_world_3d().direct_space_state.intersect_shape(sq, 8):
+			var b := h.collider as RigidBody3D
+			if b and not b.freeze:
+				var dir := (b.global_position - elena.global_position)
+				dir.y = 0.0
+				b.apply_central_impulse((dir.normalized() * 3.0 + Vector3(0, 1.0, 0)) * b.mass * 0.6)
 
 func _process(delta: float) -> void:
 	# fundido negro y mensajes

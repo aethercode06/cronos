@@ -1212,13 +1212,17 @@ func _botellero(r: Dictionary, x: float, z: float, en_pared_x: bool) -> void:
 	for sgn in [-1.0, 0.0, 1.0]:
 		var lat := Vector3(0.42, 2.0, 0.05) if en_pared_x else Vector3(0.05, 2.0, 0.42)
 		m.box(lat, c + largo * sgn * 0.78 + Vector3(0, 1.0, 0), m._mat.madera, false, null, true)
-	for k in 5:
+	# botellas de vidrio sueltas en las cuatro baldas de abajo: cada una distinta y rompible
+	for k in 4:
 		for sgn in [-0.4, 0.4]:
-			var b := m._prop("wine_bottles_01", c + largo * sgn + Vector3(0, 0.14 + k * 0.36, 0), 0.0 if not en_pared_x else PI * 0.5, 0.95, false)
-			if b and rng.randf() < 0.15:
-				b.queue_free()
-			elif b:
-				m._tenir(b, Color(0.16, 0.24, 0.14))
+			for j in 3:
+				if rng.randf() < 0.18:
+					continue
+				var b := ZarekBotella.azar(rng)
+				b.position = c + largo * (sgn + (j - 1) * 0.2) + Vector3(0, 0.143 + k * 0.36, 0)
+				b.rotation.y = rng.randf() * TAU
+				m._house.add_child(b)
+				b.sleeping = true
 
 ## Cava de vinos (12 × 14,4): puerta al norte (x 4,8-7,2); sello 3 en (3,6; 3,6) libre; sube la escalera de la despensa.
 func _cava(r: Dictionary) -> void:

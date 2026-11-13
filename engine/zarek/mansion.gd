@@ -33,6 +33,24 @@ var swing: Node3D
 var nav_region: NavigationRegion3D
 var nav_ready := false
 var _rng := RandomNumberGenerator.new()
+## Botellas que se sustituyen por botellas de vidrio con física (cuántas hay en cada modelo).
+const BOTELLAS := {"coti_wine_bottle": 1, "coti_glass_bottle": 1, "coti_small_bottle": 1, "coti_basic_bottle": 1, "wine_bottles_01": 4}
+## Objetos sueltos con física y su masa en kg.
+const FISICOS := {"vict_antique_chair": 7.0, "painted_wooden_chair_01": 6.0, "painted_wooden_chair_02": 7.0, "dining_chair_02": 7.0, "WoodenChair_01": 6.0,
+	"folding_wooden_stool": 3.0, "painted_wooden_stool": 3.0, "wooden_stool_01": 3.0, "wooden_stool_02": 1.0, "pian_piano_stool_3d_scan": 6.0, "Rockingchair_01": 9.0,
+	"side_table_01": 6.0, "side_table_tall_01": 5.0, "small_wooden_table_01": 8.0, "painted_wooden_nightstand": 10.0, "vict_small_antique_table_asset": 8.0,
+	"wooden_bucket_01": 3.0, "wooden_bucket_02": 4.0, "wicker_basket_01": 1.0, "wicker_basket_02": 1.0, "wooden_crate_01": 6.0, "wooden_crate_02": 8.0,
+	"vintage_suitcase": 6.0, "Ottoman_01": 9.0, "brass_pot_01": 2.0, "brass_pot_02": 1.5, "brass_pan_01": 1.0, "pot_enamel_01": 1.0, "jug_01": 1.0, "metal_jug": 1.0,
+	"wooden_bowl_01": 0.5, "wooden_candlestick": 0.6, "vintage_oil_lamp": 1.5, "coti_simple_bookstack": 3.0, "vict_old_books___free_download": 2.5, "coti_12_old_books": 2.0,
+	"book_encyclopedia_set_01": 4.0, "coti_bread_in_basket": 0.6, "wooden_cutting_board": 0.8, "carved_wooden_plate": 0.4, "brass_goblets": 0.6,
+	"brass_vase_01": 1.0, "brass_vase_02": 1.0, "brass_vase_03": 1.0, "ceramic_vase_01": 1.5, "ceramic_vase_02": 1.5, "ceramic_vase_03": 1.5, "antique_ceramic_vase_01": 1.5,
+	"tea_set_01": 2.0, "wine_barrel_01": 45.0, "jugu_rocking_horse": 6.0, "jugu_music_box_prop": 0.8, "marble_bust_01": 12.0, "coti_celestial_globe": 4.0,
+	"coci_samovar": 4.0, "watering_can_metal_01": 1.0, "wooden_lantern_01": 1.2, "Lantern_01": 0.6, "food_apple_01": 0.15, "yellow_onion": 0.12, "lemon": 0.1,
+	"sweet_potato": 0.15, "wooden_spoon": 0.1, "round_spectacles": 0.05, "coti_pocket_watch": 0.1, "vintage_pocket_watch": 0.1, "magnifying_glass_01": 0.2,
+	"vict_cup___saucer": 0.3, "coti_typewriter": 9.0, "coti_three_candles_and_a_golden_c": 0.8, "brass_candleholders": 2.0, "mousetrap": 0.1}
+const METALICOS := ["brass_pot_01", "brass_pot_02", "brass_pan_01", "pot_enamel_01", "metal_jug", "brass_goblets", "brass_vase_01", "brass_vase_02", "brass_vase_03",
+	"coci_samovar", "watering_can_metal_01", "brass_candleholders", "coti_typewriter", "Lantern_01"]
+
 ## Salas montadas a mano en ZarekDecorado: el decorado genérico no les añade nada al azar.
 const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile",
 	"Sala de fumar y billar", "Sala de las mañanas", "Tocador de la madre", "Cuarto del hermano", "Baño", "Cuarto de huéspedes azul", "Sala de costura", "Cuarto de la institutriz", "Galería de retratos", "Cuarto de huéspedes", "Cuarto de lectura", "Pasillo principal", "Pasillo",
@@ -2078,10 +2096,49 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 	# nada que choque puede quedar sobre una escalera o su rellano (bloquearía el paso)
 	if choca and _huella_en_escalera(p, _prop_size(nombre) * escala, yaw):
 		return null
+	# botellas: de vidrio de verdad, con física y rompibles (una fila de botellas da varias sueltas)
+	if parent == null and BOTELLAS.has(nombre):
+		var cuantas: int = BOTELLAS[nombre]
+		var primera: Node3D = null
+		for k in cuantas:
+			var b := ZarekBotella.azar(_rng)
+			var off := Vector3((k - (cuantas - 1) * 0.5) * 0.105, 0, 0).rotated(Vector3.UP, yaw)
+			b.position = p + off + Vector3(0, 0.002, 0)
+			b.rotation.y = _rng.randf() * TAU
+			_house.add_child(b)
+			b.sleeping = true
+			if primera == null:
+				primera = b
+		return primera
 	var n: Node3D = ps.instantiate()
 	n.position = p
 	n.rotation.y = yaw
 	n.scale = Vector3.ONE * escala
+	# objetos sueltos con física: se empujan, se vuelcan y suenan
+	if parent == null and FISICOS.has(nombre) and _props_info.has(nombre):
+		var rb := ZarekObjetoFisico.new()
+		rb.mass = maxf(0.1, float(FISICOS[nombre]) * escala)
+		if nombre in METALICOS:
+			rb.sonido = "tintineo"
+		rb.position = p
+		rb.rotation.y = yaw
+		n.position = Vector3.ZERO
+		n.rotation = Vector3.ZERO
+		rb.add_child(n)
+		var tt: Array = _props_info[nombre].tam
+		var rcs := CollisionShape3D.new()
+		var rbs := BoxShape3D.new()
+		rbs.size = Vector3(maxf(float(tt[0]), 0.04), maxf(float(tt[1]), 0.03), maxf(float(tt[2]), 0.04)) * escala
+		rcs.shape = rbs
+		rcs.position.y = rbs.size.y * 0.5
+		rb.add_child(rcs)
+		if lvl_y(level_of(p.y + 0.3)) + 0.3 > p.y:
+			rb.add_child(_sombra(Vector2(float(tt[0]), float(tt[2])) * 1.35 * escala))
+		_house.add_child(rb)
+		rb.sleeping = true
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if rb.mass > 2.0 else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		return rb
 	(parent if parent else _house).add_child(n)
 	for mi in n.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
