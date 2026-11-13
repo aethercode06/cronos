@@ -248,10 +248,31 @@ func _pbr(id: String, escala: float, tinte := Color(1, 1, 1), rough_mul := 1.0, 
 	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return m
 
-## Papel tapiz victoriano: dibujo damasco + suciedad y desconchones fotográficos encima.
+## Papel tapiz victoriano de rayas tono sobre tono con filete dorado.
+func _rayas(base: Color, seed_v: int) -> Image:
+	var sz := 512
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGB8)
+	var nz := _noise(0.02, seed_v, 3)
+	var fino := _noise(0.4, seed_v + 7, 1)
+	var oro := Color(0.55, 0.45, 0.25)
+	for y in sz:
+		for x in sz:
+			var t := x % 64
+			var c := base
+			if t >= 40:
+				c = base.darkened(0.22)
+			if t == 39 or t == 40 or t == 63 or t == 0:
+				c = base.lerp(oro, 0.45)
+			elif t == 51 or t == 52:
+				c = base.lerp(oro, 0.2)
+			var k := 1.0 + nz.get_noise_2d(x, y) * 0.12 + fino.get_noise_2d(x, y) * 0.05
+			img.set_pixel(x, y, Color(c.r * k, c.g * k, c.b * k))
+	return img
+
+## Papel tapiz: rayas + desconchones y suciedad fotográficos encima (ambientCG Wallpaper001C).
 func _papel(img: Image, tinte: Color) -> StandardMaterial3D:
-	var m := _tex_mat(img, tinte, 0.85, 0.42, 0.0)
-	var base := "res://zarek/texturas/Wallpaper002C/"
+	var m := _tex_mat(img, tinte, 0.9, 0.42, 0.0)
+	var base := "res://zarek/texturas/Wallpaper001C/"
 	if ResourceLoader.exists(base + "color.jpg"):
 		m.detail_enabled = true
 		m.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
@@ -259,16 +280,26 @@ func _papel(img: Image, tinte: Color) -> StandardMaterial3D:
 		m.detail_uv_layer = BaseMaterial3D.DETAIL_UV_1
 		m.normal_enabled = true
 		m.normal_texture = load(base + "normal.jpg")
-		m.normal_scale = 0.8
+		m.normal_scale = 1.0
 		m.roughness_texture = load(base + "rough.jpg")
 	return m
 
 func _materials() -> void:
-	var papers := [[Color(0.34, 0.12, 0.13), Color(0.55, 0.3, 0.22)], [Color(0.13, 0.24, 0.18), Color(0.34, 0.4, 0.26)],
-		[Color(0.18, 0.18, 0.3), Color(0.4, 0.34, 0.46)], [Color(0.46, 0.37, 0.24), Color(0.66, 0.55, 0.36)]]
+	var papers := [Color(0.36, 0.13, 0.13), Color(0.16, 0.27, 0.2), Color(0.2, 0.23, 0.33), Color(0.48, 0.4, 0.27)]
 	for i in papers.size():
-		_mat["papel%d" % i] = _papel(_damask(papers[i][0], papers[i][1], 30 + i), Color(1.2, 1.2, 1.2))
-	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.45, 0.3, 0.22), 0.8)
+		_mat["papel%d" % i] = _papel(_rayas(papers[i], 30 + i), Color(1.15, 1.15, 1.15))
+	_mat["cortina"] = _pbr("Fabric085", 1.6, Color(0.42, 0.1, 0.11), 1.0, 1.4)
+	_mat["cortina"].cull_mode = BaseMaterial3D.CULL_DISABLED
+	var cristal := _plain(Color(0.35, 0.45, 0.6, 0.22), 0.05, 0.2)
+	cristal.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_mat["cristal"] = cristal
+	var persa := StandardMaterial3D.new()
+	if ResourceLoader.exists("res://zarek/texturas/alfombra_persa.jpg"):
+		persa.albedo_texture = load("res://zarek/texturas/alfombra_persa.jpg")
+	persa.albedo_color = Color(0.9, 0.85, 0.8)
+	persa.roughness = 1.0
+	_mat["persa"] = persa
+	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.5, 0.36, 0.27), 0.7)
 	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.85, 0.78, 0.72), 0.85)
 	_mat["baldosa"] = _pbr("Tiles140", 0.5, Color(1, 1, 1), 0.9)
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
@@ -281,7 +312,7 @@ func _materials() -> void:
 	_mat["agua"] = _plain(Color(0.03, 0.05, 0.07), 0.05, 0.3)
 	_mat["madera"] = _pbr("Wood094", 0.6, Color(0.42, 0.27, 0.18), 0.75)
 	_mat["madera_clara"] = _pbr("WoodFloor043", 0.4, Color(0.9, 0.85, 0.8), 0.9)
-	_mat["moldura"] = _pbr("Plaster007", 0.8, Color(0.92, 0.88, 0.8), 0.7)
+	_mat["moldura"] = _pbr("Plaster007", 0.8, Color(0.78, 0.73, 0.64), 0.7)
 	_mat["cimiento"] = _pbr("Bricks106A", 0.4, Color(0.8, 0.78, 0.75), 1.0)
 	_mat["tablas"] = _pbr("Planks037A", 0.45, Color(1, 1, 1), 0.95)
 	_mat["oscuro"] = _plain(Color(0.05, 0.04, 0.04), 0.8)
@@ -375,7 +406,8 @@ func stair_rects() -> Array[Rect2]:
 	for st in stairs_spec:
 		var a := cell_to_world(st.key, st.r[0], st.r[1])
 		var b := cell_to_world(st.key, st.r[2], st.r[3])
-		out.append(Rect2(a.x, a.z, b.x - a.x, b.z - a.z).grow(1.6))
+		# la escalera y un rellano de 1,4 m en cada extremo (a lo largo de la escalera)
+		out.append(Rect2(a.x - 0.3, a.z - 1.4, b.x - a.x + 0.6, b.z - a.z + 2.8))
 	return out
 
 func _build_stairs() -> void:
@@ -451,7 +483,7 @@ func _level(key: String) -> void:
 		if t != "jardin" and level < 2:
 			var ceil_mat: Material = _mat.yeso if level >= 0 else _mat.piedra
 			for fr in _split_holes(r, _hole.get(level + 1, [])):
-				box(Vector3(fr.size.x, 0.15, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y + WALL_H + 0.075, fr.position.y + fr.size.y * 0.5), ceil_mat, false, null, true)
+				box(Vector3(fr.size.x, 0.1, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y + WALL_H - 0.06, fr.position.y + fr.size.y * 0.5), ceil_mat, false, null, true)
 		elif level == 2:
 			box(Vector3(r.size.x, 0.15, r.size.y), Vector3(r.get_center().x, y + 3.3, r.get_center().y), _mat.madera, false)
 		if t == "jardin":
@@ -541,11 +573,22 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 			box(Vector3(l, hh, thick) if horiz else Vector3(thick, hh, l), pos, mat, true)
 	if level >= 0 and level < 2 and not is_door:
 		var off := inward * 0.03 if exterior else Vector3.ZERO
-		if not window:
-			var wz := Vector3(len, 1.1, thick + 0.05) if horiz else Vector3(thick + 0.05, 1.1, len)
-			box(wz, center + Vector3(0, 0.55, 0) + off, _mat.revestimiento, false, null, false)
-		var mz := Vector3(len, 0.14, thick + 0.14) if horiz else Vector3(thick + 0.14, 0.14, len)
-		box(mz, center + Vector3(0, h - 0.07, 0) + off, _mat.moldura, false, null, false)
+		var rev_h := 1.1 if not window else 0.86
+		var wz := Vector3(len, rev_h, thick + 0.05) if horiz else Vector3(thick + 0.05, rev_h, len)
+		box(wz, center + Vector3(0, rev_h * 0.5, 0) + off, _mat.revestimiento, false, null, false)
+		# paneles del revestimiento: montantes y travesaños en relieve
+		for k in 4:
+			var st := Vector3(0.07, rev_h - 0.3, thick + 0.085) if horiz else Vector3(thick + 0.085, rev_h - 0.3, 0.07)
+			box(st, a + along * (len * k / 3.0 + (0.035 if k == 0 else (-0.035 if k == 3 else 0.0))) + Vector3(0, 0.22 + (rev_h - 0.3) * 0.5, 0) + off, _mat.madera, false, null, false)
+		for hy in [0.25, rev_h - 0.08]:
+			var rl := Vector3(len, 0.04, thick + 0.085) if horiz else Vector3(thick + 0.085, 0.04, len)
+			box(rl, center + Vector3(0, hy, 0) + off, _mat.madera, false, null, false)
+		# zócalo, guardasilla, riel de cuadros y cornisa en dos escalones
+		for mol in [[0.11, 0.22, 0.1, "madera"], [rev_h + 0.03, 0.07, 0.12, "madera"], [h - 0.62, 0.045, 0.07, "madera"], [h - 0.2, 0.1, 0.16, "moldura"], [h - 0.085, 0.13, 0.3, "moldura"]]:
+			if window and float(mol[0]) > 0.5 and float(mol[0]) < 3.0:
+				continue
+			var ms := Vector3(len, float(mol[1]), thick + float(mol[2])) if horiz else Vector3(thick + float(mol[2]), float(mol[1]), len)
+			box(ms, center + Vector3(0, float(mol[0]), 0) + off, _mat[mol[3]], false, null, false)
 	if is_door:
 		_door(center, horiz, level, ids)
 	if window:
@@ -554,7 +597,7 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	var lit := _rng.randf() < 0.3
 	var glass := Vector3(1.6, 2.0, 0.04) if horiz else Vector3(0.04, 2.0, 1.6)
-	box(glass, c + Vector3(0, 1.9, 0), _mat.ventana_luz if lit else _mat.vidrio, true, null, false)
+	box(glass, c + Vector3(0, 1.9, 0), _mat.ventana_luz if lit else _mat.cristal, true, null, false)
 	var fr := Vector3(1.75, 0.1, thick + 0.1) if horiz else Vector3(thick + 0.1, 0.1, 1.75)
 	box(fr, c + Vector3(0, 0.9, 0), _mat.moldura, false, null, false)
 	box(fr, c + Vector3(0, 2.9, 0), _mat.moldura, false, null, false)
@@ -565,10 +608,57 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	# frontón sobre la ventana (por fuera)
 	var top := Vector3(1.9, 0.18, 0.3) if horiz else Vector3(0.3, 0.18, 1.9)
 	box(top, c + Vector3(0, 3.1, 0) - inward * (thick * 0.5 + 0.12), _mat.moldura, false, null, false)
+	# cortinas pesadas con pliegues, barra y galería
+	var eje: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	var dentro: Vector3 = c + inward * (thick * 0.5 + 0.13)
 	for s in [-1.0, 1.0]:
-		var side: Vector3 = (Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)) * s * 0.95
-		var cs := Vector3(0.35, 2.6, 0.08) if horiz else Vector3(0.08, 2.6, 0.35)
-		box(cs, c + side + inward * (thick * 0.5 + 0.08) + Vector3(0, 2.0, 0), _mat.tela_roja, false, null, false)
+		var mi := MeshInstance3D.new()
+		mi.mesh = _cortina_mesh(int(s))
+		mi.material_override = _mat.cortina
+		mi.position = dentro + eje * s * 0.82 + Vector3(0, 0.03, 0)
+		mi.rotation.y = 0.0 if horiz else PI * 0.5
+		_house.add_child(mi)
+	var barra := Vector3(2.5, 0.04, 0.04) if horiz else Vector3(0.04, 0.04, 2.5)
+	box(barra, dentro + Vector3(0, 3.16, 0), _mat.oro, false, null, false)
+	var gal := Vector3(2.4, 0.3, 0.14) if horiz else Vector3(0.14, 0.3, 2.4)
+	box(gal, dentro + Vector3(0, 3.05, 0), _mat.tela_roja, false, null, false)
+
+var _cortinas: Dictionary = {}
+## Malla de una cortina recogida (0,7 m × 3,1 m) con pliegues; lado -1 o 1 cambia hacia dónde se recoge.
+func _cortina_mesh(lado: int) -> ArrayMesh:
+	if _cortinas.has(lado):
+		return _cortinas[lado]
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var nx := 28
+	var ny := 10
+	var alto := 3.1
+	var pts: Array = []
+	for j in ny + 1:
+		var v := float(j) / ny
+		var fila: Array = []
+		# recogida con un lazo a 1,15 m: se estrecha ahí y cae abierta abajo
+		var hy := v * alto
+		var est: float = 1.0 - 0.45 * exp(-pow((hy - 1.15) / 0.45, 2.0))
+		for i in nx + 1:
+			var u := float(i) / nx
+			var x: float = (u - 0.5) * 0.7 * est + float(lado) * (1.0 - est) * 0.3
+			var z: float = sin(u * TAU * 4.5 + v * 1.3) * 0.05 * (0.55 + 0.45 * (1.0 - v)) + sin(u * 23.0) * 0.012
+			fila.append(Vector3(x, hy, z))
+		pts.append(fila)
+	for j in ny:
+		for i in nx:
+			var a: Vector3 = pts[j][i]
+			var b: Vector3 = pts[j][i + 1]
+			var cc: Vector3 = pts[j + 1][i]
+			var d: Vector3 = pts[j + 1][i + 1]
+			for vtx in [a, cc, b, b, cc, d]:
+				st.set_smooth_group(0)
+				st.add_vertex(vtx)
+	st.generate_normals()
+	var am := st.commit()
+	_cortinas[lado] = am
+	return am
 
 func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
 	var gap := 1.5
@@ -1040,8 +1130,7 @@ func _markers() -> void:
 					_fireplace(pos)
 				"radio":
 					radio_pos = pos + Vector3(0, 1.0, 0)
-					box(Vector3(1.1, 0.8, 0.6), pos + Vector3(0, 0.4, 0), _mat.madera)
-					box(Vector3(0.6, 0.4, 0.3), pos + Vector3(0, 1.0, 0), _mat.madera, false)
+					_fonografo(pos)
 				"caja":
 					musicbox_pos = pos + Vector3(0, 1.0, 0)
 					box(Vector3(0.8, 0.8, 0.5), pos + Vector3(0, 0.4, 0), _mat.madera)
@@ -1165,26 +1254,30 @@ func _lamp(pos: Vector3) -> void:
 	var n := Node3D.new()
 	n.position = Vector3(pos.x, top, pos.z)
 	add_child(n)
-	box(Vector3(0.03, 0.8, 0.03), Vector3(0, -0.4, 0), _mat.metal, false, n)
-	var ring := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = 0.42
-	tm.outer_radius = 0.48
-	ring.mesh = tm
-	ring.material_override = _mat.oro
-	ring.position.y = -0.95
-	n.add_child(ring)
 	var bm := _plain(Color(1, 0.9, 0.7), 0.4)
 	bm.emission_enabled = true
 	bm.emission = Color(1, 0.7, 0.4)
 	bm.emission_energy_multiplier = 0.0
-	for k in 6:
-		var a := TAU * k / 6.0
-		var cc := cyl(0.03, 0.03, 0.14, Vector3(cos(a) * 0.45, -0.85, sin(a) * 0.45), bm, n, 6)
-		cc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var real := _prop("pian_medieval_chandelier", Vector3(0, -1.75, 0), 0.0, 1.25, false, n)
+	if real:
+		real.set_meta("dyn", true)
+		for mi in real.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		box(Vector3(0.025, 0.7, 0.025), Vector3(0, -0.35, 0), _mat.metal, false, n, false)
+		cyl(0.3, 0.42, 0.05, Vector3(0, -0.025, 0), _mat.moldura, n, 20)
+		for k in 8:
+			var a := TAU * k / 8.0
+			var fl := cyl(0.006, 0.016, 0.06, Vector3(cos(a) * 0.46, -0.98, sin(a) * 0.46), bm, n, 5)
+			fl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	else:
+		box(Vector3(0.03, 0.8, 0.03), Vector3(0, -0.4, 0), _mat.metal, false, n)
+		for k in 6:
+			var a := TAU * k / 6.0
+			var cc := cyl(0.03, 0.03, 0.14, Vector3(cos(a) * 0.45, -0.85, sin(a) * 0.45), bm, n, 6)
+			cc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var light := OmniLight3D.new()
-	light.position.y = -1.0
-	light.light_color = Color(1.0, 0.7, 0.42)
+	light.position.y = -1.15
+	light.light_color = Color(1.0, 0.8, 0.56)
 	var r: Rect2 = rooms[id].rect if id >= 0 else Rect2(pos.x - 6, pos.z - 6, 12, 12)
 	light.omni_range = clampf(maxf(r.size.x, r.size.y) * 0.8, 8.0, 18.0)
 	light.omni_attenuation = 1.1
@@ -1234,14 +1327,20 @@ func _fireplace(pos: Vector3) -> void:
 	n.position = fpos
 	n.rotation.y = atan2(-back.x, -back.z)
 	add_child(n)
-	box(Vector3(2.2, 1.4, 0.7), Vector3(0, 0.7, 0), _mat.marmol, true, n)
-	box(Vector3(1.2, 0.9, 0.72), Vector3(0, 0.5, 0.02), _mat.oscuro, false, n)
-	box(Vector3(2.5, 0.12, 0.85), Vector3(0, 1.45, 0.05), _mat.marmol, false, n)
-	box(Vector3(1.0, 1.2, 0.06), Vector3(0, 2.3, -0.3), _mat.oro, false, n)
-	box(Vector3(0.85, 1.05, 0.07), Vector3(0, 2.3, -0.28), _mat.vidrio, false, n)
-	for k in 5:
-		var e := box(Vector3(0.08, 0.12, 0.08), Vector3(-0.3 + k * 0.15, 0.12, 0.15), _mat.fuego, false, n, false)
-		e.rotation.y = k
+	var real := _prop("pian_victorian_fire_place__free", Vector3(0, 0, -0.1), 0.0, 1.1, true, n)
+	_tenir(real, Color(0.72, 0.66, 0.62))
+	if real == null:
+		box(Vector3(2.2, 1.4, 0.7), Vector3(0, 0.7, 0), _mat.marmol, true, n)
+		box(Vector3(1.2, 0.9, 0.72), Vector3(0, 0.5, 0.02), _mat.oscuro, false, n)
+		box(Vector3(2.5, 0.12, 0.85), Vector3(0, 1.45, 0.05), _mat.marmol, false, n)
+	# retrato grande sobre la chimenea
+	if _prop("fancy_picture_frame_02", Vector3(0, 2.5, -0.3), 0.0, 1.7, false, n) == null:
+		box(Vector3(1.0, 1.2, 0.06), Vector3(0, 2.3, -0.3), _mat.oro, false, n)
+	for k in 3:
+		var lg := cyl(0.055, 0.06, 0.55, Vector3(-0.08 + k * 0.08, 0.1 + (0.07 if k == 1 else 0.0), 0.12), _mat.corteza, n, 8)
+		lg.rotation = Vector3(0, 0.3 * (k - 1), PI * 0.5)
+	box(Vector3(0.6, 0.03, 0.3), Vector3(0, 0.05, 0.12), _mat.fuego, false, n, false)
+	n.add_child(_llamas())
 	var l := OmniLight3D.new()
 	l.light_color = Color(1.0, 0.45, 0.15)
 	l.omni_range = 8.0
@@ -1250,6 +1349,48 @@ func _fireplace(pos: Vector3) -> void:
 	l.set_meta("e", 1.3)
 	n.add_child(l)
 	fires.append(l)
+
+## Llamas de chimenea con partículas aditivas.
+func _llamas() -> CPUParticles3D:
+	var ps := CPUParticles3D.new()
+	ps.amount = 70
+	ps.lifetime = 0.7
+	ps.position = Vector3(0, 0.14, 0.12)
+	ps.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	ps.emission_box_extents = Vector3(0.24, 0.02, 0.08)
+	ps.direction = Vector3(0, 1, 0)
+	ps.spread = 12.0
+	ps.gravity = Vector3(0, 0.6, 0)
+	ps.initial_velocity_min = 0.25
+	ps.initial_velocity_max = 0.55
+	ps.scale_amount_min = 0.6
+	ps.scale_amount_max = 1.2
+	var cv := Curve.new()
+	cv.add_point(Vector2(0, 0.5)); cv.add_point(Vector2(0.3, 1.0)); cv.add_point(Vector2(1, 0.0))
+	ps.scale_amount_curve = cv
+	var gr := Gradient.new()
+	gr.set_color(0, Color(1.0, 0.85, 0.4, 1.0))
+	gr.set_color(1, Color(0.8, 0.15, 0.02, 0.0))
+	ps.color_ramp = gr
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.16, 0.22)
+	var fm := StandardMaterial3D.new()
+	fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	fm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	fm.vertex_color_use_as_albedo = true
+	fm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	fm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	var tex := GradientTexture2D.new()
+	var g2 := Gradient.new()
+	g2.set_color(0, Color(1, 1, 1, 1)); g2.set_color(1, Color(1, 1, 1, 0))
+	tex.gradient = g2
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.6); tex.fill_to = Vector2(0.5, 0.05)
+	fm.albedo_texture = tex
+	qm.material = fm
+	ps.mesh = qm
+	ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return ps
 
 func _salt_circle(pos: Vector3) -> void:
 	var ring := MeshInstance3D.new()
@@ -1279,6 +1420,32 @@ func _salt_circle(pos: Vector3) -> void:
 	fires.append(l)
 	box(Vector3(1.2, 0.5, 2.2), pos + Vector3(0, 0.25, -6.0), _mat.metal)
 	box(Vector3(1.1, 0.12, 2.0), pos + Vector3(0, 0.56, -6.0), _mat.sabana, false)
+
+## Fonógrafo de bocina sobre un aparador (hacia 1900): es la «radio» que se enciende sola.
+func _fonografo(pos: Vector3) -> void:
+	var n := Node3D.new()
+	n.position = pos
+	add_child(n)
+	var mueble := _prop("painted_wooden_cabinet", Vector3.ZERO, 0.0, 0.85, true, n)
+	_tenir(mueble, Color(0.42, 0.3, 0.22))
+	var top := 1.0 if mueble else 0.8
+	if mueble == null:
+		box(Vector3(1.0, 0.8, 0.55), Vector3(0, 0.4, 0), _mat.madera, true, n)
+	box(Vector3(0.34, 0.16, 0.26), Vector3(0, top + 0.08, 0), _mat.madera, false, n)
+	cyl(0.12, 0.12, 0.012, Vector3(0, top + 0.166, 0), _mat.oscuro, n, 24)
+	box(Vector3(0.03, 0.03, 0.2), Vector3(0.1, top + 0.2, -0.05), _mat.oro, false, n)
+	var laton := _plain(Color(0.5, 0.36, 0.17), 0.45, 0.9)
+	var horn := cyl(0.3, 0.025, 0.62, Vector3.ZERO, laton, n, 24)
+	horn.position = Vector3(0.12, top + 0.48, 0.12)
+	horn.rotation = Vector3(0.75, 0.0, -0.55)
+	var aro := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.28
+	tm.outer_radius = 0.31
+	aro.mesh = tm
+	aro.material_override = laton
+	horn.add_child(aro)
+	aro.position.y = 0.31
 
 func _piano(pos: Vector3) -> void:
 	box(Vector3(1.5, 1.0, 2.0), pos + Vector3(0, 0.5, 0), _mat.oscuro)
@@ -1347,6 +1514,16 @@ func _decorate() -> void:
 		if t in ["tunel", "roca"]:
 			_tunnel_props(r)
 			continue
+		if name == "Salón con chimenea":
+			# sala de muestra: alfombra bajo los sofás y retratos; el resto lo pone ZarekDecorado
+			_alfombra(Vector3(rect.position.x + 3.5, y, rect.position.y + 3.6), 4.0, 5.2, 0.0)
+			_alfombra(Vector3(rect.position.x + 9.2, y, rect.position.y + 2.9), 2.4, 3.2, PI * 0.5)
+			_artesonado(r)
+			_polvo(r)
+			_oclusion(r)
+			for vz in [1.2, 6.0]:
+				_luz_luna(Vector3(rect.position.x, y, rect.position.y + vz), Vector3(1, 0, -0.15).normalized())
+			continue
 		if t in ["sala", "dormitorio", "epicentro"] and rect.size.x > 9 and rect.size.y > 9:
 			box(Vector3(rect.size.x * 0.55, 0.02, rect.size.y * 0.55), c + Vector3(0, 0.01, 0), _mat.tela_roja, false, null, false)
 			box(Vector3(rect.size.x * 0.5, 0.025, rect.size.y * 0.5), c + Vector3(0, 0.012, 0), _mat.alfombra, false, null, false)
@@ -1412,10 +1589,10 @@ func _decorate() -> void:
 				_prop("marble_bust_01", Vector3(rect.end.x - 0.6, y + 0.55, rect.position.y + 0.6), PI * 0.8, 1.0, false)
 		if t in ["sala", "dormitorio", "pasillo"] and level_of(y) >= 0:
 			_portraits(r)
-		if t in ["sala", "dormitorio"] and rect.size.x > 6 and not ("baile" in lname):
+		if t in ["sala", "dormitorio"] and rect.size.x > 6 and not ("baile" in lname) and not ("vestíbulo" in lname):
 			for k in 2:
 				var sp := Vector3(_rng.randf_range(rect.position.x + 2, rect.end.x - 2), y, _rng.randf_range(rect.position.y + 2, rect.end.y - 2))
-				if door_near(sp, 2.5).is_empty() and portal_near(sp, 2.5).is_empty():
+				if door_near(sp, 3.6).is_empty() and portal_near(sp, 2.5).is_empty() and not _sobre_escalera(sp, 1.2) and sp.distance_to(cell_to_world("baja", 9.0, 11.2)) > 3.0:
 					var cubierto := _prop(["ArmChair_01", "Sofa_01", "GothicCommode_01"][_rng.randi_range(0, 2)], sp, _rng.randf() * TAU)
 					if cubierto:
 						# sábana polvorienta encima del mueble
@@ -1446,7 +1623,7 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 	if ps == null:
 		return null
 	# nada que choque puede quedar sobre una escalera o su rellano (bloquearía el paso)
-	if choca and _sobre_escalera(p, _prop_size(nombre).length() * 0.5):
+	if choca and _sobre_escalera(p, maxf(_prop_size(nombre).x, _prop_size(nombre).z) * 0.5):
 		return null
 	var n: Node3D = ps.instantiate()
 	n.position = p
@@ -1455,6 +1632,9 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 	(parent if parent else _house).add_child(n)
 	for mi in n.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	if choca and _props_info.has(nombre) and lvl_y(level_of(p.y + 0.3)) + 0.3 > p.y:
+		var tt: Array = _props_info[nombre].tam
+		n.add_child(_sombra(Vector2(float(tt[0]), float(tt[2])) * 1.35))
 	if choca and _props_info.has(nombre):
 		var t: Array = _props_info[nombre].tam
 		var sb := StaticBody3D.new()
@@ -1602,6 +1782,142 @@ func _portraits(r: Dictionary) -> void:
 			box(size, p, _mat.oro, false, null, false)
 			var inner := size * (Vector3(0.82, 0.85, 1.4) if size.x > 0.5 else Vector3(1.4, 0.85, 0.82))
 			box(inner, p, face, false, null, false)
+
+## Alfombra persa (plano con textura) de sx × sz metros.
+func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
+	var mi := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(sx, sz)
+	mi.mesh = pm
+	mi.material_override = _mat.persa
+	mi.position = c + Vector3(0, 0.012, 0)
+	mi.rotation.y = yaw
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_meta("dyn", true)
+	_house.add_child(mi)
+
+## Techo artesonado: vigas de madera oscura en retícula y rosetón de yeso sobre la araña.
+func _artesonado(r: Dictionary) -> void:
+	var rect: Rect2 = r.rect
+	var top: float = float(r.y) + WALL_H - 0.11
+	var nx := int(round(rect.size.x / 2.4))
+	var nz := int(round(rect.size.y / 2.4))
+	for i in range(1, nx):
+		box(Vector3(0.2, 0.2, rect.size.y - 0.3), Vector3(rect.position.x + rect.size.x * i / nx, top - 0.1, rect.get_center().y), _mat.madera, false, null, false)
+	for j in range(1, nz):
+		box(Vector3(rect.size.x - 0.3, 0.16, 0.16), Vector3(rect.get_center().x, top - 0.08, rect.position.y + rect.size.y * j / nz), _mat.madera, false, null, false)
+
+## Polvo en suspensión que se ve al cruzar la luz.
+func _polvo(r: Dictionary) -> void:
+	var rect: Rect2 = r.rect
+	var ps := CPUParticles3D.new()
+	ps.amount = 220
+	ps.lifetime = 14.0
+	ps.preprocess = 14.0
+	ps.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	ps.emission_box_extents = Vector3(rect.size.x * 0.5 - 0.3, 1.5, rect.size.y * 0.5 - 0.3)
+	ps.gravity = Vector3(0, -0.004, 0)
+	ps.direction = Vector3(1, 0.2, 0.3)
+	ps.spread = 180.0
+	ps.initial_velocity_min = 0.01
+	ps.initial_velocity_max = 0.05
+	var qm := QuadMesh.new()
+	qm.size = Vector2(0.009, 0.009)
+	var pmat := StandardMaterial3D.new()
+	pmat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	pmat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	pmat.albedo_color = Color(1.0, 0.95, 0.85, 0.3)
+	pmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	pmat.roughness = 1.0
+	qm.material = pmat
+	ps.mesh = qm
+	ps.position = Vector3(rect.get_center().x, float(r.y) + 1.7, rect.get_center().y)
+	ps.set_meta("dyn", true)
+	_house.add_child(ps)
+
+var _sombra_mat: StandardMaterial3D
+## Mancha de sombra suave en el suelo (oclusión de contacto barata, sirve en móvil).
+func _sombra(tam: Vector2) -> MeshInstance3D:
+	if _sombra_mat == null:
+		_sombra_mat = StandardMaterial3D.new()
+		_sombra_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_sombra_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_sombra_mat.albedo_color = Color(0, 0, 0, 0.72)
+		var tex := GradientTexture2D.new()
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1)); g.set_color(1, Color(1, 1, 1, 0))
+		g.add_point(0.45, Color(1, 1, 1, 0.75))
+		tex.gradient = g
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5); tex.fill_to = Vector2(0.5, 0.0)
+		_sombra_mat.albedo_texture = tex
+	var mi := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = tam
+	mi.mesh = pm
+	mi.material_override = _sombra_mat
+	mi.position.y = 0.018
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_meta("dyn", true)
+	return mi
+
+## Oscurece las uniones pared-suelo y pared-techo (las esquinas reciben menos luz en la vida real).
+func _oclusion(r: Dictionary) -> void:
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 1)); g.set_color(1, Color(1, 1, 1, 0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill_from = Vector2(0, 0); tex.fill_to = Vector2(0, 1)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0, 0, 0, 0.55)
+	mat.albedo_texture = tex
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var lados := [[Vector2(rect.position.x, rect.get_center().y), rect.size.y, -PI * 0.5], [Vector2(rect.end.x, rect.get_center().y), rect.size.y, PI * 0.5],
+		[Vector2(rect.get_center().x, rect.position.y), rect.size.x, 0.0], [Vector2(rect.get_center().x, rect.end.y), rect.size.x, PI]]
+	for l in lados:
+		for alto in [[0.02, 0.7, false], [WALL_H - 0.13, 0.9, true]]:
+			var mi := MeshInstance3D.new()
+			var pm := PlaneMesh.new()
+			pm.size = Vector2(float(l[1]), float(alto[1]))
+			pm.flip_faces = alto[2]
+			mi.mesh = pm
+			mi.material_override = mat
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			var c: Vector2 = l[0]
+			var dir := Vector2(0, 1).rotated(-float(l[2]))
+			var pos := c + dir * (0.15 + float(alto[1]) * 0.5)
+			mi.position = Vector3(pos.x, y + float(alto[0]), pos.y)
+			mi.rotation.y = float(l[2])
+			mi.set_meta("dyn", true)
+			_house.add_child(mi)
+
+## Haz de luz de luna que entra por una ventana (solo en las salas de muestra: cada luz cuesta en móvil).
+func _luz_luna(p: Vector3, dentro: Vector3) -> void:
+	var sl := SpotLight3D.new()
+	sl.light_color = Color(0.55, 0.66, 1.0)
+	sl.light_energy = 2.2
+	sl.spot_range = 9.0
+	sl.spot_angle = 32.0
+	sl.spot_attenuation = 0.6
+	sl.shadow_enabled = true
+	_house.add_child(sl)
+	sl.look_at_from_position(p - dentro * 0.6 + Vector3(0, 3.6, 0), p + dentro * 3.2, Vector3.UP)
+
+func _tenir(n: Node3D, tinte: Color) -> void:
+	if n == null:
+		return
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var mm: Mesh = (mi as MeshInstance3D).mesh
+		for si in mm.get_surface_count():
+			var mat := mm.surface_get_material(si)
+			if mat is BaseMaterial3D:
+				var d: BaseMaterial3D = mat.duplicate()
+				d.albedo_color = d.albedo_color * tinte
+				(mi as MeshInstance3D).set_surface_override_material(si, d)
 
 func _crates(r: Dictionary) -> void:
 	var rect: Rect2 = r.rect

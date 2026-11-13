@@ -23,8 +23,9 @@ const SALA := {
 	"baile": {"pared": ["pian_candelabra", "pian_medieval_candelabra__free", "vict_victorian_lounge_sofa", "pian_grandfather_clock"], "centro": ["pian_old_wooden_grand_piano"], "techo": ["pian_medieval_chandelier", "pian_medieval_chandelier"]},
 	"comedor": {"pared": ["vict_antique_wardrobe__free", "pian_victorian_fire_place___fre", "pian_candelabra"], "centro": ["vict_table_and_chairs"], "techo": ["pian_chandelier"], "encima": ["coci_samovar", "coci_old_teapot", "vict_cup___saucer", "coti_wine_bottle", "coti_three_candles_and_a_golde", "coti_bread_in_basket"]},
 	"cocina": {"pared": ["coci_old_kitchen_cabinets", "coci_old_gas_stove_and_oven", "coci_vintage_wooden_cabinets", "coci_hanging_kitchen_cupboards", "bano_washbasin"], "centro": ["vict_table"], "encima": ["coci_vintage_kettle", "coci_teapot_old_2_100517", "coci_basic_bowl", "coci_wooden_cutting_board", "coci_simple_cutting_board", "coci_sliced_bread", "coci_old_spoon", "coti_glass_bottle", "coti_basic_bottle", "coci_pantry_shelf"]},
+	"servicio": {"pared": ["coci_old_kitchen_shelf", "terr_old_and_dusty_multi_crat", "bano_washbasin", "vict_antique_wardrobe", "coci_vintage_wooden_cabinets"], "centro": ["vict_table", "vict_antique_chair"], "encima": ["coti_three_candles_and_a_golde", "coti_glass_bottle", "coci_basic_bowl", "coti_bread_in_basket", "coti_shabby_books"], "suelo": ["vintage_suitcase", "terr_old_and_dusty_multi_crat"]},
 	"despensa": {"pared": ["coci_old_kitchen_shelf", "coci_vintage_wooden_cabinets", "terr_old_and_dusty_multi_crat"], "encima": ["coti_glass_bottle", "coti_small_bottle", "coti_wine_bottle", "coci_basic_bowl", "coci_pantry_shelf"], "suelo": ["terr_old_and_dusty_multi_crat"]},
-	"biblioteca": {"pared": ["vict_antique_wooden_bookcase__", "terr_dusty_bookshelfs", "coti_chocolate_beech_bookshel", "vict_antique_wooden_bookcase__"], "centro": ["vict_antique_wooden_desk", "vict_antique_chair", "coti_celestial_globe", "vict_victorian_armchair"], "techo": ["pian_chandelier"], "encima": ["coti_typewriter", "coti_occult_books", "vict_old_books___free_download", "coti_three_candles_and_a_golde", "coti_vintage_globe", "vict_key"], "suelo": ["coti_12_old_books", "coti_simple_bookstack"]},
+	"biblioteca": {"pared": ["vict_antique_wooden_bookcase__", "terr_dusty_bookshelfs", "coti_chocolate_beech_bookshel", "vict_antique_wooden_bookcase__"], "centro": ["vict_antique_wooden_desk", "vict_antique_chair", "coti_celestial_globe", "vict_victorian_armchair"], "techo": ["pian_chandelier"], "encima": ["coti_typewriter", "coti_occult_books", "vict_old_books___free_download", "coti_three_candles_and_a_golde", "coti_celestial_globe", "vict_key"], "suelo": ["coti_12_old_books", "coti_simple_bookstack"]},
 	"estudio": {"pared": ["vict_antique_iron_safe", "vict_antique_wooden_bookcase__", "vict_grandfather_clock"], "centro": ["vict_antique_desk", "vict_antique_chair"], "encima": ["coti_typewriter", "coti_pocket_watch", "coti_joachim_liebermann_s_pock", "vict_old_books___free_download", "coti_three_candles_and_a_golde"], "suelo": ["coti_shabby_books"]},
 	"billar": {"pared": ["vict_antique_wooden_bookcase__", "pian_victorian_fire_place___fre"], "centro": ["vict_victorian_armchair", "vict_antique_chair"], "encima": ["coti_wine_bottle", "coti_glass_bottle"]},
 	"dormitorio": {"pared": ["vict_antique_wardrobe", "vict_dusty_antique_mirror___fre", "vict_antique_desk"], "centro": ["vict_antique_chair"], "encima": ["coti_three_candles_and_a_golde", "vict_old_books___free_download", "coti_pocket_watch", "vict_cup___saucer"], "suelo": ["vintage_suitcase"]},
@@ -68,7 +69,7 @@ func _tipo(r: Dictionary) -> String:
 			["antecocina", "despensa"], ["cocina", "cocina"], ["despensa", "despensa"], ["biblioteca", "biblioteca"], ["lectura", "biblioteca"],
 			["estudio", "estudio"], ["billar", "billar"], ["tocador", "tocador"], ["niños", "ninos"], ["costura", "costura"], ["plancha", "costura"],
 			["baño", "bano"], ["ático", "atico"], ["rincón", "atico"], ["cava", "cava"], ["calderas", "calderas"], ["archivo", "archivo"],
-			["galería de retratos", "pasillo"], ["pasillo", "pasillo"], ["guardarropa", "dormitorio"], ["galería de servicio", "sotano"]]:
+			["galería de retratos", "pasillo"], ["pasillo", "pasillo"], ["guardarropa", "dormitorio"], ["galería de servicio", "sotano"], ["cuarto de servicio", "servicio"], ["escalera de servicio", "servicio"]]:
 		if k[0] in n:
 			return k[1]
 	match String(r.type):
@@ -76,6 +77,7 @@ func _tipo(r: Dictionary) -> String:
 		"sotano": return "sotano"
 		"pasillo": return "pasillo"
 		"sala": return "salon"
+		"servicio": return "servicio"
 	return ""
 
 func _libre(c: Vector3, t: Vector3, rect: Rect2) -> bool:
@@ -156,7 +158,148 @@ func _reservar_pasos(r: Dictionary) -> void:
 		var mx := Vector2(maxf(a.x, cen.x), maxf(a.y, cen.y))
 		_ocupado.append(Rect2(mn, mx - mn).grow(0.75))
 
+## Coloca un objeto en coordenadas locales de la sala (x hacia el este, z hacia el sur, en metros desde la esquina NO).
+func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala := 1.0, alto := 0.0, choca := true) -> Node3D:
+	var rect: Rect2 = r.rect
+	var t := m._prop_size(_real(nombre)) * escala
+	var ext := t if absf(sin(yaw)) < 0.7 else Vector3(t.z, t.y, t.x)
+	# nada puede meterse dentro de la pared: se empuja hasta la cara interior (las exteriores son más gruesas)
+	if alto < ZarekMansion.WALL_H - 1.2:
+		var f := _caras(r)
+		x = clampf(x, f[0] + ext.x * 0.5 + 0.01, rect.size.x - f[1] - ext.x * 0.5 - 0.01) if ext.x < rect.size.x * 0.5 else x
+		z = clampf(z, f[2] + ext.z * 0.5 + 0.01, rect.size.y - f[3] - ext.z * 0.5 - 0.01) if ext.z < rect.size.y * 0.5 else z
+	var p := Vector3(rect.position.x + x, float(r.y) + alto, rect.position.y + z)
+	var n := m._prop(_real(nombre), p, yaw, escala, choca)
+	if n and choca:
+		_ocupar(p, ext)
+	return n
+
+var _caras_cache: Dictionary = {}
+## Distancia de cada borde de la sala a la cara interior de su pared [oeste, este, norte, sur]
+## (+ zócalo/revestimiento): 0,25 en paredes exteriores, 0,155 en las interiores.
+func _caras(r: Dictionary) -> Array:
+	if _caras_cache.has(r.id):
+		return _caras_cache[r.id]
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	var c := rect.get_center()
+	var prueba := [Vector3(rect.position.x - 0.6, y, c.y), Vector3(rect.end.x + 0.6, y, c.y), Vector3(c.x, y, rect.position.y - 0.6), Vector3(c.x, y, rect.end.y + 0.6)]
+	var out: Array = []
+	for q in prueba:
+		out.append(0.155 if m.room_at(q) >= 0 else 0.25)
+	_caras_cache[r.id] = out
+	return out
+
+## Oscurece y ensucia los materiales de un objeto (telas claras que llevan décadas cogiendo polvo).
+func _ensuciar(n: Node3D, tinte: Color) -> void:
+	if n == null:
+		return
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var mm: Mesh = (mi as MeshInstance3D).mesh
+		for si in mm.get_surface_count():
+			var mat := mm.surface_get_material(si)
+			if mat is BaseMaterial3D:
+				var d: BaseMaterial3D = mat.duplicate()
+				d.albedo_color = d.albedo_color * tinte
+				(mi as MeshInstance3D).set_surface_override_material(si, d)
+
+## Cuadro o espejo colgado (origen en el centro del marco) en coordenadas locales de la sala.
+func _cuadro(r: Dictionary, nombre: String, x: float, z: float, yaw: float, escala: float, alto := 2.25) -> void:
+	var f := _caras(r)
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	var dmin := minf(minf(x, W - x), minf(z, D - z))
+	if dmin == x: x = f[0] + 0.03
+	elif dmin == W - x: x = W - f[1] - 0.03
+	elif dmin == z: z = f[2] + 0.03
+	else: z = D - f[3] - 0.03
+	var rect: Rect2 = r.rect
+	m._prop(_real(nombre), Vector3(rect.position.x + x, float(r.y) + alto, rect.position.y + z), yaw, escala, false)
+
+## Salón con chimenea: sala de muestra montada a mano, como una sala real abandonada de golpe en 1908.
+## Local: x al este, z al sur. Chimenea en la pared oeste (z 3,6) entre dos ventanas (z 1,2 y 6,0);
+## puertas al norte (x 4,8-7,2) y al este (z 4,8-7,2); armario-escondite en la pared sur (x≈10,5).
+## Giros: los modelos que miran a +Z usan N=PI, S=0, E=PI/2, O=-PI/2; los que miran a +X (sofás vict_, pianos) usan O=PI, E=0, N=PI/2, S=-PI/2.
+func _salon_chimenea(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	# --- repisa de la chimenea (1,54 m) ---
+	_en(r, "mantel_clock_01", 0.42, 3.6, PI * 0.5, 1.0, 1.55, false)
+	_en(r, "wooden_candlestick", 0.42, 3.05, 0.0, 1.0, 1.55, false)
+	_en(r, "wooden_candlestick", 0.42, 4.15, 0.0, 1.0, 1.55, false)
+	_en(r, "antique_ceramic_vase_01", 0.4, 4.42, 0.0, 0.6, 1.55, false)
+	# --- tertulia frente al fuego, sobre la alfombra grande ---
+	_en(r, "vict_victorian_two_seat_sofa", 4.5, 3.6, PI)
+	_en(r, "vict_victorian_coffee_table", 3.05, 3.6, 0.0)
+	_en(r, "vict_victorian_armchair", 2.5, 1.75, 0.29)
+	_en(r, "vict_victorian_armchair", 2.5, 5.45, 2.86)
+	_en(r, "Ottoman_01", 1.75, 5.0, 0.4, 0.8)
+	_en(r, "coci_samovar", 3.05, 3.2, 0.5, 0.7, 0.5, false)
+	_en(r, "vict_cup___saucer", 2.95, 3.7, 0.0, 1.0, 0.5, false)
+	_en(r, "vict_cup___saucer", 3.15, 3.95, 1.2, 1.0, 0.5, false)
+	_en(r, "book_encyclopedia_set_01", 3.1, 4.0, 1.4, 0.7, 0.5, false)
+	_en(r, "coti_occult_books", 5.4, 4.6, 0.8, 0.8, 0.0, false)
+	# --- pared sur: librería doble, reloj de pie y escritorio ---
+	_en(r, "vict_antique_wooden_bookcase___ga", 1.75, D - 0.24, PI)
+	_en(r, "vict_antique_wooden_bookcase___ga", 3.65, D - 0.24, PI)
+	_en(r, "pian_grandfather_clock", 5.25, D - 0.33, PI)
+	_en(r, "vict_antique_desk", 7.3, D - 0.42, PI)
+	_en(r, "dining_chair_02", 7.3, D - 1.15, 0.15)
+	_en(r, "vintage_oil_lamp", 7.75, D - 0.35, 0.0, 0.55, 0.8, false)
+	_en(r, "vict_old_books___free_download", 6.95, D - 0.35, 0.3, 0.6, 0.8, false)
+	_en(r, "coti_pocket_watch", 7.35, D - 0.55, 0.9, 1.0, 0.8, false)
+	_en(r, "coti_celestial_globe", 8.75, D - 0.65, 0.4)
+	_cuadro(r, "fancy_picture_frame_01", 7.3, D - 0.09, PI, 1.7, 2.2)
+	# --- pared norte, lado oeste: consola con espejo ---
+	_en(r, "ClassicConsole_01", 2.7, 0.36, 0.0)
+	_en(r, "vict_ornate_mirror", 2.7, 0.1, 0.0, 0.62, 1.3, false)
+	_en(r, "coti_three_candles_and_a_golden_c", 2.2, 0.36, 0.0, 1.0, 0.95, false)
+	_en(r, "marble_bust_01", 3.2, 0.36, 0.2, 0.7, 0.95, false)
+	_en(r, "coti_wine_bottle", 2.6, 0.3, 0.0, 1.0, 0.95, false)
+	_en(r, "coti_glass_bottle", 2.78, 0.4, 0.0, 1.0, 0.95, false)
+	_en(r, "Rockingchair_01", 1.15, 1.25, 0.9)
+	_cuadro(r, "fancy_picture_frame_02", 4.25, 0.09, 0.0, 0.9, 2.0)
+	_cuadro(r, "fancy_picture_frame_02", 1.2, 0.09, 0.0, 0.9, 2.0)
+	# --- pared norte, lado este: piano vertical con banqueta y candelabro de pie ---
+	_en(r, "pian_dusty_piano", 9.2, 0.55, 0.0)
+	_en(r, "pian_medieval_candelabra__free_do", 10.9, 0.55, 0.0)
+	_cuadro(r, "fancy_picture_frame_02", 9.2, 0.09, 0.0, 1.5, 2.45)
+	# --- rincón de música: sofá claro y butaca mirando al piano, sobre la alfombra pequeña ---
+	_ensuciar(_en(r, "Sofa_01", 9.2, 3.9, PI), Color(0.72, 0.64, 0.55))
+	_ensuciar(_en(r, "ArmChair_01", 7.7, 2.7, 2.1), Color(0.72, 0.64, 0.55))
+	# --- rincón de juego (suroeste): mesita con ajedrez a medio jugar y dos sillas ---
+	_en(r, "vict_small_antique_table_asset", 2.9, 7.5, 0.3, 0.75)
+	_en(r, "chess_set", 2.9, 7.5, 0.3, 0.75, 0.29, false)
+	_en(r, "vict_antique_chair", 2.9, 6.75, PI + 0.3)
+	_en(r, "vict_antique_chair", 2.75, 8.3, 0.2)
+	_en(r, "wooden_lantern_01", 3.2, 7.25, 0.0, 0.6, 0.29, false)
+	# --- pared este (al norte de la puerta): diván y paisaje ---
+	_en(r, "vict_victorian_lounge_sofa", W - 0.42, 2.4, PI)
+	_cuadro(r, "fancy_picture_frame_01", W - 0.09, 2.4, -PI * 0.5, 2.1, 2.3)
+	# --- pared este (al sur de la puerta): baúl de viaje ---
+	_en(r, "treasure_chest", W - 0.4, 7.75, -PI * 0.5)
+	# --- rincón suroeste: cómoda con busto junto a la ventana ---
+	_en(r, "GothicCommode_01", 0.42, 8.3, PI * 0.5)
+	_en(r, "terr_creepy_lady_bust_statue_scan", 0.42, 8.55, PI * 0.5, 0.75, 1.21, false)
+	_en(r, "wooden_candlestick", 0.42, 7.95, 0.0, 1.0, 1.21, false)
+	_cuadro(r, "ornate_mirror_01", 0.09, 8.3, PI * 0.5, 1.2, 2.2)
+	# --- abandono: silla volcada y libros por el suelo ---
+	var silla := _en(r, "vict_antique_chair", 7.9, 7.3, 2.2)
+	if silla:
+		silla.rotation.x = PI * 0.5
+		silla.position.y += 0.22
+	_en(r, "coti_12_old_books", 6.3, 7.9, 0.7, 1.0, 0.0, false)
+	_en(r, "coti_shabby_books", 9.6, 7.4, 1.9, 1.0, 0.0, false)
+	_en(r, "coti_simple_bookstack", 1.2, 9.0 - 0.75, 0.3, 0.8, 0.0, false)
+	# --- telarañas en las esquinas altas ---
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
 func vestir(r: Dictionary) -> void:
+	if String(r.name) == "Salón con chimenea":
+		_reservar_pasos(r)
+		_salon_chimenea(r)
+		return
 	var tipo := _tipo(r)
 	if tipo == "" or not SALA.has(tipo):
 		return
@@ -165,17 +308,20 @@ func vestir(r: Dictionary) -> void:
 	var rect: Rect2 = r.rect
 	var area := rect.size.x * rect.size.y
 	var superficies: Array = []
-	var veces := clampi(int(area / 18.0), 1, 4)
+	var veces := clampi(int(area / 14.0), 2, 5)
 	for v in veces:
 		for nombre in c.get("pared", []):
 			if v > 0 and rng.randf() < 0.5:
 				continue
 			var res := _contra_pared(nombre, r)
 			superficies.append(res)
-	for nombre in c.get("centro", []):
-		superficies.append(_en_el_centro(nombre, r))
+	for v in 2:
+		for nombre in c.get("centro", []):
+			if v > 0 and rng.randf() < 0.5:
+				continue
+			superficies.append(_en_el_centro(nombre, r))
 	for s in superficies:
-		_encima(s, c.get("encima", []), rng.randi_range(1, 3))
+		_encima(s, c.get("encima", []), rng.randi_range(2, 4))
 	for nombre in c.get("suelo", []):
 		for k in rng.randi_range(1, 2):
 			_en_el_centro(nombre, r)

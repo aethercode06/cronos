@@ -836,7 +836,7 @@ func _take_seal(s: Dictionary) -> void:
 			if elena.state == ZarekElena.S.DORMANT:
 				elena.timer = minf(elena.timer, 4.0)
 		2:
-			message("Segundo sello.\nLa radio se encendió sola. Elena ya no le teme a la luz.", 4.5)
+			message("Segundo sello.\nEl fonógrafo se encendió solo. Elena ya no le teme a la luz.", 4.5)
 			snd_radio.play()
 			for l in mansion.lamps:
 				mansion.flicker_lamp(l, 1.5)

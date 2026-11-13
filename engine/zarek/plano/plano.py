@@ -85,7 +85,7 @@ PLANTAS = {
     "marcas": [("escalera", 9, 8.2, "Gran escalera"), ("escalera", 16.5, 6.8, "Servicio ↑"), ("escalera", 16.5, 10.8, "Sótano ↓"),
                ("escalera", 1.5, 10.5, ""), ("pasadizo", 5.0, 3.5, "Pasadizo secreto"),
                ("sello", 9, 1.5, "Sello 1"), ("piano", 7.5, 1.0, "Piano"), ("piano", 5.0, 10.5, ""),
-               ("armario", 0.5, 2.0, ""), ("armario", 14.5, 2.0, ""), ("armario", 0.5, 7.0, ""), ("armario", 12.0, 11.5, ""),
+               ("armario", 0.5, 2.0, ""), ("armario", 14.5, 2.0, ""), ("armario", 4.4, 8.6, ""), ("armario", 12.0, 11.5, ""),
                ("armario", 17.5, 2.5, ""), ("lampara", 2.5, 7.0, ""), ("lampara", 9.0, 2.0, ""), ("lampara", 13.0, 7.0, ""),
                ("lampara", 9.0, 6.0, ""), ("lampara", 2.0, 2.0, ""),
                ("radio", 4.0, 6.0, "Radio"), ("chimenea", 0.4, 6.5, "Chimenea"), ("chimenea", 2.0, 0.35, "Chimenea"),

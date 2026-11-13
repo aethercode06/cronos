@@ -372,6 +372,10 @@ func set_state(s: S, t := 0.0) -> void:
 	timer = t
 	path.clear()
 	repath = 0.0
+	if s == S.CHASE and player:
+		# al lanzarse a por ti sabe dónde estás (no sigue un rastro viejo)
+		last_seen = player.global_position
+		lost_t = 0.0
 	visible = s != S.DORMANT
 	if _snd_loop:
 		if s == S.CHASE:
