@@ -285,7 +285,7 @@ func _papel(img: Image, tinte: Color) -> StandardMaterial3D:
 	return m
 
 func _materials() -> void:
-	var papers := [Color(0.36, 0.13, 0.13), Color(0.16, 0.27, 0.2), Color(0.2, 0.23, 0.33), Color(0.48, 0.4, 0.27)]
+	var papers := [Color(0.33, 0.15, 0.14), Color(0.17, 0.24, 0.2), Color(0.2, 0.22, 0.28), Color(0.44, 0.38, 0.28)]
 	for i in papers.size():
 		_mat["papel%d" % i] = _papel(_rayas(papers[i], 30 + i), Color(1.15, 1.15, 1.15))
 	_mat["cortina"] = _pbr("Fabric085", 1.6, Color(0.42, 0.1, 0.11), 1.0, 1.4)
@@ -300,10 +300,11 @@ func _materials() -> void:
 	persa.roughness = 1.0
 	_mat["persa"] = persa
 	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.5, 0.36, 0.27), 0.7)
-	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.85, 0.78, 0.72), 0.85)
+	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.64, 0.58, 0.54), 0.8)
 	_mat["baldosa"] = _pbr("Tiles140", 0.5, Color(1, 1, 1), 0.9)
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
+	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
 	_mat["fachada"] = _pbr("Planks040", 0.5, Color(0.55, 0.62, 0.6), 0.9)
 	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
 	_mat["cesped"] = _pbr("Ground037", 0.25, Color(0.75, 0.8, 0.7), 1.0)
@@ -420,11 +421,43 @@ func _build_stairs() -> void:
 		var run := b.z - a.z
 		var steps := int(run / 0.3)
 		var low_south: bool = s.low == "s"
+		var rise := (y1 - y0) / steps
+		var dep := run / steps
+		var cx := (a.x + b.x) * 0.5
 		for i in steps:
 			var t := (i + 0.5) / steps
 			var z := (b.z - run * t) if low_south else (a.z + run * t)
 			var y := y0 + (y1 - y0) * (i + 1.0) / steps
-			box(Vector3(w, 0.08, run / steps + 0.02), Vector3((a.x + b.x) * 0.5, y - 0.04, z), _mat.madera, false, null, true)
+			# peldaño macizo con huella saliente y alfombra que baja por el centro
+			box(Vector3(w - 0.1, rise, dep + 0.01), Vector3(cx, y - rise * 0.5, z), _mat.madera, false, null, true)
+			box(Vector3(w - 0.06, 0.035, dep + 0.05), Vector3(cx, y - 0.017, z + (0.02 if low_south else -0.02)), _mat.madera_clara, false, null, false)
+			box(Vector3(w * 0.58, 0.012, dep + 0.06), Vector3(cx, y + 0.006, z), _mat.cortina, false, null, false)
+			var frente := z + dep * 0.5 * (1.0 if low_south else -1.0)
+			box(Vector3(w * 0.58, rise, 0.012), Vector3(cx, y - rise * 0.5, frente + (0.03 if low_south else -0.03)), _mat.cortina, false, null, false)
+			# balaustres torneados a cada lado
+			for sx in [a.x + 0.09, b.x - 0.09]:
+				var bal := cyl(0.016, 0.024, 0.86, Vector3(sx, y + 0.43, z), _mat.madera, null, 6)
+				bal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		var largo := Vector2(run, y1 - y0).length()
+		var incl := atan2(y1 - y0, run) * (1.0 if low_south else -1.0)
+		var mid := Vector3(cx, (y0 + y1) * 0.5, (a.z + b.z) * 0.5)
+		# zancas a los lados y techo inclinado debajo (la escalera no flota)
+		for sx in [a.x + 0.04, b.x - 0.04]:
+			var zan := box(Vector3(0.08, 0.42, largo + 0.3), mid + Vector3(sx - cx, -0.12, 0), _mat.madera, false)
+			zan.rotation.x = incl
+		var bajo := box(Vector3(w, 0.06, largo), mid + Vector3(0, -0.36, 0), _mat.revestimiento, false)
+		bajo.rotation.x = incl
+		# pasamanos y postes de arranque y llegada
+		var lo_z := b.z if low_south else a.z
+		var hi_z := a.z if low_south else b.z
+		for sx in [a.x + 0.09, b.x - 0.09]:
+			var pm := cyl(0.035, 0.035, largo + 0.2, mid + Vector3(sx - cx, 0.92, 0), _mat.madera, null, 8)
+			pm.rotation.x = PI * 0.5 + incl
+			for ext in [[lo_z + (0.15 if low_south else -0.15), y0], [hi_z, y1]]:
+				box(Vector3(0.15, 1.15, 0.15), Vector3(sx, float(ext[1]) + 0.575, float(ext[0])), _mat.madera, false)
+				box(Vector3(0.21, 0.06, 0.21), Vector3(sx, float(ext[1]) + 1.18, float(ext[0])), _mat.madera, false, null, false)
+				var bola := cyl(0.06, 0.05, 0.1, Vector3(sx, float(ext[1]) + 1.26, float(ext[0])), _mat.madera, null, 8)
+				bola.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var sb := StaticBody3D.new()
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
@@ -436,13 +469,6 @@ func _build_stairs() -> void:
 		sb.position = Vector3((a.x + b.x) * 0.5, (y0 + y1) * 0.5 - 0.05, (a.z + b.z) * 0.5)
 		var ang := atan2(y1 - y0, run)
 		sb.rotation.x = ang if low_south else -ang
-		for sx in [a.x + 0.06, b.x - 0.06]:
-			var rail := box(Vector3(0.08, 0.08, length), Vector3(sx, (y0 + y1) * 0.5 + 0.95, (a.z + b.z) * 0.5), _mat.madera, false)
-			rail.rotation.x = sb.rotation.x
-			for k in 6:
-				var t2 := k / 5.0
-				var z2 := lerpf(b.z, a.z, t2) if low_south else lerpf(a.z, b.z, t2)
-				box(Vector3(0.05, 0.95, 0.05), Vector3(sx, lerpf(y0, y1, t2) + 0.47, z2), _mat.madera, false)
 
 # ---------------- plantas ----------------
 func _level(key: String) -> void:
@@ -481,7 +507,7 @@ func _level(key: String) -> void:
 		for fr in _split_holes(r, _hole.get(level, [])):
 			box(Vector3(fr.size.x, 0.2, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y - 0.1, fr.position.y + fr.size.y * 0.5), fmat, true, null, false)
 		if t != "jardin" and level < 2:
-			var ceil_mat: Material = _mat.yeso if level >= 0 else _mat.piedra
+			var ceil_mat: Material = _mat.techo if level >= 0 else _mat.piedra
 			for fr in _split_holes(r, _hole.get(level + 1, [])):
 				box(Vector3(fr.size.x, 0.1, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y + WALL_H - 0.06, fr.position.y + fr.size.y * 0.5), ceil_mat, false, null, true)
 		elif level == 2:
@@ -1280,8 +1306,8 @@ func _lamp(pos: Vector3) -> void:
 	light.light_color = Color(1.0, 0.8, 0.56)
 	var r: Rect2 = rooms[id].rect if id >= 0 else Rect2(pos.x - 6, pos.z - 6, 12, 12)
 	light.omni_range = clampf(maxf(r.size.x, r.size.y) * 0.8, 8.0, 18.0)
-	light.omni_attenuation = 1.1
-	light.light_energy = 2.4
+	light.omni_attenuation = 1.7
+	light.light_energy = 2.6
 	light.visible = false
 	n.add_child(light)
 	var l := {"node": n, "light": light, "bulb": bm, "pos": pos, "room": id, "on": false, "broken": false, "base": 2.4, "flicker": 0.0}
@@ -1334,7 +1360,7 @@ func _fireplace(pos: Vector3) -> void:
 		box(Vector3(1.2, 0.9, 0.72), Vector3(0, 0.5, 0.02), _mat.oscuro, false, n)
 		box(Vector3(2.5, 0.12, 0.85), Vector3(0, 1.45, 0.05), _mat.marmol, false, n)
 	# retrato grande sobre la chimenea
-	if _prop("fancy_picture_frame_02", Vector3(0, 2.5, -0.3), 0.0, 1.7, false, n) == null:
+	if _prop("fancy_picture_frame_02", Vector3(0, 2.35, -0.19), 0.0, 1.7, false, n) == null:
 		box(Vector3(1.0, 1.2, 0.06), Vector3(0, 2.3, -0.3), _mat.oro, false, n)
 	for k in 3:
 		var lg := cyl(0.055, 0.06, 0.55, Vector3(-0.08 + k * 0.08, 0.1 + (0.07 if k == 1 else 0.0), 0.12), _mat.corteza, n, 8)
@@ -1524,9 +1550,19 @@ func _decorate() -> void:
 			for vz in [1.2, 6.0]:
 				_luz_luna(Vector3(rect.position.x, y, rect.position.y + vz), Vector3(1, 0, -0.15).normalized())
 			continue
-		if t in ["sala", "dormitorio", "epicentro"] and rect.size.x > 9 and rect.size.y > 9:
-			box(Vector3(rect.size.x * 0.55, 0.02, rect.size.y * 0.55), c + Vector3(0, 0.01, 0), _mat.tela_roja, false, null, false)
-			box(Vector3(rect.size.x * 0.5, 0.025, rect.size.y * 0.5), c + Vector3(0, 0.012, 0), _mat.alfombra, false, null, false)
+		if t in ["sala", "dormitorio", "epicentro"] and rect.size.x > 6 and rect.size.y > 6 and not name.begins_with("Vestíbulo"):
+			var ax := minf(rect.size.x * 0.55, 6.0)
+			var az := minf(rect.size.y * 0.55, 8.0)
+			if ax > az:
+				_alfombra(c, az, ax, PI * 0.5)
+			else:
+				_alfombra(c, ax, az, 0.0)
+		# acabado común de todas las salas interiores: esquinas en sombra, polvo en el aire y vigas en las grandes
+		if level_of(y) >= 0 and t != "jardin":
+			_oclusion(r)
+			_polvo(r, 60 if t in ["pasillo", "servicio"] else 110)
+			if t == "sala" and rect.size.x >= 9 and rect.size.y >= 9 and not ("vestíbulo" in name.to_lower()) and level_of(y) < 2:
+				_artesonado(r)
 		var lname := name.to_lower()
 		if "baile" in lname:
 			for k in 6:
@@ -1808,10 +1844,10 @@ func _artesonado(r: Dictionary) -> void:
 		box(Vector3(rect.size.x - 0.3, 0.16, 0.16), Vector3(rect.get_center().x, top - 0.08, rect.position.y + rect.size.y * j / nz), _mat.madera, false, null, false)
 
 ## Polvo en suspensión que se ve al cruzar la luz.
-func _polvo(r: Dictionary) -> void:
+func _polvo(r: Dictionary, cuanto := 220) -> void:
 	var rect: Rect2 = r.rect
 	var ps := CPUParticles3D.new()
-	ps.amount = 220
+	ps.amount = cuanto
 	ps.lifetime = 14.0
 	ps.preprocess = 14.0
 	ps.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
@@ -1899,13 +1935,13 @@ func _oclusion(r: Dictionary) -> void:
 func _luz_luna(p: Vector3, dentro: Vector3) -> void:
 	var sl := SpotLight3D.new()
 	sl.light_color = Color(0.55, 0.66, 1.0)
-	sl.light_energy = 2.2
-	sl.spot_range = 9.0
-	sl.spot_angle = 32.0
+	sl.light_energy = 3.0
+	sl.spot_range = 10.0
+	sl.spot_angle = 24.0
 	sl.spot_attenuation = 0.6
 	sl.shadow_enabled = true
 	_house.add_child(sl)
-	sl.look_at_from_position(p - dentro * 0.6 + Vector3(0, 3.6, 0), p + dentro * 3.2, Vector3.UP)
+	sl.look_at_from_position(p - dentro * 1.4 + Vector3(0, 2.75, 0), p + dentro * 2.6, Vector3.UP)
 
 func _tenir(n: Node3D, tinte: Color) -> void:
 	if n == null:

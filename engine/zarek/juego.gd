@@ -150,7 +150,7 @@ func _environment() -> void:
 	env.background_color = Color(0, 0, 0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.42, 0.38, 0.34)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.35
 	env.tonemap_white = 6.0
@@ -193,7 +193,7 @@ func _flashlight() -> void:
 	flash.light_energy = 6.0
 	flash.spot_range = 32.0
 	flash.spot_angle = 40.0
-	flash.spot_angle_attenuation = 0.6
+	flash.spot_angle_attenuation = 1.6
 	flash.spot_attenuation = 0.8
 	flash.shadow_enabled = true
 	flash.shadow_bias = 0.04
@@ -288,6 +288,17 @@ func _bar(col: Color, w: float) -> ProgressBar:
 	return b
 
 func _ui() -> void:
+	# posprocesado de cine (debajo de la interfaz, para que el texto no lleve grano)
+	var cine := CanvasLayer.new()
+	cine.layer = 40
+	add_child(cine)
+	var cr := ColorRect.new()
+	cr.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var pm := ShaderMaterial.new()
+	pm.shader = load("res://zarek/post.gdshader")
+	cr.material = pm
+	cine.add_child(cr)
 	ui = CanvasLayer.new()
 	ui.layer = 50
 	add_child(ui)

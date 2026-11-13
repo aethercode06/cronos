@@ -295,10 +295,56 @@ func _salon_chimenea(r: Dictionary) -> void:
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
+## Vestíbulo y gran escalera (9,6 × 16,8 m): la escalera ocupa el centro (x 2,4-7,2, z 4,8-10,6, sube hacia el norte);
+## puerta principal al sur (x 4,8-7,2), puertas laterales a z 4,8-7,2 y 12-14,4 en ambos lados y al norte (x 4,8-7,2).
+## Se deja libre el paso de la puerta principal a la escalera y a las puertas laterales.
+func _vestibulo(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	# alfombra de la entrada hasta el pie de la escalera
+	m._alfombra(Vector3(rect.position.x + 4.8, y, rect.position.y + 13.9), 2.2, 4.6, 0.0)
+	# pared sur, a los lados de la puerta: reloj de pie y consola con espejo
+	_en(r, "vintage_grandfather_clock_01", 1.2, D - 0.3, PI)
+	_en(r, "vict_dusty_antique_mirror__free", 3.3, D - 0.45, PI)
+	_en(r, "ClassicConsole_01", 8.3, D - 0.36, PI)
+	_en(r, "vict_ornate_mirror", 8.3, D - 0.1, PI, 0.62, 1.3, false)
+	_en(r, "brass_candleholders", 8.0, D - 0.36, PI, 0.4, 0.95, false)
+	_en(r, "vintage_oil_lamp", 8.8, D - 0.36, 0.0, 0.55, 0.95, false)
+	# pared oeste entre puertas: diván para las visitas y un trofeo de caza encima
+	_en(r, "vict_victorian_lounge_sofa", 0.45, 9.6, 0.0)
+	_cuadro(r, "lion_head", 0.1, 9.6, PI * 0.5, 1.0, 2.15)
+	_en(r, "side_table_01", 0.45, 11.3, 0.0, 0.9)
+	_en(r, "antique_ceramic_vase_01", 0.45, 11.3, 0.0, 0.8, 0.5, false)
+	# pared este entre puertas: consola gótica con candelabro y retrato grande
+	_en(r, "GothicCommode_01", W - 0.42, 9.6, -PI * 0.5)
+	_en(r, "pian_candelabra", W - 0.45, 9.2, -PI * 0.5, 0.35, 1.21, false)
+	_en(r, "marble_bust_01", W - 0.45, 10.05, -PI * 0.5, 0.7, 1.21, false)
+	_cuadro(r, "fancy_picture_frame_02", W - 0.1, 9.6, -PI * 0.5, 1.8, 2.05)
+	# norte, detrás de la escalera: rincón de espera con dos sillones, mesita y estatua
+	_en(r, "vict_victorian_armchair", 1.0, 1.0, 0.6)
+	_en(r, "vict_victorian_armchair", 2.6, 0.9, -0.5)
+	_en(r, "small_wooden_table_01", 1.8, 1.6, 0.2, 0.8)
+	_en(r, "gothic_statue", W - 1.0, 1.1, -PI * 0.75, 0.75)
+	_en(r, "vict_antique_iron_safe", W - 0.5, 3.5, -PI * 0.5)
+	# bajo la escalera: baúles y maletas olvidadas
+	_en(r, "treasure_chest", 3.6, 5.6, 0.2, 0.9)
+	_en(r, "vintage_suitcase", 5.4, 5.4, -0.3)
+	# cosas de quien llegó y se fue: bastón, sombrero no; cartas y un candelero caído en el suelo
+	_en(r, "postcard_set_01", 6.6, 12.4, 0.8, 1.0, 0.0, false)
+	_en(r, "wooden_candlestick", 3.4, 13.2, 1.2, 1.0, 0.04, false)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
+		return
+	if String(r.name).begins_with("Vestíbulo"):
+		_reservar_pasos(r)
+		_vestibulo(r)
 		return
 	var tipo := _tipo(r)
 	if tipo == "" or not SALA.has(tipo):
