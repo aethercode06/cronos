@@ -961,12 +961,92 @@ func _cama_hierro(r: Dictionary, x: float, z: float, yaw: float, escala := 1.0) 
 	var alm := m.box(Vector3(0.6, 0.12, 0.35) * Vector3(escala, 1, escala), c + Vector3(0, 0.64, 0) + Vector3(0, 0, -0.75 * escala).rotated(Vector3.UP, yaw), m._mat.sabana, false)
 	alm.rotation.y = yaw + 0.08
 
+## Despensa (7,2 × 7,2): baja la escalera al sótano por x 2,4-4,8; puerta al oeste (z 2,4-4,8).
+func _despensa(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "wine_barrel_01", W - 0.5, 0.6, 0.0, 0.9)
+	_en(r, "wine_barrel_01", W - 0.5, 1.5, 0.7, 0.9)
+	_en(r, "wooden_crate_02", W - 0.4, 3.3, 0.0)
+	_en(r, "wooden_crate_01", W - 0.55, 4.6, 0.2)
+	_en(r, "wicker_basket_02", W - 0.55, 4.6, 0.4, 1.0, 0.35, false)
+	for k in 5:
+		_en(r, "food_apple_01", W - 0.6 + (k % 2) * 0.08, 4.55 + k * 0.03, k, 1.0, 0.45, false)
+	_en(r, "painted_wooden_cabinet_02", W - 0.38, 6.3, -PI * 0.5)
+	_en(r, "painted_wooden_shelves", 0.25, 0.7, PI * 0.5)
+	_en(r, "painted_wooden_shelves", 0.25, 1.3, PI * 0.5)
+	_en(r, "coti_glass_bottle", 0.25, 0.6, 0.0, 1.0, 1.13, false)
+	_en(r, "jug_01", 0.25, 0.85, 0.5, 1.0, 1.13, false)
+	_en(r, "pot_enamel_01", 0.25, 1.3, 0.0, 1.0, 1.13, false)
+	_en(r, "wooden_bucket_01", 0.45, 6.4, 0.3)
+	_en(r, "wicker_basket_01", 1.2, 6.7, 1.0)
+	_en(r, "yellow_onion", 1.15, 6.65, 0.0, 1.0, 0.06, false)
+	_en(r, "street_rat", 1.7, 5.4, 0.9, 1.7, 0.0, false)
+	_telas(r, [0, 1, 3])
+
+## Antecocina (4,8 × 7,2): se cruza de oeste a este por z 2,4-4,8. Vajilla y la mesa de emplatar.
+func _antecocina(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "vintage_cabinet_01", 2.4, 0.38, 0.0)
+	_en(r, "painted_wooden_table", 2.4, 6.3, 0.0, 0.8)
+	_en(r, "tea_set_01", 2.1, 6.3, 0.2, 0.5, 0.77, false)
+	_en(r, "carved_wooden_plate", 2.9, 6.2, 0.0, 1.0, 0.77, false)
+	_en(r, "carved_wooden_plate", 3.1, 6.45, 0.0, 1.0, 0.79, false)
+	_en(r, "coti_wine_bottle", 1.6, 6.4, 0.0, 1.0, 0.77, false)
+	_en(r, "painted_wooden_stool", 3.9, 5.6, 0.4)
+	_telas(r, [0, 1, 2, 3])
+
+## Guardarropa (4,8 × 7,2): puertas al oeste y este (z 2,4-4,8); armario-escondite en (2,4; 6,0).
+func _guardarropa(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "GothicCabinet_01", 1.2, 0.6, 0.0)
+	_en(r, "vintage_wooden_drawer_01", 3.5, 0.55, 0.0)
+	_en(r, "vintage_suitcase", 3.5, 0.55, 0.3, 0.8, 1.09, false)
+	_en(r, "painted_wooden_bench", 0.3, 5.6, PI * 0.5, 0.9)
+	_en(r, "treasure_chest", W - 0.5, 5.9, -PI * 0.5, 0.8)
+	_en(r, "vintage_suitcase", 1.4, 6.8, 0.1, 0.9)
+	_telas(r, [0, 1, 2])
+
+## Cuarto de servicio (7,2 × 9,6): puertas sur (x 2,4-4,8) y oeste (z 4,8-7,2); armario en (6,0; 6,0).
+func _servicio(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_cama_hierro(r, 0.6, 1.3, 0.0, 0.9)
+	_cama_hierro(r, 2.6, 1.3, 0.0, 0.9)
+	_en(r, "painted_wooden_nightstand", 1.6, 0.35, 0.0)
+	_en(r, "wooden_candlestick", 1.6, 0.35, 0.0, 1.0, 0.62, false)
+	_en(r, "bano_washbasin_model", W - 0.3, 2.0, -PI * 0.5)
+	_en(r, "painted_wooden_chair_01", 4.6, 2.6, 0.8)
+	_en(r, "treasure_chest", W - 0.5, 8.8, -PI * 0.5, 0.75)
+	_en(r, "wooden_broom", 0.3, 8.9, PI * 0.5, 1.0, 0.0, false)
+	_en(r, "wooden_bucket_01", 0.6, 8.3, 0.2)
+	_telas(r, [0, 1, 2, 3])
+
+## Cuarto de plancha (7,2 × 7,2): una puerta al norte (x 2,4-4,8). Ropa por planchar y la estufa de los hierros.
+func _plancha(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "painted_wooden_table", 3.6, 4.0, 0.0, 0.9)
+	_en(r, "wicker_basket_01", 3.2, 4.0, 0.3, 1.0, 0.86, false)
+	_en(r, "wicker_basket_02", 4.1, 3.9, 0.8, 1.0, 0.86, false)
+	_en(r, "pian_small_stove", W - 0.5, D - 0.5, 0.0, 1.0)
+	_en(r, "wooden_bucket_02", 0.6, D - 0.6, 0.3)
+	_en(r, "wooden_bucket_01", 1.4, D - 0.4, 0.8)
+	_en(r, "painted_wooden_shelves", 0.25, 1.4, PI * 0.5)
+	_en(r, "jug_01", 0.25, 1.4, 0.0, 1.0, 1.13, false)
+	_en(r, "painted_wooden_stool", 2.4, 5.2, 0.5)
+	_en(r, "wicker_basket_02", W - 0.6, 1.0, 0.2)
+	_telas(r, [0, 1, 2, 3])
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
 		return
-	var a_mano := {"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
+	var a_mano := {"Despensa": _despensa, "Antecocina": _antecocina, "Guardarropa": _guardarropa, "Cuarto de servicio": _servicio, "Cuarto de plancha": _plancha,
+		"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
 		"Baño": _bano, "Cuarto de huéspedes azul": _huespedes_azul, "Sala de costura": _costura, "Cuarto de la institutriz": _institutriz,
 		"Galería de retratos": _galeria, "Cuarto de huéspedes": _huespedes, "Cuarto de lectura": _lectura, "Pasillo principal": _pasillo, "Pasillo": _pasillo,
 		"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile}
