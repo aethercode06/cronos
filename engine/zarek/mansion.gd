@@ -307,7 +307,7 @@ func _materials() -> void:
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
 	_mat["fachada"] = _pbr("Planks040", 0.5, Color(0.55, 0.62, 0.6), 0.9)
 	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
-	_mat["cesped"] = _pbr("Ground037", 0.25, Color(0.75, 0.8, 0.7), 1.0)
+	_mat["cesped"] = _pbr("Ground037", 0.25, Color(0.5, 0.52, 0.42), 1.0)
 	_mat["bosque"] = _pbr("ScatteredLeaves009", 0.25, Color(0.7, 0.68, 0.62), 1.0)
 	_mat["tierra"] = _pbr("Ground110", 0.35, Color(0.85, 0.82, 0.78), 1.0)
 	_mat["agua"] = _plain(Color(0.03, 0.05, 0.07), 0.05, 0.3)
@@ -595,6 +595,13 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 			var half := Vector3(l, hh, thick * 0.5) if horiz else Vector3(thick * 0.5, hh, l)
 			box(half, pos + inward * thick * 0.25, mat, true)
 			box(half, pos - inward * thick * 0.25, _mat.fachada, false)
+			var fuera: Vector3 = a + along * (pc[0] + l * 0.5) - inward * (thick * 0.5 + 0.05)
+			if level == 0 and pc[2] < 0.01:
+				var zs := Vector3(l, 1.0, 0.12) if horiz else Vector3(0.12, 1.0, l)
+				box(zs, fuera + Vector3(0, 0.3, 0), _mat.cimiento, false, null, false)
+			if pc[2] < 0.01:
+				var im := Vector3(l, 0.22, 0.1) if horiz else Vector3(0.1, 0.22, l)
+				box(im, fuera + Vector3(0, -0.05 if level > 0 else 0.86, 0), _mat.moldura, false, null, false)
 		else:
 			box(Vector3(l, hh, thick) if horiz else Vector3(thick, hh, l), pos, mat, true)
 	if level >= 0 and level < 2 and not is_door:
@@ -631,6 +638,13 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	box(vb, c + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
 	var hb := Vector3(1.6, 0.07, thick + 0.06) if horiz else Vector3(thick + 0.06, 0.07, 1.6)
 	box(hb, c + Vector3(0, 2.2, 0), _mat.moldura, false, null, false)
+	# jambas y alféizar por fuera
+	var ej: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	for sj in [-1.0, 1.0]:
+		var jb := Vector3(0.16, 2.2, 0.1) if horiz else Vector3(0.1, 2.2, 0.16)
+		box(jb, c + ej * sj * 0.88 - inward * (thick * 0.5 + 0.05) + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
+	var al := Vector3(2.0, 0.08, 0.26) if horiz else Vector3(0.26, 0.08, 2.0)
+	box(al, c - inward * (thick * 0.5 + 0.1) + Vector3(0, 0.84, 0), _mat.moldura, false, null, false)
 	# frontón sobre la ventana (por fuera)
 	var top := Vector3(1.9, 0.18, 0.3) if horiz else Vector3(0.3, 0.18, 1.9)
 	box(top, c + Vector3(0, 3.1, 0) - inward * (thick * 0.5 + 0.12), _mat.moldura, false, null, false)
@@ -762,10 +776,11 @@ func _roof() -> void:
 	var c := r.get_center()
 	var main := MeshInstance3D.new()
 	var pm := PrismMesh.new()
-	pm.size = Vector3(r.size.x + 1.5, 10.0, r.size.y + 1.5)
+	pm.size = Vector3(r.size.y + 1.5, 12.5, r.size.x + 1.5)
 	main.mesh = pm
 	main.material_override = _mat.tejado
-	main.position = Vector3(c.x, y + 5.0, c.y)
+	main.position = Vector3(c.x, y + 6.25, c.y)
+	main.rotation.y = PI * 0.5
 	add_child(main)
 	var cross := MeshInstance3D.new()
 	var pm2 := PrismMesh.new()
@@ -777,7 +792,10 @@ func _roof() -> void:
 	cross.rotation.y = PI * 0.5
 	add_child(cross)
 	box(Vector3(r.size.x + 1.5, 0.3, r.size.y + 1.5), Vector3(c.x, y + 0.15, c.y), _mat.tejado, false, self)
-	box(Vector3(r.size.x, 0.25, 0.25), Vector3(c.x, y + 10.0, c.y), _mat.metal, false, self)
+	box(Vector3(r.size.x + 1.5, 0.3, 0.3), Vector3(c.x, y + 12.5, c.y), _mat.metal, false, self)
+	# crestería de hierro sobre la cumbrera
+	for k in int(r.size.x / 0.6):
+		box(Vector3(0.03, 0.45, 0.03), Vector3(r.position.x + 0.3 + k * 0.6, y + 12.85, c.y), _mat.metal, false, self, false)
 	# muro del ático (fachada entre el primer piso y el tejado)
 	for s in [[r.position, Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), r.end], [r.position, Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), r.end]]:
 		var a: Vector2 = s[0]
@@ -804,8 +822,10 @@ func _roof() -> void:
 		var ow := cyl(0.9, 0.9, 0.1, Vector3(c.x + sx, y + 2.8, r.end.y + 1.05), _mat.ventana_luz, self, 14)
 		ow.rotation.x = PI * 0.5
 	for cp in [Vector2(r.position.x + 8, c.y - 6), Vector2(r.end.x - 10, c.y + 4), Vector2(c.x - 3, c.y + 6)]:
-		box(Vector3(1.6, 7.0, 1.6), Vector3(cp.x, y + 6.5, cp.y), _mat.piedra, false, self)
-		box(Vector3(2.0, 0.3, 2.0), Vector3(cp.x, y + 10.1, cp.y), _mat.piedra, false, self)
+		box(Vector3(1.6, 12.0, 1.6), Vector3(cp.x, y + 8.0, cp.y), _mat.piedra, false, self)
+		box(Vector3(2.0, 0.3, 2.0), Vector3(cp.x, y + 14.1, cp.y), _mat.piedra, false, self)
+		for k in 2:
+			cyl(0.22, 0.25, 0.6, Vector3(cp.x - 0.35 + k * 0.7, y + 14.55, cp.y), _mat.cimiento, self, 8)
 	# torre redonda con techo cónico (esquina delantera oeste)
 	var t0 := cell_to_world("baja", 0, 9)
 	var tc := t0 + Vector3(4.5, 0, 4.5)
@@ -1093,6 +1113,7 @@ func _trees(W: float, H: float) -> void:
 		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		add_child(mmi)
 	_sotobosque(W, H, avoid)
+	_jardin_salvaje()
 	# colisión de troncos con un solo cuerpo
 	var sb := StaticBody3D.new()
 	add_child(sb)
@@ -1120,7 +1141,9 @@ func _abeto_mesh(semilla: int, caida: float) -> ArrayMesh:
 		_mat_rama.albedo_texture = load("res://zarek/texturas/abeto/rama.png")
 		_mat_rama.albedo_color = Color(0.78, 0.86, 0.8)
 		_mat_rama.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-		_mat_rama.alpha_scissor_threshold = 0.42
+		_mat_rama.alpha_scissor_threshold = 0.5
+		_mat_rama.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE_AND_TO_ONE
+		_mat_rama.alpha_antialiasing_edge = 0.3
 		_mat_rama.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_mat_rama.roughness = 0.92
 		_mat_rama.backlight_enabled = true
@@ -1232,6 +1255,60 @@ func _sotobosque(W: float, H: float, avoid: Array) -> void:
 			mmi.multimesh = mm
 			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if nombre in ["boulder_01", "dead_tree_trunk", "dead_tree_trunk_02", "tree_stump_02"] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			mmi.visibility_range_end = 0.0
+			add_child(mmi)
+
+## Los jardines de la mansión llevan años sin cuidar: hierba alta, matorral, ortigas y flores silvestres.
+func _jardin_salvaje() -> void:
+	var zonas: Array = []
+	var fuera: Array = []
+	for z in plan.exterior.zonas:
+		var r := Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL)
+		if z[1] == "jardin":
+			zonas.append(r)
+		elif z[1] in ["edificio", "agua", "camino"]:
+			fuera.append(r.grow(0.8))
+	var cuantos := 1.0 if quality >= 2 else (0.6 if quality == 1 else 0.35)
+	var lista := [["grass_medium_01", 1400, 0.9, 1.6], ["grass_medium_02", 1200, 0.9, 1.6], ["shrub_02", 160, 0.7, 1.2], ["nettle_plant", 300, 0.8, 1.3],
+		["dandelion_01", 260, 0.9, 1.3], ["celandine_01", 200, 0.9, 1.3], ["fern_02", 120, 0.7, 1.1], ["dry_branches_medium_01", 90, 0.8, 1.3], ["bark_debris_01", 60, 0.8, 1.2]]
+	for it in lista:
+		var nombre: String = it[0]
+		var path := "res://zarek/muebles/%s.glb" % nombre
+		if not ResourceLoader.exists(path):
+			continue
+		var ps: PackedScene = load(path)
+		if ps == null:
+			continue
+		var raiz: Node3D = ps.instantiate()
+		var partes: Array = []
+		for mi in raiz.find_children("*", "MeshInstance3D", true, false):
+			partes.append([(mi as MeshInstance3D).mesh, _xf_rel(mi, raiz)])
+		raiz.free()
+		var xs: Array[Transform3D] = []
+		var n := int(float(it[1]) * cuantos)
+		var intentos := 0
+		while xs.size() < n and intentos < n * 8:
+			intentos += 1
+			var zr: Rect2 = zonas[_rng.randi_range(0, zonas.size() - 1)]
+			var p := Vector2(_rng.randf_range(zr.position.x, zr.end.x), _rng.randf_range(zr.position.y, zr.end.y))
+			var mal := house_rect.grow(0.3).has_point(p)
+			for r in fuera:
+				if mal:
+					break
+				mal = (r as Rect2).has_point(p)
+			if mal:
+				continue
+			var sc := _rng.randf_range(float(it[2]), float(it[3]))
+			xs.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, 0.0, p.y)))
+		for pt in partes:
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.mesh = pt[0]
+			mm.instance_count = xs.size()
+			for i in xs.size():
+				mm.set_instance_transform(i, xs[i] * (pt[1] as Transform3D))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.multimesh = mm
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			add_child(mmi)
 
 ## Transformación de un nodo relativa a un antecesor (sin estar en el árbol de escena).

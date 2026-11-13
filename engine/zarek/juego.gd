@@ -288,6 +288,8 @@ func _bar(col: Color, w: float) -> ProgressBar:
 	return b
 
 func _ui() -> void:
+	# 2× MSAA: bordes limpios y agujas de los abetos sin dientes (barato en GPU móviles de teselas)
+	get_viewport().msaa_3d = Viewport.MSAA_2X
 	# posprocesado de cine (debajo de la interfaz, para que el texto no lleve grano)
 	var cine := CanvasLayer.new()
 	cine.layer = 40
