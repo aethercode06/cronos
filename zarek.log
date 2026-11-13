@@ -1,0 +1,35 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+WARNING: Property agent_height is ceiled to cell_height voxel units and loses precision.
+     at: generator_bake_from_source_geometry_data (modules/navigation_3d/3d/nav_mesh_generator_3d.cpp:367)
+WARNING: Property agent_radius is ceiled to cell_size voxel units and loses precision.
+     at: generator_bake_from_source_geometry_data (modules/navigation_3d/3d/nav_mesh_generator_3d.cpp:373)
+ZAREK: navmesh polígonos 1022
+ZAREK: navegación lista en 0.0 s
+ZAREK: habitaciones 48, sellos 4, armarios 18, lámparas 10, puertas 51, pasos 12
+  ok   navegación de Elena horneada
+  ok   4 sellos
+  ok   armarios
+  ok   lámparas
+  ok   Elena llega al sello en los jardines
+  ok   Elena llega al sello en cava de vinos
+  ok   Elena llega al sello en salón de baile
+  ok   Elena llega al sello en dormitorio de los padres
+  ok   Elena llega al Epicentro (primer piso)
+  ok   Elena baja al sótano
+  ok   empiezas en el bosque
+  ok   al entrar se cierra la puerta (evento)
+  ok   Elena despierta (WANDER)
+  ok   lámpara ilumina su habitación
+  ok   la sal la ahuyenta
+  ok   tras huir desaparece
+  ok   Elena te atrapa (vidas 2)
+  ok   despiertas en el vestíbulo
+  ok   escondido en el armario no te ve
+  ok   sales del armario
+  ok   4 sellos recogidos
+  ok   la puerta del Epicentro se abre
+  ok   ritual completado: Zarek expulsado
+  ok   pantalla final
+ZAREK: tiempo de juego simulado 16.4 s
+ZAREK OK
