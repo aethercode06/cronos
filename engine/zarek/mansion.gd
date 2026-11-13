@@ -653,6 +653,87 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 	if window:
 		_window(center, horiz, thick, inward)
 
+## Dirección de la luz de la luna (debe coincidir con la DirectionalLight del juego: rotación -38°, -55°).
+const LUNA := Vector3(0.645, -0.616, -0.452)
+const LUNA_H := Vector3(0.819, 0, -0.574)
+var _mat_haz: StandardMaterial3D
+var _mat_mancha: StandardMaterial3D
+
+## Luz de luna que entra por una ventana: mancha con la forma de los cristales en el suelo y un haz tenue en el aire.
+## Son mallas sin sombreado con mezcla aditiva: se ven igual en todos los móviles y no gastan luces.
+func _haz_luna(c: Vector3, horiz: bool, inward: Vector3) -> void:
+	if _mat_mancha == null:
+		var img := Image.create(64, 96, false, Image.FORMAT_RGBA8)
+		for y in 96:
+			for x in 64:
+				var u := x / 63.0
+				var v := y / 95.0
+				var marco := absf(u - 0.5) < 0.035 or absf(v - 0.35) < 0.03 or u < 0.05 or u > 0.95 or v < 0.04 or v > 0.96
+				var borde := minf(minf(u, 1.0 - u), minf(v, 1.0 - v))
+				var a := 0.0 if marco else clampf(borde * 9.0, 0.0, 1.0)
+				img.set_pixel(x, y, Color(1, 1, 1, a))
+		img.generate_mipmaps()
+		_mat_mancha = StandardMaterial3D.new()
+		_mat_mancha.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_mat_mancha.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat_mancha.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		_mat_mancha.albedo_texture = ImageTexture.create_from_image(img)
+		_mat_mancha.albedo_color = Color(0.42, 0.55, 0.9, 0.9)
+		_mat_mancha.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mat_haz = StandardMaterial3D.new()
+		_mat_haz.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_mat_haz.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat_haz.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		_mat_haz.vertex_color_use_as_albedo = true
+		_mat_haz.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mat_haz.disable_receive_shadows = true
+	var eje: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	var suelo := c.y + 0.015
+	var esq := func(lado: float, h: float) -> Vector3:
+		return c + eje * lado * 0.78 + inward * 0.05 + Vector3(0, h, 0)
+	var al_suelo := func(p: Vector3) -> Vector3:
+		var t := (p.y - suelo) / -LUNA.y
+		return p + LUNA * t
+	var w0: Vector3 = esq.call(-1.0, 0.92)
+	var w1: Vector3 = esq.call(1.0, 0.92)
+	var w2: Vector3 = esq.call(1.0, 2.88)
+	var w3: Vector3 = esq.call(-1.0, 2.88)
+	var f0: Vector3 = al_suelo.call(w0)
+	var f1: Vector3 = al_suelo.call(w1)
+	var f2: Vector3 = al_suelo.call(w2)
+	var f3: Vector3 = al_suelo.call(w3)
+	# mancha en el suelo (v = 0 abajo de la ventana)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var q := [f0, f1, f2, f3]
+	var uv := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+	for i in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uv[i])
+		st.set_normal(Vector3.UP)
+		st.add_vertex(q[i])
+	var mm := MeshInstance3D.new()
+	mm.mesh = st.commit()
+	mm.material_override = _mat_mancha
+	mm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mm.set_meta("dyn", true)
+	_house.add_child(mm)
+	# haz: cuatro caras de la ventana a la mancha, que se apagan hacia el suelo
+	var sh := SurfaceTool.new()
+	sh.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var cw := Color(0.16, 0.2, 0.32, 1.0) * 0.32
+	var cf := Color(0, 0, 0, 0)
+	for cara in [[w0, w1, f1, f0], [w3, w2, f2, f3], [w0, w3, f3, f0], [w1, w2, f2, f1]]:
+		var cs := [cw, cw, cf, cf]
+		for i in [0, 1, 2, 0, 2, 3]:
+			sh.set_color(cs[i])
+			sh.add_vertex(cara[i])
+	var hm := MeshInstance3D.new()
+	hm.mesh = sh.commit()
+	hm.material_override = _mat_haz
+	hm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	hm.set_meta("dyn", true)
+	_house.add_child(hm)
+
 ## Centros de todas las ventanas (para que cuadros y muebles altos no las tapen).
 var ventanas: Array[Vector3] = []
 
@@ -664,16 +745,25 @@ func ventana_cerca(p: Vector3, radio: float) -> bool:
 
 func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	ventanas.append(c)
+	if level_of(c.y + 0.3) >= 0 and Vector3(LUNA_H.x, 0, LUNA_H.z).dot(inward) > 0.25:
+		_haz_luna(c, horiz, inward)
 	var lit := _rng.randf() < 0.3
 	var glass := Vector3(1.6, 2.0, 0.04) if horiz else Vector3(0.04, 2.0, 1.6)
 	box(glass, c + Vector3(0, 1.9, 0), _mat.ventana_luz if lit else _mat.cristal, true, null, false)
 	var fr := Vector3(1.75, 0.1, thick + 0.1) if horiz else Vector3(thick + 0.1, 0.1, 1.75)
 	box(fr, c + Vector3(0, 0.9, 0), _mat.moldura, false, null, false)
 	box(fr, c + Vector3(0, 2.9, 0), _mat.moldura, false, null, false)
-	var vb := Vector3(0.07, 2.0, thick + 0.06) if horiz else Vector3(thick + 0.06, 2.0, 0.07)
+	# parteluces finos de una ventana de guillotina, en el plano del cristal
+	var vb := Vector3(0.045, 2.0, 0.07) if horiz else Vector3(0.07, 2.0, 0.045)
 	box(vb, c + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
-	var hb := Vector3(1.6, 0.07, thick + 0.06) if horiz else Vector3(thick + 0.06, 0.07, 1.6)
-	box(hb, c + Vector3(0, 2.2, 0), _mat.moldura, false, null, false)
+	for hy in [1.55, 2.2]:
+		var hb := Vector3(1.6, 0.045, 0.07) if horiz else Vector3(0.07, 0.045, 1.6)
+		box(hb, c + Vector3(0, hy, 0), _mat.moldura, false, null, false)
+	# marco interior alrededor del hueco
+	var ej2: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	for sj in [-1.0, 1.0]:
+		var mj := Vector3(0.09, 2.0, 0.09) if horiz else Vector3(0.09, 2.0, 0.09)
+		box(mj, c + ej2 * sj * 0.79 + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
 	# jambas y alféizar por fuera
 	var ej: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
 	for sj in [-1.0, 1.0]:
@@ -1851,8 +1941,6 @@ func _decorate() -> void:
 			_artesonado(r)
 			_polvo(r)
 			_oclusion(r)
-			for vz in [1.2, 6.0]:
-				_luz_luna(Vector3(rect.position.x, y, rect.position.y + vz), Vector3(1, 0, -0.15).normalized())
 			continue
 		if t in ["sala", "dormitorio", "epicentro"] and rect.size.x > 6 and rect.size.y > 6 and not name.begins_with("Vestíbulo"):
 			var ax := minf(rect.size.x * 0.55, 6.0)

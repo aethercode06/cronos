@@ -180,7 +180,7 @@ func _environment() -> void:
 	var moon := DirectionalLight3D.new()
 	moon.light_color = Color(0.55, 0.65, 0.95)
 	moon.light_energy = 0.45
-	moon.rotation_degrees = Vector3(-38, 30, 0)
+	moon.rotation_degrees = Vector3(-38, -55, 0)
 	moon.shadow_enabled = true
 	moon.directional_shadow_max_distance = 60.0
 	add_child(moon)

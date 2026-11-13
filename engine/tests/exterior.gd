@@ -14,7 +14,7 @@ func _ready() -> void:
 	env.sky = sky; env.background_mode = Environment.BG_SKY
 	we.environment = env; add_child(we)
 	var moon := DirectionalLight3D.new(); moon.light_color = Color(0.55, 0.65, 0.95); moon.light_energy = 0.45
-	moon.rotation_degrees = Vector3(-38, 30, 0); moon.shadow_enabled = true; moon.directional_shadow_max_distance = 60.0; add_child(moon)
+	moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_enabled = true; moon.directional_shadow_max_distance = 60.0; add_child(moon)
 	var cl := CanvasLayer.new(); var cr := ColorRect.new(); cr.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var pm := ShaderMaterial.new(); pm.shader = load("res://zarek/post.gdshader"); cr.material = pm; cl.add_child(cr); add_child(cl)
 	var m := ZarekMansion.new(); add_child(m); m.build(2)
