@@ -55,7 +55,8 @@ const METALICOS := ["brass_pot_01", "brass_pot_02", "brass_pan_01", "pot_enamel_
 const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile",
 	"Sala de fumar y billar", "Sala de las mañanas", "Tocador de la madre", "Cuarto del hermano", "Baño", "Cuarto de huéspedes azul", "Sala de costura", "Cuarto de la institutriz", "Galería de retratos", "Cuarto de huéspedes", "Cuarto de lectura", "Pasillo principal", "Pasillo",
 	"Despensa", "Antecocina", "Guardarropa", "Cuarto de servicio", "Cuarto de plancha",
-	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos"]
+	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos",
+	"Ático (vigas, baúles, muñecos tapados)", "Rincón de Elena", "Torre", "Mirador de la torre"]
 var _house: Node3D
 var _mat := {}
 var _hole := {}
@@ -545,6 +546,8 @@ func _level(key: String) -> void:
 			paper = "roca"
 		if t == "epicentro":
 			paper = "papel0"
+		if level == 2 and t == "servicio":
+			paper = "tablas"
 		rooms.append({"name": name, "type": t, "level": level, "rect": r, "y": y, "id": id, "paper": paper})
 		if t == "epicentro" and level == 1:
 			epicentro_room = id
@@ -559,6 +562,8 @@ func _level(key: String) -> void:
 			fmat = _mat.roca
 		if t == "jardin":
 			fmat = _mat.madera_clara
+		if level == 2 and t != "jardin":
+			fmat = _mat.tablas
 		for fr in _split_holes(r, _hole.get(level, [])):
 			box(Vector3(fr.size.x, 0.2, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y - 0.1, fr.position.y + fr.size.y * 0.5), fmat, true, null, false)
 		if t != "jardin" and level < 2:
@@ -566,7 +571,7 @@ func _level(key: String) -> void:
 			for fr in _split_holes(r, _hole.get(level + 1, [])):
 				box(Vector3(fr.size.x, 0.1, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y + WALL_H - 0.06, fr.position.y + fr.size.y * 0.5), ceil_mat, false, null, true)
 		elif level == 2:
-			box(Vector3(r.size.x, 0.15, r.size.y), Vector3(r.get_center().x, y + 3.3, r.get_center().y), _mat.madera, false)
+			box(Vector3(r.size.x, 0.15, r.size.y), Vector3(r.get_center().x, y + 3.3, r.get_center().y), _mat.tablas, false)
 		if t == "jardin":
 			continue
 		for i in int(z[4]):
@@ -1912,13 +1917,22 @@ func _portals() -> void:
 			elif "pasadizo" in txt or "pozo" in txt or "túnel" in txt:
 				vis.append(_escalera_mano(p))
 			else:
-				_caracol(p)
-				vis.append(p)
+				# una sola escalera de caracol por torre: si ya hay una a menos de 1,6 m, se usa esa
+				var hay := false
+				for cc in _caracoles:
+					if Vector2(cc.x - p.x, cc.z - p.z).length() < 1.6 and absf(cc.y - p.y) < 1.0:
+						hay = true
+				if not hay:
+					_caracol(p)
+					_caracoles.append(p)
+				vis.append(p)  # el punto de uso sigue siendo el suyo (subir y bajar no se pisan)
 		# el punto de uso queda junto a lo que se ve (librero o escalera), un paso por delante de la pared
 		var ua: Vector3 = a.lerp(vis[0], 0.7)
 		var ub: Vector3 = b.lerp(vis[1], 0.7)
 		portals.append({"pos": ua, "to": b, "text": l[2]})
 		portals.append({"pos": ub, "to": a, "text": l[3]})
+
+var _caracoles: Array[Vector3] = []
 
 ## Escalera de caracol de hierro con peldaños de madera (subidas a la torre y al ático).
 func _caracol(p: Vector3) -> void:
@@ -1992,6 +2006,8 @@ func _decorate() -> void:
 			else:
 				_alfombra(c, ax, az, 0.0)
 		# acabado común de todas las salas interiores: esquinas en sombra, polvo en el aire y vigas en las grandes
+		if t != "jardin" and t != "agua":
+			_manchas(r)
 		if level_of(y) >= 0 and t != "jardin":
 			_oclusion(r)
 			_polvo(r, 60 if t in ["pasillo", "servicio"] else 110)
@@ -2306,6 +2322,82 @@ func _portraits(r: Dictionary) -> void:
 			box(size, p, _mat.oro, false, null, false)
 			var inner := size * (Vector3(0.82, 0.85, 1.4) if size.x > 0.5 else Vector3(1.4, 0.85, 0.82))
 			box(inner, p, face, false, null, false)
+
+var _tex_mancha: Array[Texture2D] = []
+## Manchas de humedad con cerco, moho y suciedad: texturas propias que se multiplican sobre paredes, techo y suelo.
+func _mancha_tex(tipo: int) -> Texture2D:
+	if _tex_mancha.is_empty():
+		for k in 3:
+			var img := Image.create(128, 128, false, Image.FORMAT_RGB8)
+			var nz := FastNoiseLite.new()
+			nz.seed = 70 + k
+			nz.frequency = 0.035
+			nz.fractal_octaves = 5
+			var fino := FastNoiseLite.new()
+			fino.seed = 90 + k
+			fino.frequency = 0.15
+			var tinte: Color = [Color(0.62, 0.52, 0.36), Color(0.42, 0.46, 0.36), Color(0.5, 0.45, 0.4)][k]
+			for y in 128:
+				for x in 128:
+					var d := Vector2(x - 64, (y - 64) * (1.4 if k == 0 else 1.0)).length() / 64.0
+					var forma := nz.get_noise_2d(x, y) * 0.55 + 0.62 - d
+					var m := clampf(forma * 4.0, 0.0, 1.0)
+					var cerco := clampf(1.0 - absf(forma) * 18.0, 0.0, 1.0) * 0.6 if k == 0 else 0.0
+					var v := m * (0.55 + fino.get_noise_2d(x, y) * 0.35) + cerco
+					img.set_pixel(x, y, Color(1, 1, 1).lerp(tinte, clampf(v, 0.0, 1.0)))
+			img.generate_mipmaps()
+			_tex_mancha.append(ImageTexture.create_from_image(img))
+	return _tex_mancha[tipo]
+
+func _mancha(pos: Vector3, normal: Vector3, tam: Vector2, tipo: int) -> void:
+	var mi := MeshInstance3D.new()
+	var qm := QuadMesh.new()
+	qm.size = tam
+	mi.mesh = qm
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	mat.albedo_texture = _mancha_tex(tipo)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_meta("dyn", true)
+	_house.add_child(mi)
+	mi.position = pos + normal * 0.012
+	if absf(normal.y) > 0.9:
+		mi.rotation = Vector3(-PI * 0.5 * signf(normal.y), _rng.randf() * TAU, 0)
+	else:
+		mi.look_at_from_position(mi.position, mi.position - normal, Vector3.UP)
+		mi.rotate_object_local(Vector3.FORWARD, _rng.randf_range(-0.3, 0.3))
+
+## Humedad que baja del techo por las paredes, moho en las esquinas y suciedad en el suelo.
+func _manchas(r: Dictionary) -> void:
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	var alto := WALL_H if level_of(y + 0.3) < 2 else 3.3
+	var caras := [[Vector3(rect.position.x + 0.14, 0, 0), Vector3(1, 0, 0), true], [Vector3(rect.end.x - 0.14, 0, 0), Vector3(-1, 0, 0), true],
+		[Vector3(0, 0, rect.position.y + 0.14), Vector3(0, 0, 1), false], [Vector3(0, 0, rect.end.y - 0.14), Vector3(0, 0, -1), false]]
+	var n := clampi(int(rect.size.x * rect.size.y / 18.0), 2, 9)
+	for k in n:
+		var c: Array = caras[_rng.randi_range(0, 3)]
+		var base: Vector3 = c[0]
+		var t := _rng.randf()
+		var p := Vector3(base.x if c[2] else lerpf(rect.position.x + 0.8, rect.end.x - 0.8, t), 0, base.z if not c[2] else lerpf(rect.position.y + 0.8, rect.end.y - 0.8, t))
+		var arriba := _rng.randf() < 0.65
+		var h := _rng.randf_range(0.7, 1.6)
+		p.y = y + (alto - h * 0.5 - 0.15 if arriba else h * 0.5 + 0.05)
+		if not door_near(Vector3(p.x, y, p.z), 1.2).is_empty() or ventana_cerca(Vector3(p.x, y, p.z), 1.1):
+			continue
+		_mancha(p, c[1], Vector2(_rng.randf_range(0.8, 2.0), h), 0 if arriba else 1)
+	# techo y suelo
+	for k in clampi(n / 2, 1, 4):
+		var p := Vector3(_rng.randf_range(rect.position.x + 1, rect.end.x - 1), y + alto - 0.125, _rng.randf_range(rect.position.y + 1, rect.end.y - 1))
+		var sz := _rng.randf_range(0.9, 2.4)
+		_mancha(p, Vector3.DOWN, Vector2(sz, sz * _rng.randf_range(0.6, 1.0)), 0)
+	for k in clampi(n / 2, 1, 4):
+		var p := Vector3(_rng.randf_range(rect.position.x + 0.6, rect.end.x - 0.6), y + 0.004, _rng.randf_range(rect.position.y + 0.6, rect.end.y - 0.6))
+		var sz := _rng.randf_range(0.8, 2.0)
+		_mancha(p, Vector3.UP, Vector2(sz, sz), 2)
 
 ## Alfombra persa (plano con textura) de sx × sz metros.
 func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:

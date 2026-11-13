@@ -1246,12 +1246,110 @@ func _cava(r: Dictionary) -> void:
 	_en(r, "street_rat", 8.0, 9.0, 2.1, 1.7, 0.0, false)
 	_telas(r)
 
+## Mueble tapado con una sábana polvorienta (la forma se adivina debajo).
+func _tapado(r: Dictionary, nombre: String, x: float, z: float, yaw: float, escala := 1.0) -> void:
+	var n := _en(r, nombre, x, z, yaw, escala)
+	if n == null:
+		return
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_override = m._mat.sabana
+
+## Estructura de cubierta del ático: pies derechos, tirantes y jabalcones de madera vieja.
+func _cerchas(r: Dictionary) -> void:
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	var alto := 3.25
+	var x := 1.8
+	while x < rect.size.x - 1.0:
+		var cx := rect.position.x + x
+		m.box(Vector3(0.22, 0.24, rect.size.y - 0.2), Vector3(cx, y + alto - 0.12, rect.get_center().y), m._mat.madera, false, null, true)
+		for zz in [rect.size.y * 0.3, rect.size.y * 0.7]:
+			var cz: float = rect.position.y + zz
+			m.box(Vector3(0.2, alto - 0.24, 0.2), Vector3(cx, y + (alto - 0.24) * 0.5, cz), m._mat.madera, true, null, true)
+			for sgn in [-1.0, 1.0]:
+				var j := m.box(Vector3(0.12, 1.3, 0.12), Vector3(cx, y + alto - 0.75, cz + sgn * 0.42), m._mat.madera, false, null, true)
+				j.rotation.x = sgn * 0.6
+		x += 3.6
+
+## Ático (36 × 24): vigas, baúles, muebles tapados, cuadros apoyados contra la pared y juguetes viejos.
+## Escalera de servicio en (30; 15,6), armarios en (14,4; 22,8) y (32,4; 2,4); el diario de Elena en (6; 4,8).
+func _atico(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_cerchas(r)
+	var tapados := [["GothicCabinet_01", 12.0, 3.0, 0.4], ["Sofa_01", 16.5, 6.0, 1.9], ["ArmChair_01", 18.4, 4.6, 2.6], ["GothicCommode_01", 22.0, 1.0, 0.0],
+		["vintage_cabinet_01", 26.0, 8.0, 1.2], ["dining_table", 14.0, 11.5, 0.2], ["ArmChair_01", 20.5, 12.4, -0.8], ["GothicBed_01", 8.0, 15.5, 1.57],
+		["vict_victorian_lounge_sofa", 24.0, 17.0, 0.3], ["Rockingchair_01", 5.0, 20.5, 2.2], ["vict_dusty_antique_mirror__free", 33.5, 9.0, -1.2]]
+	for t in tapados:
+		_tapado(r, t[0], t[1], t[2], t[3])
+	# baúles, maletas y cajas
+	for q in [[2.0, 9.5, 0.3], [3.4, 12.2, 1.2], [27.6, 3.0, 0.2], [34.4, 13.0, -1.3], [11.0, 20.8, 0.5]]:
+		_en(r, "treasure_chest", q[0], q[1], q[2], 0.9)
+	for q in [[3.0, 13.5, 0.4], [28.6, 3.6, 1.1], [17.0, 20.0, 0.2]]:
+		_en(r, "vintage_suitcase", q[0], q[1], q[2])
+	for q in [[33.5, 20.5, 0.0], [34.4, 18.8, 0.6], [9.6, 22.6, 0.3], [21.0, 22.8, 0.0]]:
+		_en(r, "terr_old_and_dusty_multi_crate_st", q[0], q[1], q[2], 0.8)
+	# juguetes de los niños, olvidados
+	_en(r, "jugu_rocking_horse", 13.0, 16.0, 2.6)
+	_en(r, "jugu_dollhouse", 10.4, 18.4, 0.8)
+	_en(r, "Ottoman_01", 19.0, 15.0, 0.4)
+	# cuadros apoyados contra las paredes, de cara a la pared alguno
+	for q in [[0.35, 6.0, PI * 0.5], [0.35, 7.1, PI * 0.5], [W - 0.35, 5.0, -PI * 0.5], [17.0, D - 0.35, PI], [18.2, D - 0.35, 0.0]]:
+		var cu := m._prop("fancy_picture_frame_02", Vector3(r.rect.position.x + q[0], float(r.y), r.rect.position.y + q[1]), q[2], 1.6, false)
+		if cu:
+			cu.rotation.x = -0.2
+	_en(r, "terr_creepy_lady_bust_statue_scan", 25.0, 12.0, 2.0)
+	_en(r, "coti_simple_bookstack", 23.0, 10.4, 0.4)
+	_en(r, "vict_old_books___free_download", 7.0, 9.0, 1.0, 0.8)
+	_en(r, "wooden_lantern_01", 12.6, 11.2, 0.0, 0.8)
+	for x in [2.0, 9.0, 16.0, 23.0, 30.0]:
+		for z in [0.5, D - 0.5]:
+			_en(r, "terr_cobwebs", x, z, 0.0 if z < 1.0 else PI, 1.2, 2.4, false)
+
+## Rincón de Elena (en el ático, 7,2 × 4,8): donde se escondía a escribir. El diario va en el centro.
+func _rincon_elena(r: Dictionary) -> void:
+	_cama_hierro(r, 1.2, 2.4, PI * 0.5, 0.8)
+	_en(r, "small_wooden_table_01", 5.0, 1.0, 0.0, 0.8)
+	_en(r, "coti_three_candles_and_a_golden_c", 4.8, 1.0, 0.0, 0.9, 0.43, false)
+	_en(r, "jugu_music_box_prop", 5.3, 1.05, 0.4, 1.0, 0.43, false)
+	_en(r, "ornate_mirror_01", 6.8, 3.6, -PI * 0.5 + 0.3, 1.0)
+	_en(r, "painted_wooden_stool", 5.0, 1.8, 0.3)
+
+## Torre (planta baja y primer piso, 7,2 × 7,2): escalera de caracol en el centro.
+func _torre(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	if int(r.level) == 0:
+		_en(r, "vict_victorian_armchair", 1.0, 1.0, 0.7)
+		_en(r, "side_table_tall_01", 1.9, 0.6, 0.0)
+		_en(r, "wooden_candlestick", 1.9, 0.6, 0.0, 1.0, 0.76, false)
+		_en(r, "coti_celestial_globe", 1.0, D - 1.0, 0.3)
+		_en(r, "vict_antique_wooden_bookcase___ga", 3.6, D - 0.17, PI)
+	else:
+		_en(r, "vict_antique_desk", 1.1, 3.6, PI * 0.5)
+		_en(r, "vict_antique_chair", 1.8, 3.6, -PI * 0.5)
+		_en(r, "coti_typewriter", 1.1, 3.4, PI * 0.5, 1.0, 0.8, false)
+		_en(r, "vintage_suitcase", W - 1.0, D - 0.6, 0.4)
+	_telas(r)
+
+## Mirador de la torre (7,2 × 7,2, ático): se ve todo el bosque. Escalera de caracol en el centro.
+func _mirador(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "Rockingchair_01", 1.2, 1.2, 0.8)
+	_en(r, "small_wooden_table_01", 1.2, D - 0.8, 0.3, 0.8)
+	_en(r, "vintage_oil_lamp", 1.2, D - 0.8, 0.0, 0.5, 0.43, false)
+	_en(r, "magnifying_glass_01", 1.4, D - 0.7, 0.3, 1.0, 0.43, false)
+	_en(r, "vict_antique_chair", W - 1.0, 1.0, -0.7)
+	_telas(r)
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
 		return
-	var a_mano := {"Pasillo del sótano": _pasillo_sotano, "Galería de servicio": _galeria_servicio, "Archivo": _archivo, "Sala de calderas": _calderas, "Cava de vinos": _cava,
+	var a_mano := {"Ático (vigas, baúles, muñecos tapados)": _atico, "Rincón de Elena": _rincon_elena, "Torre": _torre, "Mirador de la torre": _mirador,
+		"Pasillo del sótano": _pasillo_sotano, "Galería de servicio": _galeria_servicio, "Archivo": _archivo, "Sala de calderas": _calderas, "Cava de vinos": _cava,
 		"Despensa": _despensa, "Antecocina": _antecocina, "Guardarropa": _guardarropa, "Cuarto de servicio": _servicio, "Cuarto de plancha": _plancha,
 		"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
 		"Baño": _bano, "Cuarto de huéspedes azul": _huespedes_azul, "Sala de costura": _costura, "Cuarto de la institutriz": _institutriz,
