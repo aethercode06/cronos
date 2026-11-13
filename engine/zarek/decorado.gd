@@ -332,7 +332,7 @@ func _vestibulo(r: Dictionary) -> void:
 	_en(r, "treasure_chest", 3.6, 5.6, 0.2, 0.9)
 	_en(r, "vintage_suitcase", 5.4, 5.4, -0.3)
 	# cosas de quien llegó y se fue: bastón, sombrero no; cartas y un candelero caído en el suelo
-	_en(r, "postcard_set_01", 6.6, 12.4, 0.8, 1.0, 0.0, false)
+	_en(r, "vict_old_books___free_download", 6.6, 12.4, 0.8, 0.5, 0.0, false)
 	_en(r, "wooden_candlestick", 3.4, 13.2, 1.2, 1.0, 0.04, false)
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
@@ -390,10 +390,151 @@ func _cocina(r: Dictionary) -> void:
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, D - 0.4), Vector2(0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
+## Comedor formal (9,6 × 9,6 m): chimenea al sur (x 4,8), puertas al oeste (z 4,8-7,2) y al norte (x 2,4-4,8).
+## La cena quedó servida y nadie volvió a sentarse.
+func _comedor(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	var mz := 4.5
+	_en(r, "dining_table", 3.7, mz, 0.0)
+	_en(r, "dining_table", 5.95, mz, 0.0)
+	for k in 4:
+		var x := 2.95 + k * 1.12
+		_en(r, "dining_chair_02", x, mz - 1.05, 0.0)
+		if k != 2:
+			_en(r, "dining_chair_02", x, mz + 1.05, PI)
+	_en(r, "dining_chair_02", 2.2, mz, PI * 0.5)
+	_en(r, "dining_chair_02", 7.5, mz, -PI * 0.5)
+	# la silla que falta en el lado sur está volcada en el suelo
+	var caida := _en(r, "dining_chair_02", 5.4, mz + 2.0, 2.6, 1.0, 0.0, false)
+	if caida:
+		caida.rotation.x = -PI * 0.5
+		caida.position.y += 0.22
+	# la mesa servida
+	var t := 0.877
+	_en(r, "brass_candleholders", 3.3, mz, 0.0, 0.55, t, false)
+	_en(r, "brass_candleholders", 6.3, mz, 0.0, 0.55, t, false)
+	_en(r, "tea_set_01", 4.85, mz, 0.0, 0.8, t, false)
+	_en(r, "coti_bread_in_basket", 4.2, mz + 0.15, 0.4, 1.0, t, false)
+	_en(r, "wine_bottles_01", 5.6, mz - 0.1, 0.3, 0.8, t, false)
+	for k in 4:
+		var x := 2.95 + k * 1.12
+		_en(r, "carved_wooden_plate", x, mz - 0.45, 0.0, 1.0, t, false)
+		if k != 2:
+			_en(r, "carved_wooden_plate", x, mz + 0.45, 0.0, 1.0, t, false)
+	_en(r, "brass_goblets", 3.5, mz - 0.25, 0.0, 0.8, t, false)
+	_en(r, "brass_goblets", 6.1, mz + 0.25, PI, 0.8, t, false)
+	# una copa derramada junto a un plato
+	var copa := _en(r, "brass_goblets", 4.7, mz + 0.4, 1.0, 0.6, t + 0.05, false)
+	if copa:
+		copa.rotation.z = PI * 0.5
+	# pared este: vitrina de loza y aparador con candelabro
+	_en(r, "vintage_cabinet_01", W - 0.4, 2.4, -PI * 0.5)
+	_en(r, "GothicCommode_01", W - 0.36, 6.9, -PI * 0.5)
+	_en(r, "pian_candelabra", W - 0.4, 6.6, -PI * 0.5, 0.35, 1.21, false)
+	_en(r, "brass_vase_01", W - 0.4, 7.4, 0.0, 0.6, 1.21, false)
+	# pared norte (al este de la puerta): consola con fuente y jarrones
+	_en(r, "ClassicConsole_01", 7.0, 0.36, 0.0)
+	_en(r, "ceramic_vase_01", 6.5, 0.36, 0.0, 1.0, 0.95, false)
+	_en(r, "ceramic_vase_01", 7.5, 0.36, 0.0, 1.0, 0.95, false)
+	_en(r, "coci_samovar", 7.0, 0.36, 0.0, 0.8, 0.95, false)
+	_cuadro(r, "fancy_picture_frame_01", 7.0, 0.09, 0.0, 2.0, 2.0)
+	# pared oeste (norte de la puerta): mesita con lámpara; rincón sur: sillón y retrato
+	_en(r, "side_table_01", 0.4, 2.2, PI * 0.5)
+	_en(r, "vintage_oil_lamp", 0.4, 2.2, 0.0, 0.55, 0.55, false)
+	_cuadro(r, "fancy_picture_frame_02", 0.09, 2.4, PI * 0.5, 1.4, 2.1)
+	_en(r, "vict_victorian_armchair", 1.0, 8.6, PI * 0.8)
+	_cuadro(r, "fancy_picture_frame_01", 2.4, D - 0.09, PI, 1.7, 2.1)
+	_cuadro(r, "fancy_picture_frame_02", 7.2, D - 0.09, PI, 1.2, 2.0)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
+## Tumba un objeto que viene de pie (cartas, lupa): queda plano sobre su apoyo.
+func _tumbar(n: Node3D) -> void:
+	if n:
+		n.rotate_object_local(Vector3.RIGHT, -PI * 0.5)
+
+## Biblioteca (9,6 × 9,6 m): chimenea al norte (x 4,8), puertas al sur (x 4,8-7,2) y al este (z 4,8-7,2),
+## armario-escondite en la pared oeste (z 4,8). Estanterías hasta el techo en todas las paredes libres.
+func _biblioteca(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	var est := "vict_antique_wooden_bookcase___ga"
+	for z in [1.05, 2.9, 6.7, 8.5]:
+		_en(r, est, 0.17, z, PI * 0.5)
+	for x in [2.05, 3.9]:
+		_en(r, est, x, D - 0.17, PI)
+	_en(r, est, 8.45, D - 0.17, PI)
+	for z in [1.05, 2.9]:
+		_en(r, est, W - 0.17, z, -PI * 0.5)
+	for x in [2.0, 7.6]:
+		_en(r, est, x, 0.17, 0.0)
+	# lectura frente al fuego
+	_en(r, "vict_victorian_armchair", 3.6, 2.7, PI - 0.45)
+	_en(r, "vict_victorian_armchair", 6.0, 2.7, PI + 0.45)
+	_en(r, "side_table_01", 4.8, 2.9, 0.0, 0.85)
+	_en(r, "wooden_candlestick", 4.75, 2.9, 0.0, 1.0, 0.47, false)
+	_en(r, "round_spectacles", 4.9, 2.95, 0.6, 1.0, 0.47, false)
+	_en(r, "Ottoman_01", 6.5, 1.9, 0.3, 0.7)
+	# escritorio de consulta en el centro, con todo a medio usar
+	_en(r, "vict_antique_wooden_desk", 4.6, 5.9, PI * 0.5)
+	_en(r, "vict_antique_chair", 4.6, 5.1, PI)
+	var t := 0.8
+	_en(r, "vintage_oil_lamp", 3.8, 6.0, 0.0, 0.55, t, false)
+	_en(r, "coti_simple_bookstack", 4.5, 6.0, 0.4, 0.7, t, false)
+	_en(r, "vict_old_books___free_download", 5.3, 6.1, 1.2, 0.7, t, false)
+	_tumbar(_en(r, "magnifying_glass_01", 4.9, 5.8, 0.7, 1.0, t + 0.01, false))
+	_en(r, "vintage_pocket_watch", 4.2, 5.75, 0.3, 1.0, t, false)
+	_en(r, "coti_celestial_globe", 8.3, 7.2, 0.5)
+	# libros por el suelo: alguien buscaba algo con prisa
+	_en(r, "coti_12_old_books", 1.3, 6.3, 0.4, 1.0, 0.0, false)
+	_en(r, "coti_shabby_books", 2.4, 8.4, 2.0, 1.0, 0.0, false)
+	_en(r, "coti_simple_bookstack", 7.6, 1.3, 0.9, 0.9, 0.0, false)
+	_en(r, "coti_simple_bookstack", 1.1, 2.0, 0.2, 0.9, 0.0, false)
+	_en(r, "book_encyclopedia_set_01", 3.0, 7.6, 1.7, 0.8, 0.0, false)
+	_en(r, "wooden_ladder", 0.75, 7.6, PI * 0.5, 1.4)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
+## Estudio del padre (4,8 × 9,6 m): puertas al sur (x 2,4-4,8), oeste (z 4,8-7,2) y este (z 2,4-4,8);
+## pasadizo secreto en (2,4; 8,4), que hay que dejar libre.
+func _estudio(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "vict_antique_desk", 2.4, 1.55, 0.0)
+	_en(r, "vict_antique_chair", 2.4, 0.85, 0.0)
+	var t := 0.8
+	_en(r, "coti_typewriter", 2.1, 1.5, 0.15, 1.0, t, false)
+	_en(r, "vintage_oil_lamp", 2.9, 1.4, 0.0, 0.5, t, false)
+	_en(r, "coti_pocket_watch", 2.75, 1.7, 0.4, 1.0, t, false)
+	_en(r, "coti_simple_bookstack", 1.75, 1.45, 0.4, 0.6, t, false)
+	_en(r, "round_spectacles", 2.5, 1.75, 0.2, 1.0, t, false)
+	_cuadro(r, "fancy_picture_frame_02", 2.4, 0.09, 0.0, 1.6, 1.9)
+	_en(r, "vict_antique_wooden_bookcase___ga", 0.17, 2.4, PI * 0.5)
+	_en(r, "vintage_grandfather_clock_01", W - 0.3, 1.0, -PI * 0.5)
+	_en(r, "vict_antique_iron_safe", W - 0.5, 6.3, -PI * 0.5)
+	_cuadro(r, "bull_head", W - 0.1, 7.6, -PI * 0.5, 1.1, 2.2)
+	_en(r, "vict_victorian_lounge_sofa", 0.4, 8.3, 0.0)
+	_en(r, "vict_old_books___free_download", 3.6, 6.0, 0.8, 0.6, 0.0, false)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
+		return
+	if String(r.name) == "Biblioteca":
+		_reservar_pasos(r)
+		_biblioteca(r)
+		return
+	if String(r.name) == "Estudio del padre":
+		_reservar_pasos(r)
+		_estudio(r)
+		return
+	if String(r.name) == "Comedor formal":
+		_reservar_pasos(r)
+		_comedor(r)
 		return
 	if String(r.name) == "Cocina":
 		_reservar_pasos(r)

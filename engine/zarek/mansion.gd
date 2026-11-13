@@ -33,6 +33,8 @@ var swing: Node3D
 var nav_region: NavigationRegion3D
 var nav_ready := false
 var _rng := RandomNumberGenerator.new()
+## Salas montadas a mano en ZarekDecorado: el decorado genérico no les añade nada al azar.
+const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre"]
 var _house: Node3D
 var _mat := {}
 var _hole := {}
@@ -1711,13 +1713,55 @@ func _portals() -> void:
 	for l in links:
 		var a := cell_to_world(l[0][0], l[0][1], l[0][2])
 		var b := cell_to_world(l[1][0], l[1][1], l[1][2])
-		portals.append({"pos": a, "to": b, "text": l[2]})
-		portals.append({"pos": b, "to": a, "text": l[3]})
+		var txt: String = l[2]
+		var vis: Array[Vector3] = []
 		for p in [a, b]:
-			cyl(0.08, 0.08, 3.4, p + Vector3(0, 1.7, 0), _mat.metal, self, 8)
-			for k in 7:
-				var st := box(Vector3(1.0, 0.05, 0.3), p + Vector3(0, 0.3 + k * 0.48, 0), _mat.madera, false, self)
-				st.rotation.y = k * 0.7
+			if "librero" in txt and p == a:
+				vis.append(_librero_secreto(p))
+			elif "pasadizo" in txt or "pozo" in txt or "túnel" in txt:
+				vis.append(_escalera_mano(p))
+			else:
+				_caracol(p)
+				vis.append(p)
+		# el punto de uso queda junto a lo que se ve (librero o escalera), un paso por delante de la pared
+		var ua: Vector3 = a.lerp(vis[0], 0.7)
+		var ub: Vector3 = b.lerp(vis[1], 0.7)
+		portals.append({"pos": ua, "to": b, "text": l[2]})
+		portals.append({"pos": ub, "to": a, "text": l[3]})
+
+## Escalera de caracol de hierro con peldaños de madera (subidas a la torre y al ático).
+func _caracol(p: Vector3) -> void:
+	cyl(0.07, 0.09, 3.6, p + Vector3(0, 1.8, 0), _mat.metal, self, 10)
+	for k in 12:
+		var st := box(Vector3(0.95, 0.05, 0.32), p + Vector3(0, 0.25 + k * 0.3, 0), _mat.madera, false, self)
+		st.rotation.y = k * 0.52
+		var bal := cyl(0.012, 0.012, 0.9, p + Vector3(cos(-k * 0.52) * 0.9, 0.7 + k * 0.3, sin(-k * 0.52) * 0.9), _mat.metal, self, 5)
+		bal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+## Escalera de mano contra la pared (pozo, túnel, salida del pasadizo).
+func _escalera_mano(p: Vector3) -> Vector3:
+	var sw := _snap_to_wall(p, 0.25)
+	var base: Vector3 = sw[0]
+	var back: Vector3 = sw[1]
+	var lado := Vector3(-back.z, 0, back.x)
+	for s in [-0.25, 0.25]:
+		box(Vector3(0.06, 3.4, 0.06), base + lado * s + Vector3(0, 1.7, 0), _mat.madera, false, self)
+	for k in 10:
+		var pel := box(Vector3(0.5, 0.04, 0.04), base + Vector3(0, 0.3 + k * 0.32, 0), _mat.madera, false, self)
+		pel.rotation.y = atan2(lado.x, lado.z) + PI * 0.5
+	return base
+
+## La estantería que gira: entreabierta, deja ver la oscuridad del pasadizo detrás.
+func _librero_secreto(p: Vector3) -> Vector3:
+	var sw := _snap_to_wall(p, 0.2)
+	var pos: Vector3 = sw[0]
+	var back: Vector3 = sw[1]
+	var yaw := atan2(-back.x, -back.z)
+	box(Vector3(1.2, 2.3, 0.05) if absf(back.z) > 0.5 else Vector3(0.05, 2.3, 1.2), pos + back * 0.16 + Vector3(0, 1.15, 0), _mat.oscuro, false, self, false)
+	var lib := _prop("vict_antique_wooden_bookcase___ga", pos - back * 0.05, yaw + 0.35, 0.8, false, self)
+	if lib == null:
+		box(Vector3(1.4, 2.1, 0.32), pos + Vector3(0, 1.05, 0), _mat.madera, false, self)
+	return pos
 
 func portal_near(p: Vector3, dist := 1.7) -> Dictionary:
 	for pt in portals:
@@ -1770,9 +1814,9 @@ func _decorate() -> void:
 				_chair_real(c + Vector3((-0.35 + (k % 3) * 0.35) * rect.size.x, 0, (-0.35 + (k / 3) * 0.7) * rect.size.y), _rng.randf() * TAU, "ArmChair_01" if k % 2 == 0 else "Rockingchair_01")
 			_prop("vintage_grandfather_clock_01", Vector3(rect.position.x + 0.6, y, rect.position.y + 0.5), 0.0)
 			_prop("gothic_statue", Vector3(rect.end.x - 2.0, y, rect.position.y + 2.0), -PI * 0.75, 0.9)
-		elif "biblioteca" in lname:
+		elif "biblioteca" in lname and name != "Biblioteca":
 			_shelves_around(r, 0.6)
-		elif "comedor" in lname:
+		elif "comedor" in lname and name != "Comedor formal":
 			if _prop("dining_table", c + Vector3(0, 0, -1.2), PI * 0.5) != null:
 				_prop("dining_table", c + Vector3(0, 0, 1.2), PI * 0.5)
 				for k in 4:
@@ -1825,7 +1869,7 @@ func _decorate() -> void:
 				_prop("marble_bust_01", Vector3(rect.end.x - 0.6, y + 0.55, rect.position.y + 0.6), PI * 0.8, 1.0, false)
 		if t in ["sala", "dormitorio", "pasillo"] and level_of(y) >= 0:
 			_portraits(r)
-		if t in ["sala", "dormitorio"] and rect.size.x > 6 and not ("baile" in lname) and not ("vestíbulo" in lname):
+		if t in ["sala", "dormitorio"] and rect.size.x > 6 and not ("baile" in lname) and not ("vestíbulo" in lname) and not (name in SALAS_A_MANO):
 			for k in 2:
 				var sp := Vector3(_rng.randf_range(rect.position.x + 2, rect.end.x - 2), y, _rng.randf_range(rect.position.y + 2, rect.end.y - 2))
 				if door_near(sp, 3.6).is_empty() and portal_near(sp, 2.5).is_empty() and not _sobre_escalera(sp, 1.2) and sp.distance_to(cell_to_world("baja", 9.0, 11.2)) > 3.0:
@@ -2025,7 +2069,7 @@ func _portraits(r: Dictionary) -> void:
 		if not door_near(p - Vector3(0, 2.3, 0), 1.9).is_empty():
 			continue
 		var yaw: float = [0.0, PI, PI * 0.5, -PI * 0.5][side]
-		var marcos := ["fancy_picture_frame_01", "fancy_picture_frame_02", "hanging_picture_frame_01", "ornate_mirror_01"]
+		var marcos := ["fancy_picture_frame_01", "fancy_picture_frame_02", "fancy_picture_frame_01", "ornate_mirror_01"]
 		var mk: String = marcos[_rng.randi_range(0, marcos.size() - 1)]
 		var off := Vector3(0, 0, 0.12).rotated(Vector3.UP, yaw) * -1.0
 		if _prop(mk, p - Vector3(0, 0.5, 0) + off, yaw, 1.6 if mk != "ornate_mirror_01" else 1.3, false) == null:
