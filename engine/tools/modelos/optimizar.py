@@ -5,6 +5,10 @@ A = [a for a in sys.argv if not a.startswith('--')]
 SRC, OUT = A[-4], A[-3]
 MAXT, MAXTEX = int(A[-2]), int(A[-1])
 GRANDES = {"GothicBed_01": 1024, "GothicCabinet_01": 1024, "vintage_grandfather_clock_01": 1024, "Sofa_01": 1024, "dining_table": 1024, "old_bed_frame": 1024, "wooden_bookshelf_worn": 1024, "gothic_statue": 1024}
+# árboles y vegetación: necesitan más triángulos y textura para verse reales de cerca
+TRIS = {"fir_tree_01": 24000, "pine_tree_01": 24000, "dead_tree_trunk": 12000, "dead_tree_trunk_02": 12000, "fern_02": 9000, "shrub_02": 9000, "shrub_03": 9000, "shrub_04": 9000, "rock_moss_set_02": 12000, "boulder_01": 8000, "scandinavian_masonry_heater": 9000}
+for k in ("fir_tree_01", "pine_tree_01", "dead_tree_trunk", "dead_tree_trunk_02", "boulder_01", "rock_moss_set_02", "scandinavian_masonry_heater", "large_iron_gate"):
+    GRANDES[k] = 1024
 os.makedirs(OUT, exist_ok=True)
 info = {}
 for d in sorted(glob.glob(os.path.join(SRC, "*"))):
@@ -18,8 +22,9 @@ for d in sorted(glob.glob(os.path.join(SRC, "*"))):
         print("FALLO", name, e); continue
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
     t0 = sum(len(o.data.polygons) for o in meshes)
-    if t0 > MAXT:
-        r = MAXT / t0
+    lt = TRIS.get(name, MAXT)
+    if t0 > lt:
+        r = lt / t0
         for o in meshes:
             m = o.modifiers.new("dec", 'DECIMATE'); m.ratio = r
             bpy.context.view_layer.objects.active = o
