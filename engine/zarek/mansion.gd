@@ -36,7 +36,8 @@ var _rng := RandomNumberGenerator.new()
 ## Salas montadas a mano en ZarekDecorado: el decorado genérico no les añade nada al azar.
 const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile",
 	"Sala de fumar y billar", "Sala de las mañanas", "Tocador de la madre", "Cuarto del hermano", "Baño", "Cuarto de huéspedes azul", "Sala de costura", "Cuarto de la institutriz", "Galería de retratos", "Cuarto de huéspedes", "Cuarto de lectura", "Pasillo principal", "Pasillo",
-	"Despensa", "Antecocina", "Guardarropa", "Cuarto de servicio", "Cuarto de plancha"]
+	"Despensa", "Antecocina", "Guardarropa", "Cuarto de servicio", "Cuarto de plancha",
+	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos"]
 var _house: Node3D
 var _mat := {}
 var _hole := {}
@@ -319,6 +320,12 @@ func _materials() -> void:
 	_mat["madera_clara"] = _pbr("WoodFloor043", 0.4, Color(0.9, 0.85, 0.8), 0.9)
 	_mat["moldura"] = _pbr("Plaster007", 0.8, Color(0.78, 0.73, 0.64), 0.7)
 	_mat["cimiento"] = _pbr("Bricks106A", 0.4, Color(0.8, 0.78, 0.75), 1.0)
+	# sótano: muros de sillería ennegrecida, suelo de losas, túneles en roca viva, hierro oxidado
+	_mat["muro_sotano"] = _pbr("Bricks106A", 0.42, Color(0.5, 0.46, 0.42), 1.0, 1.3)
+	_mat["losa"] = _pbr("Rock030", 0.3, Color(0.75, 0.72, 0.68), 1.0, 1.2)
+	_mat["roca"] = _pbr("Rock022", 0.3, Color(0.7, 0.66, 0.6), 1.0, 1.4)
+	_mat["hierro"] = _pbr("Metal063", 0.6, Color(0.42, 0.33, 0.27), 1.0, 1.0)
+	_mat["hierro"].metallic = 0.6
 	_mat["tablas"] = _pbr("Planks037A", 0.45, Color(1, 1, 1), 0.95)
 	_mat["oscuro"] = _plain(Color(0.05, 0.04, 0.04), 0.8)
 	_mat["tela_roja"] = _pbr("Fabric028", 1.2, Color(0.75, 0.2, 0.2), 1.0)
@@ -514,8 +521,10 @@ func _level(key: String) -> void:
 		paper_i += 1
 		if t == "servicio":
 			paper = "yeso"
-		if t in ["sotano", "tunel", "roca", "agua"]:
-			paper = "piedra"
+		if t in ["sotano", "agua"]:
+			paper = "muro_sotano"
+		if t in ["tunel", "roca"]:
+			paper = "roca"
 		if t == "epicentro":
 			paper = "papel0"
 		rooms.append({"name": name, "type": t, "level": level, "rect": r, "y": y, "id": id, "paper": paper})
@@ -526,14 +535,16 @@ func _level(key: String) -> void:
 		var fmat: Material = _mat.parquet
 		if t in ["servicio", "pasillo"]:
 			fmat = _mat.baldosa if level >= 0 else _mat.piedra
-		if t in ["sotano", "tunel", "roca", "agua"]:
-			fmat = _mat.piedra
+		if t in ["sotano", "agua"]:
+			fmat = _mat.losa
+		if t in ["tunel", "roca"]:
+			fmat = _mat.roca
 		if t == "jardin":
 			fmat = _mat.madera_clara
 		for fr in _split_holes(r, _hole.get(level, [])):
 			box(Vector3(fr.size.x, 0.2, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y - 0.1, fr.position.y + fr.size.y * 0.5), fmat, true, null, false)
 		if t != "jardin" and level < 2:
-			var ceil_mat: Material = _mat.techo if level >= 0 else _mat.piedra
+			var ceil_mat: Material = _mat.techo if level >= 0 else (_mat.tablas if t in ["sotano", "agua"] else _mat.roca)
 			for fr in _split_holes(r, _hole.get(level + 1, [])):
 				box(Vector3(fr.size.x, 0.1, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y + WALL_H - 0.06, fr.position.y + fr.size.y * 0.5), ceil_mat, false, null, true)
 		elif level == 2:
@@ -1621,8 +1632,21 @@ func _lamp(pos: Vector3) -> void:
 	bm.emission_enabled = true
 	bm.emission = Color(1, 0.7, 0.4)
 	bm.emission_energy_multiplier = 0.0
-	var real := _prop("pian_medieval_chandelier", Vector3(0, -1.75, 0), 0.0, 1.25, false, n)
-	if real:
+	var sotano := level_of(pos.y + 0.3) < 0
+	var real: Node3D = null
+	if sotano:
+		# en el sótano: farol de aceite colgado de una cadena
+		box(Vector3(0.02, 1.0, 0.02), Vector3(0, -0.5, 0), _mat.hierro, false, n, false)
+		real = _prop("wooden_lantern_01", Vector3(0, -1.5, 0), 0.0, 1.0, false, n)
+		if real:
+			real.set_meta("dyn", true)
+		var llama := cyl(0.012, 0.02, 0.06, Vector3(0, -1.25, 0), bm, n, 5)
+		llama.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	else:
+		real = _prop("pian_medieval_chandelier", Vector3(0, -1.75, 0), 0.0, 1.25, false, n)
+	if sotano:
+		pass
+	elif real:
 		real.set_meta("dyn", true)
 		for mi in real.find_children("*", "MeshInstance3D", true, false):
 			(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

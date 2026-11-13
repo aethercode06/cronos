@@ -1040,12 +1040,213 @@ func _plancha(r: Dictionary) -> void:
 	_en(r, "wicker_basket_02", W - 0.6, 1.0, 0.2)
 	_telas(r, [0, 1, 2, 3])
 
+## Tubería de hierro a lo largo del techo (en coordenadas locales), con abrazaderas.
+func _tuberia(r: Dictionary, x0: float, z0: float, x1: float, z1: float, alto := 3.55, grosor := 0.07) -> void:
+	var rect: Rect2 = r.rect
+	var a := Vector3(rect.position.x + x0, float(r.y) + alto, rect.position.y + z0)
+	var b := Vector3(rect.position.x + x1, float(r.y) + alto, rect.position.y + z1)
+	var t := m.cyl(grosor, grosor, a.distance_to(b), (a + b) * 0.5, m._mat.hierro, null, 8)
+	t.rotation = Vector3(PI * 0.5, atan2(b.x - a.x, b.z - a.z), 0) if absf(b.z - a.z) > absf(b.x - a.x) else Vector3(0, 0, PI * 0.5)
+	var n := int(a.distance_to(b) / 1.6)
+	for i in n:
+		var q := a.lerp(b, (i + 0.5) / n)
+		m.box(Vector3(0.04, 0.45, 0.04), q + Vector3(0, 0.22, 0), m._mat.hierro, false, null, false)
+
+## Pasillo del sótano (36 × 4,8): tuberías por el techo, barriles y cajas contra las paredes, faroles colgados.
+## Viguetas de madera bajo el techo de tablas del sótano.
+func _viguetas(r: Dictionary) -> void:
+	var rect: Rect2 = r.rect
+	var top := float(r.y) + ZarekMansion.WALL_H - 0.11
+	var largo_x := rect.size.x >= rect.size.y
+	var n := int((rect.size.y if largo_x else rect.size.x) / 0.9)
+	for i in range(1, n):
+		if largo_x:
+			m.box(Vector3(rect.size.x - 0.2, 0.22, 0.14), Vector3(rect.get_center().x, top - 0.11, rect.position.y + rect.size.y * i / n), m._mat.madera, false, null, true)
+		else:
+			m.box(Vector3(0.14, 0.22, rect.size.y - 0.2), Vector3(rect.position.x + rect.size.x * i / n, top - 0.11, rect.get_center().y), m._mat.madera, false, null, true)
+
+func _pasillo_sotano(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_viguetas(r)
+	_tuberia(r, 0.4, 0.35, W - 0.4, 0.35)
+	_tuberia(r, 0.4, 0.6, W - 0.4, 0.6, 3.4, 0.045)
+	var x := 1.5
+	var k := 0
+	while x < W - 1.5:
+		var rect: Rect2 = r.rect
+		var pn := Vector3(rect.position.x + x, float(r.y), rect.position.y + 0.4)
+		var ps := Vector3(rect.position.x + x, float(r.y), rect.position.y + D - 0.4)
+		if m.door_near(pn, 1.8).is_empty():
+			match k % 4:
+				0: _en(r, "wine_barrel_01", x, 0.55, k * 0.7, 0.9)
+				1: _en(r, "terr_old_and_dusty_multi_crate_st", x, 0.7, 0.0, 0.8)
+				2: _en(r, "wooden_crate_02", x, 0.4, PI * 0.5)
+				_: _en(r, "wooden_crate_01", x, 0.35, 0.2)
+		if m.door_near(ps, 1.8).is_empty() and k % 2 == 1:
+			_en(r, "wooden_crate_01", x + 0.6, D - 0.35, 0.3)
+		if k % 3 == 0:
+			_en(r, "wooden_lantern_01", x, 0.3, 0.0, 0.8, 2.2, false)
+		x += 2.6
+		k += 1
+	_telas(r)
+
+## Galería de servicio (14,4 × 12): taller y trastero; pasadizo al estudio en (4,8; 3,6); armario en (13,2; 1,2).
+func _galeria_servicio(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_viguetas(r)
+	_tuberia(r, 0.4, 0.4, W - 0.4, 0.4)
+	_en(r, "WoodenTable_03", 9.0, 0.45, 0.0)
+	_en(r, "wooden_lantern_01", 8.6, 0.45, 0.0, 0.7, 0.83, false)
+	_en(r, "hatchet", 9.3, 0.5, 1.2, 1.2, 0.83, false)
+	_en(r, "folding_wooden_stool", 9.0, 1.2, 0.4)
+	_en(r, "wooden_ladder", 11.4, 0.4, 0.0, 1.3)
+	_en(r, "rusted_spade_01", 12.2, 0.15, 0.0, 1.0, 0.0, false)
+	_en(r, "vintage_wooden_drawer_01", 0.5, 7.6, PI * 0.5, 0.9)
+	_en(r, "vintage_cabinet_01", W - 0.4, 6.0, -PI * 0.5)
+	# muebles viejos bajados aquí y tapados con sábanas
+	for q in [Vector3(3.0, 0, 8.6), Vector3(5.2, 0, 9.4), Vector3(11.0, 0, 9.0)]:
+		var rect: Rect2 = r.rect
+		var c := Vector3(rect.position.x + q.x, float(r.y), rect.position.y + q.z)
+		var cub := m.box(Vector3(1.2 + rng.randf() * 0.6, 0.9 + rng.randf() * 0.7, 0.8 + rng.randf() * 0.4), c + Vector3(0, 0.6, 0), m._mat.sabana, true)
+		cub.rotation.y = rng.randf() * 0.6
+	_en(r, "treasure_chest", 1.6, D - 0.5, 0.0, 0.9)
+	_en(r, "vintage_suitcase", 7.4, D - 0.4, 0.2)
+	_en(r, "jugu_rocking_horse", 8.6, 10.0, 2.4)
+	_en(r, "wooden_crate_02", W - 0.4, D - 0.8, 0.0)
+	_en(r, "watering_can_metal_01", W - 1.2, D - 0.4, 0.6)
+	_telas(r)
+
+## Archivo (12 × 12): puertas norte y sur (x 4,8-7,2); armario en (1,2; 9,6). Papeles de la familia y de la mina.
+func _archivo(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_viguetas(r)
+	for z in [1.2, 3.1, 5.0]:
+		_en(r, "vict_antique_wooden_bookcase___ga", 0.17, z, PI * 0.5)
+	for z in [1.2, 3.1, 5.0, 6.9, 8.8, 10.7]:
+		_en(r, "vict_antique_wooden_bookcase___ga", W - 0.17, z, -PI * 0.5)
+	for x in [1.5, 3.4]:
+		_en(r, "vintage_wooden_drawer_01", x, 0.5, 0.0, 0.9)
+	for x in [8.8, 10.6]:
+		_en(r, "vintage_wooden_drawer_01", x, 0.5, 0.0, 0.9)
+	_en(r, "vict_antique_desk", 5.4, 6.4, 0.0)
+	_en(r, "vict_antique_chair", 5.4, 5.7, 0.0)
+	_en(r, "coti_typewriter", 5.2, 6.4, 0.1, 1.0, 0.8, false)
+	_en(r, "vintage_oil_lamp", 5.9, 6.3, 0.0, 0.5, 0.8, false)
+	_en(r, "vict_old_books___free_download", 4.8, 6.5, 0.6, 0.5, 0.8, false)
+	_en(r, "vict_antique_iron_safe", 2.6, D - 0.55, PI)
+	for q in [Vector2(3.2, 8.2), Vector2(8.0, 9.6), Vector2(7.2, 3.0)]:
+		_en(r, "coti_12_old_books", q.x, q.y, q.x, 1.0, 0.0, false)
+	_en(r, "terr_old_and_dusty_multi_crate_st", 9.5, D - 0.7, 0.0, 0.8)
+	# mesa larga de clasificar papeles
+	_en(r, "WoodenTable_03", 7.6, 8.4, PI * 0.5)
+	_en(r, "WoodenTable_03", 7.6, 9.8, PI * 0.5)
+	_en(r, "coti_simple_bookstack", 7.5, 8.2, 0.3, 0.8, 0.83, false)
+	_en(r, "vict_old_books___free_download", 7.7, 9.6, 1.4, 0.5, 0.83, false)
+	_en(r, "wooden_lantern_01", 7.6, 10.2, 0.0, 0.7, 0.83, false)
+	_en(r, "wooden_crate_01", 6.6, 9.0, 0.1)
+	_en(r, "folding_wooden_stool", 8.4, 8.9, 0.6)
+	_telas(r)
+
+## Sala de calderas (12 × 12): puerta al norte (x 4,8-7,2); armario en (9,6; 10,8). Caldera de carbón remachada.
+func _calderas(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_viguetas(r)
+	var rect: Rect2 = r.rect
+	var c := Vector3(rect.position.x + 3.0, float(r.y), rect.position.y + 7.5)
+	# cuerpo de la caldera, remaches, puerta del hogar con resplandor y chimenea al techo
+	var cuerpo := m.cyl(1.05, 1.1, 2.2, c + Vector3(0, 1.1, 0), m._mat.hierro, null, 20)
+	m.box(Vector3(2.4, 0.3, 2.4), c + Vector3(0, 0.15, 0), m._mat.cimiento, true)
+	var col := m.box(Vector3(2.0, 2.2, 2.0), c + Vector3(0, 1.1, 0), m._mat.metal, true)
+	col.visible = false
+	col.set_meta("dyn", true)
+	for k in 3:
+		m.cyl(1.12, 1.12, 0.05, c + Vector3(0, 0.5 + k * 0.7, 0), m._mat.oscuro, null, 20)
+	m.box(Vector3(0.6, 0.5, 0.1), c + Vector3(0, 0.7, 1.08), m._mat.oscuro, false)
+	var brasa := m.box(Vector3(0.5, 0.06, 0.04), c + Vector3(0, 0.58, 1.12), m._mat.fuego, false, null, false)
+	brasa.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var luz := OmniLight3D.new()
+	luz.light_color = Color(1.0, 0.4, 0.12)
+	luz.light_energy = 0.8
+	luz.omni_range = 4.0
+	luz.position = c + Vector3(0, 0.7, 1.5)
+	m._house.add_child(luz)
+	m.cyl(0.22, 0.22, 1.4, c + Vector3(0, 2.9, 0), m._mat.hierro, null, 12)
+	_tuberia(r, 3.0, 7.5, 3.0, 0.4, 3.6, 0.1)
+	_tuberia(r, 3.0, 0.5, W - 0.4, 0.5, 3.6, 0.1)
+	# montón de carbón y herramientas
+	var carbon := m._plain(Color(0.04, 0.04, 0.045), 0.6, 0.1)
+	for k in 7:
+		var piedra := MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.5 - k * 0.05
+		sm.height = 0.5 - k * 0.04
+		piedra.mesh = sm
+		piedra.material_override = carbon
+		piedra.position = Vector3(rect.position.x + 1.0 + (k % 3) * 0.4, float(r.y) + 0.1, rect.position.y + D - 1.2 - (k / 3) * 0.4)
+		piedra.scale = Vector3(1.4, 1.0, 1.2)
+		m._house.add_child(piedra)
+	_en(r, "rusted_spade_01", 2.4, D - 0.5, 0.4, 1.0, 0.0, false)
+	_en(r, "wooden_bucket_02", 2.8, D - 1.6, 0.3)
+	_en(r, "wooden_bucket_01", 0.5, 4.4, 0.0)
+	_en(r, "WoodenTable_03", W - 0.4, 3.5, -PI * 0.5)
+	_en(r, "wooden_lantern_01", W - 0.4, 3.3, 0.0, 0.7, 0.83, false)
+	_en(r, "Lantern_01", W - 0.4, 3.8, 0.0, 1.0, 0.83, false)
+	_en(r, "pian_old_stove", 8.0, 0.4, 0.0, 1.2)
+	_telas(r)
+
+## Botellero de roble oscuro (1,6 m a lo largo de la pared, 2 m de alto) con botellas en cada balda.
+func _botellero(r: Dictionary, x: float, z: float, en_pared_x: bool) -> void:
+	var rect: Rect2 = r.rect
+	var c := Vector3(rect.position.x + x, float(r.y), rect.position.y + z)
+	var largo := Vector3(0, 0, 1) if en_pared_x else Vector3(1, 0, 0)
+	var sz := Vector3(0.42, 0.04, 1.6) if en_pared_x else Vector3(1.6, 0.04, 0.42)
+	var col := m.box(Vector3(0.42, 2.0, 1.6) if en_pared_x else Vector3(1.6, 2.0, 0.42), c + Vector3(0, 1.0, 0), m._mat.madera, true)
+	col.visible = false
+	col.set_meta("dyn", true)
+	for k in 6:
+		m.box(sz, c + Vector3(0, 0.12 + k * 0.36, 0), m._mat.madera, false, null, true)
+	for sgn in [-1.0, 0.0, 1.0]:
+		var lat := Vector3(0.42, 2.0, 0.05) if en_pared_x else Vector3(0.05, 2.0, 0.42)
+		m.box(lat, c + largo * sgn * 0.78 + Vector3(0, 1.0, 0), m._mat.madera, false, null, true)
+	for k in 5:
+		for sgn in [-0.4, 0.4]:
+			var b := m._prop("wine_bottles_01", c + largo * sgn + Vector3(0, 0.14 + k * 0.36, 0), 0.0 if not en_pared_x else PI * 0.5, 0.95, false)
+			if b and rng.randf() < 0.15:
+				b.queue_free()
+
+## Cava de vinos (12 × 14,4): puerta al norte (x 4,8-7,2); sello 3 en (3,6; 3,6) libre; sube la escalera de la despensa.
+func _cava(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_viguetas(r)
+	for z in [1.4, 3.4, 5.4, 7.4, 9.4, 11.4]:
+		_botellero(r, W - 0.3, z, true)
+	for z in [6.2, 8.2, 10.2, 12.2]:
+		_botellero(r, 0.3, z, true)
+	_en(r, "wooden_barrels_01", 3.0, D - 1.9, 0.0, 0.7)
+	_en(r, "wine_barrel_01", 1.0, 1.0, 0.0)
+	_en(r, "wine_barrel_01", 1.0, 1.9, 0.6)
+	_en(r, "wine_barrel_01", 1.0, 1.45, 0.3, 1.0, 0.85, false)
+	_en(r, "vict_small_antique_table_asset", 8.4, 1.3, 0.2, 0.7)
+	_en(r, "coti_wine_bottle", 8.3, 1.3, 0.0, 1.0, 0.27, false)
+	_en(r, "brass_goblets", 8.5, 1.25, 0.6, 0.7, 0.27, false)
+	var caida := _en(r, "coti_wine_bottle", 6.4, 4.6, 0.8, 1.0, 0.04, false)
+	if caida:
+		caida.rotation.z = PI * 0.5
+	_en(r, "street_rat", 8.0, 9.0, 2.1, 1.7, 0.0, false)
+	_telas(r)
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
 		return
-	var a_mano := {"Despensa": _despensa, "Antecocina": _antecocina, "Guardarropa": _guardarropa, "Cuarto de servicio": _servicio, "Cuarto de plancha": _plancha,
+	var a_mano := {"Pasillo del sótano": _pasillo_sotano, "Galería de servicio": _galeria_servicio, "Archivo": _archivo, "Sala de calderas": _calderas, "Cava de vinos": _cava,
+		"Despensa": _despensa, "Antecocina": _antecocina, "Guardarropa": _guardarropa, "Cuarto de servicio": _servicio, "Cuarto de plancha": _plancha,
 		"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
 		"Baño": _bano, "Cuarto de huéspedes azul": _huespedes_azul, "Sala de costura": _costura, "Cuarto de la institutriz": _institutriz,
 		"Galería de retratos": _galeria, "Cuarto de huéspedes": _huespedes, "Cuarto de lectura": _lectura, "Pasillo principal": _pasillo, "Pasillo": _pasillo,
