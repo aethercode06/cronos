@@ -10,9 +10,19 @@ TRIS = {"fir_tree_01": 24000, "pine_tree_01": 24000, "dead_tree_trunk": 12000, "
 for k in ("fir_tree_01", "pine_tree_01", "dead_tree_trunk", "dead_tree_trunk_02", "boulder_01", "rock_moss_set_02", "scandinavian_masonry_heater", "large_iron_gate"):
     GRANDES[k] = 1024
 os.makedirs(OUT, exist_ok=True)
-info = {}
+# se puede relanzar: salta lo ya hecho y lo que hizo caer a Blender la vez anterior
+JS = os.path.join(OUT, "muebles.json")
+info = json.load(open(JS)) if os.path.exists(JS) else {}
+CAIDOS = os.path.join(OUT, "caidos.txt")
+caidos = set(open(CAIDOS).read().split()) if os.path.exists(CAIDOS) else set()
+EN_CURSO = os.path.join(OUT, "en_curso.txt")
+if os.path.exists(EN_CURSO):
+    caidos.add(open(EN_CURSO).read().strip()); open(CAIDOS, "w").write("\n".join(sorted(caidos)))
 for d in sorted(glob.glob(os.path.join(SRC, "*"))):
     name = os.path.basename(d)
+    if name in info or name in caidos:
+        continue
+    open(EN_CURSO, "w").write(name)
     g = glob.glob(os.path.join(d, "*.gltf"))
     if not g: continue
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -41,4 +51,6 @@ for d in sorted(glob.glob(os.path.join(SRC, "*"))):
     info[name] = {"tris": t1, "tam": [round(mx[0] - mn[0], 3), round(mx[2] - mn[2], 3), round(mx[1] - mn[1], 3)]}
     bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, name + ".glb"), export_format='GLB', export_image_format='WEBP')
     print("OK", name, t0, "->", t1, info[name]["tam"])
-json.dump(info, open(os.path.join(OUT, "muebles.json"), "w"), indent=1)
+    json.dump(info, open(JS, "w"), indent=1)
+if os.path.exists(EN_CURSO):
+    os.remove(EN_CURSO)

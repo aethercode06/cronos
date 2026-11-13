@@ -337,10 +337,67 @@ func _vestibulo(r: Dictionary) -> void:
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
+## Cocina (7,2 × 9,6 m): la escalera de servicio ocupa x 2,4-4,8, z 1,4-7,2. Puertas: norte (x 2,4-4,8) y oeste (z 4,8-7,2).
+## Pared este exterior con ventanas; al sur, la pared de la despensa. Cocina de servicio de 1900 dejada a medio hacer.
+func _cocina(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	# rincón NE: estufa de azulejos con olla y cazo encima
+	_en(r, "scandinavian_masonry_heater", W - 0.75, 0.8, -PI * 0.5)
+	# pared este: alacena azul con loza; mesa de trabajo en el centro de la franja este
+	_en(r, "painted_wooden_cabinet_02", W - 0.42, 2.7, -PI * 0.5)
+	_en(r, "tea_set_01", W - 0.42, 2.7, -PI * 0.5, 0.55, 1.02, false)
+	_en(r, "painted_wooden_table", 5.85, 5.4, PI * 0.5)
+	_en(r, "painted_wooden_chair_01", 5.1, 4.8, PI * 0.5 + 0.2)
+	_en(r, "painted_wooden_stool", 6.55, 6.4, 0.4)
+	_en(r, "wooden_stool_01", 5.0, 6.3, 0.0)
+	# encima de la mesa: pan, tabla con cebollas, cuenco con manzanas, jarra, olla esmaltada
+	var tm := 0.96
+	_en(r, "coti_bread_in_basket", 5.7, 4.6, 0.3, 1.0, tm, false)
+	_en(r, "wooden_cutting_board", 5.85, 5.2, 1.4, 1.0, tm, false)
+	for k in 4:
+		_en(r, "yellow_onion", 5.78 + (k % 2) * 0.08, 5.1 + k * 0.06, k * 1.3, 1.0, tm + 0.04, false)
+	_en(r, "wooden_spoon", 6.05, 5.3, 0.2, 1.0, tm, false)
+	_en(r, "wooden_bowl_01", 5.95, 5.9, 0.0, 1.0, tm, false)
+	for k in 4:
+		_en(r, "food_apple_01", 5.9 + (k % 2) * 0.08, 5.85 + (k / 2) * 0.08, k, 1.0, tm + 0.05, false)
+	_en(r, "jug_01", 5.6, 6.2, 0.9, 1.0, tm, false)
+	_en(r, "pot_enamel_01", 6.15, 4.8, 0.3, 1.0, tm, false)
+	_en(r, "sweet_potato", 6.2, 6.4, 1.0, 1.0, tm, false)
+	_en(r, "lemon", 6.25, 6.5, 0.0, 1.0, tm, false)
+	# pared sur: fregadero de piedra con cubos y escoba
+	_en(r, "bano_washbasin", 6.0, D - 0.48, PI, 0.85)
+	_en(r, "wooden_bucket_01", W - 0.45, 7.4, 0.3)
+	_en(r, "wooden_bucket_02", W - 0.55, 8.1, 1.0)
+	_en(r, "wooden_broom", 5.25, D - 0.25, PI, 1.0, 0.0, false)
+	_en(r, "metal_jug", 5.6, D - 0.4, 0.0, 1.0, 0.81, false)
+	# pared oeste (norte de la puerta): estantes con cazos y botes; barril y cajas debajo
+	_en(r, "painted_wooden_shelves", 0.25, 1.4, PI * 0.5)
+	_en(r, "painted_wooden_shelves", 0.25, 2.0, PI * 0.5)
+	_en(r, "brass_pot_02", 0.25, 1.4, PI * 0.5, 1.0, 1.13, false)
+	_en(r, "brass_pot_01", 0.25, 2.0, 0.0, 0.8, 1.13, false)
+	_en(r, "brass_pan_01", 0.6, 3.4, 0.4, 1.0, 0.0, false)
+	_en(r, "wine_barrel_01", 0.5, 3.4, 0.0, 0.85)
+	_en(r, "wicker_basket_02", 1.5, 0.5, 0.6)
+	_en(r, "wicker_basket_01", 1.2, 0.95, 1.2, 1.0, 0.0, false)
+	# rincón SO (sur de la puerta oeste): cajas de verduras y un banco
+	_en(r, "wooden_crate_02", 0.4, 8.3, 0.0)
+	_en(r, "wooden_crate_01", 1.4, 8.9, 0.3)
+	_en(r, "painted_wooden_bench", 0.3, 7.6, PI * 0.5, 0.9)
+	# lo que no debería estar: una rata junto al cubo y una ratonera
+	_en(r, "street_rat", 3.2, D - 0.9, 2.4, 1.7, 0.0, false)
+	_en(r, "mousetrap", 1.0, 7.0, 0.5, 1.4, 0.0, false)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, D - 0.4), Vector2(0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
+		return
+	if String(r.name) == "Cocina":
+		_reservar_pasos(r)
+		_cocina(r)
 		return
 	if String(r.name).begins_with("Vestíbulo"):
 		_reservar_pasos(r)

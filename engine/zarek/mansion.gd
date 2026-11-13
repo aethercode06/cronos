@@ -1077,32 +1077,22 @@ func _trees(W: float, H: float) -> void:
 			continue
 		var s := _rng.randf_range(0.8, 1.45)
 		xforms.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(s, s * _rng.randf_range(0.9, 1.3), s)), Vector3(p.x, 0, p.y)))
-	var mesh := ArrayMesh.new()
-	var parts := [[0.22, 0.32, 4.0, 2.0, "corteza"], [0.0, 2.6, 4.2, 5.0, "pino"], [0.0, 2.1, 3.6, 7.2, "pino"], [0.0, 1.5, 3.0, 9.2, "pino"]]
-	for pr in parts:
-		var cm := CylinderMesh.new()
-		cm.top_radius = pr[0]
-		cm.bottom_radius = pr[1]
-		cm.height = pr[2]
-		cm.radial_segments = 7
-		cm.rings = 1
-		var arr := cm.get_mesh_arrays()
-		var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-		for i in verts.size():
-			verts[i].y += float(pr[3])
-		arr[Mesh.ARRAY_VERTEX] = verts
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
-		mesh.surface_set_material(mesh.get_surface_count() - 1, _mat[pr[4]])
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = mesh
-	mm.instance_count = xforms.size()
+	# tres variantes de abeto repartidas entre los árboles
+	var grupos: Array = [[], [], []]
 	for i in xforms.size():
-		mm.set_instance_transform(i, xforms[i])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	add_child(mmi)
+		grupos[i % 3].append(xforms[i])
+	for v in 3:
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _abeto_mesh(100 + v, 0.85 + v * 0.12)
+		mm.instance_count = grupos[v].size()
+		for i in grupos[v].size():
+			mm.set_instance_transform(i, grupos[v][i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		add_child(mmi)
+	_sotobosque(W, H, avoid)
 	# colisión de troncos con un solo cuerpo
 	var sb := StaticBody3D.new()
 	add_child(sb)
@@ -1119,6 +1109,140 @@ func _trees(W: float, H: float) -> void:
 		if name.begins_with("Árbol") or name.begins_with("Claro del columpio"):
 			var c := Vector3((float(z[2]) + float(z[4]) * 0.5) * CELL, 0, (float(z[3]) + float(z[5]) * 0.5) * CELL)
 			_dead_tree(c, name.begins_with("Claro"))
+
+var _mat_rama: StandardMaterial3D
+## Abeto de unos 12 m: tronco con corteza real y verticilos de ramas (tarjetas con textura de rama y alfa).
+func _abeto_mesh(semilla: int, caida: float) -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = semilla
+	if _mat_rama == null:
+		_mat_rama = StandardMaterial3D.new()
+		_mat_rama.albedo_texture = load("res://zarek/texturas/abeto/rama.png")
+		_mat_rama.albedo_color = Color(0.78, 0.86, 0.8)
+		_mat_rama.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		_mat_rama.alpha_scissor_threshold = 0.42
+		_mat_rama.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mat_rama.roughness = 0.92
+		_mat_rama.backlight_enabled = true
+		_mat_rama.backlight = Color(0.12, 0.2, 0.1)
+		_mat_rama.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	var mesh := ArrayMesh.new()
+	# tronco
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.04
+	cm.bottom_radius = 0.3
+	cm.height = 12.0
+	cm.radial_segments = 8
+	cm.rings = 2
+	var arr := cm.get_mesh_arrays()
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	for i in verts.size():
+		verts[i].y += 6.0
+	arr[Mesh.ARRAY_VERTEX] = verts
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	mesh.surface_set_material(0, _mat.corteza)
+	# ramas
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var up := Vector3.UP
+	var y := 1.9 + rng.randf() * 0.4
+	var giro := rng.randf() * TAU
+	while y < 11.4:
+		var t := y / 12.0
+		var n := 4 if t < 0.8 else 3
+		giro += 0.9 + rng.randf() * 0.5
+		for k in n:
+			var th := giro + TAU * k / n + rng.randf_range(-0.25, 0.25)
+			var d := Vector3(cos(th), 0, sin(th))
+			var largo := (pow(1.0 - t, 0.85) * 3.4 + 0.5) * rng.randf_range(0.85, 1.12)
+			var ancho := largo * 0.62
+			var phi := deg_to_rad(lerpf(30.0, 8.0, t) * caida + rng.randf_range(-6.0, 6.0))
+			var eje := (d * cos(phi) - up * sin(phi)).normalized()
+			var lado := up.cross(d).normalized()
+			var r0 := lerpf(0.26, 0.05, t)
+			var base := Vector3(0, y, 0) + d * (r0 * 0.5)
+			for capa in 2:
+				var w := lado.rotated(eje, 0.0 if capa == 0 else 1.25)
+				var nrm := (d * 0.6 + up * 0.8).normalized()
+				var q := [base - w * ancho * 0.5, base + w * ancho * 0.5, base + eje * largo + w * ancho * 0.5, base + eje * largo - w * ancho * 0.5]
+				var uv := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+				for idx in [0, 1, 2, 0, 2, 3]:
+					st.set_normal(nrm)
+					st.set_uv(uv[idx])
+					st.add_vertex(q[idx])
+		y += rng.randf_range(0.42, 0.55)
+	# punta: tres tarjetas verticales cruzadas
+	for k in 3:
+		var a := TAU * k / 6.0
+		var w := Vector3(cos(a), 0, sin(a))
+		var q := [Vector3(0, 10.3, 0) - w * 0.55, Vector3(0, 10.3, 0) + w * 0.55, Vector3(0, 12.3, 0) + w * 0.55, Vector3(0, 12.3, 0) - w * 0.55]
+		var uv := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+		for idx in [0, 1, 2, 0, 2, 3]:
+			st.set_normal((w.cross(up)).normalized() * 0.3 + up * 0.7)
+			st.set_uv(uv[idx])
+			st.add_vertex(q[idx])
+	var ramas := st.commit()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, ramas.surface_get_arrays(0))
+	mesh.surface_set_material(1, _mat_rama)
+	return mesh
+
+## Suelo del bosque: helechos, rocas con musgo, troncos caídos, tocones, corteza, raíces y matorral (Poly Haven, CC0).
+func _sotobosque(W: float, H: float, avoid: Array) -> void:
+	var cuantos := 1.0 if quality >= 2 else (0.6 if quality == 1 else 0.35)
+	var lista := [["fern_02", 700, 0.8, 1.5], ["shrub_03", 260, 0.7, 1.3], ["shrub_04", 200, 0.7, 1.2], ["rock_moss_set_02", 60, 0.35, 0.7],
+		["boulder_01", 45, 0.8, 2.0], ["dead_tree_trunk", 30, 0.9, 1.3], ["dead_tree_trunk_02", 30, 0.9, 1.3], ["tree_stump_02", 70, 0.8, 1.4],
+		["bark_debris_01", 220, 0.8, 1.6], ["root_cluster_02", 30, 0.6, 1.0], ["dry_branches_medium_01", 180, 0.8, 1.4], ["moss_01", 160, 0.8, 1.6]]
+	for it in lista:
+		var nombre: String = it[0]
+		var path := "res://zarek/muebles/%s.glb" % nombre
+		if not ResourceLoader.exists(path):
+			continue
+		var ps: PackedScene = load(path)
+		if ps == null:
+			continue
+		var raiz: Node3D = ps.instantiate()
+		var partes: Array = []
+		for mi in raiz.find_children("*", "MeshInstance3D", true, false):
+			var m3 := mi as MeshInstance3D
+			partes.append([m3.mesh, _xf_rel(m3, raiz)])
+		raiz.free()
+		var xs: Array[Transform3D] = []
+		var n := int(float(it[1]) * cuantos)
+		var intentos := 0
+		while xs.size() < n and intentos < n * 6:
+			intentos += 1
+			var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+			var mal := false
+			for r in avoid:
+				if (r as Rect2).has_point(p):
+					mal = true
+					break
+			if mal:
+				continue
+			var sc := _rng.randf_range(float(it[2]), float(it[3]))
+			xs.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, -0.02, p.y)))
+		for pt in partes:
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.mesh = pt[0]
+			mm.instance_count = xs.size()
+			for i in xs.size():
+				mm.set_instance_transform(i, xs[i] * (pt[1] as Transform3D))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.multimesh = mm
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if nombre in ["boulder_01", "dead_tree_trunk", "dead_tree_trunk_02", "tree_stump_02"] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mmi.visibility_range_end = 0.0
+			add_child(mmi)
+
+## Transformación de un nodo relativa a un antecesor (sin estar en el árbol de escena).
+func _xf_rel(n: Node3D, raiz: Node3D) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var q: Node = n
+	while q and q != raiz:
+		if q is Node3D:
+			t = (q as Node3D).transform * t
+		q = q.get_parent()
+	return t
 
 func _dead_tree(c: Vector3, with_swing: bool) -> void:
 	cyl(0.35, 0.6, 7.0, c + Vector3(0, 3.5, 0), _mat.corteza, self, 8)
@@ -1582,9 +1706,8 @@ func _decorate() -> void:
 			else:
 				box(Vector3(2.0, 0.08, 9.0), c + Vector3(0, 0.82, 0), _mat.madera, true)
 				box(Vector3(1.6, 0.78, 8.6), c + Vector3(0, 0.39, 0), _mat.madera, false)
-		elif "cocina" in lname:
-			box(Vector3(rect.size.x - 1.0, 0.95, 0.8), Vector3(c.x, y + 0.48, rect.position.y + 0.5), _mat.madera, true)
-			box(Vector3(1.6, 1.0, 0.9), Vector3(rect.position.x + 1.3, y + 0.5, rect.end.y - 0.6), _mat.oscuro, true)
+		elif lname == "cocina":
+			pass  # la monta ZarekDecorado._cocina
 		elif t == "dormitorio":
 			var cama := "GothicBed_01" if ("padres" in lname or "principal" in lname) else "old_bed_frame"
 			var bp := Vector3(rect.position.x + 1.2, y, c.z)
@@ -1659,7 +1782,7 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 	if ps == null:
 		return null
 	# nada que choque puede quedar sobre una escalera o su rellano (bloquearía el paso)
-	if choca and _sobre_escalera(p, maxf(_prop_size(nombre).x, _prop_size(nombre).z) * 0.5):
+	if choca and _huella_en_escalera(p, _prop_size(nombre) * escala, yaw):
 		return null
 	var n: Node3D = ps.instantiate()
 	n.position = p
@@ -1697,6 +1820,20 @@ func _sobre_escalera(p: Vector3, radio := 0.5) -> bool:
 		_stairs_cache = stair_rects()
 	for sr in _stairs_cache:
 		if sr.grow(radio).has_point(Vector2(p.x, p.z)):
+			return true
+	return false
+
+## ¿La huella rectangular del mueble (girado) pisa una escalera o su rellano?
+func _huella_en_escalera(p: Vector3, t: Vector3, yaw: float) -> bool:
+	if _stairs_cache.is_empty():
+		_stairs_cache = stair_rects()
+	var c := absf(cos(yaw))
+	var sn := absf(sin(yaw))
+	var ex := t.x * c + t.z * sn
+	var ez := t.x * sn + t.z * c
+	var h := Rect2(p.x - ex * 0.5, p.z - ez * 0.5, ex, ez)
+	for sr in _stairs_cache:
+		if sr.intersects(h):
 			return true
 	return false
 
