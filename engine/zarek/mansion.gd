@@ -34,7 +34,8 @@ var nav_region: NavigationRegion3D
 var nav_ready := false
 var _rng := RandomNumberGenerator.new()
 ## Salas montadas a mano en ZarekDecorado: el decorado genérico no les añade nada al azar.
-const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile"]
+const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile",
+	"Sala de fumar y billar", "Sala de las mañanas", "Tocador de la madre", "Cuarto del hermano", "Baño", "Cuarto de huéspedes azul", "Sala de costura", "Cuarto de la institutriz", "Galería de retratos", "Cuarto de huéspedes", "Cuarto de lectura", "Pasillo principal", "Pasillo"]
 var _house: Node3D
 var _mat := {}
 var _hole := {}
@@ -460,6 +461,28 @@ func _build_stairs() -> void:
 				box(Vector3(0.21, 0.06, 0.21), Vector3(sx, float(ext[1]) + 1.18, float(ext[0])), _mat.madera, false, null, false)
 				var bola := cyl(0.06, 0.05, 0.1, Vector3(sx, float(ext[1]) + 1.26, float(ext[0])), _mat.madera, null, 8)
 				bola.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# barandilla en la planta de arriba: los dos lados largos del hueco y el extremo que da al vacío
+		if s.to >= 0:
+			var bordes := [[Vector3(a.x, y1, a.z), Vector3(a.x, y1, b.z)], [Vector3(b.x, y1, a.z), Vector3(b.x, y1, b.z)]]
+			var fondo_z := b.z if low_south else a.z
+			bordes.append([Vector3(a.x, y1, fondo_z), Vector3(b.x, y1, fondo_z)])
+			for bd in bordes:
+				var p0: Vector3 = bd[0]
+				var p1: Vector3 = bd[1]
+				var lg := p0.distance_to(p1)
+				var md := (p0 + p1) * 0.5
+				var horiz := absf(p1.x - p0.x) > 0.01
+				box(Vector3(lg, 0.07, 0.09) if horiz else Vector3(0.09, 0.07, lg), md + Vector3(0, 0.98, 0), _mat.madera, false)
+				box(Vector3(lg, 0.06, 0.12) if horiz else Vector3(0.12, 0.06, lg), md + Vector3(0, 0.03, 0), _mat.madera, false, null, false)
+				var nb := int(lg / 0.22)
+				for i in nb:
+					var bp := p0.lerp(p1, (i + 0.5) / nb)
+					var bal := cyl(0.016, 0.024, 0.92, bp + Vector3(0, 0.49, 0), _mat.madera, null, 6)
+					bal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+				# pared invisible para no caer al hueco
+				var col := box(Vector3(lg, 1.1, 0.1) if horiz else Vector3(0.1, 1.1, lg), md + Vector3(0, 0.55, 0), _mat.madera, true)
+				col.visible = false
+				col.set_meta("dyn", true)
 		var sb := StaticBody3D.new()
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
@@ -629,7 +652,17 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 	if window:
 		_window(center, horiz, thick, inward)
 
+## Centros de todas las ventanas (para que cuadros y muebles altos no las tapen).
+var ventanas: Array[Vector3] = []
+
+func ventana_cerca(p: Vector3, radio: float) -> bool:
+	for v in ventanas:
+		if absf(v.y - p.y) < 2.0 and Vector2(v.x - p.x, v.z - p.z).length() < radio:
+			return true
+	return false
+
 func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
+	ventanas.append(c)
 	var lit := _rng.randf() < 0.3
 	var glass := Vector3(1.6, 2.0, 0.04) if horiz else Vector3(0.04, 2.0, 1.6)
 	box(glass, c + Vector3(0, 1.9, 0), _mat.ventana_luz if lit else _mat.cristal, true, null, false)
@@ -1699,17 +1732,30 @@ func _pickup(pos: Vector3, kind: String) -> void:
 	n.set_meta("dyn", true)
 	n.position = pos
 	add_child(n)
-	box(Vector3(0.6, 0.8, 0.45), Vector3(0, 0.4, 0), _mat.madera, true, n)
+	var alto := 0.8
+	if _prop("side_table_01", Vector3.ZERO, _rng.randf() * TAU, 1.0, true, n) != null:
+		alto = 0.551
+	else:
+		box(Vector3(0.6, 0.8, 0.45), Vector3(0, 0.4, 0), _mat.madera, true, n)
 	var mi: MeshInstance3D
 	if kind == "pila":
-		var m := _plain(Color(0.15, 0.5, 0.2), 0.5, 0.4)
+		# pila de la linterna del jugador: cuerpo negro con etiqueta verde apagada y polo de cobre
+		var m := _plain(Color(0.06, 0.07, 0.06), 0.35, 0.3)
 		m.emission_enabled = true
-		m.emission = Color(0.2, 0.8, 0.3)
-		m.emission_energy_multiplier = 0.7
-		mi = cyl(0.05, 0.05, 0.2, Vector3(0, 0.88, 0), m, n, 10)
+		m.emission = Color(0.1, 0.35, 0.15)
+		m.emission_energy_multiplier = 0.25
+		mi = cyl(0.017, 0.017, 0.06, Vector3(0, alto + 0.018, 0), m, n, 12)
 		mi.rotation.z = PI * 0.5
+		var polo := cyl(0.006, 0.006, 0.006, Vector3(0.033, 0, 0), _mat.oro, mi, 8)
+		polo.rotation.z = 0.0
+		for k in 2:
+			var otra := cyl(0.017, 0.017, 0.06, Vector3(0.05 + k * 0.04, alto + 0.03, 0.06), m, n, 12)
+			otra.rotation.x = PI * 0.5 * float(k == 0)
 	else:
-		mi = cyl(0.09, 0.11, 0.24, Vector3(0, 0.92, 0), _mat.sal, n, 10)
+		# sal gorda en un tarro de cristal con tapa de corcho
+		mi = cyl(0.06, 0.06, 0.15, Vector3(0, alto + 0.075, 0), _mat.sal, n, 14)
+		cyl(0.065, 0.065, 0.17, Vector3(0, alto + 0.085, 0), _mat.cristal, n, 14)
+		cyl(0.045, 0.05, 0.03, Vector3(0, alto + 0.185, 0), _mat.madera_clara, n, 10)
 	pickups.append({"node": n, "pos": pos, "kind": kind, "taken": false, "item": mi})
 
 # ---------------- pasos especiales ----------------
@@ -1872,7 +1918,7 @@ func _decorate() -> void:
 				for k in 6:
 					var sp := Vector3(_rng.randf_range(rect.position.x + 2, rect.end.x - 2), y, _rng.randf_range(rect.position.y + 2, rect.end.y - 2))
 					box(Vector3(0.8, 1.6, 0.8), sp + Vector3(0, 0.8, 0), _mat.sabana, true)
-		if t == "sala" and not ("baile" in lname or "comedor" in lname or "biblioteca" in lname or "billar" in lname) and rect.size.x > 7 and rect.size.y > 7:
+		if t == "sala" and not ("baile" in lname or "comedor" in lname or "biblioteca" in lname or "billar" in lname) and rect.size.x > 7 and rect.size.y > 7 and not (name in SALAS_A_MANO):
 			var cc := c + Vector3(0, 0, 1.0)
 			if _prop("Sofa_01", cc + Vector3(0, 0, 1.6), PI) != null:
 				_prop("ArmChair_01", cc + Vector3(-1.9, 0, 0), PI * 0.5)
@@ -1881,7 +1927,7 @@ func _decorate() -> void:
 				_prop("chess_set", cc + Vector3(0, 0.34, 0), 0.4, 0.8, false)
 				_prop("side_table_01", Vector3(rect.end.x - 0.6, y, rect.position.y + 0.6), 0.0)
 				_prop("marble_bust_01", Vector3(rect.end.x - 0.6, y + 0.55, rect.position.y + 0.6), PI * 0.8, 1.0, false)
-		if t in ["sala", "dormitorio", "pasillo"] and level_of(y) >= 0:
+		if t in ["sala", "dormitorio", "pasillo"] and level_of(y) >= 0 and not (name in SALAS_A_MANO):
 			_portraits(r)
 		if t in ["sala", "dormitorio"] and rect.size.x > 6 and not ("baile" in lname) and not ("vestíbulo" in lname) and not (name in SALAS_A_MANO):
 			for k in 2:
@@ -2072,20 +2118,20 @@ func _portraits(r: Dictionary) -> void:
 		var p: Vector3
 		var size := Vector3(1.0, 1.3, 0.06)
 		match side:
-			0: p = Vector3(rect.position.x + rect.size.x * t, y + 2.3, rect.position.y + 0.17)
-			1: p = Vector3(rect.position.x + rect.size.x * t, y + 2.3, rect.end.y - 0.17)
+			0: p = Vector3(rect.position.x + rect.size.x * t, y + 2.3, rect.position.y + 0.27)
+			1: p = Vector3(rect.position.x + rect.size.x * t, y + 2.3, rect.end.y - 0.27)
 			2:
-				p = Vector3(rect.position.x + 0.17, y + 2.3, rect.position.y + rect.size.y * t)
+				p = Vector3(rect.position.x + 0.27, y + 2.3, rect.position.y + rect.size.y * t)
 				size = Vector3(0.06, 1.3, 1.0)
 			_:
-				p = Vector3(rect.end.x - 0.17, y + 2.3, rect.position.y + rect.size.y * t)
+				p = Vector3(rect.end.x - 0.27, y + 2.3, rect.position.y + rect.size.y * t)
 				size = Vector3(0.06, 1.3, 1.0)
-		if not door_near(p - Vector3(0, 2.3, 0), 1.9).is_empty():
+		if not door_near(p - Vector3(0, 2.3, 0), 1.9).is_empty() or ventana_cerca(p - Vector3(0, 2.3, 0), 1.3):
 			continue
 		var yaw: float = [0.0, PI, PI * 0.5, -PI * 0.5][side]
 		var marcos := ["fancy_picture_frame_01", "fancy_picture_frame_02", "fancy_picture_frame_01", "ornate_mirror_01"]
 		var mk: String = marcos[_rng.randi_range(0, marcos.size() - 1)]
-		var off := Vector3(0, 0, 0.12).rotated(Vector3.UP, yaw) * -1.0
+		var off := Vector3.ZERO
 		if _prop(mk, p - Vector3(0, 0.5, 0) + off, yaw, 1.6 if mk != "ornate_mirror_01" else 1.3, false) == null:
 			box(size, p, _mat.oro, false, null, false)
 			var inner := size * (Vector3(0.82, 0.85, 1.4) if size.x > 0.5 else Vector3(1.4, 0.85, 0.82))
@@ -2093,6 +2139,25 @@ func _portraits(r: Dictionary) -> void:
 
 ## Alfombra persa (plano con textura) de sx × sz metros.
 func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
+	var ex := sz if absf(sin(yaw)) > 0.7 else sx
+	var ez := sx if absf(sin(yaw)) > 0.7 else sz
+	var huella := Rect2(c.x - ex * 0.5, c.z - ez * 0.5, ex, ez)
+	for h in _hole.get(level_of(c.y + 0.3), []):
+		if (h as Rect2).grow(0.3).intersects(huella):
+			# se recorta la alfombra al lado más grande que queda libre del hueco
+			var hr: Rect2 = h
+			var trozos := [Rect2(huella.position, Vector2(hr.position.x - 0.3 - huella.position.x, huella.size.y)),
+				Rect2(Vector2(hr.end.x + 0.3, huella.position.y), Vector2(huella.end.x - hr.end.x - 0.3, huella.size.y)),
+				Rect2(huella.position, Vector2(huella.size.x, hr.position.y - 0.3 - huella.position.y)),
+				Rect2(Vector2(huella.position.x, hr.end.y + 0.3), Vector2(huella.size.x, huella.end.y - hr.end.y - 0.3))]
+			var mejor := Rect2()
+			for tr in trozos:
+				if tr.size.x > 1.0 and tr.size.y > 1.0 and tr.get_area() > mejor.get_area():
+					mejor = tr
+			if mejor.get_area() < 2.0:
+				return
+			_alfombra(Vector3(mejor.get_center().x, c.y, mejor.get_center().y), mejor.size.x, mejor.size.y, 0.0)
+			return
 	var mi := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(sx, sz)

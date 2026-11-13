@@ -169,10 +169,33 @@ func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala :
 		x = clampf(x, f[0] + ext.x * 0.5 + 0.01, rect.size.x - f[1] - ext.x * 0.5 - 0.01) if ext.x < rect.size.x * 0.5 else x
 		z = clampf(z, f[2] + ext.z * 0.5 + 0.01, rect.size.y - f[3] - ext.z * 0.5 - 0.01) if ext.z < rect.size.y * 0.5 else z
 	var p := Vector3(rect.position.x + x, float(r.y) + alto, rect.position.y + z)
+	# un mueble alto pegado a la pared no puede tapar una ventana: se corre a lo largo de la pared
+	if t.y > 1.3 and alto < 0.5:
+		p = _esquivar_ventana(r, p, ext)
 	var n := m._prop(_real(nombre), p, yaw, escala, choca)
 	if n and choca:
 		_ocupar(p, ext)
 	return n
+
+func _esquivar_ventana(r: Dictionary, p: Vector3, ext: Vector3) -> Vector3:
+	var rect: Rect2 = r.rect
+	var dx := minf(p.x - rect.position.x, rect.end.x - p.x)
+	var dz := minf(p.z - rect.position.y, rect.end.y - p.z)
+	if minf(dx, dz) > 0.9:
+		return p
+	var eje := Vector3(0, 0, 1) if dx < dz else Vector3(1, 0, 0)
+	var media := (ext.z if dx < dz else ext.x) * 0.5
+	var y0 := float(r.y)
+	var muro := Vector3(p.x, y0, p.z)
+	if not m.ventana_cerca(muro, media + 0.85):
+		return p
+	for paso in [0.6, -0.6, 1.2, -1.2, 1.8, -1.8, 2.4, -2.4]:
+		var q: Vector3 = muro + eje * paso
+		if not rect.grow(-media).has_point(Vector2(q.x, q.z)):
+			continue
+		if not m.ventana_cerca(q, media + 0.85):
+			return Vector3(q.x, p.y, q.z)
+	return p
 
 var _caras_cache: Dictionary = {}
 ## Distancia de cada borde de la sala a la cara interior de su pared [oeste, este, norte, sur]
@@ -214,7 +237,19 @@ func _cuadro(r: Dictionary, nombre: String, x: float, z: float, yaw: float, esca
 	elif dmin == z: z = f[2] + 0.03
 	else: z = D - f[3] - 0.03
 	var rect: Rect2 = r.rect
-	m._prop(_real(nombre), Vector3(rect.position.x + x, float(r.y) + alto, rect.position.y + z), yaw, escala, false)
+	var q := Vector3(rect.position.x + x, float(r.y) + alto, rect.position.y + z)
+	if m.ventana_cerca(Vector3(q.x, float(r.y), q.z), 1.25):
+		var eje := Vector3(0, 0, 1) if (dmin == x or dmin == W - x) else Vector3(1, 0, 0)
+		var hecho := false
+		for paso in [1.2, -1.2, 2.0, -2.0]:
+			var q2: Vector3 = q + eje * paso
+			if rect.grow(-0.5).has_point(Vector2(q2.x, q2.z)) and not m.ventana_cerca(Vector3(q2.x, float(r.y), q2.z), 1.25) and m.door_near(Vector3(q2.x, float(r.y), q2.z), 1.3).is_empty():
+				q = q2
+				hecho = true
+				break
+		if not hecho:
+			return
+	m._prop(_real(nombre), q, yaw, escala, false)
 
 ## Salón con chimenea: sala de muestra montada a mano, como una sala real abandonada de golpe en 1908.
 ## Local: x al este, z al sur. Chimenea en la pared oeste (z 3,6) entre dos ventanas (z 1,2 y 6,0);
@@ -555,7 +590,7 @@ func _dormitorio_padres(r: Dictionary) -> void:
 func _cuarto_elena(r: Dictionary) -> void:
 	var W: float = r.rect.size.x
 	var D: float = r.rect.size.y
-	_en(r, "old_bed_frame", 1.6, 1.15, 0.0)
+	_cama_hierro(r, 1.6, 1.15, 0.0)
 	_en(r, "painted_wooden_nightstand", 2.55, 0.35, 0.0)
 	_en(r, "jugu_music_box_prop", 2.55, 0.35, 0.3, 1.2, 0.62, false)
 	_en(r, "wooden_candlestick", 2.7, 0.45, 0.0, 1.0, 0.62, false)
@@ -591,8 +626,8 @@ func _cuarto_elena(r: Dictionary) -> void:
 func _cuarto_ninos(r: Dictionary) -> void:
 	var W: float = r.rect.size.x
 	var D: float = r.rect.size.y
-	_en(r, "old_bed_frame", 1.2, 1.1, 0.0, 0.85)
-	_en(r, "old_bed_frame", 6.0, 1.1, 0.0, 0.85)
+	_cama_hierro(r, 1.2, 1.1, 0.0, 0.85)
+	_cama_hierro(r, 6.0, 1.1, 0.0, 0.85)
 	_en(r, "painted_wooden_nightstand", 3.6, 0.35, 0.0)
 	_en(r, "wooden_candlestick", 3.6, 0.35, 0.0, 1.0, 0.62, false)
 	_en(r, "jugu_dollhouse", W - 0.5, 3.6, -PI * 0.5)
@@ -653,12 +688,288 @@ func _salon_baile(r: Dictionary) -> void:
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 1.0, ZarekMansion.WALL_H - 0.9, false)
 
+## Telarañas en las esquinas altas indicadas (0 NO, 1 NE, 2 SO, 3 SE).
+func _telas(r: Dictionary, esquinas := [0, 1, 2, 3]) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	var e := [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]
+	for i in esquinas:
+		var q: Vector2 = e[i]
+		_en(r, "terr_cobwebs", q.x, q.y, atan2(W * 0.5 - q.x, D * 0.5 - q.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
+## Mesa de billar de 1,5 × 2,8 m hecha a medida: patas torneadas, banda de caoba, paño verde, troneras.
+func _mesa_billar(r: Dictionary, x: float, z: float) -> void:
+	var rect: Rect2 = r.rect
+	var c := Vector3(rect.position.x + x, float(r.y), rect.position.y + z)
+	m.box(Vector3(1.5, 0.22, 2.8), c + Vector3(0, 0.7, 0), m._mat.madera, true)
+	m.box(Vector3(1.26, 0.03, 2.56), c + Vector3(0, 0.82, 0), m._mat.tela_verde, false, null, false)
+	for sx in [-0.69, 0.69]:
+		m.box(Vector3(0.12, 0.07, 2.8), c + Vector3(sx, 0.845, 0), m._mat.madera, false, null, false)
+	for sz in [-1.34, 1.34]:
+		m.box(Vector3(1.5, 0.07, 0.12), c + Vector3(0, 0.845, sz), m._mat.madera, false, null, false)
+	for px in [-0.62, 0.62]:
+		for pz in [-1.27, 0.0, 1.27]:
+			m.cyl(0.055, 0.055, 0.02, c + Vector3(px, 0.84, pz), m._mat.oscuro, null, 10)
+	for lx in [-0.6, 0.6]:
+		for lz in [-1.2, 0.0, 1.2]:
+			m.cyl(0.07, 0.1, 0.6, c + Vector3(lx, 0.3, lz), m._mat.madera, null, 8)
+	# bolas por el paño y un taco olvidado encima
+	var cols := [Color(0.95, 0.93, 0.85), Color(0.8, 0.1, 0.08), Color(0.9, 0.75, 0.1)]
+	for k in 3:
+		var mat := m._plain(cols[k], 0.25)
+		var b := MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.03
+		sm.height = 0.06
+		b.mesh = sm
+		b.material_override = mat
+		b.position = c + Vector3(-0.3 + k * 0.28, 0.865, -0.5 + k * 0.45)
+		m.add_child(b)
+	var taco := m.cyl(0.008, 0.016, 1.45, c + Vector3(0.2, 0.87, 0.3), m._mat.madera_clara, null, 6)
+	taco.rotation = Vector3(PI * 0.5, 0.35, 0)
+
+## Sala de fumar y billar (7,2 × 9,6): puertas al sur (x 2,4-4,8) y este (z 4,8-7,2); armario en (6,0; 4,8).
+func _billar(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_mesa_billar(r, 3.3, 4.0)
+	# tacos apoyados en la pared oeste
+	for k in 4:
+		var t := m.cyl(0.008, 0.016, 1.45, Vector3(r.rect.position.x + 0.2, float(r.y) + 0.72, r.rect.position.y + 3.4 + k * 0.12), m._mat.madera_clara, null, 6)
+		t.rotation.z = -0.08
+	_en(r, "ArmChair_01", 1.1, 8.2, 0.6)
+	_en(r, "ArmChair_01", 2.3, 8.7, -0.3)
+	_en(r, "side_table_01", 1.7, 9.1, 0.0, 0.8)
+	_en(r, "coti_wine_bottle", 1.6, 9.1, 0.0, 1.0, 0.44, false)
+	_en(r, "coti_glass_bottle", 1.8, 9.05, 0.0, 1.0, 0.44, false)
+	_en(r, "vict_antique_wooden_bookcase___ga", W - 0.17, 1.6, -PI * 0.5)
+	_en(r, "vict_small_antique_table_asset", 6.0, 8.6, 0.3, 0.7)
+	_en(r, "chess_set", 6.0, 8.6, 0.3, 0.6, 0.27, false)
+	_en(r, "vict_antique_chair", 5.4, 8.7, PI * 0.5 + 0.3)
+	_cuadro(r, "bull_head", 3.3, 0.1, 0.0, 1.2, 2.25)
+	_cuadro(r, "fancy_picture_frame_01", 0.09, 7.6, PI * 0.5, 1.6, 2.1)
+	_telas(r)
+
+## Sala de las mañanas (4,8 × 9,6): puertas norte (x 2,4-4,8), oeste y este (z 4,8-7,2). Desayuno a media luz.
+func _mananas(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "round_wooden_table_01", 2.4, 2.9, 0.0, 0.75)
+	for k in 3:
+		var a := TAU * k / 3.0 + 0.4
+		_en(r, "painted_wooden_chair_01", 2.4 + cos(a) * 0.95, 2.9 + sin(a) * 0.95, -a - PI * 0.5)
+	_en(r, "tea_set_01", 2.4, 2.9, 0.4, 0.5, 0.755, false)
+	_en(r, "coti_bread_in_basket", 2.2, 3.15, 0.0, 1.0, 0.755, false)
+	_en(r, "sofa_02", 2.4, D - 0.45, PI)
+	_en(r, "painted_wooden_cabinet", 0.36, 1.2, PI * 0.5)
+	_en(r, "ceramic_vase_02", 0.36, 1.0, 0.0, 1.0, 1.18, false)
+	_en(r, "Rockingchair_01", 3.9, 8.0, PI + 0.6)
+	_cuadro(r, "fancy_picture_frame_02", W - 0.09, 2.6, -PI * 0.5, 1.3, 2.0)
+	_telas(r, [1, 2, 3])
+
+## Tocador de la madre (4,8 × 9,6): puertas sur (x 2,4-4,8) y oeste (z 4,8-7,2); tocador con espejo al norte.
+func _tocador(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "GothicCommode_01", 2.4, 0.33, 0.0)
+	_en(r, "vict_ornate_mirror", 2.4, 0.1, 0.0, 0.62, 1.25, false)
+	_en(r, "vict_antique_chair", 2.4, 1.1, PI)
+	_en(r, "coti_small_bottle", 2.0, 0.35, 0.0, 0.35, 1.21, false)
+	_en(r, "coti_glass_bottle", 2.15, 0.3, 0.0, 0.8, 1.21, false)
+	_en(r, "jugu_music_box_prop", 2.85, 0.35, 0.3, 1.0, 1.21, false)
+	_en(r, "brass_vase_03", 1.75, 0.35, 0.0, 0.4, 1.21, false)
+	_en(r, "GothicCabinet_01", W - 0.6, 3.0, -PI * 0.5)
+	_en(r, "vintage_day_bed", W - 0.45, 7.6, -PI * 0.5)
+	_en(r, "vict_dusty_antique_mirror__free", 0.6, 3.0, PI * 0.5)
+	_en(r, "vintage_suitcase", 0.5, 8.6, PI * 0.5, 0.9)
+	_telas(r, [0, 1, 3])
+
+## Cuarto del hermano (7,2 × 9,6): puertas sur (x 2,4-4,8) y este (z 4,8-7,2); armario en (6,0; 1,2).
+func _hermano(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_cama_hierro(r, 0.6, 1.3, 0.0)
+	_en(r, "painted_wooden_nightstand", 1.5, 0.35, 0.0)
+	_en(r, "wooden_candlestick", 1.5, 0.35, 0.0, 1.0, 0.62, false)
+	_en(r, "vict_antique_desk", 1.2, D - 0.4, PI)
+	_en(r, "vict_antique_chair", 1.2, D - 1.05, 0.2)
+	_en(r, "coti_celestial_globe", 0.9, D - 0.4, 0.0, 0.5, 0.8, false)
+	_en(r, "vict_old_books___free_download", 1.6, D - 0.4, 0.4, 0.5, 0.8, false)
+	_en(r, "vict_antique_wooden_bookcase___ga", 0.17, 5.4, PI * 0.5)
+	_en(r, "treasure_chest", 3.2, 2.4, 0.2, 0.8)
+	_en(r, "jugu_rocking_horse", 5.6, 8.3, -2.6)
+	_en(r, "hatchet", 4.6, 8.9, 1.2, 1.0, 0.0, false)
+	_cuadro(r, "fancy_picture_frame_01", 0.09, 1.4, PI * 0.5, 1.2, 2.2)
+	_telas(r, [0, 2, 3])
+
+## Baño (4,8 × 9,6): una puerta al sur (x 2,4-4,8). Bañera de patas, lavabo de pie con espejo.
+func _bano(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "bano_classic_bathtub", 2.4, 0.5, 0.0, 1.05)
+	_en(r, "bano_washbasin_model", 0.35, 3.6, PI * 0.5)
+	_en(r, "ornate_mirror_01", 0.12, 3.6, PI * 0.5, 1.2, 1.45, false)
+	_en(r, "wooden_bucket_01", 3.9, 1.4, 0.3)
+	_en(r, "painted_wooden_stool", 3.6, 2.0, 0.5)
+	_en(r, "coti_small_bottle", 3.6, 2.0, 0.0, 0.35, 0.58, false)
+	_en(r, "painted_wooden_shelves", W - 0.25, 4.6, -PI * 0.5)
+	_en(r, "coti_glass_bottle", W - 0.25, 4.5, 0.0, 0.8, 1.13, false)
+	_en(r, "jug_01", W - 0.25, 4.75, 0.3, 1.0, 1.13, false)
+	_en(r, "wicker_basket_02", 0.5, 8.6, 0.3)
+	_en(r, "painted_wooden_cabinet", W - 0.33, 7.4, -PI * 0.5)
+	_en(r, "coti_small_bottle", W - 0.33, 7.2, 0.0, 0.35, 1.18, false)
+	_en(r, "jug_01", W - 0.33, 7.7, 0.6, 1.0, 1.18, false)
+	_en(r, "painted_wooden_chair_01", 1.3, 6.4, 0.7)
+	_en(r, "wooden_bucket_02", 1.0, 1.4, 0.4)
+	_telas(r, [0, 1, 2, 3])
+
+## Huéspedes azul (7,2 × 9,6): puertas norte y sur (x 2,4-4,8); armario en (1,2; 7,2).
+func _huespedes_azul(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "GothicBed_01", W - 1.15, 4.6, -PI * 0.5)
+	_en(r, "ClassicNightstand_01", W - 0.3, 3.1, -PI * 0.5)
+	_en(r, "vintage_oil_lamp", W - 0.3, 3.1, 0.0, 0.5, 0.7, false)
+	_en(r, "ClassicNightstand_01", W - 0.3, 6.1, -PI * 0.5)
+	_en(r, "vintage_suitcase", 4.2, 4.6, PI * 0.5, 0.9)
+	_en(r, "GothicCommode_01", 0.36, 2.6, PI * 0.5)
+	_en(r, "ornate_mirror_01", 0.12, 2.6, PI * 0.5, 1.2, 1.4, false)
+	_en(r, "vict_victorian_armchair", 1.4, 4.6, PI * 0.5 + 0.3)
+	_cuadro(r, "fancy_picture_frame_02", W - 0.09, 4.6, -PI * 0.5, 1.3, 2.25)
+	_telas(r, [0, 1, 3])
+
+## Sala de costura (9,6 × 9,6): puertas norte y sur (x 4,8-7,2).
+func _costura(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "vict_singer_15___old_sewing_machi", 0.4, 2.4, PI * 0.5)
+	_en(r, "painted_wooden_chair_01", 1.15, 2.4, -PI * 0.5)
+	_en(r, "coti_willoughsby_sewing_machine", 0.55, 5.6, PI * 0.5)
+	_en(r, "spinning_wheel_01", W - 1.2, 2.6, -0.7)
+	_en(r, "painted_wooden_stool", W - 1.9, 3.2, 0.3)
+	_en(r, "painted_wooden_table", 4.8, 4.8, 0.0, 0.8)
+	_en(r, "wicker_basket_01", 4.4, 4.7, 0.3, 1.0, 0.77, false)
+	_en(r, "wicker_basket_02", 5.3, 4.9, 1.0, 1.0, 0.77, false)
+	_en(r, "painted_wooden_chair_02", 4.8, 3.9, 0.0)
+	_en(r, "vintage_wooden_drawer_01", W - 0.55, 7.2, -PI * 0.5)
+	_en(r, "painted_wooden_cabinet_02", 0.4, 8.6, PI * 0.5)
+	_en(r, "wicker_basket_02", 2.4, 8.9, 0.4)
+	_en(r, "wicker_basket_01", 7.6, 0.5, 1.4)
+	_telas(r)
+
+## Cuarto de la institutriz (9,6 × 7,2): una puerta al norte (x 4,8-7,2); armario en (8,4; 6,0).
+func _institutriz(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_cama_hierro(r, 0.6, 4.6, 0.0)
+	_en(r, "painted_wooden_nightstand", 1.4, 6.8, 0.0)
+	_en(r, "wooden_candlestick", 1.4, 6.8, 0.0, 1.0, 0.62, false)
+	_en(r, "vict_antique_desk", 2.6, 0.35, 0.0)
+	_en(r, "vict_antique_chair", 2.6, 1.0, PI)
+	_en(r, "vict_old_books___free_download", 2.3, 0.35, 0.2, 0.5, 0.8, false)
+	_en(r, "coti_pocket_watch", 2.9, 0.45, 0.6, 1.0, 0.8, false)
+	_en(r, "vict_antique_wooden_bookcase___ga", 0.17, 1.6, PI * 0.5)
+	_en(r, "bano_washbasin_model", W - 0.3, 2.2, -PI * 0.5)
+	_en(r, "painted_wooden_bench", 5.2, D - 0.35, PI)
+	_cuadro(r, "fancy_picture_frame_01", 4.8, D - 0.09, PI, 1.3, 2.1)
+	_telas(r, [0, 2, 3])
+
+## Galería de retratos (9,6 × 12): llega la gran escalera (hueco x 2,4-7,2, z 4,8-10,6); puertas norte y sur.
+## Retratos en todas las paredes y bustos en el extremo norte.
+func _galeria(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	for z in [1.6, 4.0, 6.4, 8.8]:
+		_cuadro(r, "fancy_picture_frame_02" if int(z) % 2 == 0 else "fancy_picture_frame_01", 0.09, z, PI * 0.5, 1.5, 1.9)
+		_cuadro(r, "fancy_picture_frame_01" if int(z) % 2 == 0 else "fancy_picture_frame_02", W - 0.09, z, -PI * 0.5, 1.5, 1.9)
+	for x in [1.6, 8.0]:
+		_cuadro(r, "fancy_picture_frame_02", x, 0.09, 0.0, 1.6, 1.9)
+		_en(r, "side_table_tall_01", x, 0.6, 0.0)
+		_en(r, "marble_bust_01", x, 0.6, 0.0, 0.8, 0.76, false)
+	_en(r, "painted_wooden_bench", 0.4, 11.0, PI * 0.5)
+	_en(r, "painted_wooden_bench", W - 0.4, 11.0, -PI * 0.5)
+	_telas(r)
+
+## Cuarto de huéspedes (9,6 × 9,6): puertas norte y sur (x 4,8-7,2); armario en (8,4; 8,4).
+func _huespedes(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "GothicBed_01", 1.15, 4.8, PI * 0.5)
+	_en(r, "throw_pillows_01", 0.6, 4.8, PI * 0.5, 0.9, 0.62, false)
+	_en(r, "ClassicNightstand_01", 0.3, 3.3, PI * 0.5)
+	_en(r, "ClassicNightstand_01", 0.3, 6.3, PI * 0.5)
+	_en(r, "wooden_candlestick", 0.3, 3.3, 0.0, 1.0, 0.7, false)
+	_en(r, "GothicCommode_01", W - 0.36, 2.4, -PI * 0.5)
+	_en(r, "ornate_mirror_01", W - 0.12, 2.4, -PI * 0.5, 1.2, 1.4, false)
+	_en(r, "ArmChair_01", 7.6, 5.6, -2.2)
+	_en(r, "treasure_chest", 3.3, 4.8, PI * 0.5, 0.85)
+	_cuadro(r, "fancy_picture_frame_01", 0.09, 4.8, PI * 0.5, 1.6, 2.3)
+	_telas(r, [0, 1, 2])
+
+## Cuarto de lectura (9,6 × 7,2): una puerta al norte (x 4,8-7,2).
+func _lectura(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	for x in [1.2, 3.1, 6.5, 8.4]:
+		_en(r, "vict_antique_wooden_bookcase___ga", x, D - 0.17, PI)
+	_en(r, "sofa_03", 0.5, 3.4, PI * 0.5, 0.85)
+	_en(r, "coffee_table_round_01", 2.0, 3.4, 0.0, 0.8)
+	_en(r, "vintage_oil_lamp", 2.0, 3.4, 0.0, 0.5, 0.4, false)
+	_en(r, "vict_old_books___free_download", 2.2, 3.6, 0.6, 0.5, 0.4, false)
+	_en(r, "vict_victorian_armchair", 4.8, 4.2, PI + 0.2)
+	_en(r, "coti_celestial_globe", W - 0.9, 1.4, 0.4)
+	_en(r, "Ottoman_01", 4.2, 3.2, 0.2, 0.7)
+	_telas(r, [0, 1])
+
+## Pasillos (43,2 × 2,4): alfombra corrida, consolas con candelabros y retratos entre las puertas de la pared norte.
+func _pasillo(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	var x := 3.0
+	while x < W - 3.0:
+		m._alfombra(Vector3(rect.position.x + x + 2.0, y, rect.position.y + D * 0.5), 1.1, 3.6, PI * 0.5)
+		x += 4.4
+	x = 2.4
+	var k := 0
+	while x < W - 1.8:
+		var pn := Vector3(rect.position.x + x, y, rect.position.y + 0.3)
+		if m.door_near(pn, 1.7).is_empty() and m.portal_near(pn, 2.0).is_empty():
+			if k % 2 == 0:
+				_en(r, "ClassicConsole_01", x, 0.33, 0.0, 0.8)
+				_en(r, "brass_candleholders", x, 0.33, 0.0, 0.35, 0.76, false)
+			else:
+				_en(r, "side_table_tall_01", x, 0.3, 0.0)
+				_en(r, "ceramic_vase_03", x, 0.3, 0.0, 1.0, 0.76, false)
+			_cuadro(r, "fancy_picture_frame_02" if k % 3 else "fancy_picture_frame_01", x, 0.09, 0.0, 1.3, 1.95)
+			k += 1
+			x += 3.6
+		else:
+			x += 0.6
+
+## Cama de hierro con colchón, sábana arrugada y almohada (el armazón solo parecía abandonado de más).
+func _cama_hierro(r: Dictionary, x: float, z: float, yaw: float, escala := 1.0) -> void:
+	var n := _en(r, "old_bed_frame", x, z, yaw, escala)
+	if n == null:
+		return
+	var c := n.global_position if n.is_inside_tree() else n.position
+	var colchon := m.box(Vector3(0.84, 0.16, 1.9) * Vector3(escala, 1, escala), c + Vector3(0, 0.5, 0), m._mat.sabana, false)
+	colchon.rotation.y = yaw
+	var manta := m.box(Vector3(0.9, 0.04, 1.2) * Vector3(escala, 1, escala), c + Vector3(0, 0.6, 0) + Vector3(0, 0, 0.3 * escala).rotated(Vector3.UP, yaw), m._mat.tela_roja, false)
+	manta.rotation = Vector3(0.03, yaw + 0.05, 0.02)
+	var alm := m.box(Vector3(0.6, 0.12, 0.35) * Vector3(escala, 1, escala), c + Vector3(0, 0.64, 0) + Vector3(0, 0, -0.75 * escala).rotated(Vector3.UP, yaw), m._mat.sabana, false)
+	alm.rotation.y = yaw + 0.08
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
 		return
-	var a_mano := {"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile}
+	var a_mano := {"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
+		"Baño": _bano, "Cuarto de huéspedes azul": _huespedes_azul, "Sala de costura": _costura, "Cuarto de la institutriz": _institutriz,
+		"Galería de retratos": _galeria, "Cuarto de huéspedes": _huespedes, "Cuarto de lectura": _lectura, "Pasillo principal": _pasillo, "Pasillo": _pasillo,
+		"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile}
 	if a_mano.has(String(r.name)):
 		_reservar_pasos(r)
 		(a_mano[String(r.name)] as Callable).call(r)
