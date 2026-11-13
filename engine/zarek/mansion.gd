@@ -34,7 +34,7 @@ var nav_region: NavigationRegion3D
 var nav_ready := false
 var _rng := RandomNumberGenerator.new()
 ## Salas montadas a mano en ZarekDecorado: el decorado genérico no les añade nada al azar.
-const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre"]
+const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile"]
 var _house: Node3D
 var _mat := {}
 var _hole := {}
@@ -830,17 +830,17 @@ func _roof() -> void:
 			cyl(0.22, 0.25, 0.6, Vector3(cp.x - 0.35 + k * 0.7, y + 14.55, cp.y), _mat.cimiento, self, 8)
 	# torre redonda con techo cónico (esquina delantera oeste)
 	var t0 := cell_to_world("baja", 0, 9)
-	var tc := t0 + Vector3(4.5, 0, 4.5)
+	# tambor de la torre: toca la pared de la sala de música sin entrar en ella y sobresale hacia el oeste y el sur
+	var rt := 4.2
+	var tc := t0 + Vector3(3.0, 0, 5.0)
 	var th := lvl_y(3) + 1.0
-	# la torre sobresale un poco de la esquina (tambor exterior)
-	tc += Vector3(-1.2, 0, 1.2)
-	cyl(5.0, 5.0, th, tc + Vector3(0, th * 0.5 - 0.02, 0), _mat.fachada, self, 18)
-	cyl(0.0, 6.0, 9.0, tc + Vector3(0, th + 4.5, 0), _mat.tejado, self, 18)
+	cyl(rt, rt, th, tc + Vector3(0, th * 0.5 - 0.02, 0), _mat.fachada, self, 24)
+	cyl(0.0, rt + 1.0, 9.0, tc + Vector3(0, th + 4.5, 0), _mat.tejado, self, 24)
 	cyl(0.05, 0.05, 3.0, tc + Vector3(0, th + 10.0, 0), _mat.metal, self, 6)
 	for lv in 3:
 		for k in 6:
 			var a := TAU * k / 6.0 + 0.3
-			var wp := tc + Vector3(cos(a) * 5.05, lvl_y(lv) + 1.9, sin(a) * 5.05)
+			var wp := tc + Vector3(cos(a) * (rt + 0.05), lvl_y(lv) + 1.9, sin(a) * (rt + 0.05))
 			var w := box(Vector3(0.1, 2.0, 1.1), wp, _mat.ventana_luz if (k + lv) % 3 == 0 else _mat.vidrio, false, self)
 			w.rotation.y = -a
 
@@ -1362,8 +1362,11 @@ func _markers() -> void:
 					_fonografo(pos)
 				"caja":
 					musicbox_pos = pos + Vector3(0, 1.0, 0)
-					box(Vector3(0.8, 0.8, 0.5), pos + Vector3(0, 0.4, 0), _mat.madera)
-					box(Vector3(0.35, 0.2, 0.25), pos + Vector3(0, 0.9, 0), _mat.oro, false)
+					if _prop("painted_wooden_nightstand", pos, 0.3, 1.2) != null:
+						_prop("jugu_music_box_prop", pos + Vector3(0, 0.616 * 1.2, 0), 0.3, 1.6, false)
+					else:
+						box(Vector3(0.8, 0.8, 0.5), pos + Vector3(0, 0.4, 0), _mat.madera)
+						box(Vector3(0.35, 0.2, 0.25), pos + Vector3(0, 0.9, 0), _mat.oro, false)
 				"circulo":
 					circle_pos = pos
 					_salt_circle(pos)
@@ -1412,10 +1415,17 @@ func _car(p: Vector3) -> void:
 	set_meta("car", n)
 
 func _seal(pos: Vector3) -> void:
-	box(Vector3(0.8, 0.9, 0.6), pos + Vector3(0, 0.45, 0), _mat.madera)
+	# el sello descansa sobre un velador de época, junto a una vela
+	var alto := 0.9
+	var mesa := _prop("side_table_tall_01", pos, 0.4, 1.15)
+	if mesa:
+		alto = 0.761 * 1.15
+		_prop("wooden_candlestick", pos + Vector3(0.12, alto, 0.08), 0.0, 0.8, false)
+	else:
+		box(Vector3(0.8, 0.9, 0.6), pos + Vector3(0, 0.45, 0), _mat.madera)
 	var n := Node3D.new()
 	n.set_meta("dyn", true)
-	n.position = pos + Vector3(0, 1.13, 0)
+	n.position = pos + Vector3(-0.05, alto + 0.2, 0)
 	add_child(n)
 	var disc := cyl(0.17, 0.17, 0.035, Vector3.ZERO, _mat.sello, n, 20)
 	disc.rotation.x = PI * 0.5
@@ -1676,11 +1686,13 @@ func _fonografo(pos: Vector3) -> void:
 	horn.add_child(aro)
 	aro.position.y = 0.31
 
+## Piano de cola real con su banqueta (el teclado mira al sur) y partituras por el suelo.
 func _piano(pos: Vector3) -> void:
-	box(Vector3(1.5, 1.0, 2.0), pos + Vector3(0, 0.5, 0), _mat.oscuro)
-	var lid := box(Vector3(1.5, 0.05, 2.0), pos + Vector3(0, 1.3, -0.35), _mat.oscuro, false)
-	lid.rotation.x = -0.5
-	box(Vector3(1.3, 0.05, 0.25), pos + Vector3(0, 1.0, 1.05), _mat.marmol, false)
+	if _prop("pian_old_wooden_grand_piano", pos, 0.0, 1.05) == null:
+		box(Vector3(1.5, 1.0, 2.0), pos + Vector3(0, 0.5, 0), _mat.oscuro)
+		return
+	_prop("pian_piano_stool_3d_scan", pos + Vector3(0.1, 0, 1.55), 0.3, 0.9)
+	_prop("pian_candelabra", pos + Vector3(-0.45, 1.05, -0.3), 0.0, 0.3, false)
 
 func _pickup(pos: Vector3, kind: String) -> void:
 	var n := Node3D.new()
@@ -1809,7 +1821,9 @@ func _decorate() -> void:
 			if t == "sala" and rect.size.x >= 9 and rect.size.y >= 9 and not ("vestíbulo" in name.to_lower()) and level_of(y) < 2:
 				_artesonado(r)
 		var lname := name.to_lower()
-		if "baile" in lname:
+		if name in SALAS_A_MANO:
+			pass
+		elif "baile" in lname:
 			for k in 6:
 				_chair_real(c + Vector3((-0.35 + (k % 3) * 0.35) * rect.size.x, 0, (-0.35 + (k / 3) * 0.7) * rect.size.y), _rng.randf() * TAU, "ArmChair_01" if k % 2 == 0 else "Rockingchair_01")
 			_prop("vintage_grandfather_clock_01", Vector3(rect.position.x + 0.6, y, rect.position.y + 0.5), 0.0)

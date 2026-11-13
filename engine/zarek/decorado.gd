@@ -519,10 +519,149 @@ func _estudio(r: Dictionary) -> void:
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
+## Dormitorio de los padres (9,6 × 9,6, primer piso): puertas al sur (x 4,8-7,2) y este (z 4,8-7,2);
+## sello 2 en (3,6; 3,6) libre; armario-escondite en (8,4; 8,4); chimenea en la pared oeste.
+func _dormitorio_padres(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "GothicBed_01", 5.2, 1.15, 0.0)
+	_en(r, "throw_pillows_01", 5.2, 0.6, 0.0, 0.9, 0.62, false)
+	_en(r, "ClassicNightstand_01", 3.95, 0.33, 0.0)
+	_en(r, "ClassicNightstand_01", 6.45, 0.33, 0.0)
+	_en(r, "vintage_oil_lamp", 3.95, 0.33, 0.0, 0.5, 0.7, false)
+	_en(r, "wooden_candlestick", 6.35, 0.3, 0.0, 1.0, 0.7, false)
+	_en(r, "vict_old_books___free_download", 6.55, 0.4, 0.4, 0.4, 0.7, false)
+	_en(r, "coti_pocket_watch", 4.05, 0.45, 0.8, 1.0, 0.7, false)
+	_en(r, "vintage_suitcase", 5.2, 2.75, 0.1, 0.9)
+	_cuadro(r, "fancy_picture_frame_02", 5.2, 0.09, 0.0, 1.5, 2.15)
+	# tocador con espejo en la pared este (al norte de la puerta)
+	_en(r, "GothicCommode_01", W - 0.36, 2.4, -PI * 0.5)
+	_en(r, "vict_ornate_mirror", W - 0.1, 2.4, -PI * 0.5, 0.6, 1.25, false)
+	_en(r, "coti_small_bottle", W - 0.4, 2.0, 0.0, 0.4, 1.21, false)
+	_en(r, "coti_glass_bottle", W - 0.4, 2.15, 0.0, 0.8, 1.21, false)
+	_en(r, "brass_vase_02", W - 0.4, 2.85, 0.0, 0.5, 1.21, false)
+	# rincón de la chimenea: sillón y mesita; espejo de cuerpo entero en la esquina SO
+	_en(r, "vict_victorian_armchair", 1.9, 6.4, -PI * 0.5 - 0.5)
+	_en(r, "side_table_tall_01", 1.6, 7.3, 0.0)
+	_en(r, "wooden_candlestick", 1.6, 7.3, 0.0, 1.0, 0.76, false)
+	_en(r, "vict_dusty_antique_mirror__free", 0.6, 8.8, PI * 0.75)
+	_en(r, "GothicCabinet_01", 3.4, D - 0.6, PI)
+	_en(r, "vict_antique_chair", 7.0, 6.6, 2.4)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
+## Cuarto de Elena (EPICENTRO, 9,6 × 9,6): una sola puerta al sur (x 4,8-7,2). El círculo de sal del ritual
+## va en el centro y debe quedar libre (radio 1,9). Habitación de una joven de 1908, ahora corrompida.
+func _cuarto_elena(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "old_bed_frame", 1.6, 1.15, 0.0)
+	_en(r, "painted_wooden_nightstand", 2.55, 0.35, 0.0)
+	_en(r, "jugu_music_box_prop", 2.55, 0.35, 0.3, 1.2, 0.62, false)
+	_en(r, "wooden_candlestick", 2.7, 0.45, 0.0, 1.0, 0.62, false)
+	_en(r, "jugu_dollhouse", W - 0.6, 0.6, -PI * 0.75)
+	# tocador con el espejo donde se mira lo que no es ella
+	_en(r, "GothicCommode_01", W - 0.36, 4.4, -PI * 0.5)
+	_en(r, "vict_ornate_mirror", W - 0.1, 4.4, -PI * 0.5, 0.6, 1.25, false)
+	_en(r, "coti_small_bottle", W - 0.4, 4.1, 0.0, 0.35, 1.21, false)
+	_en(r, "terr_creepy_lady_bust_statue_scan", W - 0.42, 4.85, -PI * 0.5, 0.6, 1.21, false)
+	_en(r, "GothicCabinet_01", 0.6, 5.4, PI * 0.5)
+	_en(r, "Rockingchair_01", 7.9, 7.6, -2.4)
+	_en(r, "jugu_rocking_horse", 7.4, 2.4, -0.6)
+	# velas alrededor del círculo, alguna caída; páginas arrancadas por el suelo
+	for k in 6:
+		var a := TAU * k / 6.0 + 0.3
+		var v := _en(r, "coti_three_candles_and_a_golden_c", 4.8 + cos(a) * 2.25, 4.8 + sin(a) * 2.25, a, 0.9, 0.0, false)
+		if v and k == 4:
+			v.rotation.z = PI * 0.5
+			v.position.y += 0.1
+	_en(r, "vict_old_books___free_download", 2.2, 3.6, 1.0, 0.6, 0.0, false)
+	_en(r, "coti_occult_books", 7.0, 5.6, 0.4, 0.8, 0.0, false)
+	_en(r, "coti_shabby_books", 3.0, 7.6, 2.2, 1.0, 0.0, false)
+	var silla := _en(r, "vict_antique_chair", 6.8, 8.6, 0.8)
+	if silla:
+		silla.rotation.x = PI * 0.5
+		silla.position.y += 0.22
+	_cuadro(r, "fancy_picture_frame_01", 1.6, 0.09, 0.0, 1.4, 2.2)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 1.0, ZarekMansion.WALL_H - 0.9, false)
+
+## Cuarto de niños (7,2 × 9,6): puertas al sur (x 2,4-4,8) y oeste (z 4,8-7,2); armario en (6,0; 8,4);
+## la caja de música del juego va en (3,6; 3,6).
+func _cuarto_ninos(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "old_bed_frame", 1.2, 1.1, 0.0, 0.85)
+	_en(r, "old_bed_frame", 6.0, 1.1, 0.0, 0.85)
+	_en(r, "painted_wooden_nightstand", 3.6, 0.35, 0.0)
+	_en(r, "wooden_candlestick", 3.6, 0.35, 0.0, 1.0, 0.62, false)
+	_en(r, "jugu_dollhouse", W - 0.5, 3.6, -PI * 0.5)
+	_en(r, "jugu_rocking_horse", 5.2, 5.6, 0.7)
+	_en(r, "treasure_chest", 0.45, 3.2, PI * 0.5, 0.8)
+	# la merienda de muñecas que nadie recogió
+	_en(r, "small_wooden_table_01", 1.6, 8.5, 0.0, 0.8)
+	_en(r, "painted_wooden_stool", 0.9, 8.5, 0.6)
+	_en(r, "painted_wooden_stool", 2.3, 8.6, -0.4)
+	_en(r, "tea_set_01", 1.6, 8.5, 0.2, 0.45, 0.43, false)
+	_en(r, "coti_simple_bookstack", 4.6, 7.8, 1.2, 0.6, 0.0, false)
+	_cuadro(r, "fancy_picture_frame_01", 3.6, 0.09, 0.0, 1.2, 1.9)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+
+## Sala de música (9,6 × 7,2): puertas al oeste y al este (z 2,4-4,8); el piano de cola va en el centro (marca).
+func _sala_musica(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	# sillas para el público en arco, mirando al piano (al norte de él)
+	for k in 5:
+		var a := lerpf(-0.9, 0.9, k / 4.0)
+		var x := 4.8 + sin(a) * 2.6
+		var z := 6.1 - (1.0 - cos(a)) * 1.2
+		_en(r, "vict_antique_chair", x, z, PI + a)
+	_en(r, "pian_dusty_old_piano", 0.6, 0.9, PI * 0.5)
+	_en(r, "pian_medieval_candelabra__free_do", W - 0.5, 0.5, 0.0)
+	_en(r, "pian_medieval_candelabra__free_do", 0.5, D - 0.5, 0.0)
+	_en(r, "sofa_02", W - 0.5, 5.8, -PI * 0.5)
+	_en(r, "vintage_grandfather_clock_01", 3.0, 0.3, 0.0)
+	_cuadro(r, "fancy_picture_frame_02", 6.5, 0.09, 0.0, 1.6, 2.0)
+	_cuadro(r, "fancy_picture_frame_01", 4.8, D - 0.09, PI, 1.8, 2.1)
+	_en(r, "coti_shabby_books", 6.4, 3.9, 0.5, 1.0, 0.0, false)
+
+## Salón de baile (14,4 × 9,6): puertas norte y sur (x 7,2-9,6) y oeste (z 2,4-4,8); sello 1 en (7,2; 3,6),
+## piano en (3,6; 2,4), chimenea al norte. El centro queda despejado para bailar; sillas contra las paredes.
+func _salon_baile(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	for z in [6.0, 7.0, 8.0]:
+		_en(r, "vict_antique_chair", 0.35, z, PI * 0.5)
+	for z in [1.2, 2.2, 3.2, 6.0, 7.0, 8.0]:
+		_en(r, "vict_antique_chair", W - 0.35, z, -PI * 0.5)
+	for x in [1.5, 2.5, 3.5, 4.5, 11.0, 12.2]:
+		_en(r, "vict_antique_chair", x, D - 0.35, PI)
+	var caida := _en(r, "vict_antique_chair", 9.8, 6.4, 1.1, 1.0, 0.0, false)
+	if caida:
+		caida.rotation.x = PI * 0.5
+		caida.position.y += 0.22
+	for z in [3.2, 7.0]:
+		_cuadro(r, "vict_ornate_mirror", W - 0.08, z - 1.3, -PI * 0.5, 0.75, 1.0)
+	_cuadro(r, "vict_ornate_mirror", 0.08, 7.0 - 1.3, PI * 0.5, 0.75, 1.0)
+	for esq in [Vector2(0.55, 0.55), Vector2(W - 0.55, 0.55), Vector2(0.55, D - 0.55), Vector2(W - 0.55, D - 0.55)]:
+		_en(r, "pian_medieval_candelabra__free_do", esq.x, esq.y, 0.0)
+	_en(r, "painted_wooden_sofa", 3.6, 0.5, 0.0, 0.9)
+	_en(r, "gothic_statue", W - 2.0, 4.8, -PI * 0.5, 0.6)
+	_cuadro(r, "fancy_picture_frame_02", 11.0, 0.09, 0.0, 2.0, 2.0)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 1.0, ZarekMansion.WALL_H - 0.9, false)
+
 func vestir(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
+		return
+	var a_mano := {"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile}
+	if a_mano.has(String(r.name)):
+		_reservar_pasos(r)
+		(a_mano[String(r.name)] as Callable).call(r)
 		return
 	if String(r.name) == "Biblioteca":
 		_reservar_pasos(r)
