@@ -546,7 +546,7 @@ func _level(key: String) -> void:
 			paper = "roca"
 		if t == "epicentro":
 			paper = "papel0"
-		if level == 2 and t == "servicio":
+		if level == 2 and t in ["servicio", "epicentro"]:
 			paper = "tablas"
 		rooms.append({"name": name, "type": t, "level": level, "rect": r, "y": y, "id": id, "paper": paper})
 		if t == "epicentro" and level == 1:
