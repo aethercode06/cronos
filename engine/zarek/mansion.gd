@@ -1535,29 +1535,23 @@ func _exterior() -> void:
 	var ex: Dictionary = plan.exterior
 	var W := float(ex.w) * CELL
 	var H := float(ex.h) * CELL
+	# el bosque se extiende 86 m por cada lado (unas 3 veces la superficie del plano) y el arroyo lo cruza entero
+	var E := 36.0 * CELL
+	bosque_rect = Rect2(-E, -E, W + 2.0 * E, H + 2.0 * E)
+	if not ex.has("_ampliado"):
+		ex["_ampliado"] = true
+		for z in ex.zonas:
+			if String(z[0]).begins_with("Bosque"):
+				z[2] = -36; z[3] = -36; z[4] = int(ex.w) + 72; z[5] = int(ex.h) + 72
+			elif String(z[0]) == "Arroyo":
+				z[2] = -36; z[4] = int(ex.w) + 72
 	# el suelo del bosque no pasa por debajo de la casa (si no, tapa la escalera del sótano)
 	# cauces de agua: el suelo no pasa por encima (el agua tiene fondo y orillas de verdad)
 	var cauces: Array = [house_rect]
 	for z in ex.zonas:
 		if String(z[0]) in ["Arroyo", "Estanque"]:
 			cauces.append(Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL).grow(1.2))
-	# más allá del mapa: suelo de bosque que se pierde en la niebla (para no ver el borde) y un muro invisible
-	# a 1,5 m del borde que no deja salir
-	for anillo in [Rect2(-40, -40, W + 80, 40), Rect2(-40, H, W + 80, 40), Rect2(-40, 0, 40, H), Rect2(W, 0, 40, H)]:
-		var ar: Rect2 = anillo
-		var g2 := box(Vector3(ar.size.x, 0.4, ar.size.y), Vector3(ar.get_center().x, -0.2, ar.get_center().y), _mat.bosque, true, self, false)
-		g2.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	for borde in [[Vector3(W * 0.5, 4.0, 1.0), Vector3(W + 4.0, 10.0, 1.0)], [Vector3(W * 0.5, 4.0, H - 1.0), Vector3(W + 4.0, 10.0, 1.0)],
-			[Vector3(1.0, 4.0, H * 0.5), Vector3(1.0, 10.0, H + 4.0)], [Vector3(W - 1.0, 4.0, H * 0.5), Vector3(1.0, 10.0, H + 4.0)]]:
-		var sb := StaticBody3D.new()
-		var cs := CollisionShape3D.new()
-		var bs := BoxShape3D.new()
-		bs.size = borde[1]
-		cs.shape = bs
-		sb.position = borde[0]
-		sb.add_child(cs)
-		add_child(sb)
-	for gr in _split_holes(Rect2(0, 0, W, H), cauces):
+	for gr in _split_holes(bosque_rect, cauces):
 		var grr: Rect2 = gr
 		var ground := box(Vector3(grr.size.x, 0.4, grr.size.y), Vector3(grr.get_center().x, -0.2, grr.get_center().y), _mat.bosque, true, self, false)
 		ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1606,6 +1600,7 @@ func _exterior() -> void:
 			_shed(name, r)
 		elif name == "Porche":
 			_porch(r)
+	_fronteras()
 	var tz := Time.get_ticks_msec()
 	_trees(W, H)
 	print("ZAREK   bosque %d ms" % (Time.get_ticks_msec() - tz))
@@ -1834,7 +1829,7 @@ func _mm_trozos(malla: Mesh, xs: Array, sombra: bool, hasta: float, desde := 0.0
 	var trozos := {}
 	for x in xs:
 		var o: Vector3 = (x as Transform3D).origin
-		var k := Vector2i(floori(o.x / 16.0), floori(o.z / 16.0))
+		var k := Vector2i(floori(o.x / 28.0), floori(o.z / 28.0))
 		if not trozos.has(k):
 			trozos[k] = []
 		(trozos[k] as Array).append(x)
@@ -1854,6 +1849,110 @@ func _mm_trozos(malla: Mesh, xs: Array, sombra: bool, hasta: float, desde := 0.0
 		mmi.visibility_range_end = hasta
 		mmi.visibility_range_end_margin = 4.0
 		add_child(mmi)
+
+var bosque_rect := Rect2()
+## Cuánto más grande es el bosque que el plano original (para repartir la misma densidad de árboles y plantas).
+func _escala_bosque() -> float:
+	var W := float(plan.exterior.w) * CELL
+	var H := float(plan.exterior.h) * CELL
+	return clampf(bosque_rect.get_area() / (W * H), 1.0, 4.0) if bosque_rect.get_area() > 0.0 else 1.0
+
+## Los límites del mundo tienen sentido: al norte y al oeste montañas de roca demasiado empinadas para subir,
+## al este un acantilado, y al sur un barranco sin fondo (caer es mortal). Arriba de todo, árboles gigantes.
+func _fronteras() -> void:
+	var F := bosque_rect
+	var roca := _pbr("Rock022", 0.12, Color(0.55, 0.56, 0.5))
+	var roca2 := _pbr("Rock030", 0.1, Color(0.5, 0.5, 0.48))
+	roca.cull_mode = BaseMaterial3D.CULL_DISABLED
+	roca2.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# norte: montaña
+	_ladera(Vector3(F.position.x - 30, 0, F.position.y), Vector3(F.end.x + 30, 0, F.position.y), Vector3(0, 0, -1), 42.0, 58.0, roca, 11)
+	# oeste: montaña
+	_ladera(Vector3(F.position.x, 0, F.end.y + 30), Vector3(F.position.x, 0, F.position.y - 30), Vector3(-1, 0, 0), 38.0, 56.0, roca, 12)
+	# este: acantilado casi vertical
+	_ladera(Vector3(F.end.x, 0, F.position.y - 30), Vector3(F.end.x, 0, F.end.y + 30), Vector3(1, 0, 0), 34.0, 74.0, roca2, 13)
+	# sur: barranco de 34 m de ancho y 60 de hondo; la otra orilla es otro bosque inalcanzable
+	var z0 := F.end.y
+	var ancho := F.size.x + 60.0
+	var cx := F.get_center().x
+	_ladera(Vector3(F.end.x + 30, -60, z0), Vector3(F.position.x - 30, -60, z0), Vector3(0, 0, 1), 60.0, 84.0, roca2, 14, true)
+	_ladera(Vector3(F.position.x - 30, -60, z0 + 34.0), Vector3(F.end.x + 30, -60, z0 + 34.0), Vector3(0, 0, 1), 60.0, 82.0, roca, 15)
+	var otra := box(Vector3(ancho, 0.4, 60.0), Vector3(cx, -0.2, z0 + 34.0 + 32.0), _mat.bosque, false, self, false)
+	otra.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var fondo := StandardMaterial3D.new()
+	fondo.albedo_color = Color(0.01, 0.012, 0.012)
+	fondo.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	box(Vector3(ancho, 1.0, 50.0), Vector3(cx, -61.0, z0 + 17.0), fondo, true, self, false)
+	# rocas sueltas al pie de las montañas
+	var rocas: Array = []
+	for ld in [[Vector2(F.position.x, F.position.y), Vector2(F.end.x, F.position.y), Vector2(0, 1)],
+			[Vector2(F.position.x, F.end.y), Vector2(F.end.x, F.end.y), Vector2(0, -1)],
+			[Vector2(F.position.x, F.position.y), Vector2(F.position.x, F.end.y), Vector2(1, 0)],
+			[Vector2(F.end.x, F.position.y), Vector2(F.end.x, F.end.y), Vector2(-1, 0)]]:
+		var a0: Vector2 = ld[0]
+		var a1: Vector2 = ld[1]
+		var largo := a0.distance_to(a1)
+		var u := 0.0
+		while u < largo:
+			var q: Vector2 = a0.lerp(a1, u / largo) + (ld[2] as Vector2) * _rng.randf_range(-1.0, 2.5)
+			var sc := _rng.randf_range(1.2, 3.2)
+			rocas.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc * _rng.randf_range(0.7, 1.3), sc)), Vector3(q.x, -0.3, q.y)))
+			u += _rng.randf_range(2.5, 6.0)
+	_multi_planta("boulder_01", rocas)
+
+## Ladera de roca entre a y b que sube hacia «afuera»: alto en metros y pendiente en grados (más de 45 no se
+## puede subir). Malla con ruido para que parezca roca natural y colisión exacta. «hacia_abajo» la invierte (pared
+## que baja desde el suelo, para el barranco).
+func _ladera(a: Vector3, b: Vector3, afuera: Vector3, alto: float, grados: float, mat: Material, semilla: int, hacia_abajo := false) -> void:
+	var nz := FastNoiseLite.new()
+	nz.seed = semilla
+	nz.frequency = 0.06
+	nz.fractal_octaves = 4
+	var largo := a.distance_to(b)
+	var nu := int(largo / 3.0) + 1
+	var nv := 14
+	var fondo_h := alto / tan(deg_to_rad(grados))
+	var pts := []
+	for iv in nv + 1:
+		var fila := []
+		var v := float(iv) / nv
+		for iu in nu + 1:
+			var p0 := a.lerp(b, float(iu) / nu)
+			var p := p0 + afuera * (v * fondo_h) + Vector3.UP * (v * alto)
+			if hacia_abajo:
+				p = p0 + afuera * (-v * fondo_h * 0.2) + Vector3.UP * (v * alto)
+			var amp := 1.6 * sin(v * PI) + (0.0 if iv == 0 else 0.4)
+			p += afuera * nz.get_noise_2d(p0.x + p0.z, v * 40.0) * amp * 2.0
+			p.y += nz.get_noise_2d(p0.x - p0.z + 500.0, v * 40.0) * amp
+			if iv == nv and not hacia_abajo:
+				p.y += absf(nz.get_noise_1d(p0.x + p0.z)) * 8.0
+			fila.append(p)
+		pts.append(fila)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for iv in nv:
+		for iu in nu:
+			var q00: Vector3 = pts[iv][iu]
+			var q10: Vector3 = pts[iv][iu + 1]
+			var q01: Vector3 = pts[iv + 1][iu]
+			var q11: Vector3 = pts[iv + 1][iu + 1]
+			st.add_vertex(q00); st.add_vertex(q01); st.add_vertex(q10)
+			st.add_vertex(q10); st.add_vertex(q01); st.add_vertex(q11)
+	st.generate_normals()
+	var malla := st.commit()
+	var mi := MeshInstance3D.new()
+	mi.mesh = malla
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_meta("dyn", true)
+	add_child(mi)
+	var sb := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var forma := malla.create_trimesh_shape()
+	(forma as ConcavePolygonShape3D).backface_collision = true
+	cs.shape = forma
+	sb.add_child(cs)
+	add_child(sb)
 
 ## Distancia a la que deja de dibujarse una planta u objeto disperso, según su tamaño.
 func _alcance(nombre: String) -> float:
@@ -2116,11 +2215,11 @@ func _trees(W: float, H: float) -> void:
 		var r := Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL)
 		avoid.append(r.grow(1.0 if name.begins_with("Terrenos") else 2.5))
 	var xforms: Array[Transform3D] = []
-	var count := 2200 if quality >= 2 else (1400 if quality == 1 else 800)
+	var count := int((2200 if quality >= 2 else (1400 if quality == 1 else 800)) * _escala_bosque())
 	var tries := 0
 	while xforms.size() < count and tries < count * 8:
 		tries += 1
-		var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+		var p := Vector2(_rng.randf_range(bosque_rect.position.x + 4.0, bosque_rect.end.x - 4.0), _rng.randf_range(bosque_rect.position.y + 4.0, bosque_rect.end.y - 4.0))
 		var bad := false
 		for r in avoid:
 			if (r as Rect2).has_point(p):
@@ -2130,6 +2229,29 @@ func _trees(W: float, H: float) -> void:
 			continue
 		var s := _rng.randf_range(0.8, 1.45)
 		xforms.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(s, s * _rng.randf_range(0.9, 1.3), s)), Vector3(p.x, 0, p.y)))
+	# árboles gigantes muy juntos a lo largo del borde: el bosque se cierra (no se ve el final del mapa)
+	var F := bosque_rect
+	var lados := [[Vector2(F.position.x, F.position.y), Vector2(F.end.x, F.position.y), Vector2(0, 1)],
+		[Vector2(F.position.x, F.end.y), Vector2(F.end.x, F.end.y), Vector2(0, -1)],
+		[Vector2(F.position.x, F.position.y), Vector2(F.position.x, F.end.y), Vector2(1, 0)],
+		[Vector2(F.end.x, F.position.y), Vector2(F.end.x, F.end.y), Vector2(-1, 0)]]
+	for ld in lados:
+		var a0: Vector2 = ld[0]
+		var a1: Vector2 = ld[1]
+		var dentro: Vector2 = ld[2]
+		var largo := a0.distance_to(a1)
+		var u := 0.0
+		while u < largo:
+			for fila in 2:
+				var q := a0.lerp(a1, u / largo) + dentro * _rng.randf_range(2.0 + fila * 5.0, 6.0 + fila * 6.0)
+				var sg := _rng.randf_range(1.6, 2.5)
+				xforms.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sg, sg * _rng.randf_range(0.95, 1.2), sg)), Vector3(q.x, 0, q.y)))
+			u += _rng.randf_range(3.0, 5.5)
+	# el bosque sigue al otro lado del barranco (no se puede llegar)
+	for k in int(260 * _escala_bosque() / 3.0):
+		var q := Vector2(_rng.randf_range(F.position.x, F.end.x), _rng.randf_range(F.end.y + 38.0, F.end.y + 90.0))
+		var sg := _rng.randf_range(1.0, 2.0)
+		xforms.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sg, sg, sg)), Vector3(q.x, 0, q.y)))
 	# árboles realistas (Ez-Tree) cerca y abetos sencillos a lo lejos, repartidos en parcelas de 24 m para que
 	# solo se dibuje con detalle el bosque que rodea al jugador (la niebla tapa el resto)
 	var pinos := ["pino_grande_1", "pino_grande_2", "pino_grande_3", "pino_mediano_1", "pino_mediano_2", "pino_joven", "muerto_roble", "muerto_fresno", "muerto_roble_2",
@@ -2145,7 +2267,7 @@ func _trees(W: float, H: float) -> void:
 	var lejos: Array = []
 	for v in 3:
 		lejos.append(_abeto_mesh(100 + v, 0.85 + v * 0.12))
-	var PARC := 24.0
+	var PARC := 40.0
 	var parcelas: Dictionary = {}
 	var total_peso := 0
 	for w in peso:
@@ -2186,7 +2308,7 @@ func _trees(W: float, H: float) -> void:
 	# setas al pie de los árboles (en corros de 2-6) y helechos grandes entre los troncos
 	var setas := ["veg_boletus_edulis_mushroom", "veg_chanterelle", "veg_tricholoma_murrillianum_", "veg_shaggy_parasol_mushroom_", "veg_mushroom", "veg_mushroom_on_tree_baked_l"]
 	var por_seta: Dictionary = {}
-	for k in int(260 * (1.0 if quality >= 2 else 0.6)):
+	for k in int(260 * (1.0 if quality >= 2 else 0.6) * _escala_bosque()):
 		var base: Transform3D = xforms[_rng.randi_range(0, xforms.size() - 1)]
 		var sn: String = setas[_rng.randi_range(0, setas.size() - 1)]
 		if not por_seta.has(sn):
@@ -2199,8 +2321,8 @@ func _trees(W: float, H: float) -> void:
 	for sn in por_seta:
 		_multi_planta(sn, por_seta[sn])
 	var helechos: Array = []
-	for k in int(700 * (1.0 if quality >= 2 else 0.6)):
-		var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+	for k in int(700 * (1.0 if quality >= 2 else 0.6) * _escala_bosque()):
+		var p := Vector2(_rng.randf_range(bosque_rect.position.x + 4.0, bosque_rect.end.x - 4.0), _rng.randf_range(bosque_rect.position.y + 4.0, bosque_rect.end.y - 4.0))
 		var mal := false
 		for r in avoid:
 			if (r as Rect2).has_point(p):
@@ -2213,11 +2335,11 @@ func _trees(W: float, H: float) -> void:
 	# arbustos bajo los árboles
 	var arb := [_malla_glb("res://zarek/arboles/arbusto_1.glb"), _malla_glb("res://zarek/arboles/arbusto_2.glb"), _malla_glb("res://zarek/arboles/arbusto_3.glb")]
 	var arb_xs: Array = [[], [], []]
-	var na := int(900 * (1.0 if quality >= 2 else 0.6))
+	var na := int(900 * (1.0 if quality >= 2 else 0.6) * _escala_bosque())
 	var intentos := 0
 	while arb_xs[0].size() + arb_xs[1].size() + arb_xs[2].size() < na and intentos < na * 6:
 		intentos += 1
-		var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+		var p := Vector2(_rng.randf_range(bosque_rect.position.x + 4.0, bosque_rect.end.x - 4.0), _rng.randf_range(bosque_rect.position.y + 4.0, bosque_rect.end.y - 4.0))
 		var mal := false
 		for r in avoid:
 			if (r as Rect2).has_point(p):
@@ -2245,8 +2367,9 @@ func _trees(W: float, H: float) -> void:
 	_jardin_salvaje()
 	print("ZAREK     jardin %d ms" % (Time.get_ticks_msec() - t1))
 	# colisión de troncos con un solo cuerpo
+	# (las formas se añaden antes de meter el cuerpo en la escena: añadirlas una a una con el cuerpo ya dentro
+	# rehace el cuerpo entero cada vez y tardaba segundos)
 	var sb := StaticBody3D.new()
-	add_child(sb)
 	var sh := CylinderShape3D.new()
 	sh.radius = 0.45
 	sh.height = 4.0
@@ -2255,6 +2378,7 @@ func _trees(W: float, H: float) -> void:
 		cs.shape = sh
 		cs.position = t.origin + Vector3(0, 2.0, 0)
 		sb.add_child(cs)
+	add_child(sb)
 	for z in plan.exterior.zonas:
 		var name: String = z[0]
 		if name.begins_with("Árbol") or name.begins_with("Claro del columpio"):
@@ -2512,11 +2636,11 @@ func _sotobosque(W: float, H: float, avoid: Array) -> void:
 			partes.append([m3.mesh, _xf_rel(m3, raiz)])
 		raiz.free()
 		var xs: Array[Transform3D] = []
-		var n := int(float(it[1]) * cuantos)
+		var n := int(float(it[1]) * cuantos * _escala_bosque())
 		var intentos := 0
 		while xs.size() < n and intentos < n * 6:
 			intentos += 1
-			var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+			var p := Vector2(_rng.randf_range(bosque_rect.position.x + 4.0, bosque_rect.end.x - 4.0), _rng.randf_range(bosque_rect.position.y + 4.0, bosque_rect.end.y - 4.0))
 			var mal := false
 			for r in avoid:
 				if (r as Rect2).has_point(p):

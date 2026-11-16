@@ -32,6 +32,13 @@ func _ready() -> void:
 		var en := m.cell_to_world("exterior", 44.0, 42.0)
 		vistas = [[en + Vector3(-1.5, 1.7, 8.0), en + Vector3(0, 2.3, 0)], [en + Vector3(0.8, 1.7, 3.2), en + Vector3(0, 1.8, 0)],
 			[pu + Vector3(-7.0, 1.7, -3.5), pu + Vector3(0, -0.3, 0.5)], [pu + Vector3(-20.0, 1.7, -9.0), pu + Vector3(-20.0, 0.0, -6.0)]]
+	if OS.get_environment("VISTAS") == "bordes":
+		var F: Rect2 = m.bosque_rect
+		var cxx := F.get_center().x + 20.0
+		vistas = [[Vector3(cxx, 1.7, F.position.y + 9.0), Vector3(cxx, 8.0, F.position.y - 10.0)],
+			[Vector3(F.end.x - 8.0, 1.7, F.get_center().y), Vector3(F.end.x + 10.0, 6.0, F.get_center().y + 4.0)],
+			[Vector3(cxx, 1.7, F.end.y - 2.0), Vector3(cxx, -10.0, F.end.y + 12.0)],
+			[Vector3(F.position.x + 8.0, 1.7, F.get_center().y + 30.0), Vector3(F.position.x - 10.0, 6.0, F.get_center().y + 26.0)]]
 	if OS.get_environment("VISTAS") == "agua":
 		vistas = [[pu + Vector3(-7.0, 1.7, -3.5), pu + Vector3(0, -0.3, 0.5)], [pu + Vector3(-14.0, 1.6, 1.5), pu + Vector3(-5.0, -0.4, 0.3)], [fu + Vector3(-2.2, 1.7, 2.6), fu + Vector3(0, 0.6, 0)]]
 	if OS.get_environment("VISTAS") == "fachada":

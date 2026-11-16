@@ -692,8 +692,13 @@ func _physics_process(_delta: float) -> void:
 			_t_segura = 0.0
 			_pos_segura = player.global_position
 		if player.global_position.y < -12.0:
-			player.global_position = _pos_segura if _pos_segura != Vector3.ZERO else respawn_pos
+			# caída al barranco: golpe de miedo y vuelta al último sitio firme (un poco hacia dentro)
+			var vuelta := _pos_segura if _pos_segura != Vector3.ZERO else respawn_pos
+			var centro := Vector3(mansion.bosque_rect.get_center().x, vuelta.y, mansion.bosque_rect.get_center().y)
+			player.global_position = vuelta + (centro - vuelta).normalized() * 3.0
 			player.velocity = Vector3.ZERO
+			sanity = maxf(0.0, sanity - 25.0)
+			message("Caíste al barranco… algo te devolvió arriba.", 3.0)
 	# el objeto cogido sigue a la mano (delante de la cámara) con física: choca, se frena y puede caerse
 	if is_instance_valid(llevado):
 		var cam := player.camera
@@ -770,7 +775,14 @@ func _update_niebla(delta: float) -> void:
 		return
 	var dentro := mansion != null and mansion.inside_house(player.global_position)
 	_fuera = move_toward(_fuera, 0.0 if dentro else 1.0, delta * 0.5)
-	env.fog_density = lerpf(0.016, 0.05, _fuera)
+	# cerca de los límites del bosque la niebla se espesa (montañas y barranco se pierden en ella)
+	var borde := 1.0
+	if mansion and mansion.bosque_rect.get_area() > 0.0:
+		var p2 := Vector2(player.global_position.x, player.global_position.z)
+		var F: Rect2 = mansion.bosque_rect
+		var d := minf(minf(p2.x - F.position.x, F.end.x - p2.x), minf(p2.y - F.position.y, F.end.y - p2.y))
+		borde = 1.0 + (1.0 - clampf(d / 40.0, 0.0, 1.0)) * 1.4
+	env.fog_density = lerpf(0.016, 0.05 * borde, _fuera)
 	env.fog_light_color = Color(0.07, 0.065, 0.07).lerp(Color(0.12, 0.135, 0.18), _fuera)
 	env.fog_height = 1.4
 	env.fog_height_density = lerpf(0.0, 0.32, _fuera)
