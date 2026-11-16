@@ -1,6 +1,10 @@
 // Genera árboles realistas con Ez-Tree (github.com/dgreenheck/ez-tree, MIT) y guarda su geometría en JSON
 // (ramas y hojas por separado) para pasarlos a GLB en Blender. Uso: node generar.mjs <salida>
-import { Tree } from '@dgreenheck/ez-tree';
+// la librería está pensada para el navegador: unos sustitutos mínimos bastan para generar la geometría
+globalThis.window = globalThis.window || globalThis;
+globalThis.self = globalThis.self || globalThis;
+globalThis.document = globalThis.document || { createElementNS: () => ({ style: {}, getContext: () => null, addEventListener() {} }), createElement: () => ({ style: {}, getContext: () => null, addEventListener() {} }) };
+const { Tree } = await import('@dgreenheck/ez-tree');
 import fs from 'fs';
 const OUT = process.argv[2] || 'out';
 fs.mkdirSync(OUT, { recursive: true });
@@ -18,7 +22,7 @@ function dump(mesh) {
   return { pos: a('position'), nor: a('normal'), uv: a('uv'), idx: g.index ? Array.from(g.index.array) : [] };
 }
 const info = {};
-for (const [nombre, preset, seed, extra] of PEDIDOS) {
+for (const [nombre, preset, seed, extra] of PEDIDOS) { try {
   const t = new Tree();
   t.loadPreset(preset);
   t.options.seed = seed;
@@ -28,5 +32,5 @@ for (const [nombre, preset, seed, extra] of PEDIDOS) {
   fs.writeFileSync(`${OUT}/${nombre}.json`, JSON.stringify(d));
   info[nombre] = { preset, seed, vr: d.ramas.pos.length / 3, vh: d.hojas ? d.hojas.pos.length / 3 : 0, bark: t.options.bark.type, hoja: t.options.leaves.type };
   console.log(nombre, JSON.stringify(info[nombre]));
-}
+} catch (e) { console.log('FALLO', nombre, e && e.stack); } }
 fs.writeFileSync(`${OUT}/info.json`, JSON.stringify(info, null, 1));

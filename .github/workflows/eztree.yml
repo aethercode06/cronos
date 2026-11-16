@@ -15,10 +15,13 @@ jobs:
         with: { node-version: "20" }
       - name: Generar
         run: |
-          mkdir -p /tmp/gen && cp engine/tools/eztree/generar.mjs /tmp/gen/ && cd /tmp/gen
-          npm init -y > /dev/null && npm i three @dgreenheck/ez-tree > /dev/null
-          node generar.mjs out 2>&1 | tee out_registro.txt || true
-          cp out_registro.txt out/registro.txt
+          set +e
+          mkdir -p /tmp/gen/out && cp engine/tools/eztree/generar.mjs /tmp/gen/ && cd /tmp/gen
+          npm init -y > /dev/null; npm i three @dgreenheck/ez-tree > out/npm.txt 2>&1
+          ls node_modules/@dgreenheck/ez-tree/build >> out/npm.txt 2>&1
+          node generar.mjs out > out/registro.txt 2>&1
+          echo "salida $?" >> out/registro.txt
+          true
       - name: Publicar en la rama aether-eztree
         run: |
           cd /tmp/gen/out
