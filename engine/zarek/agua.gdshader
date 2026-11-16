@@ -30,6 +30,9 @@ uniform vec3 luna_dir = vec3(0.645, -0.616, -0.452);     // dirección hacia la 
 uniform vec3 color_luna : source_color = vec3(0.55, 0.65, 0.95);
 uniform float borde = 0.06;
 uniform int depurar = 0;
+// fuente: donde cae el agua de cada taza el agua de abajo hace anillos que se abren (centro xz y radios de caída)
+uniform vec2 ondas_centro = vec2(0.0);
+uniform vec4 ondas_radios = vec4(0.0);
 varying vec3 mundo;
 
 vec3 flujo_uvw(vec2 uv, vec2 f, vec2 salto, float t, bool b) {
@@ -68,6 +71,22 @@ void fragment() {
 	vec3 w1 = texture(olas, a1.xy).rgb * a1.z + texture(olas, b1.xy).rgb * b1.z;
 	vec3 w2 = texture(olas, a2.xy).rgb * a2.z + texture(olas, b2.xy).rgb * b2.z;
 	vec2 nor = w1.rg * 0.65 + w2.rg * 0.35;
+	float salpica = 0.0;
+	if (ondas_radios.x > 0.0) {
+		vec2 dc = mundo.xz - ondas_centro;
+		float dist = length(dc);
+		vec2 dir = dc / max(dist, 0.001);
+		for (int i = 0; i < 4; i++) {
+			float rr = ondas_radios[i];
+			if (rr <= 0.0) continue;
+			float fuera = dist - rr;
+			// anillos que salen del punto de caída y se apagan al alejarse
+			float env = exp(-abs(fuera) * 2.2) * (fuera > -0.15 ? 1.0 : 0.25);
+			float fase = fuera * 26.0 - TIME * 7.0 + float(i) * 1.7;
+			nor += dir * cos(fase) * env * 0.22;
+			salpica += exp(-abs(fuera) * 14.0);
+		}
+	}
 	float fbm = w1.b * w2.b * 2.0;
 	// profundidad real del agua en este punto
 	float sz = vista_z(SCREEN_UV, INV_PROJECTION_MATRIX);
@@ -77,6 +96,8 @@ void fragment() {
 	float mascara = clamp((1.0 - smoothstep(0.0, espuma_orilla, hondo)) * 1.4 + azar * 0.15 * fuerza, 0.0, 1.0);
 	float esp = clamp(fbm * espuma - 0.5 / max(espuma, 0.001), 0.0, 1.0);
 	float esp_total = clamp(mix(clamp(esp - (1.0 - mascara), 0.0, 1.0), esp * mascara, 0.3), 0.0, 1.0);
+	// espuma blanca donde golpea el chorro
+	esp_total = clamp(esp_total + salpica * (0.35 + 0.3 * azar), 0.0, 1.0);
 	SPECULAR = 0.6;
 	ROUGHNESS = max(mix(rugosidad, 0.7, esp_total), 0.12);
 	NORMAL_MAP = vec3(nor, 0.0);

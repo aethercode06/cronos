@@ -1640,7 +1640,8 @@ func _exterior() -> void:
 				var es_rio := name == "Arroyo"
 				var sup := MeshInstance3D.new()
 				var pl := PlaneMesh.new()
-				pl.size = Vector2(r.size.x, r.size.y)
+				# el río: la superficie es más ancha que el cauce; la orilla irregular la corta el propio terreno
+				pl.size = Vector2(r.size.x, r.size.y + (2.0 if es_rio else 0.0))
 				pl.subdivide_width = int(r.size.x / 2.0)
 				pl.subdivide_depth = 4
 				sup.mesh = pl
@@ -1649,10 +1650,14 @@ func _exterior() -> void:
 				sup.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 				sup.set_meta("dyn", true)
 				add_child(sup)
-				_cauce(r.grow(1.2), es_rio)
 				if es_rio:
+					_cauce_natural(r.grow(1.2))
 					_hojas_rio(r)
-				_orillas(r.grow(1.2), es_rio)
+					_orillas_rio(r.grow(1.2))
+					(sup.material_override as ShaderMaterial).set_shader_parameter("borde", 0.32)
+				else:
+					_cauce(r.grow(1.2), es_rio)
+					_orillas(r.grow(1.2), es_rio)
 				_sonidos_agua(r, "rio" if es_rio else "rio", 18.0 if es_rio else 12.0, -10.0)
 				if es_rio:
 					_stream_banks(r)
@@ -1768,7 +1773,16 @@ func _fountain(r: Rect2) -> void:
 	var mch := ShaderMaterial.new()
 	mch.shader = load("res://zarek/chorro.gdshader")
 	mch.set_shader_parameter("ruido", _ruido_chorro)
-	# de cada taza (salvo la pila de abajo) cae una cortina de agua hasta el nivel de la siguiente
+	# de cada taza (salvo la pila de abajo) cae una cortina de agua hasta el nivel de la siguiente; el agua de abajo
+	# hace anillos y espuma donde cae
+	var radios_caida: Array = []
+	for i in range(ks.size() - 1, 0, -1):
+		if float(niveles[ks[i]]) <= 2.8 and (float(ks[i]) - float(ks[i - 1])) / 10.0 >= 0.3:
+			radios_caida.append(float(niveles[ks[i]]) + 0.2)
+	while radios_caida.size() < 4:
+		radios_caida.append(0.0)
+	agua.set_shader_parameter("ondas_centro", Vector2(c.x, c.z))
+	agua.set_shader_parameter("ondas_radios", Vector4(radios_caida[0], radios_caida[1], radios_caida[2], radios_caida[3]))
 	for i in range(ks.size() - 1, 0, -1):
 		var y_arriba := float(ks[i]) / 10.0
 		var y_abajo := float(ks[i - 1]) / 10.0
@@ -1851,6 +1865,121 @@ func _gota_mesh() -> Mesh:
 	return _gota
 
 ## Cauce hundido: fondo de barro y piedras a -0,9 m y orillas en pendiente (se puede salir andando).
+# ---------------- río natural ----------------
+var _rio_nz: Array = []
+## Centro y medio ancho del agua del río en una x (orillas que serpentean y cambian de ancho).
+func _rio_forma(r: Rect2, x: float) -> Vector2:
+	if _rio_nz.is_empty():
+		for k in 3:
+			var n := FastNoiseLite.new()
+			n.seed = 300 + k
+			n.frequency = 0.035 + k * 0.02
+			_rio_nz.append(n)
+	var c: float = r.get_center().y + (_rio_nz[0] as FastNoiseLite).get_noise_1d(x) * 0.9
+	var hw: float = r.size.y * 0.5 - 1.7 + (_rio_nz[1] as FastNoiseLite).get_noise_1d(x) * 0.7
+	return Vector2(c, hw)
+
+## Cauce de río natural: una sola malla de terreno con orillas redondeadas que serpentean, fondo hondo en el
+## centro y bancos de barro; el agua (a −0,28) la corta el terreno, así la orilla no es una línea recta.
+func _cauce_natural(r: Rect2) -> void:
+	var fondo := -0.95
+	var paso := 1.0
+	var nx := int(r.size.x / paso) + 1
+	var nz := 18
+	var ruido := FastNoiseLite.new()
+	ruido.seed = 77
+	ruido.frequency = 0.4
+	var pts := []
+	for ix in nx + 1:
+		var x := r.position.x + minf(ix * paso, r.size.x)
+		var f := _rio_forma(r, x)
+		var fila := []
+		for iz in nz + 1:
+			var v := float(iz) / nz
+			var z := lerpf(r.position.y, r.end.y, v)
+			var y := 0.0
+			if iz > 0 and iz < nz:
+				# distancia al centro relativa al ancho del agua + talud de 1,3 m
+				var t := absf(z - f.x) / (f.y + 1.3)
+				var perfil := 1.0 - smoothstep(0.55, 1.0, t)
+				y = fondo * pow(perfil, 0.7) + ruido.get_noise_2d(x, z) * 0.06 * perfil
+				# al borde del hueco del suelo vuelve a 0 sin escalón
+				var borde := minf(z - r.position.y, r.end.y - z)
+				y *= smoothstep(0.0, 0.6, borde)
+			fila.append(Vector3(x, y, z))
+		pts.append(fila)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for ix in nx:
+		for iz in nz:
+			var a: Vector3 = pts[ix][iz]
+			var b: Vector3 = pts[ix + 1][iz]
+			var c: Vector3 = pts[ix][iz + 1]
+			var d: Vector3 = pts[ix + 1][iz + 1]
+			st.add_vertex(a); st.add_vertex(b); st.add_vertex(c)
+			st.add_vertex(b); st.add_vertex(d); st.add_vertex(c)
+	st.generate_normals()
+	var malla := st.commit()
+	var mi := MeshInstance3D.new()
+	mi.mesh = malla
+	mi.material_override = _mat.barro
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.set_meta("dyn", true)
+	add_child(mi)
+	var sb := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	cs.shape = malla.create_trimesh_shape()
+	sb.add_child(cs)
+	add_child(sb)
+	# cantos rodados en el fondo
+	for k in int(r.size.x / 3.0):
+		var x := _rng.randf_range(r.position.x, r.end.x)
+		var f := _rio_forma(r, x)
+		var z := f.x + _rng.randf_range(-f.y, f.y) * 0.8
+		_prop("boulder_01", Vector3(x, fondo - 0.08, z), _rng.randf() * TAU, _rng.randf_range(0.15, 0.4), false)
+
+## Orillas del río: vegetación espesa siguiendo la orilla irregular (juncos y hierba en el agua somera, helechos,
+## ortigas y arbustos arriba) y rocas medio hundidas en la línea del agua.
+func _orillas_rio(r: Rect2) -> void:
+	var cerca := {"veg_cattail": [], "veg_cattail_plant": [], "grass_medium_01": [], "grass_medium_02": []}
+	var arriba := {"fern_02": [], "veg_3d_fern_01": [], "nettle_plant": [], "shrub_03": [], "grass_medium_01": [], "dandelion_01": [], "celandine_01": []}
+	var rocas: Array = []
+	var musgo: Array = []
+	var x := r.position.x
+	var puente_x := _zone("Puente viejo").get_center().x
+	while x < r.end.x:
+		var f := _rio_forma(r, x)
+		if absf(x - puente_x) < 2.8:
+			x += 0.55
+			continue
+		for lado in [-1.0, 1.0]:
+			# en el agua somera y la misma orilla: juncos y hierba
+			for k in 2:
+				var d := f.y + _rng.randf_range(-0.5, 0.6)
+				var nm: String = (cerca.keys() as Array)[_rng.randi_range(0, cerca.size() - 1)]
+				var sc := _rng.randf_range(0.8, 1.4)
+				var yy := -0.3 if d < f.y + 0.2 else -0.15
+				(cerca[nm] as Array).append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(x + _rng.randf_range(-0.3, 0.3), yy, f.x + lado * d)))
+			# arriba del talud
+			for k in 2:
+				var d2 := f.y + _rng.randf_range(1.2, 3.2)
+				var nm2: String = (arriba.keys() as Array)[_rng.randi_range(0, arriba.size() - 1)]
+				var sc2 := _rng.randf_range(0.8, 1.5)
+				(arriba[nm2] as Array).append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc2, sc2, sc2)), Vector3(x + _rng.randf_range(-0.3, 0.3), -0.02, f.x + lado * d2)))
+			if _rng.randf() < 0.35:
+				var sr := _rng.randf_range(0.35, 1.0)
+				rocas.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sr, sr * _rng.randf_range(0.6, 1.0), sr)), Vector3(x, -0.55, f.x + lado * (f.y + _rng.randf_range(-0.4, 0.4)))))
+			if _rng.randf() < 0.08:
+				var sm := _rng.randf_range(0.25, 0.4)
+				musgo.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sm, sm, sm)), Vector3(x, -0.4, f.x + lado * (f.y + 0.6))))
+		x += 0.55
+	for nm in cerca:
+		_multi_planta(nm, cerca[nm])
+	for nm in arriba:
+		_multi_planta(nm, arriba[nm])
+	_multi_planta("boulder_01", rocas)
+	_multi_planta("rock_moss_set_02", musgo)
+
 func _cauce(r: Rect2, es_rio: bool) -> void:
 	var fondo := -0.95
 	var talud := 1.4
@@ -2188,12 +2317,6 @@ func _well(r: Rect2) -> void:
 	_static_cyl(1.7, 1.0, c + Vector3(0, 0.5, 0))
 
 func _stream_banks(r: Rect2) -> void:
-	var x := r.position.x
-	while x < r.end.x:
-		for s in [r.position.y - 0.3, r.end.y + 0.3]:
-			if _rng.randf() < 0.5:
-				_prop("boulder_01", Vector3(x + _rng.randf() * 3, -0.55, s + _rng.randf_range(-0.6, 0.6)), _rng.randf() * TAU, _rng.randf_range(0.35, 0.75), false)
-		x += 4.0
 	var bx := _zone("Puente viejo").get_center().x
 	var bz := r.get_center().y
 	var largo := r.size.y + 6.0
