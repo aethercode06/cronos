@@ -21,7 +21,7 @@ for cat, cfg in json.load(open(PED)).items():
         dst = os.path.join(OUT, aid)
         if os.path.isdir(dst): continue
         try:
-            z = zipfile.ZipFile(io.BytesIO(get(f"https://ambientcg.com/get?file={aid}_1K-JPG.zip")))
+            z = zipfile.ZipFile(io.BytesIO(get(f"https://ambientcg.com/get?file={aid}_{cfg.get('res', '1K')}-JPG.zip")))
             os.makedirs(dst, exist_ok=True)
             for n in z.namelist():
                 low = n.lower()
