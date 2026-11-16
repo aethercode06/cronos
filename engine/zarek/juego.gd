@@ -196,6 +196,8 @@ func _environment() -> void:
 	moon.rotation_degrees = Vector3(-38, -55, 0)
 	moon.shadow_enabled = true
 	moon.directional_shadow_max_distance = 60.0
+	moon.shadow_bias = 0.06
+	moon.shadow_normal_bias = 2.5
 	add_child(moon)
 
 func _flashlight() -> void:

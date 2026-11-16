@@ -140,6 +140,7 @@ func build(q := 2) -> void:
 		_level(key)
 	_build_stairs()
 	_roof()
+	_ornatos_fachada()
 	_exterior()
 	_markers()
 	_portals()
@@ -282,6 +283,31 @@ func _shingles() -> Image:
 
 ## Material PBR con texturas fotográficas CC0 (ambientCG) de res://zarek/texturas/<id>/.
 ## escala = repeticiones por metro (proyección triplanar en coordenadas del mundo).
+## Material de fachada (fachada.gdshader): sillería con churretes, base húmeda y manchas.
+func _fachada_mat(id: String, escala: float, tinte: Color) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://zarek/fachada.gdshader")
+	var base := "res://zarek/texturas/%s/" % id
+	m.set_shader_parameter("c_tex", load(base + "color.jpg"))
+	m.set_shader_parameter("n_tex", load(base + "normal.jpg"))
+	m.set_shader_parameter("r_tex", load(base + "rough.jpg"))
+	if ResourceLoader.exists(base + "ao.jpg"):
+		m.set_shader_parameter("ao_tex", load(base + "ao.jpg"))
+	var nt := NoiseTexture2D.new()
+	nt.width = 512
+	nt.height = 512
+	nt.seamless = true
+	nt.generate_mipmaps = true
+	var fn := FastNoiseLite.new()
+	fn.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	fn.frequency = 0.03
+	fn.fractal_octaves = 4
+	nt.noise = fn
+	m.set_shader_parameter("ruido", nt)
+	m.set_shader_parameter("escala", escala)
+	m.set_shader_parameter("tinte", Vector3(tinte.r, tinte.g, tinte.b))
+	return m
+
 var _ruido_suelo: NoiseTexture2D
 ## Suelo exterior sin repetición visible (ver suelo.gdshader): base, manchas de una segunda capa y de una tercera.
 func _suelo(a: String, b: String, c: String, escala: float, t1: Color, t2: Color, t3: Color, k2: float, k3: float) -> ShaderMaterial:
@@ -400,7 +426,9 @@ func _materials() -> void:
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
-	_mat["fachada"] = _pbr("Bricks097", 0.42, Color(0.78, 0.7, 0.66), 0.95, 1.3)
+	_mat["fachada"] = _fachada_mat("Bricks066", 0.32, Color(0.8, 0.77, 0.7))
+	_mat["piedra_clara"] = _pbr("Travertine009", 0.45, Color(0.9, 0.87, 0.8), 0.9)
+	_mat["contraventana"] = _pbr("Wood049", 0.8, Color(0.16, 0.2, 0.17), 0.7)
 	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
 	_mat["cesped"] = _suelo("Ground037", "ScatteredLeaves009", "Ground110", 0.25, Color(0.5, 0.52, 0.42), Color(0.66, 0.62, 0.56), Color(0.75, 0.72, 0.68), 0.3, 0.2)
 	_mat["bosque"] = _suelo("ScatteredLeaves009", "Ground085", "Ground037", 0.25, Color(0.7, 0.68, 0.62), Color(0.55, 0.5, 0.45), Color(0.48, 0.52, 0.4), 0.32, 0.28)
@@ -871,16 +899,46 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	for sj in [-1.0, 1.0]:
 		var mj := Vector3(0.09, 2.0, 0.09) if horiz else Vector3(0.09, 2.0, 0.09)
 		box(mj, c + ej2 * sj * 0.79 + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
-	# jambas y alféizar por fuera
+	# por fuera: recerco de piedra clara con dintel y clave, alféizar sobre ménsulas, frontón (triangular en la
+	# planta baja, cornisa recta con ménsulas arriba) y contraventanas de madera abiertas contra el muro
 	var ej: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	var fuera := -inward * (thick * 0.5 + 0.06)
+	var pc: Material = _mat.piedra_clara
 	for sj in [-1.0, 1.0]:
-		var jb := Vector3(0.16, 2.2, 0.1) if horiz else Vector3(0.1, 2.2, 0.16)
-		box(jb, c + ej * sj * 0.88 - inward * (thick * 0.5 + 0.05) + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
-	var al := Vector3(2.0, 0.08, 0.26) if horiz else Vector3(0.26, 0.08, 2.0)
-	box(al, c - inward * (thick * 0.5 + 0.1) + Vector3(0, 0.84, 0), _mat.moldura, false, null, false)
-	# frontón sobre la ventana (por fuera)
-	var top := Vector3(1.9, 0.18, 0.3) if horiz else Vector3(0.3, 0.18, 1.9)
-	box(top, c + Vector3(0, 3.1, 0) - inward * (thick * 0.5 + 0.12), _mat.moldura, false, null, false)
+		var jb := Vector3(0.24, 2.3, 0.12) if horiz else Vector3(0.12, 2.3, 0.24)
+		box(jb, c + ej * sj * 0.93 + fuera + Vector3(0, 1.9, 0), pc, false, null, false)
+	var dintel := Vector3(2.1, 0.26, 0.13) if horiz else Vector3(0.13, 0.26, 2.1)
+	box(dintel, c + fuera + Vector3(0, 3.13, 0), pc, false, null, false)
+	var clave := Vector3(0.26, 0.42, 0.18) if horiz else Vector3(0.18, 0.42, 0.26)
+	box(clave, c + fuera - inward * 0.03 + Vector3(0, 3.16, 0), pc, false, null, false)
+	var al := Vector3(2.2, 0.1, 0.3) if horiz else Vector3(0.3, 0.1, 2.2)
+	box(al, c - inward * (thick * 0.5 + 0.12) + Vector3(0, 0.84, 0), pc, false, null, false)
+	for sj in [-0.7, 0.7]:
+		var me := Vector3(0.14, 0.22, 0.18) if horiz else Vector3(0.18, 0.22, 0.14)
+		box(me, c + ej * sj - inward * (thick * 0.5 + 0.1) + Vector3(0, 0.68, 0), pc, false, null, false)
+	var nivel := level_of(c.y + 0.3)
+	if nivel == 0:
+		var fr2 := MeshInstance3D.new()
+		var pm := PrismMesh.new()
+		pm.size = Vector3(2.4, 0.55, 0.2)
+		fr2.mesh = pm
+		fr2.material_override = pc
+		fr2.position = c + fuera - inward * 0.02 + Vector3(0, 3.55, 0)
+		fr2.rotation.y = 0.0 if horiz else PI * 0.5
+		_house.add_child(fr2)
+	else:
+		var cor := Vector3(2.4, 0.12, 0.32) if horiz else Vector3(0.32, 0.12, 2.4)
+		box(cor, c + fuera - inward * 0.08 + Vector3(0, 3.33, 0), pc, false, null, false)
+		for sj in [-1.05, 1.05]:
+			var mn := Vector3(0.12, 0.3, 0.2) if horiz else Vector3(0.2, 0.3, 0.12)
+			box(mn, c + ej * sj + fuera - inward * 0.04 + Vector3(0, 3.12, 0), pc, false, null, false)
+	for sj in [-1.0, 1.0]:
+		var hoja := Vector3(0.82, 2.15, 0.05) if horiz else Vector3(0.05, 2.15, 0.82)
+		var cv := box(hoja, c + ej * sj * 1.5 + fuera + Vector3(0, 1.9, 0), _mat.contraventana, false, null, false)
+		# lamas de la persiana en relieve
+		for k in 7:
+			var lama := Vector3(0.7, 0.03, 0.035) if horiz else Vector3(0.035, 0.03, 0.7)
+			box(lama, c + ej * sj * 1.5 + fuera - inward * 0.03 + Vector3(0, 1.05 + k * 0.27, 0), _mat.contraventana, false, null, false)
 	# cortinas pesadas con pliegues, barra y galería
 	var eje: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
 	var dentro: Vector3 = c + inward * (thick * 0.5 + 0.13)
@@ -1001,6 +1059,49 @@ func set_door(d: Dictionary, open: bool, force := false) -> void:
 	d.target = (1.6 if open else 0.0)
 	d.shape.disabled = open
 	d["speed"] = 9.0 if force else 3.2
+
+## Detalles que hacen que la casa parezca una mansión: esquinas con sillares alternos (cadenas de esquina),
+## cornisa grande con ménsulas bajo el tejado e impostas entre pisos, todo en piedra clara.
+func _ornatos_fachada() -> void:
+	var r := house_rect
+	var pc: Material = _mat.piedra_clara
+	var cara := 0.26
+	var alto_total := lvl_y(2) + 3.4
+	var esquinas := [[r.position, Vector2(1, 1)], [Vector2(r.end.x, r.position.y), Vector2(-1, 1)], [Vector2(r.position.x, r.end.y), Vector2(1, -1)], [r.end, Vector2(-1, -1)]]
+	for e in esquinas:
+		var p: Vector2 = e[0]
+		var d: Vector2 = e[1]
+		var k := 0
+		var y := 0.55
+		while y < alto_total:
+			var largo := 0.75 if k % 2 == 0 else 0.45
+			var bx := box(Vector3(largo, 0.4, 0.42), Vector3(p.x + d.x * (largo * 0.5 - cara), y + 0.2, p.y - d.y * cara + d.y * 0.21 - d.y * 0.21), pc, false, self, false)
+			bx.position = Vector3(p.x + d.x * (largo * 0.5 - cara - 0.02), y + 0.2, p.y - d.y * (cara + 0.02) + d.y * 0.2)
+			var bz := box(Vector3(0.42, 0.4, 0.45 if k % 2 == 0 else 0.75), Vector3.ZERO, pc, false, self, false)
+			bz.position = Vector3(p.x - d.x * (cara + 0.02) + d.x * 0.2, y + 0.2, p.y + d.y * ((0.45 if k % 2 == 0 else 0.75) * 0.5 - cara - 0.02))
+			y += 0.43
+			k += 1
+	# cornisa con ménsulas bajo el alero
+	var yc := lvl_y(2) + 3.2
+	for lado in 4:
+		var horiz := lado < 2
+		var l := r.size.x if horiz else r.size.y
+		var cpos := Vector3(r.get_center().x, yc, (r.position.y if lado == 0 else r.end.y)) if horiz else Vector3((r.position.x if lado == 2 else r.end.x), yc, r.get_center().y)
+		var fuera := Vector3(0, 0, -1 if lado == 0 else 1) if horiz else Vector3(-1 if lado == 2 else 1, 0, 0)
+		var banda := Vector3(l + 0.9, 0.22, 0.5) if horiz else Vector3(0.5, 0.22, l + 0.9)
+		box(banda, cpos + fuera * 0.4 + Vector3(0, 0.12, 0), pc, false, self, false)
+		var friso := Vector3(l + 0.6, 0.35, 0.2) if horiz else Vector3(0.2, 0.35, l + 0.6)
+		box(friso, cpos + fuera * 0.3 + Vector3(0, -0.15, 0), pc, false, self, false)
+		var n := int(l / 0.9)
+		for k in n:
+			var t := -l * 0.5 + 0.45 + k * (l - 0.9) / maxf(n - 1, 1)
+			var mpos := cpos + (Vector3(t, 0, 0) if horiz else Vector3(0, 0, t)) + fuera * 0.42 + Vector3(0, -0.12, 0)
+			var men := Vector3(0.14, 0.32, 0.34) if horiz else Vector3(0.34, 0.32, 0.14)
+			box(men, mpos, pc, false, self, false)
+		# impostas entre pisos (bandas de piedra que marcan cada planta)
+		for lv in [1, 2]:
+			var imp := Vector3(l + 0.5, 0.2, 0.16) if horiz else Vector3(0.16, 0.2, l + 0.5)
+			box(imp, Vector3(cpos.x, lvl_y(lv) - 0.05, cpos.z) + fuera * 0.3, pc, false, self, false)
 
 # ---------------- tejado y torre ----------------
 func _roof() -> void:

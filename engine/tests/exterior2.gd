@@ -14,7 +14,7 @@ func _ready() -> void:
 	env.sky = sky; env.background_mode = Environment.BG_SKY
 	we.environment = env; add_child(we)
 	var moon := DirectionalLight3D.new(); moon.light_color = Color(0.55, 0.65, 0.95); moon.light_energy = 0.45
-	moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_enabled = true; moon.directional_shadow_max_distance = 60.0; add_child(moon)
+	moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_enabled = true; moon.directional_shadow_max_distance = 60.0; moon.shadow_bias = 0.06; moon.shadow_normal_bias = 2.5; add_child(moon)
 	var cl := CanvasLayer.new(); var cr := ColorRect.new(); cr.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var pm := ShaderMaterial.new(); pm.shader = load("res://zarek/post.gdshader"); cr.material = pm; cl.add_child(cr); add_child(cl)
 	var m := ZarekMansion.new(); add_child(m); m.build(2)
@@ -28,6 +28,10 @@ func _ready() -> void:
 	var pu := m.cell_to_world("exterior", 31.0, 83.0)
 	var vistas := [[fu + Vector3(-7.5, 1.7, 5.0), fu + Vector3(0, 1.8, 0)], [fu + Vector3(-2.2, 1.6, 2.6), fu + Vector3(0, 1.0, 0)],
 		[pu + Vector3(-9.0, 1.7, -4.0), pu + Vector3(0, 0.4, 0)], [Vector3(hr.get_center().x - 9.0, 1.7, hr.end.y + 7.0), Vector3(hr.get_center().x - 4.0, 3.5, hr.end.y)]]
+	if OS.get_environment("VISTAS") == "fachada":
+		vistas = [[Vector3(hr.get_center().x - 2.0, 1.7, hr.end.y + 24.0), Vector3(hr.get_center().x, 5.5, hr.end.y)],
+			[Vector3(hr.position.x - 9.0, 1.7, hr.end.y + 11.0), Vector3(hr.position.x + 6.0, 4.5, hr.end.y - 2.0)],
+			[Vector3(hr.get_center().x + 6.0, 1.7, hr.end.y + 5.5), Vector3(hr.get_center().x + 6.0, 3.0, hr.end.y)]]
 	if OS.get_environment("VISTAS") == "rio":
 		vistas = [[pu + Vector3(-9.0, 1.7, -4.0), pu + Vector3(0, -0.2, 0)], [pu + Vector3(-14.0, 1.7, 1.0), pu + Vector3(-4.0, -0.4, 0.5)], [Vector3(hr.get_center().x - 9.0, 1.7, hr.end.y + 7.0), Vector3(hr.get_center().x - 4.0, 3.5, hr.end.y)]]
 	if OS.get_environment("VISTAS") == "viejas":
