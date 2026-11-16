@@ -25,6 +25,7 @@ func _ready() -> void:
 		var p := "res://zarek/objetos/%s.glb" % nm
 		if not ResourceLoader.exists(p): p = "res://zarek/muebles/%s.glb" % nm
 		if not ResourceLoader.exists(p): p = "res://zarek/arboles/%s.glb" % nm
+		if not ResourceLoader.exists(p): p = "res://zarek/animales/%s.glb" % nm
 		var ps: PackedScene = load(p) if ResourceLoader.exists(p) else null
 		if ps == null: print("ROTO ", nm); continue
 		var n: Node3D = ps.instantiate(); add_child(n)

@@ -9,7 +9,7 @@ const RATE := 22050
 static var _cache := {}
 
 ## Nombres disponibles: drone, latido, paso, portazo, golpes, susurro, grito,
-## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo
+## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza
 static func make(kind: String) -> AudioStreamWAV:
 	if not _cache.has(kind):
 		_cache[kind] = _build(kind)
@@ -37,6 +37,8 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"golpe_madera": return _wood_hit()
 		"graznido": return _caw()
 		"aleteo": return _flaps()
+		"ululato": return _hoot()
+		"lechuza": return _barn_screech()
 	return _chime()
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -289,6 +291,45 @@ static func _caw() -> AudioStreamWAV:
 			if ini + i < b.size():
 				b[ini + i] = o * env
 	_normalize(b, 0.8)
+	return _wav(b)
+
+## Ululato de búho: «uu… uu-uu-uuu», grave y suave, con un poco de aire.
+static func _hoot() -> AudioStreamWAV:
+	var notas := [[0.0, 0.42, 1.0], [0.75, 0.18, 0.8], [1.0, 0.18, 0.8], [1.25, 0.6, 1.0]]
+	var b := _buf(2.1)
+	var ph := 0.0
+	var lp := 0.0
+	for nt in notas:
+		var ini := int(float(nt[0]) * RATE)
+		var dur: float = nt[1]
+		for i in int(dur * RATE):
+			var t := float(i) / RATE
+			var env := sin(PI * t / dur) * float(nt[2])
+			var f := 360.0 + 25.0 * sin(PI * t / dur) - 10.0 * t
+			ph += f / RATE
+			lp += ((randf() * 2.0 - 1.0) - lp) * 0.05
+			b[ini + i] += (sin(TAU * ph) * 0.85 + sin(TAU * ph * 2.0) * 0.08 + lp * 0.25) * pow(env, 1.3)
+	_normalize(b, 0.7)
+	return _wav(b)
+
+## Chillido de lechuza: un siseo ronco y largo, ruido filtrado con una resonancia que sube y baja.
+static func _barn_screech() -> AudioStreamWAV:
+	var sec := 1.6
+	var b := _buf(sec)
+	var f1 := 0.0
+	var f2 := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var env := minf(1.0, t / 0.08) * pow(maxf(0.0, 1.0 - t / sec), 0.8)
+		var fc := 2400.0 + 900.0 * sin(PI * t / sec) + 200.0 * sin(TAU * 23.0 * t)
+		var w := TAU * fc / RATE
+		var r := 0.93
+		var x := (randf() * 2.0 - 1.0) * (0.7 + 0.3 * sin(TAU * 31.0 * t))
+		var y := x + 2.0 * r * cos(w) * f1 - r * r * f2
+		f2 = f1
+		f1 = y
+		b[i] = y * env
+	_normalize(b, 0.75)
 	return _wav(b)
 
 ## Aleteo: golpes de aire graves y rápidos (para cuando una bandada levanta el vuelo).

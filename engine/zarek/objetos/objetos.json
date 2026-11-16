@@ -2491,5 +2491,59 @@
   ],
   "tris": 5999,
   "escala": 0.0339
+ },
+ "ave_common_barn_owl": {
+  "tam": [
+   0.282,
+   0.551,
+   0.32
+  ],
+  "tris": 8000,
+  "escala": 1.4669
+ },
+ "ave_eastern_screech_owl": {
+  "tam": [
+   0.238,
+   0.36,
+   0.244
+  ],
+  "tris": 7999,
+  "escala": 1.6296
+ },
+ "ave_great_horned_owl": {
+  "tam": [
+   0.539,
+   0.7,
+   0.707
+  ],
+  "tris": 8000,
+  "escala": 1.7449
+ },
+ "ave_moth_number_1": {
+  "tam": [
+   0.104,
+   0.039,
+   0.12
+  ],
+  "tris": 7999,
+  "escala": 0.0688
+ },
+ "ave_owl": {
+  "tam": [
+   1.0,
+   0.42,
+   0.367
+  ],
+  "tris": 3438,
+  "escala": 1.3383
+ },
+ "ave_snowy_owl": {
+  "tam": [
+   0.347,
+   0.601,
+   0.356
+  ],
+  "tris": 7999,
+  "escala": 1.0315
  }
 }

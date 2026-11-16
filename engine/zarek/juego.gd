@@ -111,9 +111,16 @@ func _ready() -> void:
 	elena.visible = false
 	var ex0 := mansion.cell_to_world("exterior", 0.0, 0.0)
 	var ex1 := mansion.cell_to_world("exterior", 90.0, 104.0)
-	cuervos = ZarekCuervos.new()
-	add_child(cuervos)
-	cuervos.setup(player, self, mansion.cell_to_world("exterior", 79.0, 21.0), Rect2(ex0.x, ex0.z, ex1.x - ex0.x, ex1.z - ex0.z))
+	var evitar: Array = []
+	for z in mansion.plan.exterior.zonas:
+		if not String(z[0]).begins_with("Bosque"):
+			var a := mansion.cell_to_world("exterior", float(z[2]), float(z[3]))
+			evitar.append(Rect2(a.x, a.z, float(z[4]) * ZarekMansion.CELL, float(z[5]) * ZarekMansion.CELL).grow(3.0))
+	var hr: Rect2 = mansion.house_rect
+	aves = ZarekAves.new()
+	add_child(aves)
+	aves.setup(player, self, mansion.cell_to_world("exterior", 79.0, 21.0), Rect2(ex0.x, ex0.z, ex1.x - ex0.x, ex1.z - ex0.z), evitar,
+		Vector3(hr.get_center().x, 10.0, hr.get_center().y), mansion.cell_to_world("exterior", 36.5, 19.5), mansion.cell_to_world("exterior", 44.0, 43.0))
 	ghost = ZarekElena.new()
 	ghost.only_visual = true
 	add_child(ghost)
@@ -624,7 +631,7 @@ func _process(delta: float) -> void:
 	_update_audio(delta)
 
 var niebla: ZarekNiebla
-var cuervos: ZarekCuervos
+var aves: ZarekAves
 var _fuera := 1.0
 ## Fuera de la casa: niebla espesa azulada de luna, más densa a ras de suelo, y bancos de niebla que se mueven.
 ## Dentro: la niebla fina de siempre. Se pasa de una a otra poco a poco al cruzar la puerta.
@@ -781,7 +788,7 @@ func _events(pp: Vector3) -> void:
 					sound_at("crujido", pts[k] + Vector3(0, 2, 0), 4.0)
 					sound_behind("susurro", 2.0, 0.0)
 				"cuervos":
-					message("Algo los ha espantado…", 2.5)
+					pass
 
 func _in_circle(pp: Vector3) -> bool:
 	return absf(pp.y - mansion.circle_pos.y) < 1.5 and Vector2(pp.x - mansion.circle_pos.x, pp.z - mansion.circle_pos.z).length() < 1.9

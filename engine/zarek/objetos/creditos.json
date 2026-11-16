@@ -2868,5 +2868,95 @@
   "url": "https://sketchfab.com/3d-models/8ffa4d339fcc40ac9f076df30ff41afb",
   "caras": 3000,
   "cat": "r_colgada"
+ },
+ {
+  "clave": "ave_common_barn_owl",
+  "uid": "19c989a6681145bc999c332699eb852e",
+  "nombre": "Common Barn Owl",
+  "autor": "cmp_innovation_studio",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/19c989a6681145bc999c332699eb852e",
+  "caras": 29314,
+  "cat": "a_buho"
+ },
+ {
+  "clave": "ave_snowy_owl",
+  "uid": "e63aacf6b63a41f6bf9b302aad460835",
+  "nombre": "Snowy Owl",
+  "autor": "cmp_innovation_studio",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/e63aacf6b63a41f6bf9b302aad460835",
+  "caras": 30930,
+  "cat": "a_buho"
+ },
+ {
+  "clave": "ave_day_20_snowy_owl",
+  "uid": "745c105544784b9a80bbec49cccd1580",
+  "nombre": "Day 20 - Snowy Owl",
+  "autor": "LillyTr",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/745c105544784b9a80bbec49cccd1580",
+  "caras": 5992,
+  "cat": "a_buho"
+ },
+ {
+  "clave": "ave_eastern_screech_owl",
+  "uid": "1b34de1b8208495abb37b4b629c1f8a3",
+  "nombre": "Eastern Screech Owl",
+  "autor": "cmp_innovation_studio",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/1b34de1b8208495abb37b4b629c1f8a3",
+  "caras": 22844,
+  "cat": "a_buho"
+ },
+ {
+  "clave": "ave_great_horned_owl",
+  "uid": "6e64e602bc7447afacdf63669128f367",
+  "nombre": "Great Horned Owl",
+  "autor": "cmp_innovation_studio",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/6e64e602bc7447afacdf63669128f367",
+  "caras": 44278,
+  "cat": "a_buho"
+ },
+ {
+  "clave": "ave_owl",
+  "uid": "6cc34c515da041939e7348384ebba086",
+  "nombre": "Owl",
+  "autor": "hendrikReyneke",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/6cc34c515da041939e7348384ebba086",
+  "caras": 3438,
+  "cat": "a_buho"
+ },
+ {
+  "clave": "ave_bat_animated_character",
+  "uid": "5b3b856dbbb54e01987f5a1c272d49f2",
+  "nombre": "Bat animated character",
+  "autor": "GoldGryphon",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5b3b856dbbb54e01987f5a1c272d49f2",
+  "caras": 7134,
+  "cat": "a_murcielago"
+ },
+ {
+  "clave": "ave_bat_flying",
+  "uid": "de028c94ae87414e9da27b294afa97ac",
+  "nombre": "Bat flying",
+  "autor": "rafaelrafi",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/de028c94ae87414e9da27b294afa97ac",
+  "caras": 3668,
+  "cat": "a_murcielago"
+ },
+ {
+  "clave": "ave_moth_number_1",
+  "uid": "b808ca8c575844e1b37ec3ce39cca32f",
+  "nombre": "Moth number 1",
+  "autor": "interstellar_simian",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/b808ca8c575844e1b37ec3ce39cca32f",
+  "caras": 50000,
+  "cat": "a_noche"
  }
 ]
