@@ -1,12 +1,20 @@
 {
- "hd2": {
+ "sillar": {
   "ids": [
-   "Bricks097",
-   "Wood066",
-   "Wood049",
-   "Bricks094",
-   "Travertine009"
+   "Bricks066",
+   "Bricks059",
+   "Bricks075A",
+   "Plaster001",
+   "Concrete034"
   ],
   "res": "2K"
+ },
+ "sillares": {
+  "q": "ashlar",
+  "n": 6
+ },
+ "piedra_tallada": {
+  "q": "stone block wall",
+  "n": 6
  }
 }
