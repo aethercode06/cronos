@@ -6,7 +6,7 @@ shader_type canvas_item;
 // - Película: grano animado, polvo y rayas verticales que aparecen a ratos, y un ligero parpadeo de exposición.
 // - Miedo (0..1, sube con la cordura baja y el peligro): más distorsión, aberración, ondulación de la imagen,
 //   desaturación y un tinte rojizo; a veces la imagen tiembla un fotograma.
-uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
 uniform float saturacion = 0.62;
 uniform float vineta = 0.72;
 uniform float grano = 0.065;
@@ -17,6 +17,7 @@ uniform vec3 tinte_sombras : source_color = vec3(0.78, 0.98, 1.0);
 uniform vec3 tinte_medios : source_color = vec3(1.0, 0.98, 0.84);
 uniform vec3 tinte_luces : source_color = vec3(1.02, 0.97, 0.88);
 uniform vec3 velo : source_color = vec3(0.012, 0.022, 0.02);
+uniform float brillo = 1.0;
 uniform float miedo : hint_range(0.0, 1.0) = 0.0;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
@@ -75,5 +76,5 @@ void fragment() {
 	// grano
 	float n = hash(SCREEN_UV * vec2(1920.0, 1080.0) + fract(t * 7.13) * 91.7) - 0.5;
 	col += n * (grano + miedo * 0.05) * (1.0 - l * 0.5);
-	COLOR = vec4(max(col, vec3(0.0)), 1.0);
+	COLOR = vec4(max(col * brillo, vec3(0.0)), 1.0);
 }

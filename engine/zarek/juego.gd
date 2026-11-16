@@ -91,7 +91,8 @@ func _ready() -> void:
 	_environment()
 	mansion = ZarekMansion.new()
 	add_child(mansion)
-	mansion.build(Aether.quality)
+	# en el teléfono, densidad media de bosque y objetos (la alta va a tirones)
+	mansion.build(mini(Aether.quality, 1) if OS.get_name() == "Android" else Aether.quality)
 	mansion.bake_nav()
 	for l in mansion.lamps:
 		mansion.set_lamp(l, true)
@@ -223,7 +224,7 @@ func _environment() -> void:
 	moon.light_energy = 0.45
 	moon.rotation_degrees = Vector3(-38, -55, 0)
 	moon.shadow_enabled = true
-	moon.directional_shadow_max_distance = 60.0
+	moon.directional_shadow_max_distance = 32.0 if OS.get_name() == "Android" else 60.0
 	moon.shadow_bias = 0.06
 	moon.shadow_normal_bias = 2.5
 	add_child(moon)
@@ -332,7 +333,7 @@ func _bar(col: Color, w: float) -> ProgressBar:
 
 func _ui() -> void:
 	# 2× MSAA: bordes limpios y agujas de los abetos sin dientes (barato en GPU móviles de teselas)
-	get_viewport().msaa_3d = Viewport.MSAA_2X
+	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if OS.get_name() == "Android" else Viewport.MSAA_2X
 	# posprocesado de cine (debajo de la interfaz, para que el texto no lleve grano)
 	var cine := CanvasLayer.new()
 	cine.layer = 40
@@ -344,6 +345,10 @@ func _ui() -> void:
 	pm.shader = load("res://zarek/post.gdshader")
 	cr.material = pm
 	post_mat = pm
+	if OS.get_name() == "Android":
+		pm.set_shader_parameter("brillo", 1.35)
+		pm.set_shader_parameter("vineta", 0.55)
+		pm.set_shader_parameter("contraste", 1.08)
 	cine.add_child(cr)
 	ui = CanvasLayer.new()
 	ui.layer = 50

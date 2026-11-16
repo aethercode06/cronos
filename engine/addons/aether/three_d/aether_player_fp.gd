@@ -48,7 +48,7 @@ func _ready() -> void:
 	camera = Camera3D.new()
 	camera.fov = 72.0
 	camera.near = 0.05
-	camera.far = 80.0
+	camera.far = 60.0 if OS.get_name() == "Android" else 80.0
 	head.add_child(camera)
 	camera.current = true
 	_yaw = rotation.y
