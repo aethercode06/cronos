@@ -1,3 +1,5 @@
 .godot/
 *.import
 /android/
+tests/luz/salon.*
+tests/luz/_*
