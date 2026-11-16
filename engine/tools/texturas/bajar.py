@@ -25,7 +25,7 @@ for cat, cfg in json.load(open(PED)).items():
             os.makedirs(dst, exist_ok=True)
             for n in z.namelist():
                 low = n.lower()
-                for key, nm in (("_color", "color"), ("_normalgl", "normal"), ("_roughness", "rough"), ("_ambientocclusion", "ao")):
+                for key, nm in (("_color", "color"), ("_normalgl", "normal"), ("_roughness", "rough"), ("_ambientocclusion", "ao"), ("_displacement", "height")):
                     if key in low and low.endswith(".jpg"):
                         open(os.path.join(dst, nm + ".jpg"), "wb").write(z.read(n))
             print("OK", cat, aid); hoja.append((cat, aid))

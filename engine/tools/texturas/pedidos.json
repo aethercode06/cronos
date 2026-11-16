@@ -1,20 +1,11 @@
 {
- "sillar": {
+ "relieve": {
   "ids": [
-   "Bricks066",
-   "Bricks059",
-   "Bricks075A",
-   "Plaster001",
-   "Concrete034"
+   "Ground085",
+   "ScatteredLeaves009",
+   "Ground037",
+   "Ground110"
   ],
   "res": "2K"
- },
- "sillares": {
-  "q": "ashlar",
-  "n": 6
- },
- "piedra_tallada": {
-  "q": "stone block wall",
-  "n": 6
  }
 }
