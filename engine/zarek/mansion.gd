@@ -2220,10 +2220,11 @@ func _mat_agua(es_rio: bool) -> ShaderMaterial:
 	if es_rio:
 		m.set_shader_parameter("corriente", Vector2(1.0, 0.0))
 		m.set_shader_parameter("fuerza", 1.4)
-		m.set_shader_parameter("fuerza", 2.0)
-		m.set_shader_parameter("velocidad", 1.0)
-		m.set_shader_parameter("escala", 0.2)
-		m.set_shader_parameter("relieve", 2.4)
+		m.set_shader_parameter("fuerza", 1.1)
+		m.set_shader_parameter("velocidad", 0.55)
+		m.set_shader_parameter("escala", 0.32)
+		m.set_shader_parameter("relieve", 1.8)
+		m.set_shader_parameter("espuma", 1.2)
 	else:
 		m.set_shader_parameter("corriente", Vector2(0.6, 0.4))
 		m.set_shader_parameter("fuerza", 0.12)
