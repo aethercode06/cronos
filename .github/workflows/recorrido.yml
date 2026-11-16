@@ -1,0 +1,55 @@
+name: Vídeo del recorrido (Zarek)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  GODOT_VERSION: 4.7.2
+jobs:
+  tramo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        n: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: false }
+      - name: Godot y dependencias
+        run: |
+          V=$GODOT_VERSION; cd $RUNNER_TEMP
+          wget -q https://github.com/godotengine/godot/releases/download/${V}-stable/Godot_v${V}-stable_linux.x86_64.zip
+          unzip -q Godot_v${V}-stable_linux.x86_64.zip && sudo mv Godot_v${V}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri ffmpeg > /dev/null
+      - name: Importar
+        run: godot --headless --path engine --import > import.log 2>&1 || true
+      - name: Grabar tramo
+        run: |
+          INI=$(( ${{ matrix.n }} * 6 ))
+          DUR=6; if [ ${{ matrix.n }} -eq 11 ]; then DUR=30; fi
+          TRAMO_INI=$INI TRAMO_DUR=$DUR timeout 6600 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-driver opengl3 --resolution 1280x720 --write-movie $PWD/tramo.avi --fixed-fps 24 res://tests/recorrido.tscn > rec.log 2>&1 || true
+          grep -E "RUTA|TRAMO|RECORRIDO|SCRIPT" rec.log || true
+          ffmpeg -y -loglevel error -i tramo.avi -an -c:v libx264 -preset slow -crf 20 -pix_fmt yuv420p -r 24 tramo_${{ matrix.n }}.mp4
+          ls -la tramo_${{ matrix.n }}.mp4
+      - uses: actions/upload-artifact@v4
+        with: { name: "tramo_${{ matrix.n }}", path: "tramo_${{ matrix.n }}.mp4" }
+  unir:
+    needs: tramo
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: tramos, merge-multiple: true }
+      - name: Unir y publicar
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          ls -la tramos
+          for i in $(seq 0 11); do [ -f tramos/tramo_$i.mp4 ] && echo "file 'tramos/tramo_$i.mp4'" >> lista.txt; done
+          cat lista.txt
+          ffmpeg -y -loglevel error -f concat -safe 0 -i lista.txt -c copy Zarek_recorrido.mp4
+          ffmpeg -y -loglevel error -i Zarek_recorrido.mp4 -vf scale=854:-2 -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p Zarek_recorrido_movil.mp4
+          ls -la Zarek_recorrido*.mp4
+          gh release view zarek-video -R ${{ github.repository }} > /dev/null 2>&1 || gh release create zarek-video -R ${{ github.repository }} -t "Zarek: vídeo del recorrido" -n "Recorrido por el bosque y la casa"
+          gh release upload zarek-video Zarek_recorrido.mp4 Zarek_recorrido_movil.mp4 --clobber -R ${{ github.repository }}
