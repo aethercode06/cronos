@@ -1,6 +1,6 @@
 """Busca en Objaverse (Hugging Face) modelos con licencia comercial (CC-BY / CC0) por palabras clave
 y hace hojas de miniaturas. Uso: python buscar.py consultas.json <salida>"""
-import json, sys, os, io, urllib.request, gzip
+import json, sys, os, io, urllib.request, gzip, re
 import objaverse
 from PIL import Image, ImageDraw
 Q, OUT = sys.argv[1], sys.argv[2]
@@ -23,7 +23,7 @@ for cat, cfg in cons.items():
         if L not in ("by", "cc0"):
             continue
         txt = (a.get("name", "") + " " + " ".join(t["name"] for t in a.get("tags", []))).lower()
-        if not any(k in txt for k in kws) or any(k in txt for k in excl):
+        if not any(re.search(r"(?<![a-z])" + re.escape(k.strip()) + r"(?![a-z])", txt) for k in kws) or any(k in txt for k in excl):
             continue
         fc = a.get("faceCount") or 0
         if fc <= 0 or fc > cfg.get("max_caras", 150000):
