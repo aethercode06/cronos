@@ -2095,5 +2095,401 @@
   ],
   "tris": 5350,
   "escala": 0.0339
+ },
+ "ropa_1830s_frock_coat_unbuttoned": {
+  "tam": [
+   1.344,
+   1.2,
+   0.567
+  ],
+  "tris": 6000,
+  "escala": 0.0113
+ },
+ "ropa_1900_dress_form": {
+  "tam": [
+   0.434,
+   1.6,
+   0.502
+  ],
+  "tris": 5999,
+  "escala": 1.103
+ },
+ "ropa_a_fashionable_waistcoat": {
+  "tam": [
+   1.406,
+   0.8,
+   0.435
+  ],
+  "tris": 6000,
+  "escala": 0.7031
+ },
+ "ropa_apron": {
+  "tam": [
+   0.515,
+   0.9,
+   0.308
+  ],
+  "tris": 5999,
+  "escala": 0.0117
+ },
+ "ropa_black_dress": {
+  "tam": [
+   0.7,
+   1.399,
+   0.566
+  ],
+  "tris": 6000,
+  "escala": 0.0097
+ },
+ "ropa_boots": {
+  "tam": [
+   0.307,
+   0.42,
+   0.14
+  ],
+  "tris": 5236,
+  "escala": 0.1175
+ },
+ "ropa_bowler_hat": {
+  "tam": [
+   0.287,
+   0.13,
+   0.265
+  ],
+  "tris": 4094,
+  "escala": 0.0933
+ },
+ "ropa_coraline_riding_boot": {
+  "tam": [
+   0.265,
+   0.5,
+   0.225
+  ],
+  "tris": 5999,
+  "escala": 1.2289
+ },
+ "ropa_couch_pillow": {
+  "tam": [
+   0.45,
+   0.158,
+   0.336
+  ],
+  "tris": 6000,
+  "escala": 0.225
+ },
+ "ropa_dress": {
+  "tam": [
+   1.319,
+   1.3,
+   0.339
+  ],
+  "tris": 5999,
+  "escala": 0.0131
+ },
+ "ropa_dress_plain2": {
+  "tam": [
+   0.889,
+   1.3,
+   0.7
+  ],
+  "tris": 1440,
+  "escala": 1.5802
+ },
+ "ropa_dress_shoe_left": {
+  "tam": [
+   0.234,
+   0.125,
+   0.282
+  ],
+  "tris": 6000,
+  "escala": 0.001
+ },
+ "ropa_folded_newspaper": {
+  "tam": [
+   0.267,
+   0.034,
+   0.38
+  ],
+  "tris": 1158,
+  "escala": 0.0164
+ },
+ "ropa_frosted_sheets": {
+  "tam": [
+   0.8,
+   0.155,
+   0.629
+  ],
+  "tris": 5999,
+  "escala": 0.2676
+ },
+ "ropa_gray_sweater": {
+  "tam": [
+   1.331,
+   0.7,
+   0.336
+  ],
+  "tris": 5999,
+  "escala": 0.6655
+ },
+ "ropa_hanger": {
+  "tam": [
+   0.806,
+   1.8,
+   0.806
+  ],
+  "tris": 5999,
+  "escala": 0.05
+ },
+ "ropa_hanger_pile": {
+  "tam": [
+   0.45,
+   0.351,
+   0.066
+  ],
+  "tris": 6000,
+  "escala": 0.0106
+ },
+ "ropa_heavy_worn_jacket": {
+  "tam": [
+   1.493,
+   0.8,
+   0.451
+  ],
+  "tris": 6000,
+  "escala": 0.7468
+ },
+ "ropa_kirza_boots": {
+  "tam": [
+   0.496,
+   0.42,
+   0.366
+  ],
+  "tris": 3112,
+  "escala": 0.0112
+ },
+ "ropa_ladies_handbag_vol_1": {
+  "tam": [
+   0.276,
+   0.35,
+   0.143
+  ],
+  "tris": 6000,
+  "escala": 0.0406
+ },
+ "ropa_leather_bag": {
+  "tam": [
+   0.272,
+   0.25,
+   0.133
+  ],
+  "tris": 5999,
+  "escala": 0.1058
+ },
+ "ropa_leather_belt": {
+  "tam": [
+   0.3,
+   0.238,
+   0.45
+  ],
+  "tris": 6000,
+  "escala": 0.0002
+ },
+ "ropa_long_white_cotton_socks": {
+  "tam": [
+   0.353,
+   0.7,
+   0.274
+  ],
+  "tris": 6000,
+  "escala": 1.2383
+ },
+ "ropa_mannequin_1900s_m_size": {
+  "tam": [
+   0.369,
+   1.6,
+   0.332
+  ],
+  "tris": 6000,
+  "escala": 1.1511
+ },
+ "ropa_old_dirty_boots": {
+  "tam": [
+   0.811,
+   0.4,
+   0.396
+  ],
+  "tris": 1940,
+  "escala": 0.4054
+ },
+ "ropa_old_oxford_shoe": {
+  "tam": [
+   0.28,
+   0.105,
+   0.187
+  ],
+  "tris": 5998,
+  "escala": 0.9794
+ },
+ "ropa_old_shoes": {
+  "tam": [
+   0.297,
+   0.239,
+   0.299
+  ],
+  "tris": 6000,
+  "escala": 0.0011
+ },
+ "ropa_party_shoe_for_girls": {
+  "tam": [
+   0.07,
+   0.059,
+   0.18
+  ],
+  "tris": 6000,
+  "escala": 0.0196
+ },
+ "ropa_photoscanned_female_ankle_bo": {
+  "tam": [
+   0.132,
+   0.2,
+   0.317
+  ],
+  "tris": 6000,
+  "escala": 0.0012
+ },
+ "ropa_ribbon_ball": {
+  "tam": [
+   0.118,
+   0.118,
+   0.12
+  ],
+  "tris": 6000,
+  "escala": 0.0058
+ },
+ "ropa_robe": {
+  "tam": [
+   0.422,
+   1.401,
+   0.325
+  ],
+  "tris": 5999,
+  "escala": 0.0008
+ },
+ "ropa_sewing_machine": {
+  "tam": [
+   0.45,
+   0.343,
+   0.161
+  ],
+  "tris": 2870,
+  "escala": 0.0658
+ },
+ "ropa_shoes": {
+  "tam": [
+   0.28,
+   0.091,
+   0.101
+  ],
+  "tris": 5999,
+  "escala": 0.0873
+ },
+ "ropa_sunday_hat": {
+  "tam": [
+   0.332,
+   0.224,
+   0.42
+  ],
+  "tris": 1074,
+  "escala": 0.0012
+ },
+ "ropa_towel": {
+  "tam": [
+   0.162,
+   0.081,
+   0.6
+  ],
+  "tris": 5999,
+  "escala": 0.0025
+ },
+ "ropa_towel_rail": {
+  "tam": [
+   0.6,
+   0.399,
+   0.096
+  ],
+  "tris": 4616,
+  "escala": 0.0067
+ },
+ "ropa_umbrella": {
+  "tam": [
+   0.884,
+   0.846,
+   1.0
+  ],
+  "tris": 5998,
+  "escala": 0.3003
+ },
+ "ropa_victorian_vampire": {
+  "tam": [
+   1.555,
+   1.3,
+   0.374
+  ],
+  "tris": 6000,
+  "escala": 0.7775
+ },
+ "ropa_wedding_dress": {
+  "tam": [
+   0.772,
+   1.649,
+   0.841
+  ],
+  "tris": 5999,
+  "escala": 0.1119
+ },
+ "ropa_wood_clothes_hanger": {
+  "tam": [
+   0.43,
+   0.236,
+   0.013
+  ],
+  "tris": 1128,
+  "escala": 0.0055
+ },
+ "ropa_wooden_tool_hanger": {
+  "tam": [
+   1.0,
+   0.118,
+   0.049
+  ],
+  "tris": 3000,
+  "escala": 17.2584
+ },
+ "ropa_worn_leather_glove": {
+  "tam": [
+   0.21,
+   0.24,
+   0.156
+  ],
+  "tris": 6000,
+  "escala": 1.0144
+ },
+ "ropa_worn_rieker_women_leather_sh": {
+  "tam": [
+   0.129,
+   0.25,
+   0.347
+  ],
+  "tris": 5999,
+  "escala": 0.0814
+ },
+ "ropa_worn_vagabond_women_leather_": {
+  "tam": [
+   0.13,
+   0.301,
+   0.349
+  ],
+  "tris": 5999,
+  "escala": 0.0339
  }
 }

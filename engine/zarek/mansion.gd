@@ -50,16 +50,16 @@ const FISICOS := {"vict_antique_chair": 7.0, "painted_wooden_chair_01": 6.0, "pa
 	"vict_cup___saucer": 0.3, "coti_typewriter": 9.0, "coti_three_candles_and_a_golden_c": 0.8, "brass_candleholders": 2.0, "mousetrap": 0.1}
 ## Modelos de Objaverse que vienen mirando de lado: giro para que miren a +Z como los demás.
 const GIRO := {"obj_pendulum_clock": -PI * 0.5, "obj_withered_wooden_crucifix": -PI * 0.5, "obj_wooden_cuckoo_clock": -PI * 0.5,
-	"obj_teddy_bear_2": -PI * 0.5, "obj_old_violin": -PI * 0.5, "obj_biblical_scene_from_nurember": PI * 0.5, "obj_candle_wall_lamp": PI * 0.5}
+	"obj_teddy_bear_2": -PI * 0.5, "obj_old_violin": -PI * 0.5, "obj_biblical_scene_from_nurember": PI * 0.5, "obj_candle_wall_lamp": PI * 0.5, "ropa_towel_rail": -PI * 0.5}
 ## Objetos de pared o fijos: nunca sueltos con física.
-const FIJOS := ["frame", "crucifix", "cross", "deerhead", "cuckoo", "wall_lamp", "portrait", "biblical", "torment", "painting"]
+const FIJOS := ["ropa_hanger", "ropa_towel", "ropa_frosted", "ropa_wooden_tool", "frame", "crucifix", "cross", "deerhead", "cuckoo", "wall_lamp", "portrait", "biblical", "torment", "painting"]
 const METAL_PAL := ["lamp", "candle", "kettle", "teapot", "anvil", "goblet", "lantern", "watch", "candelabra", "pickaxe", "shovel", "cleaver", "grinder", "samovar", "cutlery", "scoop", "pens", "inkwell", "hourglass", "hour_glass", "sphere"]
 
 ## Masa (kg) si el objeto va suelto con física; 0 si es fijo. Los objetos pequeños nuevos (obj_*) se calculan por tamaño.
 func _masa_fisica(nombre: String) -> float:
 	if FISICOS.has(nombre):
 		return float(FISICOS[nombre])
-	if not nombre.begins_with("obj_") or not _props_info.has(nombre):
+	if not (nombre.begins_with("obj_") or nombre.begins_with("ropa_")) or not _props_info.has(nombre):
 		return 0.0
 	for f in FIJOS:
 		if nombre.contains(f):
@@ -1659,7 +1659,19 @@ func _wardrobe(pos: Vector3) -> void:
 	n.position = wpos
 	n.rotation.y = atan2(-back.x, -back.z)
 	add_child(n)
-	box(Vector3(1.6, 2.5, 0.85), Vector3(0, 1.25, 0), _mat.madera, true, n)
+	# cuerpo hueco (por dentro se ve el armario de verdad cuando te escondes); el choque sigue siendo un bloque
+	var macizo := box(Vector3(1.6, 2.5, 0.85), Vector3(0, 1.25, 0), _mat.madera, true, n)
+	macizo.visible = false
+	macizo.set_meta("dyn", true)
+	box(Vector3(1.6, 2.5, 0.04), Vector3(0, 1.25, -0.405), _mat.madera, false, n)
+	box(Vector3(0.04, 2.5, 0.85), Vector3(-0.78, 1.25, 0), _mat.madera, false, n)
+	box(Vector3(0.04, 2.5, 0.85), Vector3(0.78, 1.25, 0), _mat.madera, false, n)
+	box(Vector3(1.6, 0.06, 0.85), Vector3(0, 0.03, 0), _mat.madera, false, n)
+	box(Vector3(1.6, 0.04, 0.85), Vector3(0, 2.48, 0), _mat.madera, false, n)
+	# fondo interior (el trasero queda metido en el muro)
+	box(Vector3(1.52, 2.4, 0.02), Vector3(0, 1.25, -0.24), _mat.madera, false, n)
+	box(Vector3(1.52, 0.03, 0.3), Vector3(0, 2.15, -0.09), _mat.madera, false, n)
+	_ropa_armario(n)
 	box(Vector3(0.76, 2.2, 0.05), Vector3(-0.39, 1.2, 0.44), _mat.madera, false, n)
 	box(Vector3(0.76, 2.2, 0.05), Vector3(0.39, 1.2, 0.44), _mat.madera, false, n)
 	box(Vector3(1.75, 0.18, 0.95), Vector3(0, 2.55, 0), _mat.madera, false, n)
@@ -1668,6 +1680,36 @@ func _wardrobe(pos: Vector3) -> void:
 	box(Vector3(0.04, 0.2, 0.06), Vector3(0.06, 1.25, 0.48), _mat.oro, false, n)
 	var front := -back
 	wardrobes.append({"pos": wpos + front * 1.05, "inside": wpos + front * 0.05, "yaw": atan2(-front.x, -front.z)})
+
+## Dentro del armario: barra con perchas y prendas colgadas a los lados (deja el centro libre para esconderse),
+## una sombrerera o sombrero en la balda y zapatos en el suelo.
+const ROPA_COLGADA := ["ropa_robe", "ropa_black_dress", "ropa_dress_plain2", "ropa_1830s_frock_coat_unbuttoned", "ropa_a_fashionable_waistcoat", "ropa_gray_sweater", "ropa_heavy_worn_jacket", "ropa_victorian_vampire"]
+func _ropa_armario(n: Node3D) -> void:
+	_load_props_info()
+	var barra := cyl(0.012, 0.012, 1.5, Vector3(0, 2.0, 0), _mat.metal, n, 8)
+	barra.rotation.z = PI * 0.5
+	var xs := [-0.66, -0.52, -0.38, 0.38, 0.52, 0.66]
+	for x in xs:
+		if _rng.randf() < 0.18:
+			continue
+		var nombre: String = ROPA_COLGADA[_rng.randi_range(0, ROPA_COLGADA.size() - 1)]
+		if not _props_info.has(nombre):
+			continue
+		var t := _prop_size(nombre)
+		var esc := minf(1.0, 1.45 / maxf(t.y, 0.1))
+		var ancho := minf(1.0, 0.7 / maxf(t.x * esc, 0.1))
+		var pr := _prop(nombre, Vector3(x + _rng.randf_range(-0.02, 0.02), 1.96 - t.y * esc, 0.0), PI * 0.5 + _rng.randf_range(-0.08, 0.08), esc, false, n)
+		if pr:
+			pr.scale = Vector3(esc * ancho, esc, esc * 0.6)
+		var pe := _prop("ropa_wood_clothes_hanger", Vector3(x, 1.86, 0.0), PI * 0.5, 0.9, false, n)
+	for k in 2:
+		if _rng.randf() < 0.6:
+			var zap: String = ["ropa_old_shoes", "ropa_old_dirty_boots", "ropa_kirza_boots", "ropa_worn_rieker_women_leather_sh", "ropa_old_oxford_shoe"][_rng.randi_range(0, 4)]
+			_prop(zap, Vector3(-0.5 + k * 1.0, 0.06, -0.1), _rng.randf_range(-0.3, 0.3), 1.0, false, n)
+	var arriba: String = ["ropa_bowler_hat", "obj_top_hat_2", "ropa_sunday_hat", "ropa_frosted_sheets"][_rng.randi_range(0, 3)]
+	if _props_info.has(arriba):
+		var ta := _prop_size(arriba)
+		_prop(arriba, Vector3(_rng.randf_range(-0.4, 0.4), 2.165, -0.09), _rng.randf() * TAU, minf(1.0, 0.45 / maxf(ta.x, ta.z)), false, n)
 
 func wardrobe_near(p: Vector3, dist := 1.6) -> Dictionary:
 	for wd in wardrobes:

@@ -198,6 +198,8 @@ func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala :
 		var real := _real(nombre)
 		if SUPERFICIE.has(real) and alto < 0.3:
 			_superficies.append({"pos": p, "ext": ext, "tam": t, "yaw": yaw, "nombre": real, "alto": float(SUPERFICIE[real]) * escala, "sala": r.id, "n": 0, "grupo": _grupo(r)})
+		if real in ["GothicBed_01", "old_bed_frame"]:
+			_camas.append({"pos": p, "yaw": yaw, "tam": t, "alto": 0.62 if real == "GothicBed_01" else 0.58, "sala": r.id})
 		if t.y > 1.5:
 			_altos.append(Rect2(p.x - ext.x * 0.5 - 0.1, p.z - ext.z * 0.5 - 0.1, ext.x + 0.2, ext.z + 0.2))
 	elif n and alto > 0.3:
@@ -257,7 +259,7 @@ func _ensuciar(n: Node3D, tinte: Color) -> void:
 				(mi as MeshInstance3D).set_surface_override_material(si, d)
 
 ## Cuadro o espejo colgado (origen en el centro del marco) en coordenadas locales de la sala.
-func _cuadro(r: Dictionary, nombre: String, x: float, z: float, yaw: float, escala: float, alto := 2.25) -> void:
+func _cuadro(r: Dictionary, nombre: String, x: float, z: float, yaw: float, escala: float, alto := 2.25) -> Vector3:
 	var f := _caras(r)
 	var W: float = r.rect.size.x
 	var D: float = r.rect.size.y
@@ -280,15 +282,14 @@ func _cuadro(r: Dictionary, nombre: String, x: float, z: float, yaw: float, esca
 				hecho = true
 				break
 		if not hecho:
-			if DBG and _tipo(r) in ["cocina", "ninos"]: print("CUADRO no cabe ", r.name, " ", nombre, " ventana=", m.ventana_cerca(Vector3(q.x, float(r.y), q.z), radio_v))
-			return
+			return Vector3.ZERO
 	var real := _real(nombre)
-	if DBG and _tipo(r) in ["cocina", "ninos"]: print("CUADRO ok ", r.name, " ", real, " ", q)
 	if real.begins_with("obj_"):
 		var tq := m._prop_size(real) * escala
 		q += Vector3(0, -tq.y * 0.5, 0) + Vector3(0, 0, 1).rotated(Vector3.UP, yaw) * tq.z * 0.5
 	m._prop(real, q, yaw, escala, false)
 	_en_pared.append(Vector3(q.x, float(r.y), q.z))
+	return q
 
 ## Salón con chimenea: sala de muestra montada a mano, como una sala real abandonada de golpe en 1908.
 ## Local: x al este, z al sur. Chimenea en la pared oeste (z 3,6) entre dos ventanas (z 1,2 y 6,0);
@@ -491,13 +492,18 @@ func _comedor(r: Dictionary) -> void:
 	_en(r, "tea_set_01", 4.85, mz, 0.0, 0.8, t, false)
 	_en(r, "coti_bread_in_basket", 4.2, mz + 0.15, 0.4, 1.0, t, false)
 	_en(r, "wine_bottles_01", 5.6, mz - 0.1, 0.3, 0.8, t, false)
+	# mantel blanco sobre las dos mesas y un cubierto completo en cada sitio (también donde falta la silla)
+	_mantel(Vector3(r.rect.position.x + 4.825, float(r.y) + t, r.rect.position.y + mz), Vector2(4.75, 1.62))
+	var tt := t + 0.004
 	for k in 4:
 		var x := 2.95 + k * 1.12
-		_en(r, "carved_wooden_plate", x, mz - 0.45, 0.0, 1.0, t, false)
-		if k != 2:
-			_en(r, "carved_wooden_plate", x, mz + 0.45, 0.0, 1.0, t, false)
-	_en(r, "brass_goblets", 3.5, mz - 0.25, 0.0, 0.8, t, false)
-	_en(r, "brass_goblets", 6.1, mz + 0.25, PI, 0.8, t, false)
+		_cubierto(Vector3(r.rect.position.x + x, float(r.y) + tt, r.rect.position.y + mz - 0.45), Vector3(0, 0, 1))
+		_cubierto(Vector3(r.rect.position.x + x, float(r.y) + tt, r.rect.position.y + mz + 0.45), Vector3(0, 0, -1))
+	_cubierto(Vector3(r.rect.position.x + 2.8, float(r.y) + tt, r.rect.position.y + mz), Vector3(1, 0, 0))
+	_cubierto(Vector3(r.rect.position.x + 6.9, float(r.y) + tt, r.rect.position.y + mz), Vector3(-1, 0, 0))
+	# fuentes en el centro
+	_en(r, "obj_elegant_victorian_porcelan_t", 4.1, mz - 0.05, 0.6, 1.0, tt, false)
+	_en(r, "obj_cup_and_plate", 5.25, mz + 0.12, 0.0, 1.0, tt, false)
 	# una copa derramada junto a un plato
 	var copa := _en(r, "brass_goblets", 4.7, mz + 0.4, 1.0, 0.6, t + 0.05, false)
 	if copa:
@@ -1322,8 +1328,10 @@ func _atico(r: Dictionary) -> void:
 	for t in tapados:
 		_tapado(r, t[0], t[1], t[2], t[3])
 	# baúles, maletas y cajas
-	for q in [[2.0, 9.5, 0.3], [3.4, 12.2, 1.2], [27.6, 3.0, 0.2], [34.4, 13.0, -1.3], [11.0, 20.8, 0.5]]:
+	for q in [[2.0, 9.5, 0.3], [34.4, 13.0, -1.3]]:
 		_en(r, "treasure_chest", q[0], q[1], q[2], 0.9)
+	for q in [[3.4, 12.2, 1.2], [27.6, 3.0, 0.2], [11.0, 20.8, 0.5], [6.5, 4.0, -0.4]]:
+		_baul_abierto(r, q[0], q[1], q[2])
 	for q in [[3.0, 13.5, 0.4], [28.6, 3.6, 1.1], [17.0, 20.0, 0.2]]:
 		_en(r, "vintage_suitcase", q[0], q[1], q[2])
 	for q in [[33.5, 20.5, 0.0], [34.4, 18.8, 0.6], [9.6, 22.6, 0.3], [21.0, 22.8, 0.0]]:
@@ -1404,6 +1412,7 @@ func _relleno(r: Dictionary) -> void:
 	if g != "tunel":
 		_paredes(r, g)
 		_suelo_con_sentido(r, g)
+		_ropa(r, g)
 		for sf in _superficies:
 			if sf.sala == r.id and int(sf.n) == 0:
 				_componer(r, sf)
@@ -1445,7 +1454,17 @@ const VARIANTES := {
 	"jaula": ["obj_birdcage", "obj_birdcage_3"],
 	"perchero": ["obj_coat_rack", "obj_coat_rack_2", "obj_coat_rack_bowler_hat"],
 	"botella": ["coti_wine_bottle", "coti_glass_bottle"],
+	"complemento_m": ["ropa_bowler_hat", "ropa_leather_belt", "ropa_worn_leather_glove", "ropa_leather_bag", "obj_top_hat_2", "ropa_folded_newspaper"],
+	"complemento_f": ["ropa_sunday_hat", "ropa_ladies_handbag_vol_1", "ropa_worn_leather_glove", "ropa_ribbon_ball"],
+	"prenda_f": ["ropa_black_dress", "ropa_dress_plain2"],
+	"prenda_m": ["ropa_1830s_frock_coat_unbuttoned", "ropa_a_fashionable_waistcoat", "ropa_heavy_worn_jacket", "ropa_victorian_vampire", "ropa_gray_sweater"],
+	"zapatos_f": ["ropa_worn_vagabond_women_leather_", "ropa_photoscanned_female_ankle_bo", "ropa_worn_rieker_women_leather_sh", "ropa_coraline_riding_boot"],
+	"zapatos_m": ["ropa_old_shoes", "ropa_old_dirty_boots", "ropa_kirza_boots", "ropa_shoes", "ropa_old_oxford_shoe", "ropa_dress_shoe_left", "ropa_boots"],
+	"zapatos_n": ["ropa_party_shoe_for_girls"],
+	"maniqui": ["ropa_1900_dress_form", "ropa_mannequin_1900s_m_size", "ropa_wedding_dress"],
 }
+## Pares que ya vienen dobles en el modelo (el resto de zapatos se ponen dos).
+const PARES := ["ropa_old_shoes", "ropa_old_dirty_boots", "ropa_kirza_boots"]
 
 ## Elige una variante que exista (modelo cargable) de una clase de objeto.
 func _var(clase: String) -> String:
@@ -1514,7 +1533,7 @@ func _componer(r: Dictionary, sf: Dictionary) -> void:
 			_sobre(sf, "juguete", 0.35, 0.2, PI)
 			return
 		_sobre(sf, "libro", 0.3, 0.3, 0.3)
-		var mesilla: Array = ["taza", "cepillo", "jarron_peq", "escribir"]
+		var mesilla: Array = ["taza", "cepillo", "jarron_peq", "escribir", "complemento_f" if _sexo(r) == "f" else "complemento_m"]
 		if rng.randf() < 0.6:
 			_sobre(sf, String(mesilla[rng.randi_range(0, mesilla.size() - 1)]), 0.45, -0.3)
 		return
@@ -1523,7 +1542,7 @@ func _componer(r: Dictionary, sf: Dictionary) -> void:
 		for k in 3:
 			_sobre(sf, "perfume", -0.8 + k * 0.22, -0.5)
 		_sobre(sf, "joyero", 0.0, -0.2)
-		_sobre(sf, "cepillo", 0.5, 0.4, 0.6)
+		_sobre(sf, "cepillo" if rng.randf() < 0.5 else "complemento_f", 0.5, 0.4, 0.6)
 		_sobre(sf, "vela", 0.85, -0.5)
 		return
 	if g == "cocina" and nombre in ["painted_wooden_table", "WoodenTable_03", "wooden_table_02", "round_wooden_table_01"]:
@@ -1561,7 +1580,14 @@ func _componer(r: Dictionary, sf: Dictionary) -> void:
 				_sobre(sf, "libro", 0.5, 0.3, 0.6)
 			_:
 				_sobre(sf, "taza", -0.35, 0.2)
-				_sobre(sf, "carta", 0.3, -0.1, 0.4)
+				_sobre(sf, "", 0.3, -0.1, 0.4, "ropa_folded_newspaper")
+		return
+	if _tipo(r) == "costura" and alto < 1.1 and float(sf.tam.x) > 0.8:
+		# mesa de costura: máquina en el centro, ovillos y perchas a los lados
+		_sobre(sf, "", 0.0, -0.2, 0.0, "ropa_sewing_machine")
+		_sobre(sf, "", -0.7, 0.3, 0.0, "ropa_ribbon_ball")
+		_sobre(sf, "", -0.5, 0.45, 0.0, "ropa_ribbon_ball")
+		_sobre(sf, "", 0.7, 0.3, 0.3, "ropa_hanger_pile")
 		return
 	if nombre in ["side_table_01", "side_table_tall_01", "small_wooden_table_01"]:
 		var cosas: Array = ["jarron", "lampara", "vela", "libros", "busto", "curiosidad", "jaula", "candelabro"]
@@ -1676,6 +1702,232 @@ func _paredes(r: Dictionary, g: String) -> void:
 						var az: float = z if horiz else (mid + sgn * off)
 						_aplique(r, ax, az, yaw, false)
 			i = j
+
+var _m_porcelana: StandardMaterial3D
+var _m_plata: StandardMaterial3D
+var _m_copa: StandardMaterial3D
+func _mats_mesa() -> void:
+	if _m_porcelana:
+		return
+	_m_porcelana = StandardMaterial3D.new()
+	_m_porcelana.albedo_color = Color(0.93, 0.91, 0.86)
+	_m_porcelana.roughness = 0.2
+	_m_porcelana.clearcoat_enabled = true
+	_m_plata = StandardMaterial3D.new()
+	_m_plata.albedo_color = Color(0.72, 0.7, 0.66)
+	_m_plata.metallic = 1.0
+	_m_plata.roughness = 0.32
+	_m_copa = StandardMaterial3D.new()
+	_m_copa.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_m_copa.albedo_color = Color(0.85, 0.9, 0.95, 0.16)
+	_m_copa.roughness = 0.03
+	_m_copa.metallic_specular = 1.0
+	_m_copa.rim_enabled = true
+	_m_copa.rim = 0.6
+	_m_copa.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+## Mantel de hilo: tapa y faldones que caen por los cuatro lados.
+func _mantel(c: Vector3, tam: Vector2) -> void:
+	var caida := 0.32
+	m.box(Vector3(tam.x, 0.006, tam.y), c + Vector3(0, 0.003, 0), m._mat.sabana, false, null, false)
+	for sgn in [-1.0, 1.0]:
+		m.box(Vector3(tam.x, caida, 0.008), c + Vector3(0, -caida * 0.5, sgn * tam.y * 0.5), m._mat.sabana, false, null, false)
+		m.box(Vector3(0.008, caida, tam.y), c + Vector3(sgn * tam.x * 0.5, -caida * 0.5, 0), m._mat.sabana, false, null, false)
+
+## Un cubierto completo: bajoplato dorado, plato de porcelana, tenedor a la izquierda, cuchillo y cuchara a la derecha,
+## servilleta doblada, copa de vino y vaso de agua de cristal. «hacia» apunta del comensal al centro de la mesa.
+func _cubierto(p: Vector3, hacia: Vector3) -> void:
+	_mats_mesa()
+	var der := Vector3(-hacia.z, 0, hacia.x)
+	var yaw := atan2(hacia.x, hacia.z)
+	m.cyl(0.155, 0.155, 0.008, p + Vector3(0, 0.004, 0), m._mat.oro, null, 24)
+	m.cyl(0.125, 0.1, 0.018, p + Vector3(0, 0.017, 0), _m_porcelana, null, 24)
+	if rng.randf() < 0.5:
+		m.cyl(0.085, 0.07, 0.03, p + Vector3(0, 0.041, 0), _m_porcelana, null, 20)
+	for piezas in [[-0.19, 0.17, 0.016], [0.19, 0.2, 0.014], [0.235, 0.17, 0.02]]:
+		var b := m.box(Vector3(float(piezas[2]), 0.005, float(piezas[1])), p + der * float(piezas[0]) + Vector3(0, 0.003, 0), _m_plata, false, null, false)
+		b.rotation.y = yaw
+	var serv := m.box(Vector3(0.11, 0.03, 0.15), p - der * 0.31 + Vector3(0, 0.015, 0), m._mat.sabana, false, null, false)
+	serv.rotation.y = yaw + rng.randf_range(-0.1, 0.1)
+	for vaso in [[0.17, 0.2, true], [0.06, 0.24, false]]:
+		var q: Vector3 = p + der * float(vaso[0]) + hacia * float(vaso[1])
+		var piezas_copa: Array[MeshInstance3D] = []
+		if vaso[2]:
+			piezas_copa.append(m.cyl(0.032, 0.034, 0.004, q + Vector3(0, 0.002, 0), _m_copa, null, 16))
+			piezas_copa.append(m.cyl(0.004, 0.004, 0.085, q + Vector3(0, 0.046, 0), _m_copa, null, 8))
+			piezas_copa.append(m.cyl(0.036, 0.022, 0.075, q + Vector3(0, 0.125, 0), _m_copa, null, 16))
+		else:
+			piezas_copa.append(m.cyl(0.034, 0.03, 0.1, q + Vector3(0, 0.05, 0), _m_copa, null, 16))
+		for pc in piezas_copa:
+			pc.set_meta("dyn", true)
+			pc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+## Baúl abierto del ático: caja de madera con flejes de hierro, tapa levantada y cosas dentro.
+func _baul_abierto(r: Dictionary, x: float, z: float, yaw: float) -> void:
+	var c := Vector3(r.rect.position.x + x, float(r.y), r.rect.position.y + z)
+	var tam := Vector3(0.95, 0.5, 0.55)
+	if m._huella_en_escalera(c, tam, yaw):
+		return
+	_ocupar(c, tam)
+	var n := Node3D.new()
+	n.position = c
+	n.rotation.y = yaw
+	m._house.add_child(n)
+	var mad: Material = m._mat.madera
+	m.box(Vector3(tam.x, 0.04, tam.z), Vector3(0, 0.06, 0), mad, false, n)
+	m.box(Vector3(tam.x, tam.y, 0.035), Vector3(0, tam.y * 0.5, -tam.z * 0.5), mad, true, n)
+	m.box(Vector3(tam.x, tam.y, 0.035), Vector3(0, tam.y * 0.5, tam.z * 0.5), mad, true, n)
+	m.box(Vector3(0.035, tam.y, tam.z), Vector3(-tam.x * 0.5, tam.y * 0.5, 0), mad, true, n)
+	m.box(Vector3(0.035, tam.y, tam.z), Vector3(tam.x * 0.5, tam.y * 0.5, 0), mad, true, n)
+	for fx in [-0.32, 0.32]:
+		m.box(Vector3(0.05, tam.y + 0.01, tam.z + 0.01), Vector3(fx, tam.y * 0.5, 0), m._mat.hierro, false, n)
+	# tapa abierta hacia atrás, apoyada
+	var bisagra := Node3D.new()
+	bisagra.position = Vector3(0, tam.y, -tam.z * 0.5)
+	bisagra.rotation.x = -1.9
+	n.add_child(bisagra)
+	m.box(Vector3(tam.x, 0.04, tam.z), Vector3(0, 0.02, tam.z * 0.5), mad, false, bisagra)
+	m.box(Vector3(tam.x - 0.06, 0.012, tam.z - 0.06), Vector3(0, 0.046, tam.z * 0.5), m._mat.tela_roja, false, bisagra)
+	for fx in [-0.32, 0.32]:
+		m.box(Vector3(0.05, 0.05, tam.z + 0.01), Vector3(fx, 0.02, tam.z * 0.5), m._mat.hierro, false, bisagra)
+	# lo de dentro: sábanas dobladas al fondo y encima lo que guardaron
+	var fondo := Vector3(0, 0.08, 0)
+	var sab := m._prop("ropa_frosted_sheets", fondo, rng.randf_range(-0.2, 0.2), 1.0, false, n)
+	if sab:
+		sab.scale = Vector3(1.05, 1.4, 0.75)
+	var guardado: Array = [["ropa_dress_plain2", 0], ["obj_teddy_bear_2", 1], ["obj_old_book_3", 1], ["obj_envelope", 1], ["obj_fancy_picture_frame_01_freep", 2], ["obj_wooden_toy_train", 1], ["ropa_long_white_cotton_socks", 0], ["obj_old_jewelry_box", 1], ["ropa_bowler_hat", 1], ["obj_pocket_watch", 1], ["obj_scroll", 1]]
+	guardado.shuffle()
+	var sitios := [Vector3(-0.25, 0.25, 0.05), Vector3(0.22, 0.25, -0.05), Vector3(0.0, 0.3, 0.12)]
+	for k in 3:
+		var g: Array = guardado[k]
+		var nombre: String = g[0]
+		if not m._props_info.has(nombre):
+			continue
+		var pq := m._prop(nombre, sitios[k], rng.randf() * TAU, 1.0, false, n)
+		if pq == null:
+			continue
+		if int(g[1]) == 0:
+			# prenda doblada: aplastada y tumbada
+			pq.rotation = Vector3(-PI * 0.5, rng.randf() * TAU, 0)
+			var tq := m._prop_size(nombre)
+			var e := 0.35 / maxf(tq.y, 0.1)
+			pq.scale = Vector3(e, e, e * 0.25)
+		elif int(g[1]) == 2:
+			pq.rotation = Vector3(-PI * 0.5, rng.randf_range(-0.3, 0.3), 0)
+
+## ¿De quién es la sala? f mujer, m hombre, n niños, x matrimonio (al azar en las demás).
+func _sexo(r: Dictionary) -> String:
+	var n := String(r.name).to_lower()
+	for k in ["madre", "institutriz", "elena", "costura", "tocador", "plancha"]:
+		if k in n: return "f"
+	for k in ["hermano", "estudio", "billar", "fumar"]:
+		if k in n: return "m"
+	if "niños" in n: return "n"
+	if "padres" in n: return "x"
+	return "f" if (int(r.id) * 7919) % 2 == 0 else "m"
+
+## La ropa de la casa: prendas extendidas a los pies de las camas, zapatos junto a ellas, batas y delantales
+## colgados de percheros de pared, toallas en el baño, maniquíes de costura, sábanas en el ático.
+func _ropa(r: Dictionary, g: String) -> void:
+	var tp := _tipo(r)
+	var sx := _sexo(r)
+	for cama in _camas:
+		if cama.sala != r.id:
+			continue
+		var c: Vector3 = cama.pos
+		var yaw: float = cama.yaw
+		var t: Vector3 = cama.tam
+		var cabeza := Vector3(0, 0, -1).rotated(Vector3.UP, yaw)
+		var lado := Vector3(1, 0, 0).rotated(Vector3.UP, yaw)
+		if rng.randf() < 0.7:
+			var quien: String = sx if sx != "x" else ("f" if rng.randf() < 0.5 else "m")
+			if quien != "n":
+				_tendida(c + Vector3(0, float(cama.alto), 0) - cabeza * (t.z * 0.5 - 0.15), yaw, _var("prenda_" + quien))
+		# zapatos al lado de la cama, mirando hacia fuera
+		for lad in ([1.0, -1.0] if sx == "x" else [1.0 if rng.randf() < 0.5 else -1.0]):
+			var quien2: String = sx if sx != "x" else ("f" if lad > 0 else "m")
+			var zp: Vector3 = c + lado * lad * (t.x * 0.5 + 0.28) - cabeza * 0.3
+			_zapatos(zp, yaw + PI * 0.5 * lad, _var("zapatos_" + quien2))
+	match tp:
+		"costura":
+			for k in 2:
+				_pie(r, _var("maniqui"), true)
+		"bano":
+			var pr := _pared_al_azar(r)
+			if pr.size() == 3:
+				_cuadro(r, "ropa_towel_rail", pr[0], pr[1], pr[2], 1.0, 1.45)
+		"vestibulo":
+			var bz := _pie(r, _var("zapatos_m"), true)
+		"dormitorio", "tocador":
+			if rng.randf() < 0.55:
+				var pr2 := _pared_al_azar(r)
+				if pr2.size() == 3:
+					_percha(r, pr2[0], pr2[1], pr2[2], "ropa_robe" if rng.randf() < 0.6 else "")
+		"cocina":
+			var pr3 := _pared_al_azar(r)
+			if pr3.size() == 3:
+				_percha(r, pr3[0], pr3[1], pr3[2], "ropa_apron")
+	if g == "atico":
+		_pie(r, "ropa_wedding_dress", false)
+		var q := _pie(r, "ropa_frosted_sheets", false)
+
+## Prenda extendida y aplastada sobre una cama (el cuello hacia el cabecero).
+func _tendida(pie: Vector3, yaw: float, nombre: String) -> void:
+	var real := _real(nombre)
+	if nombre == "" or not m._props_info.has(real):
+		return
+	var t := m._prop_size(real)
+	var esc := minf(1.0, 1.25 / maxf(t.y, 0.1)) * 0.92
+	var n := m._prop(real, pie, yaw, esc, false)
+	if n == null:
+		return
+	n.rotation = Vector3(-PI * 0.5, yaw + rng.randf_range(-0.12, 0.12), 0)
+	n.scale = Vector3(esc, esc, esc * 0.3)
+	n.position = pie + Vector3(0, t.z * esc * 0.15 + 0.01, 0)
+
+## Un par de zapatos en el suelo, juntos y ordenados.
+func _zapatos(p: Vector3, yaw: float, nombre: String) -> void:
+	var real := _real(nombre)
+	if nombre == "" or not m._props_info.has(real) or m._sobre_escalera(p, 0.3) or not m.door_near(p, 0.9).is_empty():
+		return
+	if real in PARES:
+		m._prop(real, p, yaw + rng.randf_range(-0.15, 0.15), 1.0, false)
+		return
+	var lado := Vector3(1, 0, 0).rotated(Vector3.UP, yaw)
+	m._prop(real, p - lado * 0.07, yaw + rng.randf_range(-0.1, 0.1), 1.0, false)
+	m._prop(real, p + lado * 0.07, yaw + rng.randf_range(-0.1, 0.25), 1.0, false)
+
+## Perchero de pared (listón con ganchos) y, si se pide, una prenda colgada de él.
+func _percha(r: Dictionary, x: float, z: float, yaw: float, prenda: String) -> void:
+	var q := _cuadro(r, "ropa_wooden_tool_hanger", x, z, yaw, 1.0, 1.75)
+	if q == Vector3.ZERO or prenda == "":
+		return
+	var real := _real(prenda)
+	if not m._props_info.has(real):
+		return
+	var t := m._prop_size(real)
+	var dentro := Vector3(0, 0, 1).rotated(Vector3.UP, yaw)
+	m._prop(real, Vector3(q.x, q.y + 0.02 - t.y, q.z) + dentro * (t.z * 0.5 + 0.03), yaw, 1.0, false)
+
+## Un punto de pared libre (sin puertas, ventanas ni nada colgado cerca) en coordenadas locales: [x, z, yaw].
+func _pared_al_azar(r: Dictionary) -> Array:
+	var rect: Rect2 = r.rect
+	for k in 30:
+		var lado := rng.randi_range(0, 3)
+		var horiz := lado < 2
+		var u := rng.randf_range(0.8, (rect.size.x if horiz else rect.size.y) - 0.8)
+		var x := u if horiz else (0.1 if lado == 2 else rect.size.x - 0.1)
+		var z := (0.1 if lado == 0 else rect.size.y - 0.1) if horiz else u
+		var w := Vector3(rect.position.x + x, float(r.y), rect.position.y + z)
+		if not m.door_near(w, 1.1).is_empty() or m.ventana_cerca(w, 1.2) or not _pared_libre(w, 1.0):
+			continue
+		var tapado := false
+		for a in _altos:
+			if a.grow(0.3).has_point(Vector2(w.x, w.z)):
+				tapado = true
+		if not tapado:
+			return [x, z, [0.0, PI, PI * 0.5, -PI * 0.5][lado]]
+	return []
 
 ## Mueble bajo contra la pared, centrado en un tramo libre (consola, cómoda, mesilla, baúl… según la sala).
 ## Devuelve su altura (0 si no se puso).
@@ -1916,6 +2168,7 @@ func _estante(r: Dictionary, x: float, z: float, yaw: float, g: String) -> void:
 		m._prop(_real(nombre), base + dentro * 0.12 + lado * u + Vector3(0, 0.02, 0), yaw + rng.randf_range(-0.15, 0.15), 0.9, false)
 
 var _crucifijo: Dictionary = {}
+var _camas: Array = []
 var DBG := OS.get_environment("DECO_DBG") != ""
 var _ap_tipo: Dictionary = {}
 var _tex_papel: Texture2D
