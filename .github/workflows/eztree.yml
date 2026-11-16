@@ -21,6 +21,11 @@ jobs:
           ls node_modules/@dgreenheck/ez-tree/build >> out/npm.txt 2>&1
           node generar.mjs out > out/registro.txt 2>&1
           echo "salida $?" >> out/registro.txt
+          # texturas de corteza (ambientCG, CC0) y hojas del repositorio de Ez-Tree (MIT)
+          git clone -q --depth 1 https://github.com/dgreenheck/ez-tree /tmp/ezsrc && cd /tmp/ezsrc && git lfs pull --include="src/app/public/textures/**"
+          mkdir -p /tmp/gen/out/texturas && cp -r src/app/public/textures/leaves src/app/public/textures/LICENSE.md /tmp/gen/out/texturas/
+          mkdir -p /tmp/gen/out/texturas/bark && for b in Bark001 Bark003 Bark007 Bark013; do cp -r src/app/public/textures/bark/${b}_1K-JPG /tmp/gen/out/texturas/bark/; done
+          cp LICENSE /tmp/gen/out/texturas/LICENSE_ez-tree.txt
           true
       - name: Publicar en la rama aether-eztree
         run: |
