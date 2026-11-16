@@ -1,0 +1,17 @@
+name: Pinturas de dominio público (Met Museum CC0)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q pillow
+      - run: |
+          mkdir -p /tmp/out && cd /tmp/out
+          python3 $GITHUB_WORKSPACE/engine/tools/pinturas/bajar.py | tee bajar.log
+          git init -q && git checkout -q -b aether-pinturas
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Pinturas CC0" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-pinturas
