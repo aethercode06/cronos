@@ -400,13 +400,15 @@ func _materials() -> void:
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
-	_mat["fachada"] = _pbr("Planks040", 0.5, Color(0.55, 0.62, 0.6), 0.9)
+	_mat["fachada"] = _pbr("Bricks097", 0.42, Color(0.78, 0.7, 0.66), 0.95, 1.3)
 	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
 	_mat["cesped"] = _suelo("Ground037", "ScatteredLeaves009", "Ground110", 0.25, Color(0.5, 0.52, 0.42), Color(0.66, 0.62, 0.56), Color(0.75, 0.72, 0.68), 0.3, 0.2)
 	_mat["bosque"] = _suelo("ScatteredLeaves009", "Ground085", "Ground037", 0.25, Color(0.7, 0.68, 0.62), Color(0.55, 0.5, 0.45), Color(0.48, 0.52, 0.4), 0.32, 0.28)
 	_mat["tierra"] = _suelo("Ground110", "Ground085", "ScatteredLeaves009", 0.35, Color(0.85, 0.82, 0.78), Color(0.62, 0.56, 0.5), Color(0.66, 0.62, 0.56), 0.35, 0.15)
 	_mat["agua"] = _plain(Color(0.03, 0.05, 0.07), 0.05, 0.3)
-	_mat["madera"] = _pbr("Wood094", 0.6, Color(0.42, 0.27, 0.18), 0.75)
+	_mat["barro"] = _pbr("Ground085", 0.35, Color(0.35, 0.3, 0.26), 0.6)
+	_mat["madera_vieja"] = _pbr("Wood049", 0.5, Color(0.62, 0.57, 0.52), 0.9, 1.2)
+	_mat["madera"] = _pbr("Wood066", 0.55, Color(0.8, 0.68, 0.6), 0.75)
 	_mat["madera_clara"] = _pbr("WoodFloor043", 0.4, Color(0.9, 0.85, 0.8), 0.9)
 	_mat["moldura"] = _pbr("Plaster007", 0.8, Color(0.78, 0.73, 0.64), 0.7)
 	_mat["cimiento"] = _pbr("Bricks106A", 0.4, Color(0.8, 0.78, 0.75), 1.0)
@@ -1079,7 +1081,12 @@ func _exterior() -> void:
 	var W := float(ex.w) * CELL
 	var H := float(ex.h) * CELL
 	# el suelo del bosque no pasa por debajo de la casa (si no, tapa la escalera del sótano)
-	for gr in _split_holes(Rect2(0, 0, W, H), [house_rect]):
+	# cauces de agua: el suelo no pasa por encima (el agua tiene fondo y orillas de verdad)
+	var cauces: Array = [house_rect]
+	for z in ex.zonas:
+		if String(z[0]) in ["Arroyo", "Estanque"]:
+			cauces.append(Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL).grow(1.2))
+	for gr in _split_holes(Rect2(0, 0, W, H), cauces):
 		var grr: Rect2 = gr
 		var ground := box(Vector3(grr.size.x, 0.4, grr.size.y), Vector3(grr.get_center().x, -0.2, grr.get_center().y), _mat.bosque, true, self, false)
 		ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1103,8 +1110,21 @@ func _exterior() -> void:
 			elif name.begins_with("Pozo"):
 				_well(r)
 			else:
-				box(Vector3(r.size.x, 0.05, r.size.y), Vector3(r.get_center().x, 0.04, r.get_center().y), _mat.agua, false, self, false)
-				if name == "Arroyo":
+				var es_rio := name == "Arroyo"
+				var sup := MeshInstance3D.new()
+				var pl := PlaneMesh.new()
+				pl.size = Vector2(r.size.x, r.size.y)
+				pl.subdivide_width = int(r.size.x / 2.0)
+				pl.subdivide_depth = 4
+				sup.mesh = pl
+				sup.material_override = _mat_agua(es_rio)
+				sup.position = Vector3(r.get_center().x, -0.28, r.get_center().y)
+				sup.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				sup.set_meta("dyn", true)
+				add_child(sup)
+				_cauce(r.grow(1.2), es_rio)
+				_sonidos_agua(r, "rio" if es_rio else "rio", 18.0 if es_rio else 12.0, -10.0)
+				if es_rio:
 					_stream_banks(r)
 		elif name == "Laberinto de setos":
 			_maze(r)
@@ -1170,22 +1190,218 @@ func _static_cyl(r: float, h: float, pos: Vector3) -> void:
 	sb.position = pos
 	add_child(sb)
 
+## Fuente del jardín delantero: fuente de mármol de tres tazas con pila festoneada (modelo real, CC-BY),
+## con agua de verdad en cada taza, láminas de agua cayendo de una a otra, el surtidor de arriba, salpicaduras
+## y el sonido del agua.
 func _fountain(r: Rect2) -> void:
 	var c := Vector3(r.get_center().x, 0, r.get_center().y)
-	cyl(6.0, 6.3, 0.8, c + Vector3(0, 0.4, 0), _mat.marmol, self, 24)
-	_static_cyl(6.3, 0.8, c + Vector3(0, 0.4, 0))
-	cyl(5.6, 5.6, 0.05, c + Vector3(0, 0.75, 0), _mat.agua, self, 24)
-	cyl(0.5, 0.7, 2.4, c + Vector3(0, 1.6, 0), _mat.marmol, self, 12)
-	cyl(2.0, 0.6, 0.4, c + Vector3(0, 2.9, 0), _mat.marmol, self, 16)
-	cyl(0.3, 0.4, 1.2, c + Vector3(0, 3.6, 0), _mat.marmol, self, 10)
+	var f := _prop("fuente_festoneada", c, 0.0, 1.0, false)
+	if f == null:
+		cyl(6.0, 6.3, 0.8, c + Vector3(0, 0.4, 0), _mat.marmol, self, 24)
+		_static_cyl(6.3, 0.8, c + Vector3(0, 0.4, 0))
+		return
+	_static_cyl(3.2, 0.9, c + Vector3(0, 0.45, 0))
+	_static_cyl(0.7, 4.0, c + Vector3(0, 2.0, 0))
+	var agua := _mat_agua(false)
+	agua.set_shader_parameter("espuma_borde", 0.12)
+	agua.set_shader_parameter("color_hondo", Color(0.03, 0.05, 0.05))
+	var niveles: Dictionary = {}
+	for mi in f.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		for si in m3.mesh.get_surface_count():
+			var mat := m3.mesh.surface_get_material(si)
+			if mat is BaseMaterial3D and (mat as BaseMaterial3D).albedo_color.a < 0.95:
+				m3.set_surface_override_material(si, agua)
+				m3.set_meta("dyn", true)
+				# alturas y radios de cada taza (para colocar las cascadas)
+				var vs: PackedVector3Array = m3.mesh.surface_get_arrays(si)[Mesh.ARRAY_VERTEX]
+				for v in vs:
+					var w := m3.transform * v
+					var k := int(round(w.y * 10.0))
+					var rr := Vector2(w.x, w.z).length()
+					niveles[k] = maxf(float(niveles.get(k, 0.0)), rr)
+	var ks: Array = niveles.keys()
+	ks.sort()
+	if _ruido_chorro == null:
+		_ruido_chorro = NoiseTexture2D.new()
+		_ruido_chorro.width = 256
+		_ruido_chorro.height = 256
+		_ruido_chorro.seamless = true
+		var fn := FastNoiseLite.new()
+		fn.frequency = 0.04
+		fn.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		_ruido_chorro.noise = fn
+	var mch := ShaderMaterial.new()
+	mch.shader = load("res://zarek/chorro.gdshader")
+	mch.set_shader_parameter("ruido", _ruido_chorro)
+	# de cada taza (salvo la pila de abajo) cae una cortina de agua hasta el nivel de la siguiente
+	for i in range(ks.size() - 1, 0, -1):
+		var y_arriba := float(ks[i]) / 10.0
+		var y_abajo := float(ks[i - 1]) / 10.0
+		var rad: float = niveles[ks[i]]
+		if rad > 2.8 or y_arriba - y_abajo < 0.3:
+			continue
+		var alto := y_arriba - y_abajo + 0.02
+		var cm := CylinderMesh.new()
+		cm.top_radius = rad + 0.06
+		cm.bottom_radius = rad + 0.22
+		cm.height = alto
+		cm.cap_top = false
+		cm.cap_bottom = false
+		cm.radial_segments = 40
+		var cortina := MeshInstance3D.new()
+		cortina.mesh = cm
+		cortina.material_override = mch
+		cortina.position = c + Vector3(0, y_abajo + alto * 0.5, 0)
+		cortina.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		cortina.set_meta("dyn", true)
+		add_child(cortina)
+		# salpicaduras donde cae
+		var sp := CPUParticles3D.new()
+		sp.amount = 40
+		sp.lifetime = 0.7
+		sp.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+		sp.emission_ring_axis = Vector3.UP
+		sp.emission_ring_radius = rad + 0.22
+		sp.emission_ring_inner_radius = rad + 0.1
+		sp.emission_ring_height = 0.02
+		sp.direction = Vector3.UP
+		sp.spread = 35.0
+		sp.initial_velocity_min = 0.3
+		sp.initial_velocity_max = 0.8
+		sp.gravity = Vector3(0, -4.0, 0)
+		sp.scale_amount_min = 0.5
+		sp.scale_amount_max = 1.2
+		sp.mesh = _gota_mesh()
+		sp.position = c + Vector3(0, y_abajo + 0.03, 0)
+		add_child(sp)
+	# surtidor de arriba
+	if ks.size() > 0:
+		var top := float(ks[ks.size() - 1]) / 10.0
+		var ch := CPUParticles3D.new()
+		ch.amount = 90
+		ch.lifetime = 0.9
+		ch.direction = Vector3.UP
+		ch.spread = 6.0
+		ch.initial_velocity_min = 2.4
+		ch.initial_velocity_max = 2.8
+		ch.gravity = Vector3(0, -9.8, 0)
+		ch.scale_amount_min = 0.6
+		ch.scale_amount_max = 1.0
+		ch.mesh = _gota_mesh()
+		ch.position = c + Vector3(0, top + 0.45, 0)
+		add_child(ch)
+	var son := AudioStreamPlayer3D.new()
+	son.stream = AetherSynth.make("fuente")
+	son.unit_size = 3.0
+	son.max_distance = 22.0
+	son.volume_db = -6.0
+	son.autoplay = true
+	son.position = c + Vector3(0, 1.5, 0)
+	add_child(son)
+
+var _ruido_chorro: NoiseTexture2D
+var _gota: Mesh
+func _gota_mesh() -> Mesh:
+	if _gota == null:
+		var q := QuadMesh.new()
+		q.size = Vector2(0.035, 0.07)
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.75, 0.82, 0.88, 0.55)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		m.roughness = 0.05
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+		q.material = m
+		_gota = q
+	return _gota
+
+## Cauce hundido: fondo de barro y piedras a -0,9 m y orillas en pendiente (se puede salir andando).
+func _cauce(r: Rect2, es_rio: bool) -> void:
+	var fondo := -0.95
+	var talud := 1.4
+	var largo_x := r.size.x >= r.size.y
+	var interior := r.grow(-talud)
+	box(Vector3(maxf(interior.size.x, 0.5), 0.3, maxf(interior.size.y, 0.5)), Vector3(r.get_center().x, fondo - 0.15, r.get_center().y), _mat.barro, true, self, false)
+	# cuatro taludes (o dos en el río largo, con los extremos fuera del mapa)
+	var ang := atan2(-fondo, talud)
+	var lt := sqrt(talud * talud + fondo * fondo)
+	for lado in 4:
+		var horiz := lado < 2
+		if es_rio and largo_x and not horiz:
+			continue
+		var l := r.size.x if horiz else r.size.y
+		var t := box(Vector3(l if horiz else lt, 0.12, lt if horiz else l), Vector3.ZERO, _mat.barro, true, self, false)
+		var sgn := -1.0 if lado % 2 == 0 else 1.0
+		if horiz:
+			t.position = Vector3(r.get_center().x, fondo * 0.5, (r.position.y + talud * 0.5) if sgn < 0 else (r.end.y - talud * 0.5))
+			t.rotation.x = ang * (1.0 if sgn < 0 else -1.0)
+		else:
+			t.position = Vector3((r.position.x + talud * 0.5) if sgn < 0 else (r.end.x - talud * 0.5), fondo * 0.5, r.get_center().y)
+			t.rotation.z = ang * (-1.0 if sgn < 0 else 1.0)
+	# cantos rodados en el fondo
+	var n := int(r.size.x * r.size.y / 16.0)
+	for k in n:
+		var pc := Vector3(_rng.randf_range(interior.position.x, interior.end.x), fondo - 0.1, _rng.randf_range(interior.position.y, interior.end.y))
+		_prop("boulder_01", pc, _rng.randf() * TAU, _rng.randf_range(0.15, 0.4), false)
+	# algunas piedras grandes con musgo asomando en las orillas
+	for k in int(maxf(r.size.x, r.size.y) / 25.0):
+		var u := _rng.randf()
+		var lado2 := -1.0 if _rng.randf() < 0.5 else 1.0
+		var pr := Vector3(lerpf(r.position.x, r.end.x, u), -0.5, r.get_center().y + lado2 * (r.size.y * 0.5 - 0.6)) if es_rio else Vector3(r.get_center().x + lado2 * r.size.x * 0.4, -0.5, lerpf(r.position.y, r.end.y, u))
+		_prop("rock_moss_set_02", pr, _rng.randf() * TAU, _rng.randf_range(0.25, 0.4), false)
+
+var _tex_olas: Array = []
+## Material de agua (agua.gdshader) con olas de ruido: río con corriente o agua quieta (pilas, estanque).
+func _mat_agua(es_rio: bool) -> ShaderMaterial:
+	if _tex_olas.is_empty():
+		for k in 3:
+			var nt := NoiseTexture2D.new()
+			nt.width = 512
+			nt.height = 512
+			nt.seamless = true
+			nt.as_normal_map = k < 2
+			nt.bump_strength = 6.0 if k == 0 else 3.0
+			nt.generate_mipmaps = true
+			var fn := FastNoiseLite.new()
+			fn.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH if k != 1 else FastNoiseLite.TYPE_CELLULAR
+			fn.frequency = 0.02 if k == 0 else (0.035 if k == 1 else 0.05)
+			fn.fractal_octaves = 4 if k == 0 else 3
+			fn.seed = 1874 + k
+			nt.noise = fn
+			_tex_olas.append(nt)
+	var m := ShaderMaterial.new()
+	m.shader = load("res://zarek/agua.gdshader")
+	m.set_shader_parameter("olas1", _tex_olas[0])
+	m.set_shader_parameter("olas2", _tex_olas[1])
+	m.set_shader_parameter("espuma_tex", _tex_olas[2])
+	m.set_shader_parameter("es_rio", es_rio)
+	m.set_shader_parameter("fuerza_olas", 1.0 if es_rio else 0.4)
+	m.set_shader_parameter("escala", 0.16 if es_rio else 0.3)
+	return m
+
+## Rumor de agua repartido a lo largo de una zona (varios emisores 3D en bucle).
+func _sonidos_agua(r: Rect2, tipo: String, cada: float, db: float) -> void:
+	var largo := maxf(r.size.x, r.size.y)
+	var n := maxi(1, int(largo / cada))
+	for k in n:
+		var sp := AudioStreamPlayer3D.new()
+		sp.stream = AetherSynth.make(tipo)
+		sp.unit_size = 3.0
+		sp.max_distance = cada * 1.2
+		sp.volume_db = db
+		sp.autoplay = true
+		var u := (k + 0.5) / n
+		sp.position = Vector3(lerpf(r.position.x, r.end.x, u) if r.size.x >= r.size.y else r.get_center().x, 0.3, r.get_center().y if r.size.x >= r.size.y else lerpf(r.position.y, r.end.y, u))
+		add_child(sp)
 
 func _well(r: Rect2) -> void:
 	var c := Vector3(r.get_center().x, 0, r.get_center().y)
 	cyl(1.6, 1.7, 1.0, c + Vector3(0, 0.5, 0), _mat.piedra, self, 14)
 	cyl(1.3, 1.3, 0.05, c + Vector3(0, 0.98, 0), _mat.oscuro, self, 14)
 	for s in [-1.0, 1.0]:
-		box(Vector3(0.18, 2.6, 0.18), c + Vector3(s * 1.5, 1.3, 0), _mat.madera, false, self)
-	box(Vector3(3.4, 0.15, 0.15), c + Vector3(0, 2.6, 0), _mat.madera, false, self)
+		box(Vector3(0.18, 2.6, 0.18), c + Vector3(s * 1.5, 1.3, 0), _mat.madera_vieja, false, self)
+	box(Vector3(3.4, 0.15, 0.15), c + Vector3(0, 2.6, 0), _mat.madera_vieja, false, self)
 	var p := PrismMesh.new()
 	p.size = Vector3(4.0, 1.2, 3.4)
 	var roof := MeshInstance3D.new()
@@ -1200,16 +1416,44 @@ func _stream_banks(r: Rect2) -> void:
 	while x < r.end.x:
 		for s in [r.position.y - 0.3, r.end.y + 0.3]:
 			if _rng.randf() < 0.5:
-				var rock := cyl(0.2, _rng.randf_range(0.4, 0.8), _rng.randf_range(0.3, 0.6), Vector3(x + _rng.randf() * 3, 0.15, s), _mat.piedra, self, 6)
-				rock.rotation.y = _rng.randf() * TAU
+				_prop("boulder_01", Vector3(x + _rng.randf() * 3, -0.55, s + _rng.randf_range(-0.6, 0.6)), _rng.randf() * TAU, _rng.randf_range(0.35, 0.75), false)
 		x += 4.0
 	var bx := _zone("Puente viejo").get_center().x
 	var bz := r.get_center().y
-	box(Vector3(4.0, 0.25, r.size.y + 6.0), Vector3(bx, 0.15, bz), _mat.madera, true, self)
-	for s in [-1.0, 1.0]:
-		box(Vector3(0.12, 0.1, r.size.y + 6.0), Vector3(bx + s * 1.9, 1.2, bz), _mat.madera, false, self)
-		for k in 5:
-			box(Vector3(0.12, 1.0, 0.12), Vector3(bx + s * 1.9, 0.7, bz - r.size.y * 0.5 - 3.0 + k * (r.size.y + 6.0) / 4.0), _mat.madera, false, self)
+	var largo := r.size.y + 6.0
+	var mv: Material = _mat.madera_vieja
+	# vigas maestras sobre las que van las tablas, apoyadas en postes metidos en las orillas
+	for s2 in [-1.4, 1.4]:
+		box(Vector3(0.22, 0.3, largo), Vector3(bx + s2, 0.12, bz), mv, false, self)
+	for zz in [bz - largo * 0.5 + 0.3, bz + largo * 0.5 - 0.3, bz - r.size.y * 0.5 - 0.2, bz + r.size.y * 0.5 + 0.2]:
+		for s2 in [-1.4, 1.4]:
+			cyl(0.13, 0.15, 1.2, Vector3(bx + s2, -0.35, zz), mv, self, 8)
+	# tablas sueltas, gastadas, alguna torcida o rota y una que falta
+	var nt := int(largo / 0.27)
+	for k in nt:
+		var z := bz - largo * 0.5 + 0.135 + k * 0.27
+		if k == int(nt * 0.43):
+			continue
+		var tabla := box(Vector3(3.6 + _rng.randf_range(-0.15, 0.1), 0.055, 0.245), Vector3(bx + _rng.randf_range(-0.06, 0.06), 0.3 + _rng.randf_range(-0.01, 0.015), z), mv, false, self)
+		tabla.rotation = Vector3(_rng.randf_range(-0.02, 0.02), _rng.randf_range(-0.03, 0.03), _rng.randf_range(-0.015, 0.015))
+		if k == int(nt * 0.7):
+			tabla.scale.x = 0.55
+			tabla.position.x -= 0.8
+			tabla.rotation.z = 0.12
+	# suelo transitable del puente (una sola caja invisible)
+	var piso := box(Vector3(3.6, 0.1, largo), Vector3(bx, 0.28, bz), mv, true, self)
+	piso.visible = false
+	piso.set_meta("dyn", true)
+	# barandillas: postes, pasamanos y tornapuntas en diagonal
+	for s2 in [-1.0, 1.0]:
+		box(Vector3(0.1, 0.12, largo), Vector3(bx + s2 * 1.75, 1.25, bz), mv, false, self)
+		box(Vector3(0.08, 0.08, largo), Vector3(bx + s2 * 1.75, 0.75, bz), mv, false, self)
+		for k in 6:
+			var zp := bz - largo * 0.5 + 0.2 + k * (largo - 0.4) / 5.0
+			box(Vector3(0.13, 1.1, 0.13), Vector3(bx + s2 * 1.75, 0.82, zp), mv, false, self)
+			if k < 5:
+				var tp := box(Vector3(0.06, 0.06, (largo - 0.4) / 5.0 * 1.05), Vector3(bx + s2 * 1.75, 0.95, zp + (largo - 0.4) / 10.0), mv, false, self)
+				tp.rotation.x = 0.32 * (1.0 if k % 2 == 0 else -1.0)
 
 func _maze(r: Rect2) -> void:
 	var h := 2.6
@@ -1241,7 +1485,7 @@ func _shed(name: String, r: Rect2) -> void:
 	var c := Vector3(r.get_center().x, 0, r.get_center().y)
 	var hh := 3.6
 	var glass := name == "Invernadero"
-	var wm: Material = _mat.vidrio if glass else (_mat.fachada if name == "Cochera" else _mat.madera)
+	var wm: Material = _mat.vidrio if glass else (_mat.fachada if name == "Cochera" else _mat.madera_vieja)
 	var thick := 0.3
 	var sides := [[Vector2(r.position.x, r.position.y), Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.end.y)],
 		[Vector2(r.position.x, r.position.y), Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y)]]

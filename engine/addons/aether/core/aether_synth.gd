@@ -9,7 +9,7 @@ const RATE := 22050
 static var _cache := {}
 
 ## Nombres disponibles: drone, latido, paso, portazo, golpes, susurro, grito,
-## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza
+## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza, rio, fuente
 static func make(kind: String) -> AudioStreamWAV:
 	if not _cache.has(kind):
 		_cache[kind] = _build(kind)
@@ -38,6 +38,8 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"graznido": return _caw()
 		"aleteo": return _flaps()
 		"ululato": return _hoot()
+		"rio": return _river()
+		"fuente": return _fountain_snd()
 		"lechuza": return _barn_screech()
 	return _chime()
 
@@ -331,6 +333,49 @@ static func _barn_screech() -> AudioStreamWAV:
 		b[i] = y * env
 	_normalize(b, 0.75)
 	return _wav(b)
+
+## Arroyo: rumor continuo (ruido rosa filtrado) con burbujeos y chapoteos sueltos. En bucle.
+static func _river() -> AudioStreamWAV:
+	var sec := 6.0
+	var b := _buf(sec)
+	var lp := 0.0
+	var lp2 := 0.0
+	var burb := []
+	for k in 70:
+		burb.append([randf() * sec, randf_range(500.0, 1400.0), randf_range(0.02, 0.06), randf_range(0.2, 0.6)])
+	for i in b.size():
+		var t := float(i) / RATE
+		lp += ((randf() * 2.0 - 1.0) - lp) * 0.08
+		lp2 += (lp - lp2) * 0.3
+		var v := lp2 * 0.6 + lp * 0.25
+		for bb in burb:
+			var dt: float = t - float(bb[0])
+			if dt > 0.0 and dt < float(bb[2]):
+				var f: float = float(bb[1]) * (1.0 + dt * 8.0)
+				v += sin(TAU * f * dt) * exp(-dt * 60.0) * float(bb[3])
+		b[i] = v * (0.85 + 0.15 * sin(TAU * t / sec))
+	_normalize(b, 0.6)
+	return _wav(b, true)
+
+## Fuente: chorro cayendo en la pila (ruido más brillante y constante) con salpicaduras. En bucle.
+static func _fountain_snd() -> AudioStreamWAV:
+	var sec := 4.0
+	var b := _buf(sec)
+	var lp := 0.0
+	var hp := 0.0
+	var prev := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var x := randf() * 2.0 - 1.0
+		lp += (x - lp) * 0.35
+		hp = lp - prev
+		prev = lp
+		var gotas := 0.0
+		if randf() < 0.002:
+			gotas = randf_range(0.3, 0.8)
+		b[i] = lp * 0.5 + hp * 0.6 + gotas
+	_normalize(b, 0.55)
+	return _wav(b, true)
 
 ## Aleteo: golpes de aire graves y rápidos (para cuando una bandada levanta el vuelo).
 static func _flaps() -> AudioStreamWAV:
