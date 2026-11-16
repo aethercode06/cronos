@@ -160,6 +160,8 @@ func _tiempo(paso: String, t0: int) -> void:
 
 func _optimizar() -> void:
 	_oclusores()
+	if OS.get_name() == "Android":
+		_rugosidad_minima()
 	# los muebles y objetos de dentro van en la capa 2: la luna no calcula su sombra (el tejado ya la tapa);
 	# la linterna y las lámparas sí
 	var dentro := house_rect.grow(0.5)
@@ -372,6 +374,9 @@ func _suelo(a: String, b: String, c: String, escala: float, t1: Color, t2: Color
 			m.set_shader_parameter("h" + cp[1], load(base + "height.jpg"))
 			if cp[1] == "1":
 				m.set_shader_parameter("con_alturas", true)
+				if OS.get_name() == "Android":
+					m.set_shader_parameter("max_pasos", 4.0)
+					m.set_shader_parameter("dist_relieve", 7.0)
 		if cp[1] == "1" and ResourceLoader.exists(base + "ao.jpg"):
 			m.set_shader_parameter("a1", load(base + "ao.jpg"))
 	if ResourceLoader.exists("res://zarek/texturas/%s/rough.jpg" % a):
@@ -1764,7 +1769,7 @@ func _gota_mesh() -> Mesh:
 		m.albedo_color = Color(0.75, 0.82, 0.88, 0.55)
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-		m.roughness = 0.05
+		m.roughness = 0.3
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 		q.material = m
 		_gota = q
@@ -3246,6 +3251,36 @@ func _alcance_prop(nombre: String, escala: float) -> float:
 	if lado < 2.0:
 		return 28.0
 	return 60.0
+
+## En la GPU del móvil (media precisión) un material casi espejo desborda el brillo especular: manchas blancas
+## con puntos negros. Se sube la rugosidad mínima a 0,15 en todos los materiales.
+func _rugosidad_minima() -> void:
+	var vistos := {}
+	for g in find_children("*", "GeometryInstance3D", true, false):
+		var gi := g as GeometryInstance3D
+		var mats: Array = []
+		if gi.material_override:
+			mats.append(gi.material_override)
+		var malla: Mesh = null
+		if gi is MeshInstance3D:
+			malla = (gi as MeshInstance3D).mesh
+			for si in (gi as MeshInstance3D).get_surface_override_material_count():
+				mats.append((gi as MeshInstance3D).get_surface_override_material(si))
+		elif gi is MultiMeshInstance3D and (gi as MultiMeshInstance3D).multimesh:
+			malla = (gi as MultiMeshInstance3D).multimesh.mesh
+		elif gi is CPUParticles3D:
+			malla = (gi as CPUParticles3D).mesh
+		if malla:
+			for si in malla.get_surface_count():
+				mats.append(malla.surface_get_material(si))
+		for mt in mats:
+			if mt is StandardMaterial3D and not vistos.has(mt):
+				vistos[mt] = true
+				var sm := mt as StandardMaterial3D
+				if sm.roughness < 0.15 and sm.roughness_texture == null:
+					sm.roughness = 0.15
+				if sm.clearcoat_enabled:
+					sm.clearcoat_roughness = maxf(sm.clearcoat_roughness, 0.15)
 
 ## Oclusores: cada muro, suelo y techo macizo tapa lo que hay detrás, así desde fuera no se dibujan las
 ## habitaciones y desde una habitación no se dibuja el resto de la casa.

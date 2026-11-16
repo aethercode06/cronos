@@ -50,6 +50,7 @@ void fragment() {
 	if (usa_normal) {
 		NORMAL_MAP = texture(normal_tex, UV).rgb;
 	}
-	ROUGHNESS = usa_rough ? texture(rough_tex, UV).r : rugosidad;
+	// la GPU del móvil calcula en media precisión: una rugosidad casi 0 desborda el brillo (manchas blancas y negras)
+	ROUGHNESS = max(usa_rough ? texture(rough_tex, UV).r : rugosidad, 0.3);
 	BACKLIGHT = trasluz;
 }

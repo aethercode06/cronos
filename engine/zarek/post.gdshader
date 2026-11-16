@@ -49,6 +49,9 @@ void fragment() {
 	col.r = texture(screen_tex, uv + off).r;
 	col.g = texture(screen_tex, uv).g;
 	col.b = texture(screen_tex, uv - off).b;
+	// píxeles con valores imposibles (desbordes de la GPU del móvil): se cambian por negro suave en vez de manchas
+	if (any(isnan(col)) || any(isinf(col))) col = vec3(0.02);
+	col = clamp(col, vec3(0.0), vec3(8.0));
 	// parpadeo de exposición muy leve
 	col *= 0.97 + 0.03 * ruido(vec2(t * 9.0, 0.0));
 	// gradación por zonas de luz

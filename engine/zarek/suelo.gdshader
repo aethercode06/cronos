@@ -23,6 +23,8 @@ uniform float cantidad2 = 0.35;
 uniform float cantidad3 = 0.25;
 uniform float relieve = 0.06;      // altura del relieve en metros
 uniform bool con_alturas = false;
+uniform float max_pasos = 12.0;  // pasos del relieve (4 en el teléfono)
+uniform float dist_relieve = 14.0;
 varying vec3 mundo;
 
 void vertex() {
@@ -39,8 +41,8 @@ void fragment() {
 	// paralaje: busca dónde corta el rayo de vista con el relieve de la capa base (solo cerca y en suelo horizontal)
 	vec3 v_mundo = normalize((INV_VIEW_MATRIX * vec4(VIEW, 0.0)).xyz);
 	float dist = length(VERTEX);
-	if (con_alturas && dist < 14.0 && v_mundo.y > 0.15) {
-		int pasos = int(mix(12.0, 4.0, clamp(dist / 14.0, 0.0, 1.0)));
+	if (con_alturas && dist < dist_relieve && v_mundo.y > 0.15) {
+		int pasos = int(mix(max_pasos, 2.0, clamp(dist / dist_relieve, 0.0, 1.0)));
 		vec2 delta = -v_mundo.xz / v_mundo.y * relieve * escala / float(pasos);
 		float capa = 1.0;
 		float paso_h = 1.0 / float(pasos);

@@ -17,7 +17,7 @@ func _ready() -> void:
 	moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_enabled = true; moon.directional_shadow_max_distance = 60.0; moon.shadow_bias = 0.06; moon.shadow_normal_bias = 2.5; add_child(moon)
 	var cl := CanvasLayer.new(); var cr := ColorRect.new(); cr.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var pm := ShaderMaterial.new(); pm.shader = load("res://zarek/post.gdshader"); cr.material = pm; cl.add_child(cr); add_child(cl)
-	var m := ZarekMansion.new(); add_child(m); m.build(2)
+	var m := ZarekMansion.new(); add_child(m); m.build(int(OS.get_environment("Q")) if OS.get_environment("Q") != "" else 2)
 	var cam := Camera3D.new(); cam.fov = 70.0; cam.far = 300.0; add_child(cam)
 	var nb := ZarekNiebla.new(); add_child(nb); nb.objetivo = cam
 	var fl := SpotLight3D.new(); fl.light_color = Color(1, 0.9, 0.72); fl.light_energy = 6.0; fl.spot_range = 32.0; fl.spot_angle = 40.0

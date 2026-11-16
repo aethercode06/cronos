@@ -206,7 +206,7 @@ func _environment() -> void:
 	env.fog_light_color = Color(0.07, 0.065, 0.07)
 	env.fog_density = 0.016
 	env.fog_sky_affect = 0.0
-	env.glow_enabled = Aether.glow_ok()
+	env.glow_enabled = Aether.glow_ok() and OS.get_name() != "Android"
 	env.glow_intensity = 0.8
 	env.glow_bloom = 0.06
 	env.glow_hdr_threshold = 0.9
@@ -385,7 +385,12 @@ func _ui() -> void:
 	lbl_fps.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	capa_fps.add_child(lbl_fps)
 	# 2× MSAA: bordes limpios y agujas de los abetos sin dientes (barato en GPU móviles de teselas)
-	get_viewport().msaa_3d = Viewport.MSAA_2X
+	# en el teléfono, suavizado FXAA (barato) en vez de MSAA: con tantas hojas recortadas el MSAA cuesta mucho
+	if OS.get_name() == "Android":
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+		get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+	else:
+		get_viewport().msaa_3d = Viewport.MSAA_2X
 	# posprocesado de cine (debajo de la interfaz, para que el texto no lleve grano)
 	var cine := CanvasLayer.new()
 	cine.layer = 40
@@ -876,7 +881,7 @@ func _play(delta: float) -> void:
 	var lit := mansion.is_lit(pp)
 	var on := flash_on and battery > 0.0 and hidden_in.is_empty()
 	if on:
-		battery = maxf(0.0, battery - delta * 0.75)
+		battery = maxf(0.0, battery - delta * 0.28)  # unos 6 minutos con la pila llena
 		if battery <= 0.0:
 			message("La linterna se quedó sin pilas.", 2.5)
 	# Elena a la vista

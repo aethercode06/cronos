@@ -1720,7 +1720,7 @@ func _mats_mesa() -> void:
 	_m_copa = StandardMaterial3D.new()
 	_m_copa.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_m_copa.albedo_color = Color(0.85, 0.9, 0.95, 0.16)
-	_m_copa.roughness = 0.03
+	_m_copa.roughness = 0.15
 	_m_copa.metallic_specular = 1.0
 	_m_copa.rim_enabled = true
 	_m_copa.rim = 0.6

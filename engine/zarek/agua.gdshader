@@ -77,7 +77,7 @@ void fragment() {
 	float esp = clamp(fbm * espuma - 0.5 / max(espuma, 0.001), 0.0, 1.0);
 	float esp_total = clamp(mix(clamp(esp - (1.0 - mascara), 0.0, 1.0), esp * mascara, 0.3), 0.0, 1.0);
 	SPECULAR = 0.35;
-	ROUGHNESS = mix(rugosidad, 0.7, esp_total);
+	ROUGHNESS = max(mix(rugosidad, 0.7, esp_total), 0.12);
 	NORMAL_MAP = vec3(nor, 0.0);
 	NORMAL_MAP_DEPTH = relieve;
 	// refracción con el fondo
