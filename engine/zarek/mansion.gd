@@ -130,7 +130,9 @@ func build(q := 2) -> void:
 	_rng.seed = 1874
 	var f := FileAccess.open(PLAN, FileAccess.READ)
 	plan = JSON.parse_string(f.get_as_text())
+	var t0 := Time.get_ticks_msec()
 	_materials()
+	_tiempo("materiales", t0)
 	nav_region = NavigationRegion3D.new()
 	add_child(nav_region)
 	_house = Node3D.new()
@@ -142,12 +144,19 @@ func build(q := 2) -> void:
 	_roof()
 	_ornatos_fachada()
 	_abandono_exterior()
+	_tiempo("casa", t0)
 	_exterior()
+	_tiempo("exterior", t0)
 	_markers()
 	_portals()
 	_decorate()
+	_tiempo("decorado", t0)
 	_merge_static()
 	_optimizar()
+	_tiempo("fusion", t0)
+
+func _tiempo(paso: String, t0: int) -> void:
+	print("ZAREK paso %s hasta %d ms" % [paso, Time.get_ticks_msec() - t0])
 
 func _optimizar() -> void:
 	_oclusores()

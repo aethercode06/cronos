@@ -85,9 +85,10 @@ jobs:
           seg2=re.sub(r'command_line/extra_args=".*"', 'command_line/extra_args="--rendering-driver opengl3 --rendering-method gl_compatibility"', seg2)
           open(p,'w').write(s[:i]+seg2+(s[j:] if j>0 else ''))
           PY
+          sed -i 's/^renderer\/rendering_method.mobile=.*/renderer\/rendering_method.mobile="gl_compatibility"/' engine/project.godot
           godot --headless --path engine --export-release "Android Zarek" ../build/Zarek_x86_64.apk > export_x86.log 2>&1 || true
           tail -5 export_x86.log
-          git checkout engine/export_presets.cfg
+          git checkout engine/export_presets.cfg engine/project.godot
           ls -la build
       - uses: actions/upload-artifact@v4
         with:
@@ -125,7 +126,7 @@ jobs:
           arch: x86_64
           ram-size: 6144M
           disk-size: 8G
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             mkdir -p emu && adb install -r build/Zarek_x86_64.apk > emu/install.txt 2>&1; cat emu/install.txt
