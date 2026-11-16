@@ -25,9 +25,19 @@ func _ready() -> void:
 	cl.add_child(cr); add_child(cl)
 	m = ZarekMansion.new(); add_child(m); m.build(2)
 	for l in m.lamps: m.set_lamp(l, true)
-	var r: Dictionary = {}
-	for q in m.rooms:
-		if String(q.name).to_lower() == sala: r = q
+	var salas := sala.split("|")
+	for sn in salas:
+		var r: Dictionary = {}
+		for q in m.rooms:
+			if String(q.name).to_lower() == sn: r = q
+		if r.is_empty(): print("NO EXISTE ", sn); continue
+		var o2 := out if salas.size() == 1 else "%s/%s" % [out, sn.replace(" ", "_")]
+		DirAccess.make_dir_recursive_absolute(o2)
+		await _vistas(r, o2, linterna, a, env, cl)
+	print("SALON OK")
+	get_tree().quit()
+
+func _vistas(r: Dictionary, out: String, linterna: bool, a: PackedStringArray, env: Environment, cl: CanvasLayer) -> void:
 	var rect: Rect2 = r.rect
 	var y: float = r.y
 	# para que el renderizado por software sea rápido: fuera todo lo que no esté cerca de la sala
@@ -62,5 +72,4 @@ func _ready() -> void:
 	fl.visible = false; env.ambient_light_energy = 3.0; env.fog_enabled = false; cl.visible = false
 	for k in 6: await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_jpg("%s/planta.jpg" % out, 0.9)
-	print("SALON OK")
-	get_tree().quit()
+	fl.queue_free(); cam.queue_free(); env.ambient_light_energy = 0.32; env.fog_enabled = true; cl.visible = true

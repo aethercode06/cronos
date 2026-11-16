@@ -48,6 +48,36 @@ const FISICOS := {"vict_antique_chair": 7.0, "painted_wooden_chair_01": 6.0, "pa
 	"coci_samovar": 4.0, "watering_can_metal_01": 1.0, "wooden_lantern_01": 1.2, "Lantern_01": 0.6, "food_apple_01": 0.15, "yellow_onion": 0.12, "lemon": 0.1,
 	"sweet_potato": 0.15, "wooden_spoon": 0.1, "round_spectacles": 0.05, "coti_pocket_watch": 0.1, "vintage_pocket_watch": 0.1, "magnifying_glass_01": 0.2,
 	"vict_cup___saucer": 0.3, "coti_typewriter": 9.0, "coti_three_candles_and_a_golden_c": 0.8, "brass_candleholders": 2.0, "mousetrap": 0.1}
+## Modelos de Objaverse que vienen mirando de lado: giro para que miren a +Z como los demás.
+const GIRO := {"obj_pendulum_clock": -PI * 0.5, "obj_withered_wooden_crucifix": -PI * 0.5, "obj_wooden_cuckoo_clock": -PI * 0.5,
+	"obj_teddy_bear_2": -PI * 0.5, "obj_old_violin": -PI * 0.5, "obj_biblical_scene_from_nurember": PI * 0.5, "obj_candle_wall_lamp": PI * 0.5}
+## Objetos de pared o fijos: nunca sueltos con física.
+const FIJOS := ["frame", "crucifix", "cross", "deerhead", "cuckoo", "wall_lamp", "portrait", "biblical", "torment", "painting"]
+const METAL_PAL := ["lamp", "candle", "kettle", "teapot", "anvil", "goblet", "lantern", "watch", "candelabra", "pickaxe", "shovel", "cleaver", "grinder", "samovar", "cutlery", "scoop", "pens", "inkwell", "hourglass", "hour_glass", "sphere"]
+
+## Masa (kg) si el objeto va suelto con física; 0 si es fijo. Los objetos pequeños nuevos (obj_*) se calculan por tamaño.
+func _masa_fisica(nombre: String) -> float:
+	if FISICOS.has(nombre):
+		return float(FISICOS[nombre])
+	if not nombre.begins_with("obj_") or not _props_info.has(nombre):
+		return 0.0
+	for f in FIJOS:
+		if nombre.contains(f):
+			return 0.0
+	var t: Array = _props_info[nombre].tam
+	var mx := maxf(float(t[0]), maxf(float(t[1]), float(t[2])))
+	if mx > 0.62:
+		return 0.0
+	return clampf(float(t[0]) * float(t[1]) * float(t[2]) * 350.0, 0.15, 8.0)
+
+func _es_metal(nombre: String) -> bool:
+	if nombre in METALICOS:
+		return true
+	for k in METAL_PAL:
+		if nombre.contains(k):
+			return true
+	return false
+
 const METALICOS := ["brass_pot_01", "brass_pot_02", "brass_pan_01", "pot_enamel_01", "metal_jug", "brass_goblets", "brass_vase_01", "brass_vase_02", "brass_vase_03",
 	"coci_samovar", "watering_can_metal_01", "brass_candleholders", "coti_typewriter", "Lantern_01"]
 
@@ -1737,6 +1767,7 @@ func _fireplace(pos: Vector3) -> void:
 	n.position = fpos
 	n.rotation.y = atan2(-back.x, -back.z)
 	add_child(n)
+	chimeneas.append({"pos": fpos, "back": back})
 	var real := _prop("pian_victorian_fire_place__free", Vector3(0, 0, -0.1), 0.0, 1.1, true, n)
 	_tenir(real, Color(0.72, 0.66, 0.62))
 	if real == null:
@@ -1933,6 +1964,7 @@ func _portals() -> void:
 		portals.append({"pos": ub, "to": a, "text": l[3]})
 
 var _caracoles: Array[Vector3] = []
+var chimeneas: Array = []
 
 ## Escalera de caracol de hierro con peldaños de madera (subidas a la torre y al ático).
 func _caracol(p: Vector3) -> void:
@@ -2127,14 +2159,20 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 				primera = b
 		return primera
 	var n: Node3D = ps.instantiate()
+	if GIRO.has(nombre):
+		var w := Node3D.new()
+		n.rotation.y = GIRO[nombre]
+		w.add_child(n)
+		n = w
 	n.position = p
 	n.rotation.y = yaw
 	n.scale = Vector3.ONE * escala
 	# objetos sueltos con física: se empujan, se vuelcan y suenan
-	if parent == null and FISICOS.has(nombre) and _props_info.has(nombre):
+	var masa := _masa_fisica(nombre) if parent == null else 0.0
+	if masa > 0.0 and _props_info.has(nombre):
 		var rb := ZarekObjetoFisico.new()
-		rb.mass = maxf(0.1, float(FISICOS[nombre]) * escala)
-		if nombre in METALICOS:
+		rb.mass = maxf(0.1, masa * escala)
+		if _es_metal(nombre):
 			rb.sonido = "tintineo"
 		rb.position = p
 		rb.rotation.y = yaw

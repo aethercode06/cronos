@@ -907,5 +907,1193 @@
   ],
   "tris": 2804,
   "escala": 0.8493
+ },
+ "obj_ancient_clay_pots": {
+  "tam": [
+   0.328,
+   0.287,
+   0.4
+  ],
+  "tris": 6000,
+  "escala": 0.1441
+ },
+ "obj_antique_clock": {
+  "tam": [
+   0.163,
+   0.751,
+   0.357
+  ],
+  "tris": 6000,
+  "escala": 0.0006
+ },
+ "obj_antique_globe": {
+  "tam": [
+   0.377,
+   0.5,
+   0.382
+  ],
+  "tris": 2000,
+  "escala": 0.0086
+ },
+ "obj_antique_silver_goblets_type__2": {
+  "tam": [
+   0.5,
+   0.224,
+   0.077
+  ],
+  "tris": 5999,
+  "escala": 0.9433
+ },
+ "obj_antique_vase": {
+  "tam": [
+   0.138,
+   0.45,
+   0.139
+  ],
+  "tris": 5999,
+  "escala": 0.025
+ },
+ "obj_antique_vase_s5139506": {
+  "tam": [
+   0.206,
+   0.3,
+   0.181
+  ],
+  "tris": 5999,
+  "escala": 0.001
+ },
+ "obj_anvil": {
+  "tam": [
+   0.397,
+   0.35,
+   0.978
+  ],
+  "tris": 1123,
+  "escala": 0.0095
+ },
+ "obj_anvil_nature_morte": {
+  "tam": [
+   0.543,
+   0.85,
+   0.288
+  ],
+  "tris": 6000,
+  "escala": 0.6994
+ },
+ "obj_armillary_sphere": {
+  "tam": [
+   0.298,
+   0.45,
+   0.248
+  ],
+  "tris": 5999,
+  "escala": 0.0085
+ },
+ "obj_art_of_chokin_vintage_piano_": {
+  "tam": [
+   0.16,
+   0.101,
+   0.121
+  ],
+  "tris": 5000,
+  "escala": 0.0017
+ },
+ "obj_asset02_medieval_anvil": {
+  "tam": [
+   0.622,
+   0.8,
+   0.521
+  ],
+  "tris": 2098,
+  "escala": 0.0088
+ },
+ "obj_bible_on_stand": {
+  "tam": [
+   0.538,
+   1.15,
+   0.49
+  ],
+  "tris": 1644,
+  "escala": 234.5653
+ },
+ "obj_biblical_scene_from_nurember": {
+  "tam": [
+   0.523,
+   0.6,
+   0.014
+  ],
+  "tris": 140,
+  "escala": 0.4536
+ },
+ "obj_birdcage": {
+  "tam": [
+   0.318,
+   0.55,
+   0.318
+  ],
+  "tris": 5999,
+  "escala": 0.146
+ },
+ "obj_birdcage_2": {
+  "tam": [
+   0.241,
+   0.5,
+   0.241
+  ],
+  "tris": 6000,
+  "escala": 0.1075
+ },
+ "obj_birdcage_3": {
+  "tam": [
+   0.42,
+   0.6,
+   0.42
+  ],
+  "tris": 5552,
+  "escala": 0.0037
+ },
+ "obj_book_stack": {
+  "tam": [
+   0.32,
+   0.239,
+   0.295
+  ],
+  "tris": 2304,
+  "escala": 0.0966
+ },
+ "obj_brocal_quadra_jar": {
+  "tam": [
+   0.158,
+   0.22,
+   0.121
+  ],
+  "tris": 5999,
+  "escala": 0.5959
+ },
+ "obj_candle_holder": {
+  "tam": [
+   0.152,
+   0.3,
+   0.127
+  ],
+  "tris": 1295,
+  "escala": 0.0016
+ },
+ "obj_candle_wall_lamp": {
+  "tam": [
+   0.194,
+   0.35,
+   0.265
+  ],
+  "tris": 1560,
+  "escala": 0.0156
+ },
+ "obj_candlestick": {
+  "tam": [
+   0.11,
+   0.28,
+   0.108
+  ],
+  "tris": 1216,
+  "escala": 0.0093
+ },
+ "obj_candlestick_2": {
+  "tam": [
+   0.19,
+   0.2,
+   0.16
+  ],
+  "tris": 6000,
+  "escala": 0.7152
+ },
+ "obj_cereal_bread": {
+  "tam": [
+   0.3,
+   0.091,
+   0.112
+  ],
+  "tris": 338,
+  "escala": 0.1142
+ },
+ "obj_classic_coffee_grinder": {
+  "tam": [
+   0.209,
+   0.3,
+   0.183
+  ],
+  "tris": 5999,
+  "escala": 0.2997
+ },
+ "obj_coat_rack": {
+  "tam": [
+   0.424,
+   1.85,
+   0.408
+  ],
+  "tris": 5580,
+  "escala": 0.0104
+ },
+ "obj_coat_rack_2": {
+  "tam": [
+   0.437,
+   1.85,
+   0.437
+  ],
+  "tris": 4492,
+  "escala": 0.2417
+ },
+ "obj_coat_rack_bowler_hat": {
+  "tam": [
+   0.512,
+   1.851,
+   0.514
+  ],
+  "tris": 6000,
+  "escala": 0.1894
+ },
+ "obj_coffee_grinder_pbr": {
+  "tam": [
+   0.262,
+   0.3,
+   0.294
+  ],
+  "tris": 5998,
+  "escala": 0.2279
+ },
+ "obj_cracked_porcelain_vase": {
+  "tam": [
+   0.327,
+   0.3,
+   0.327
+  ],
+  "tris": 6000,
+  "escala": 0.3268
+ },
+ "obj_craft_teddy_bear_photogramme": {
+  "tam": [
+   0.234,
+   0.32,
+   0.186
+  ],
+  "tris": 5999,
+  "escala": 0.0014
+ },
+ "obj_cup_and_plate": {
+  "tam": [
+   0.16,
+   0.081,
+   0.16
+  ],
+  "tris": 4370,
+  "escala": 13.2532
+ },
+ "obj_deerhead": {
+  "tam": [
+   0.396,
+   0.7,
+   0.587
+  ],
+  "tris": 5000,
+  "escala": 0.7074
+ },
+ "obj_dirty_shovel": {
+  "tam": [
+   0.248,
+   1.1,
+   0.064
+  ],
+  "tris": 798,
+  "escala": 0.0143
+ },
+ "obj_dry_firewood": {
+  "tam": [
+   0.55,
+   0.215,
+   0.444
+  ],
+  "tris": 6710,
+  "escala": 0.07
+ },
+ "obj_elegant_victorian_porcelan_t": {
+  "tam": [
+   0.24,
+   0.24,
+   0.16
+  ],
+  "tris": 5999,
+  "escala": 0.0648
+ },
+ "obj_empty_cross": {
+  "tam": [
+   0.339,
+   0.6,
+   0.06
+  ],
+  "tris": 5999,
+  "escala": 0.0219
+ },
+ "obj_envelope": {
+  "tam": [
+   0.18,
+   0.17,
+   0.014
+  ],
+  "tris": 23,
+  "escala": 0.09
+ },
+ "obj_fancy_picture_frame_01_freep": {
+  "tam": [
+   0.356,
+   0.501,
+   0.029
+  ],
+  "tris": 6000,
+  "escala": 1.0036
+ },
+ "obj_fancy_picture_frame_02_freep": {
+  "tam": [
+   0.365,
+   0.551,
+   0.014
+  ],
+  "tris": 5999,
+  "escala": 1.0782
+ },
+ "obj_firewood": {
+  "tam": [
+   0.79,
+   0.391,
+   0.8
+  ],
+  "tris": 480,
+  "escala": 0.4708
+ },
+ "obj_firewood_hp": {
+  "tam": [
+   0.358,
+   0.272,
+   0.9
+  ],
+  "tris": 18000,
+  "escala": 0.0326
+ },
+ "obj_floor_globe": {
+  "tam": [
+   0.576,
+   1.001,
+   0.574
+  ],
+  "tris": 6000,
+  "escala": 0.0072
+ },
+ "obj_floral_vase": {
+  "tam": [
+   0.175,
+   0.38,
+   0.175
+  ],
+  "tris": 1568,
+  "escala": 1.2661
+ },
+ "obj_flower_vase": {
+  "tam": [
+   0.23,
+   0.28,
+   0.23
+  ],
+  "tris": 2914,
+  "escala": 0.14
+ },
+ "obj_fountain_pens": {
+  "tam": [
+   0.16,
+   0.017,
+   0.16
+  ],
+  "tris": 2158,
+  "escala": 0.0045
+ },
+ "obj_garlic": {
+  "tam": [
+   0.06,
+   0.05,
+   0.06
+  ],
+  "tris": 5999,
+  "escala": 0.0334
+ },
+ "obj_garlic_game_ready_2k_pbr": {
+  "tam": [
+   0.057,
+   0.06,
+   0.055
+  ],
+  "tris": 2048,
+  "escala": 0.0095
+ },
+ "obj_globe": {
+  "tam": [
+   0.395,
+   0.45,
+   0.372
+  ],
+  "tris": 6000,
+  "escala": 0.086
+ },
+ "obj_grain_scoop": {
+  "tam": [
+   0.35,
+   0.054,
+   0.1
+  ],
+  "tris": 6000,
+  "escala": 0.0731
+ },
+ "obj_hanging_picture_frame_freepo": {
+  "tam": [
+   0.802,
+   0.6,
+   0.046
+  ],
+  "tris": 490,
+  "escala": 0.7661
+ },
+ "obj_harp": {
+  "tam": [
+   0.487,
+   1.6,
+   0.913
+  ],
+  "tris": 6000,
+  "escala": 2.6071
+ },
+ "obj_hour_glass": {
+  "tam": [
+   0.112,
+   0.22,
+   0.112
+  ],
+  "tris": 2557,
+  "escala": 0.009
+ },
+ "obj_hourglass": {
+  "tam": [
+   0.163,
+   0.24,
+   0.163
+  ],
+  "tris": 5999,
+  "escala": 0.0062
+ },
+ "obj_hourglass_2": {
+  "tam": [
+   0.111,
+   0.26,
+   0.086
+  ],
+  "tris": 6000,
+  "escala": 0.0936
+ },
+ "obj_inkwell_from_bell_rock_light": {
+  "tam": [
+   0.162,
+   0.12,
+   0.099
+  ],
+  "tris": 6000,
+  "escala": 0.7181
+ },
+ "obj_japan_porcelain_vase": {
+  "tam": [
+   0.384,
+   0.32,
+   0.384
+  ],
+  "tris": 2112,
+  "escala": 0.1918
+ },
+ "obj_jar": {
+  "tam": [
+   0.142,
+   0.18,
+   0.146
+  ],
+  "tris": 5999,
+  "escala": 0.0235
+ },
+ "obj_jewelry_box_2": {
+  "tam": [
+   0.602,
+   0.3,
+   0.641
+  ],
+  "tris": 6000,
+  "escala": 0.3204
+ },
+ "obj_kerosene_lamp": {
+  "tam": [
+   0.258,
+   0.45,
+   0.199
+  ],
+  "tris": 6000,
+  "escala": 0.225
+ },
+ "obj_kerosene_lamp_2": {
+  "tam": [
+   0.146,
+   0.42,
+   0.159
+  ],
+  "tris": 3984,
+  "escala": 0.0007
+ },
+ "obj_letter_box": {
+  "tam": [
+   0.337,
+   0.35,
+   0.261
+  ],
+  "tris": 5999,
+  "escala": 0.0143
+ },
+ "obj_loshadka_rocking_horse_woode": {
+  "tam": [
+   0.9,
+   0.704,
+   0.33
+  ],
+  "tris": 6000,
+  "escala": 0.1182
+ },
+ "obj_meat_cleaver": {
+  "tam": [
+   0.3,
+   0.022,
+   0.094
+  ],
+  "tris": 138,
+  "escala": 0.0091
+ },
+ "obj_medieval_cutlery": {
+  "tam": [
+   0.25,
+   0.014,
+   0.13
+  ],
+  "tris": 484,
+  "escala": 0.012
+ },
+ "obj_military_telescope": {
+  "tam": [
+   0.45,
+   0.099,
+   0.106
+  ],
+  "tris": 6000,
+  "escala": 0.7471
+ },
+ "obj_miners_oil_lamp": {
+  "tam": [
+   0.14,
+   0.32,
+   0.11
+  ],
+  "tris": 6000,
+  "escala": 0.1604
+ },
+ "obj_museums_old_book_1767": {
+  "tam": [
+   0.3,
+   0.064,
+   0.207
+  ],
+  "tris": 2604,
+  "escala": 0.9673
+ },
+ "obj_oil_lamp": {
+  "tam": [
+   0.139,
+   0.38,
+   0.148
+  ],
+  "tris": 5999,
+  "escala": 0.19
+ },
+ "obj_old_bible": {
+  "tam": [
+   0.28,
+   0.021,
+   0.161
+  ],
+  "tris": 54,
+  "escala": 0.1339
+ },
+ "obj_old_book": {
+  "tam": [
+   0.194,
+   0.052,
+   0.26
+  ],
+  "tris": 982,
+  "escala": 0.0002
+ },
+ "obj_old_book_2": {
+  "tam": [
+   0.286,
+   0.059,
+   0.193
+  ],
+  "tris": 6000,
+  "escala": 0.0262
+ },
+ "obj_old_book_3": {
+  "tam": [
+   0.191,
+   0.048,
+   0.27
+  ],
+  "tris": 632,
+  "escala": 0.135
+ },
+ "obj_old_book_4": {
+  "tam": [
+   0.36,
+   0.027,
+   0.293
+  ],
+  "tris": 1336,
+  "escala": 0.1776
+ },
+ "obj_old_book_5": {
+  "tam": [
+   0.198,
+   0.054,
+   0.25
+  ],
+  "tris": 360,
+  "escala": 0.125
+ },
+ "obj_old_books": {
+  "tam": [
+   0.33,
+   0.223,
+   0.234
+  ],
+  "tris": 300,
+  "escala": 0.5744
+ },
+ "obj_old_books_sketchfab_weekly": {
+  "tam": [
+   0.32,
+   0.06,
+   0.269
+  ],
+  "tris": 1132,
+  "escala": 0.0987
+ },
+ "obj_old_brass_candle_holder": {
+  "tam": [
+   0.195,
+   0.22,
+   0.195
+  ],
+  "tris": 6000,
+  "escala": 0.0014
+ },
+ "obj_old_candelabra": {
+  "tam": [
+   0.257,
+   0.55,
+   0.257
+  ],
+  "tris": 6000,
+  "escala": 0.6255
+ },
+ "obj_old_jewelry_box": {
+  "tam": [
+   0.255,
+   0.3,
+   0.158
+  ],
+  "tris": 6000,
+  "escala": 0.0067
+ },
+ "obj_old_lantern": {
+  "tam": [
+   0.187,
+   0.381,
+   0.202
+  ],
+  "tris": 6000,
+  "escala": 0.0085
+ },
+ "obj_old_map_3d_model": {
+  "tam": [
+   0.55,
+   0.058,
+   0.306
+  ],
+  "tris": 1966,
+  "escala": 0.1175
+ },
+ "obj_old_pickaxe": {
+  "tam": [
+   0.715,
+   0.9,
+   0.843
+  ],
+  "tris": 432,
+  "escala": 0.0751
+ },
+ "obj_old_pocket_watch": {
+  "tam": [
+   0.036,
+   0.06,
+   0.04
+  ],
+  "tris": 6000,
+  "escala": 0.0021
+ },
+ "obj_old_shovel": {
+  "tam": [
+   0.208,
+   0.038,
+   1.0
+  ],
+  "tris": 780,
+  "escala": 0.5459
+ },
+ "obj_old_soviet_teapot": {
+  "tam": [
+   0.181,
+   0.22,
+   0.129
+  ],
+  "tris": 1971,
+  "escala": 0.0004
+ },
+ "obj_old_violin": {
+  "tam": [
+   0.203,
+   0.6,
+   0.074
+  ],
+  "tris": 5999,
+  "escala": 0.04
+ },
+ "obj_oriental_perfume_bottle": {
+  "tam": [
+   0.055,
+   0.16,
+   0.056
+  ],
+  "tris": 5999,
+  "escala": 0.0014
+ },
+ "obj_ornate_antique_candlestick": {
+  "tam": [
+   0.274,
+   0.3,
+   0.274
+  ],
+  "tris": 3072,
+  "escala": 0.003
+ },
+ "obj_pbr_anvil": {
+  "tam": [
+   0.811,
+   0.35,
+   0.303
+  ],
+  "tris": 642,
+  "escala": 0.0097
+ },
+ "obj_pecking_chicken_wooden_toy": {
+  "tam": [
+   0.25,
+   0.184,
+   0.037
+  ],
+  "tris": 6000,
+  "escala": 0.7752
+ },
+ "obj_pendulum_clock": {
+  "tam": [
+   0.552,
+   1.996,
+   0.377
+  ],
+  "tris": 6000,
+  "escala": 1.0
+ },
+ "obj_perfume_bottle": {
+  "tam": [
+   0.074,
+   0.15,
+   0.079
+  ],
+  "tris": 6000,
+  "escala": 0.946
+ },
+ "obj_perfume_bottle_with_a_landsc": {
+  "tam": [
+   0.088,
+   0.15,
+   0.067
+  ],
+  "tris": 6000,
+  "escala": 0.3574
+ },
+ "obj_perfume_bottle_with_floral_d": {
+  "tam": [
+   0.117,
+   0.16,
+   0.078
+  ],
+  "tris": 5999,
+  "escala": 0.0007
+ },
+ "obj_perfume_bottles_with_floral_": {
+  "tam": [
+   0.07,
+   0.2,
+   0.154
+  ],
+  "tris": 6000,
+  "escala": 0.0008
+ },
+ "obj_phonograph_v2": {
+  "tam": [
+   0.673,
+   0.7,
+   0.707
+  ],
+  "tris": 5999,
+  "escala": 0.7401
+ },
+ "obj_photogrammetry_cloth_sack_wi": {
+  "tam": [
+   0.759,
+   0.6,
+   0.56
+  ],
+  "tris": 4208,
+  "escala": 0.0099
+ },
+ "obj_pickaxe": {
+  "tam": [
+   0.645,
+   0.9,
+   0.06
+  ],
+  "tris": 2340,
+  "escala": 0.45
+ },
+ "obj_pocket_watch": {
+  "tam": [
+   0.06,
+   0.009,
+   0.044
+  ],
+  "tris": 6000,
+  "escala": 0.0039
+ },
+ "obj_pocket_watch_model": {
+  "tam": [
+   0.047,
+   0.033,
+   0.06
+  ],
+  "tris": 6000,
+  "escala": 0.0053
+ },
+ "obj_polished_tea_kettle": {
+  "tam": [
+   0.347,
+   0.26,
+   0.185
+  ],
+  "tris": 6000,
+  "escala": 0.0011
+ },
+ "obj_porcelain_perfume_bottle": {
+  "tam": [
+   0.088,
+   0.13,
+   0.071
+  ],
+  "tris": 6000,
+  "escala": 0.8695
+ },
+ "obj_quill": {
+  "tam": [
+   0.083,
+   0.023,
+   0.3
+  ],
+  "tris": 400,
+  "escala": 0.0101
+ },
+ "obj_round_nosed_shovel": {
+  "tam": [
+   0.209,
+   1.2,
+   0.056
+  ],
+  "tris": 5232,
+  "escala": 0.6
+ },
+ "obj_sack_v1": {
+  "tam": [
+   0.569,
+   0.65,
+   0.424
+  ],
+  "tris": 6000,
+  "escala": 0.8381
+ },
+ "obj_sack_v2": {
+  "tam": [
+   0.613,
+   0.7,
+   0.456
+  ],
+  "tris": 6000,
+  "escala": 0.9025
+ },
+ "obj_samovar": {
+  "tam": [
+   0.283,
+   0.5,
+   0.297
+  ],
+  "tris": 5999,
+  "escala": 0.0146
+ },
+ "obj_scroll": {
+  "tam": [
+   0.3,
+   0.05,
+   0.049
+  ],
+  "tris": 1140,
+  "escala": 0.0082
+ },
+ "obj_scroll_2": {
+  "tam": [
+   0.3,
+   0.069,
+   0.077
+  ],
+  "tris": 884,
+  "escala": 0.15
+ },
+ "obj_seal_and_letter": {
+  "tam": [
+   0.25,
+   0.075,
+   0.213
+  ],
+  "tris": 5372,
+  "escala": 0.125
+ },
+ "obj_shawl_3d_scan": {
+  "tam": [
+   0.801,
+   1.699,
+   0.721
+  ],
+  "tris": 6000,
+  "escala": 0.1752
+ },
+ "obj_sheet_music": {
+  "tam": [
+   0.32,
+   0.019,
+   0.2
+  ],
+  "tris": 212,
+  "escala": 0.0254
+ },
+ "obj_shovel": {
+  "tam": [
+   0.24,
+   1.1,
+   0.099
+  ],
+  "tris": 4958,
+  "escala": 0.7309
+ },
+ "obj_sir_isaac_newton_portrait_pa": {
+  "tam": [
+   0.9,
+   0.9,
+   0.03
+  ],
+  "tris": 222,
+  "escala": 0.45
+ },
+ "obj_stack_of_old_books": {
+  "tam": [
+   0.35,
+   0.107,
+   0.216
+  ],
+  "tris": 876,
+  "escala": 0.175
+ },
+ "obj_tea_set": {
+  "tam": [
+   0.293,
+   0.184,
+   0.45
+  ],
+  "tris": 6000,
+  "escala": 0.1215
+ },
+ "obj_tea_set_01_4k": {
+  "tam": [
+   0.42,
+   0.076,
+   0.221
+  ],
+  "tris": 6000,
+  "escala": 0.4573
+ },
+ "obj_teapot": {
+  "tam": [
+   0.206,
+   0.24,
+   0.212
+  ],
+  "tris": 5999,
+  "escala": 0.1991
+ },
+ "obj_teapot_2": {
+  "tam": [
+   0.201,
+   0.2,
+   0.302
+  ],
+  "tris": 5999,
+  "escala": 9.7435
+ },
+ "obj_teapot_weathered_metal_teapo": {
+  "tam": [
+   0.245,
+   0.26,
+   0.397
+  ],
+  "tris": 5999,
+  "escala": 0.0
+ },
+ "obj_teddy_bear_2": {
+  "tam": [
+   0.178,
+   0.3,
+   0.103
+  ],
+  "tris": 5536,
+  "escala": 0.2425
+ },
+ "obj_telescope": {
+  "tam": [
+   1.341,
+   1.5,
+   0.499
+  ],
+  "tris": 5898,
+  "escala": 0.0367
+ },
+ "obj_thai_jar_c_1000_bce": {
+  "tam": [
+   0.295,
+   0.35,
+   0.294
+  ],
+  "tris": 6000,
+  "escala": 1.4135
+ },
+ "obj_top_hat_2": {
+  "tam": [
+   0.224,
+   0.18,
+   0.246
+  ],
+  "tris": 5999,
+  "escala": 0.0241
+ },
+ "obj_unending_torment": {
+  "tam": [
+   0.511,
+   0.697,
+   0.208
+  ],
+  "tris": 6000,
+  "escala": 0.35
+ },
+ "obj_victorian_brass_oil_lamp": {
+  "tam": [
+   0.652,
+   1.55,
+   0.612
+  ],
+  "tris": 6000,
+  "escala": 0.0286
+ },
+ "obj_victorian_typewriter": {
+  "tam": [
+   0.4,
+   0.304,
+   0.344
+  ],
+  "tris": 6000,
+  "escala": 1.0435
+ },
+ "obj_withered_wooden_crucifix": {
+  "tam": [
+   0.241,
+   0.55,
+   0.057
+  ],
+  "tris": 1048,
+  "escala": 0.0025
+ },
+ "obj_wooden_cuckoo_clock": {
+  "tam": [
+   0.293,
+   0.549,
+   0.152
+  ],
+  "tris": 6000,
+  "escala": 0.0404
+ },
+ "obj_wooden_plate": {
+  "tam": [
+   0.26,
+   0.017,
+   0.26
+  ],
+  "tris": 1120,
+  "escala": 0.0043
+ },
+ "obj_wooden_rolling_pin": {
+  "tam": [
+   0.09,
+   0.092,
+   0.45
+  ],
+  "tris": 1196,
+  "escala": 0.0007
+ },
+ "obj_wooden_toy_train": {
+  "tam": [
+   0.35,
+   0.11,
+   0.096
+  ],
+  "tris": 5350,
+  "escala": 0.0339
  }
 }

@@ -7,6 +7,26 @@ extends RefCounted
 var m: ZarekMansion
 var rng := RandomNumberGenerator.new()
 var _ocupado: Array[Rect2] = []
+var _superficies: Array = []
+var _altos: Array[Rect2] = []
+var _en_pared: Array[Vector3] = []
+
+## ¿Hay sitio en la pared? (sin otro cuadro, aplique o estante a menos de «hueco» metros)
+func _pared_libre(p: Vector3, hueco: float) -> bool:
+	for q in _en_pared:
+		if absf(q.y - p.y) < 1.5 and Vector2(q.x - p.x, q.z - p.z).length() < hueco:
+			return false
+	return true
+
+## Muebles con tapa donde se pueden dejar cosas y la altura de su tapa (m, sin escalar).
+const SUPERFICIE := {"ClassicConsole_01": 0.949, "GothicCommode_01": 1.212, "vict_antique_desk": 0.8, "vict_antique_wooden_desk": 0.8, "WoodenTable_03": 0.83,
+	"painted_wooden_table": 0.959, "wooden_table_02": 0.8, "side_table_01": 0.551, "side_table_tall_01": 0.761, "small_wooden_table_01": 0.533,
+	"ClassicNightstand_01": 0.7, "painted_wooden_nightstand": 0.616, "vintage_wooden_drawer_01": 1.091, "painted_wooden_cabinet": 1.182,
+	"GothicCabinet_01": 2.362, "vintage_cabinet_01": 2.236, "vict_victorian_coffee_table": 0.5, "coffee_table_round_01": 0.491, "gothic_coffee_table": 0.558,
+	"round_wooden_table_01": 1.005, "treasure_chest": 0.62, "wine_barrel_01": 0.871, "terr_old_and_dusty_multi_crate_st": 0.66, "vict_antique_wooden_bookcase___ga": 2.1,
+	"vict_small_antique_table_asset": 0.376, "painted_wooden_cabinet_02": 1.02, "vintage_suitcase": 0.569}
+
+
 
 func _init(mansion: ZarekMansion) -> void:
 	m = mansion
@@ -175,6 +195,16 @@ func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala :
 	var n := m._prop(_real(nombre), p, yaw, escala, choca)
 	if n and choca:
 		_ocupar(p, ext)
+		var real := _real(nombre)
+		if SUPERFICIE.has(real) and alto < 0.3:
+			_superficies.append({"pos": p, "ext": ext, "tam": t, "yaw": yaw, "nombre": real, "alto": float(SUPERFICIE[real]) * escala, "sala": r.id, "n": 0, "grupo": _grupo(r)})
+		if t.y > 1.5:
+			_altos.append(Rect2(p.x - ext.x * 0.5 - 0.1, p.z - ext.z * 0.5 - 0.1, ext.x + 0.2, ext.z + 0.2))
+	elif n and alto > 0.3:
+		# algo puesto encima de una superficie: cuenta para no amontonar
+		for sf in _superficies:
+			if Vector2(sf.pos.x - p.x, sf.pos.z - p.z).length() < 0.9:
+				sf.n += 1
 	return n
 
 func _esquivar_ventana(r: Dictionary, p: Vector3, ext: Vector3) -> Vector3:
@@ -238,18 +268,27 @@ func _cuadro(r: Dictionary, nombre: String, x: float, z: float, yaw: float, esca
 	else: z = D - f[3] - 0.03
 	var rect: Rect2 = r.rect
 	var q := Vector3(rect.position.x + x, float(r.y) + alto, rect.position.y + z)
-	if m.ventana_cerca(Vector3(q.x, float(r.y), q.z), 1.25):
+	var media := m._prop_size(_real(nombre)).x * escala * 0.5
+	var radio_v := 1.0 + media
+	if m.ventana_cerca(Vector3(q.x, float(r.y), q.z), radio_v) or not _pared_libre(Vector3(q.x, float(r.y), q.z), media + 0.5):
 		var eje := Vector3(0, 0, 1) if (dmin == x or dmin == W - x) else Vector3(1, 0, 0)
 		var hecho := false
 		for paso in [1.2, -1.2, 2.0, -2.0]:
 			var q2: Vector3 = q + eje * paso
-			if rect.grow(-0.5).has_point(Vector2(q2.x, q2.z)) and not m.ventana_cerca(Vector3(q2.x, float(r.y), q2.z), 1.25) and m.door_near(Vector3(q2.x, float(r.y), q2.z), 1.3).is_empty():
+			if rect.grow(-0.5).has_point(Vector2(q2.x, q2.z)) and not m.ventana_cerca(Vector3(q2.x, float(r.y), q2.z), radio_v) and m.door_near(Vector3(q2.x, float(r.y), q2.z), 1.3).is_empty() and _pared_libre(Vector3(q2.x, float(r.y), q2.z), media + 0.5):
 				q = q2
 				hecho = true
 				break
 		if not hecho:
+			if DBG and _tipo(r) in ["cocina", "ninos"]: print("CUADRO no cabe ", r.name, " ", nombre, " ventana=", m.ventana_cerca(Vector3(q.x, float(r.y), q.z), radio_v))
 			return
-	m._prop(_real(nombre), q, yaw, escala, false)
+	var real := _real(nombre)
+	if DBG and _tipo(r) in ["cocina", "ninos"]: print("CUADRO ok ", r.name, " ", real, " ", q)
+	if real.begins_with("obj_"):
+		var tq := m._prop_size(real) * escala
+		q += Vector3(0, -tq.y * 0.5, 0) + Vector3(0, 0, 1).rotated(Vector3.UP, yaw) * tq.z * 0.5
+	m._prop(real, q, yaw, escala, false)
+	_en_pared.append(Vector3(q.x, float(r.y), q.z))
 
 ## Salón con chimenea: sala de muestra montada a mano, como una sala real abandonada de golpe en 1908.
 ## Local: x al este, z al sur. Chimenea en la pared oeste (z 3,6) entre dos ventanas (z 1,2 y 6,0);
@@ -1343,7 +1382,683 @@ func _mirador(r: Dictionary) -> void:
 	_en(r, "vict_antique_chair", W - 1.0, 1.0, -0.7)
 	_telas(r)
 
+## Grupo de sala para elegir qué objetos van en ella.
+func _grupo(r: Dictionary) -> String:
+	var t := _tipo(r)
+	match t:
+		"salon", "vestibulo", "musica", "baile", "billar", "comedor", "pasillo": return "salon"
+		"dormitorio", "tocador", "ninos", "costura", "bano": return "dormitorio"
+		"cocina", "despensa", "servicio": return "cocina"
+		"biblioteca", "estudio", "archivo": return "biblioteca"
+		"sotano", "cava", "calderas": return "sotano"
+		"atico": return "atico"
+	if String(r.type) in ["tunel", "roca"]:
+		return "tunel"
+	return "salon"
+
+## Relleno ordenado: cada mueble con tapa recibe una composición pensada para él (simétrica en consolas,
+## de trabajo en escritorios, de noche en mesillas…), cada tramo libre de pared un cuadro centrado con apliques
+## a los lados, y el suelo solo lo que tiene sentido (leña junto a la chimenea, libros junto a las estanterías).
+func _relleno(r: Dictionary) -> void:
+	var g := _grupo(r)
+	if g != "tunel":
+		_paredes(r, g)
+		_suelo_con_sentido(r, g)
+		for sf in _superficies:
+			if sf.sala == r.id and int(sf.n) == 0:
+				_componer(r, sf)
+	_restos(r, g)
+
+## Variantes de cada clase de objeto (se amplían con los modelos nuevos que existan).
+const VARIANTES := {
+	"vela": ["wooden_candlestick", "obj_candlestick", "obj_candlestick_2", "obj_candle_holder", "obj_old_brass_candle_holder", "obj_ornate_antique_candlestick"],
+	"candelabro": ["brass_candleholders", "coti_three_candles_and_a_golden_c", "pian_candelabra", "obj_old_candelabra"],
+	"reloj": ["mantel_clock_01", "vict_torsion_pendulum_clock___ani", "obj_antique_clock"],
+	"jarron": ["ceramic_vase_01", "ceramic_vase_02", "antique_ceramic_vase_01", "brass_vase_01", "brass_vase_02", "obj_japan_porcelain_vase", "obj_floral_vase", "obj_cracked_porcelain_vase", "obj_thai_jar_c_1000_bce", "obj_antique_vase"],
+	"jarron_peq": ["brass_vase_03", "ceramic_vase_03", "obj_flower_vase", "obj_antique_vase_s5139506"],
+	"libros": ["vict_old_books___free_download", "coti_simple_bookstack", "coti_shabby_books", "obj_old_books", "obj_old_books_sketchfab_weekly", "obj_book_stack", "obj_stack_of_old_books"],
+	"libro": ["obj_old_book", "obj_old_book_2", "obj_old_book_3", "obj_old_book_4", "obj_old_book_5", "obj_old_bible", "obj_museums_old_book_1767"],
+	"lampara": ["vintage_oil_lamp", "obj_kerosene_lamp", "obj_kerosene_lamp_2", "obj_oil_lamp", "obj_old_lantern"],
+	"busto": ["marble_bust_01", "terr_creepy_lady_bust_statue_scan"],
+	"curiosidad": ["obj_armillary_sphere", "obj_globe", "obj_antique_globe", "obj_hourglass", "obj_hourglass_2", "obj_hour_glass", "obj_birdcage_2", "obj_military_telescope"],
+	"perfume": ["coti_small_bottle", "obj_oriental_perfume_bottle", "obj_porcelain_perfume_bottle", "obj_perfume_bottle", "obj_perfume_bottle_with_a_landsc", "obj_perfume_bottle_with_floral_d", "obj_perfume_bottles_with_floral_"],
+	"joyero": ["jugu_music_box_prop", "obj_old_jewelry_box", "obj_art_of_chokin_vintage_piano_"],
+	"cepillo": ["round_spectacles", "obj_pocket_watch", "obj_old_pocket_watch", "obj_pocket_watch_model"],
+	"te": ["tea_set_01", "vict_cup___saucer", "obj_tea_set", "obj_tea_set_01_4k", "obj_elegant_victorian_porcelan_t", "obj_teapot_2", "obj_cup_and_plate"],
+	"taza": ["vict_cup___saucer", "obj_cup_and_plate"],
+	"escribir": ["obj_inkwell_from_bell_rock_light", "obj_quill", "vintage_pocket_watch", "magnifying_glass_01", "round_spectacles", "obj_fountain_pens", "obj_seal_and_letter"],
+	"carta": ["obj_envelope", "obj_scroll", "obj_scroll_2", "obj_old_map_3d_model", "obj_old_book_4"],
+	"cuenco": ["wooden_bowl_01", "wooden_bowl_02", "obj_wooden_plate"],
+	"jarra": ["jug_01", "metal_jug", "obj_jar", "obj_brocal_quadra_jar"],
+	"olla": ["pot_enamel_01", "brass_pot_01", "brass_pot_02", "coci_vintage_kettle", "obj_polished_tea_kettle", "obj_teapot_weathered_metal_teapo", "obj_old_soviet_teapot", "obj_teapot"],
+	"comida": ["coti_bread_in_basket", "food_apple_01", "yellow_onion", "lemon", "sweet_potato", "obj_cereal_bread", "obj_garlic", "obj_garlic_game_ready_2k_pbr"],
+	"utensilio": ["obj_classic_coffee_grinder", "obj_coffee_grinder_pbr", "obj_wooden_rolling_pin", "obj_meat_cleaver", "obj_medieval_cutlery", "obj_samovar"],
+	"farol": ["wooden_lantern_01", "Lantern_01", "obj_miners_oil_lamp", "obj_old_lantern"],
+	"caja": ["obj_jewelry_box_2", "vintage_suitcase"],
+	"juguete": ["obj_teddy_bear_2", "obj_wooden_toy_train", "obj_pecking_chicken_wooden_toy", "obj_craft_teddy_bear_photogramme"],
+	"cuadro_peq": ["obj_fancy_picture_frame_01_freep", "obj_fancy_picture_frame_02_freep", "obj_hanging_picture_frame_freepo", "obj_biblical_scene_from_nurember", "obj_sir_isaac_newton_portrait_pa"],
+	"religioso": ["obj_unending_torment", "obj_withered_wooden_crucifix", "obj_empty_cross"],
+	"herramienta": ["obj_shovel", "obj_dirty_shovel", "obj_round_nosed_shovel", "obj_pickaxe"],
+	"yunque": ["obj_anvil_nature_morte", "obj_asset02_medieval_anvil"],
+	"saco": ["obj_sack_v1", "obj_sack_v2", "obj_photogrammetry_cloth_sack_wi"],
+	"lena": ["obj_firewood", "obj_dry_firewood", "obj_firewood_hp"],
+	"jaula": ["obj_birdcage", "obj_birdcage_3"],
+	"perchero": ["obj_coat_rack", "obj_coat_rack_2", "obj_coat_rack_bowler_hat"],
+	"botella": ["coti_wine_bottle", "coti_glass_bottle"],
+}
+
+## Elige una variante que exista (modelo cargable) de una clase de objeto.
+func _var(clase: String) -> String:
+	var lista: Array = VARIANTES.get(clase, [clase])
+	var validas: Array = []
+	for n in lista:
+		var real := _real(n)
+		if m._props_info.has(real) or ResourceLoader.exists("res://zarek/objetos/%s.glb" % real) or ResourceLoader.exists("res://zarek/muebles/%s.glb" % real):
+			validas.append(n)
+	if validas.is_empty():
+		return ""
+	return validas[rng.randi_range(0, validas.size() - 1)]
+
+## Pone un objeto en la tapa de un mueble, en coordenadas del mueble: u a lo ancho (-1 izquierda … 1 derecha),
+## v a lo hondo (-1 pegado a la pared … 1 borde delantero). Pequeña variación de giro y tamaño, y de color en
+## cerámica y latón, para que dos objetos iguales nunca parezcan copiados.
+func _sobre(sf: Dictionary, clase: String, u: float, v: float, giro := 0.0, forzar := "") -> Node3D:
+	var nombre := forzar if forzar != "" else _var(clase)
+	if nombre == "":
+		return null
+	var real := _real(nombre)
+	var t := m._prop_size(real)
+	var tam: Vector3 = sf.tam
+	var yaw: float = sf.yaw
+	var hu := maxf(tam.x * 0.5 - maxf(t.x, t.z) * 0.5 - 0.03, 0.0)
+	var hv := maxf(tam.z * 0.5 - maxf(t.x, t.z) * 0.5 - 0.03, 0.0)
+	if maxf(t.x, t.z) > minf(tam.x, tam.z) * 1.1:
+		return null
+	if t.y > 0.6 and float(sf.alto) > 1.6:
+		return null
+	var local := Vector3(u * hu, 0, v * hv)
+	var p: Vector3 = sf.pos + local.rotated(Vector3.UP, yaw) + Vector3(0, float(sf.alto) + 0.004, 0)
+	var esc := rng.randf_range(0.92, 1.06)
+	var n := m._prop(real, p, yaw + giro + rng.randf_range(-0.12, 0.12), esc, false)
+	if n and (real.contains("vase") or real.contains("brass") or real.contains("ceramic")) and rng.randf() < 0.7:
+		m._tenir(n, Color(rng.randf_range(0.75, 1.05), rng.randf_range(0.7, 1.0), rng.randf_range(0.65, 1.0)))
+	return n
+
+## Composición según el mueble y la sala.
+func _componer(r: Dictionary, sf: Dictionary) -> void:
+	var nombre: String = sf.nombre
+	var g: String = sf.grupo
+	var alto: float = sf.alto
+	if alto > 1.6:
+		# encima de armarios y estanterías: cajas y algún jarrón, ordenados
+		if rng.randf() < 0.6:
+			_sobre(sf, "caja", -0.5, 0.0, 0.0)
+			if rng.randf() < 0.5:
+				_sobre(sf, "jarron_peq", 0.6, 0.0)
+		return
+	if nombre in ["vict_antique_desk", "vict_antique_wooden_desk"] or (nombre == "WoodenTable_03" and g == "biblioteca"):
+		_sobre(sf, "lampara", -0.8, -0.6)
+		_sobre(sf, "libros", 0.75, -0.55, PI * 0.5)
+		# en el centro: o la máquina de escribir del estudio, o el papeleo del día
+		if g == "biblioteca" and rng.randf() < 0.35 and _sobre(sf, "", 0.0, 0.1, 0.0, "obj_victorian_typewriter"):
+			_sobre(sf, "carta", 0.55, 0.45, 0.3)
+		else:
+			_sobre(sf, "carta", 0.0, 0.4)
+			_sobre(sf, "escribir", 0.45, 0.1)
+		if rng.randf() < 0.6:
+			_sobre(sf, "curiosidad" if rng.randf() < 0.5 else "libro", -0.35, 0.3, 0.4)
+		return
+	if nombre in ["ClassicNightstand_01", "painted_wooden_nightstand"]:
+		_sobre(sf, "vela" if rng.randf() < 0.6 else "lampara", -0.4, -0.4)
+		if _tipo(r) == "ninos":
+			_sobre(sf, "juguete", 0.35, 0.2, PI)
+			return
+		_sobre(sf, "libro", 0.3, 0.3, 0.3)
+		var mesilla: Array = ["taza", "cepillo", "jarron_peq", "escribir"]
+		if rng.randf() < 0.6:
+			_sobre(sf, String(mesilla[rng.randi_range(0, mesilla.size() - 1)]), 0.45, -0.3)
+		return
+	if g == "dormitorio" and nombre in ["GothicCommode_01", "vintage_wooden_drawer_01", "painted_wooden_cabinet"]:
+		# tocador: frascos en fila, joyero en medio, cepillo delante
+		for k in 3:
+			_sobre(sf, "perfume", -0.8 + k * 0.22, -0.5)
+		_sobre(sf, "joyero", 0.0, -0.2)
+		_sobre(sf, "cepillo", 0.5, 0.4, 0.6)
+		_sobre(sf, "vela", 0.85, -0.5)
+		return
+	if g == "cocina" and nombre in ["painted_wooden_table", "WoodenTable_03", "wooden_table_02", "round_wooden_table_01"]:
+		# mesa de trabajo: lo que se estaba usando cuando se fueron
+		_sobre(sf, "cuenco", -0.4, 0.0)
+		_sobre(sf, "jarra", 0.45, -0.3)
+		_sobre(sf, "comida", 0.1, 0.35)
+		_sobre(sf, "olla", 0.75, 0.3)
+		_sobre(sf, "utensilio", -0.75, 0.35, 0.3)
+		if rng.randf() < 0.6:
+			_sobre(sf, "comida", -0.1, -0.4)
+		return
+	if nombre in ["ClassicConsole_01", "GothicCommode_01", "vintage_wooden_drawer_01", "painted_wooden_cabinet", "painted_wooden_cabinet_02", "vintage_cabinet_01"]:
+		# consola simétrica: pieza central y pareja de candelabros (la misma variante a ambos lados)
+		var centros: Array = ["reloj", "busto", "jarron", "lampara", "curiosidad", "candelabro"]
+		if g == "cocina":
+			centros = ["olla", "jarra", "utensilio"]
+		var centro: String = centros[rng.randi_range(0, centros.size() - 1)]
+		_sobre(sf, centro, 0.0, -0.3)
+		var par := _var("vela")
+		if par != "":
+			_sobre(sf, "vela", -0.75, -0.3, 0.0, par)
+			_sobre(sf, "vela", 0.75, -0.3, 0.0, par)
+		if rng.randf() < 0.5:
+			_sobre(sf, "libro", 0.4, 0.45, 0.2)
+		return
+	if nombre in ["vict_victorian_coffee_table", "coffee_table_round_01", "gothic_coffee_table", "vict_small_antique_table_asset"]:
+		match rng.randi_range(0, 3):
+			0: _sobre(sf, "te", 0.0, 0.0)
+			1:
+				_sobre(sf, "libros", -0.3, 0.0, 0.5)
+				_sobre(sf, "vela", 0.45, 0.0)
+			2:
+				_sobre(sf, "jarron_peq", 0.0, 0.0)
+				_sobre(sf, "libro", 0.5, 0.3, 0.6)
+			_:
+				_sobre(sf, "taza", -0.35, 0.2)
+				_sobre(sf, "carta", 0.3, -0.1, 0.4)
+		return
+	if nombre in ["side_table_01", "side_table_tall_01", "small_wooden_table_01"]:
+		var cosas: Array = ["jarron", "lampara", "vela", "libros", "busto", "curiosidad", "jaula", "candelabro"]
+		if g == "dormitorio":
+			cosas = ["jarron", "lampara", "vela", "joyero", "perfume", "libro"]
+		_sobre(sf, String(cosas[rng.randi_range(0, cosas.size() - 1)]), 0.0, 0.0)
+		return
+	if nombre in ["treasure_chest", "wine_barrel_01", "terr_old_and_dusty_multi_crate_st"] and rng.randf() < 0.45:
+		var sob: Array = ["farol", "lampara", "saco"] if g in ["sotano", "atico"] else ["libros", "caja", "farol"]
+		_sobre(sf, String(sob[rng.randi_range(0, sob.size() - 1)]), 0.0, 0.0)
+
+## Paredes: cada tramo libre (sin puertas, ventanas ni muebles altos delante) recibe un cuadro centrado;
+## los tramos largos, un cuadro grande con dos apliques simétricos a los lados.
+func _paredes(r: Dictionary, g: String) -> void:
+	if g in ["sotano", "atico", "tunel"]:
+		return
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	if DBG and _tipo(r) in ["cocina", "ninos"]: print("PAREDES ", r.name, " g=", g, " rect=", rect)
+	for lado in 4:
+		var horiz := lado < 2
+		var largo := rect.size.x if horiz else rect.size.y
+		var bloqueos: Array = []
+		var paso := 0.2
+		var t := 0.0
+		while t <= largo:
+			var lx := t if horiz else (0.0 if lado == 2 else rect.size.x)
+			var lz := (0.0 if lado == 0 else rect.size.y) if horiz else t
+			var pw := Vector3(rect.position.x + lx, y, rect.position.y + lz)
+			var malo := not m.door_near(pw, 1.0).is_empty() or m.ventana_cerca(pw, 1.05) or not _pared_libre(pw, 0.7)
+			for a in _altos:
+				if a.grow(0.3).has_point(Vector2(pw.x, pw.z)):
+					malo = true
+			bloqueos.append(malo)
+			t += paso
+		# tramos libres continuos
+		var i := 0
+		while i < bloqueos.size():
+			if bloqueos[i]:
+				i += 1
+				continue
+			var j := i
+			while j < bloqueos.size() and not bloqueos[j]:
+				j += 1
+			var a0 := i * paso
+			var a1 := (j - 1) * paso
+			var tramo := a1 - a0
+			if DBG and _tipo(r) in ["cocina", "ninos"]: print("TRAMO ", r.name, " lado ", lado, " ", a0, "-", a1)
+			if tramo >= 1.4:
+				var mid := (a0 + a1) * 0.5
+				var x := mid if horiz else (0.1 if lado == 2 else rect.size.x - 0.1)
+				var z := (0.1 if lado == 0 else rect.size.y - 0.1) if horiz else mid
+				var yaw: float = [0.0, PI, PI * 0.5, -PI * 0.5][lado]
+				var grande := tramo >= 3.2
+				if g == "cocina":
+					# en cocina y despensa no se cuelgan cuadros: baldas con loza, botes y cacharros
+					var tpc := _tipo(r)
+					if tpc == "cocina" and not _crucifijo.has(-r.id - 1) and rng.randf() < 0.35:
+						_crucifijo[-r.id - 1] = true
+						_cuadro(r, "obj_wooden_cuckoo_clock", x, z, yaw, 1.0, 1.95)
+					else:
+						_estante(r, x, z, yaw, g)
+						if grande:
+							var off2 := minf(tramo * 0.5 - 0.6, 1.2)
+							_estante(r, (mid + off2) if horiz else x, z if horiz else (mid + off2), yaw, g)
+					i = j
+					continue
+				var marco := "fancy_picture_frame_02" if rng.randf() < 0.5 else "fancy_picture_frame_01"
+				var esc := 1.8 if grande else 1.2
+				var cy := 1.75 if grande else 1.85
+				var tp := _tipo(r)
+				if not grande:
+					# tramos cortos: cada sala cuelga lo suyo, y nunca dos salas igual
+					var tira := rng.randf()
+					if tp in ["dormitorio"] and not _crucifijo.has(r.id) and tira < 0.45:
+						marco = _var("religioso"); esc = 1.0; cy = 1.95
+						_crucifijo[r.id] = true
+					elif tp in ["biblioteca", "estudio", "billar"] and tira < 0.3:
+						marco = "obj_deerhead"; esc = 1.0; cy = 2.0
+					elif tp in ["cocina", "comedor", "servicio"] and tira < 0.3 and not _crucifijo.has(-r.id - 1):
+						marco = "obj_wooden_cuckoo_clock"; esc = 1.0; cy = 1.95
+						_crucifijo[-r.id - 1] = true
+					elif g == "dormitorio" and tira < 0.3:
+						marco = "ornate_mirror_01"
+					elif tira < 0.75:
+						marco = _var("cuadro_peq")
+						esc = 1.0 if marco.contains("hanging") or marco.contains("newton") or marco.contains("biblical") else 1.35
+				if marco == "":
+					marco = "fancy_picture_frame_01"
+				# composición clásica: un mueble contra la pared y el cuadro encima, centrado
+				var bajo := _mueble_bajo(r, tp, x, z, yaw, tramo)
+				if bajo > 1.0:
+					cy = maxf(cy, bajo + 0.75)
+					if marco.begins_with("fancy_picture_frame_0") and not marco.begins_with("obj_"):
+						esc = minf(esc, 1.2)
+				_cuadro(r, marco, x, z, yaw, esc, cy)
+				if grande and bajo > 0.0 and tp in ["salon", "pasillo", "vestibulo", "baile", "comedor", "musica"] and rng.randf() < 0.6:
+					# dos sillas iguales a los lados del mueble
+					var silla := "vict_antique_chair" if rng.randf() < 0.5 else "painted_wooden_chair_01"
+					var offs := minf(tramo * 0.5 - 0.5, 1.25)
+					var dentro2 := Vector3(0, 0, 1).rotated(Vector3.UP, yaw)
+					for sgn in [-1.0, 1.0]:
+						var sx: float = (mid + sgn * offs) if horiz else x
+						var sz: float = z if horiz else (mid + sgn * offs)
+						var sc := Vector3(r.rect.position.x + sx, float(r.y), r.rect.position.y + sz) + dentro2 * 0.35
+						if _libre(sc, Vector3(0.55, 1.0, 0.55), r.rect.grow(0.3)):
+							_en(r, silla, sx + dentro2.x * 0.35, sz + dentro2.z * 0.35, yaw, 1.0)
+				if grande and g != "cocina":
+					var off := minf(tramo * 0.5 - 0.35, 1.3)
+					for sgn in [-1.0, 1.0]:
+						var ax: float = (mid + sgn * off) if horiz else x
+						var az: float = z if horiz else (mid + sgn * off)
+						_aplique(r, ax, az, yaw, false)
+			i = j
+
+## Mueble bajo contra la pared, centrado en un tramo libre (consola, cómoda, mesilla, baúl… según la sala).
+## Devuelve su altura (0 si no se puso).
+func _mueble_bajo(r: Dictionary, tp: String, x: float, z: float, yaw: float, tramo: float) -> float:
+	var op: Array = []
+	match tp:
+		"salon", "pasillo", "vestibulo", "baile", "billar", "musica":
+			op = ["ClassicConsole_01", "side_table_tall_01", "small_wooden_table_01", "painted_wooden_cabinet"]
+		"dormitorio", "tocador":
+			op = ["GothicCommode_01", "ClassicNightstand_01", "painted_wooden_cabinet", "small_wooden_table_01"]
+		"ninos":
+			op = ["treasure_chest", "small_wooden_table_01", "painted_wooden_nightstand"]
+		"biblioteca", "estudio", "archivo":
+			op = ["small_wooden_table_01", "side_table_tall_01", "ClassicConsole_01"]
+		"comedor":
+			op = ["painted_wooden_cabinet", "ClassicConsole_01"]
+	if op.is_empty() or rng.randf() > 0.7:
+		return 0.0
+	var nombre: String = op[rng.randi_range(0, op.size() - 1)]
+	var t := m._prop_size(_real(nombre))
+	if t.x > tramo - 0.3:
+		return 0.0
+	var f := _caras(r)
+	var rect: Rect2 = r.rect
+	var dentro := Vector3(0, 0, 1).rotated(Vector3.UP, yaw)
+	var lx := x
+	var lz := z
+	if absf(dentro.x) > 0.5:
+		lx = (f[0] + t.z * 0.5 + 0.02) if dentro.x > 0 else (rect.size.x - f[1] - t.z * 0.5 - 0.02)
+	else:
+		lz = (f[2] + t.z * 0.5 + 0.02) if dentro.z > 0 else (rect.size.y - f[3] - t.z * 0.5 - 0.02)
+	var ext := t if absf(dentro.z) > 0.5 else Vector3(t.z, t.y, t.x)
+	var c := Vector3(rect.position.x + lx, float(r.y), rect.position.y + lz)
+	if not _libre(c, ext, rect.grow(0.3)) or m._huella_en_escalera(c, ext, 0.0):
+		return 0.0
+	var n := _en(r, nombre, lx, lz, yaw, 1.0)
+	return t.y if n else 0.0
+
+## Suelo: solo lo que tiene sentido donde está.
+func _suelo_con_sentido(r: Dictionary, g: String) -> void:
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	# leña junto a cada chimenea de la sala
+	for ch in m.chimeneas:
+		var cp: Vector3 = ch.pos
+		if absf(cp.y - y) > 1.0 or not rect.grow(0.5).has_point(Vector2(cp.x, cp.z)):
+			continue
+		var back: Vector3 = ch.back
+		var lado := Vector3(-back.z, 0, back.x)
+		var leña := cp - back * 0.35 + lado * 1.35
+		var lm := _var("lena")
+		if lm != "" and rng.randf() < 0.6:
+			m._prop(_real(lm), leña, atan2(lado.x, lado.z) + rng.randf_range(-0.2, 0.2), 1.0, false)
+		else:
+			_monton_lena(leña, atan2(lado.x, lado.z))
+		if _var("obj_fireplace_tools_1") != "":
+			m._prop(_real("obj_fireplace_tools_1"), cp - back * 0.3 - lado * 1.3, atan2(-back.x, -back.z), 1.0, true)
+	# piezas de pie, cada una en su sala y contra una pared libre (nunca en mitad del paso)
+	var tp := _tipo(r)
+	match tp:
+		"vestibulo":
+			_pie(r, _var("perchero"), true)
+			_pie(r, "obj_pendulum_clock", false)
+		"pasillo":
+			if rng.randf() < 0.35:
+				_pie(r, "obj_pendulum_clock", false)
+		"biblioteca":
+			_pie(r, "obj_floor_globe", true)
+			if rng.randf() < 0.6:
+				_pie(r, "obj_bible_on_stand", false)
+		"estudio":
+			_pie(r, "obj_floor_globe" if rng.randf() < 0.5 else "obj_telescope", true)
+		"salon", "mananas":
+			_pie(r, "obj_victorian_brass_oil_lamp", true)
+		"musica":
+			_pie(r, "obj_harp", true)
+			_pie(r, "obj_old_violin", true)
+		"ninos":
+			_pie(r, "obj_loshadka_rocking_horse_woode", true)
+			for k in 3:
+				_pie(r, _var("juguete"), false)
+		"costura":
+			_pie(r, "obj_shawl_3d_scan", true)
+		"dormitorio":
+			if rng.randf() < 0.4:
+				_pie(r, _var("perchero"), true)
+		"calderas":
+			_pie(r, _var("yunque"), true)
+			for k in 2:
+				_pie(r, _var("herramienta"), true)
+			_pie(r, _var("saco"), true)
+		"despensa":
+			for k in 3:
+				_pie(r, _var("saco"), true)
+			_pie(r, "obj_ancient_clay_pots", true)
+		"sotano", "cava":
+			if rng.randf() < 0.6:
+				_pie(r, _var("herramienta"), true)
+			if rng.randf() < 0.5:
+				_pie(r, _var("saco"), true)
+	if g == "atico":
+		_pie(r, _var("caja"), true)
+		_pie(r, _var("juguete"), true)
+		_pie(r, "obj_birdcage_3", true)
+	# junto a las estanterías: una pila de libros ordenada en el suelo, a un lado
+	if g in ["biblioteca", "salon"]:
+		for a in _altos:
+			var c := a.get_center()
+			if not rect.has_point(c) or rng.randf() > 0.4:
+				continue
+			var lado := Vector3(1, 0, 0) if a.size.x > a.size.y else Vector3(0, 0, 1)
+			var q := Vector3(c.x, y, c.y) + lado * (maxf(a.size.x, a.size.y) * 0.5 + 0.25)
+			var t := Vector3(0.35, 0.3, 0.35)
+			if _libre(q, t, rect):
+				var n := m._prop(_real(_var("libros")), q, rng.randf_range(-0.2, 0.2), 1.0, false)
+				if n:
+					_ocupar(q, t)
+
+## Pieza de pie contra una pared libre de la sala, mirando hacia dentro; «esquina» la lleva cerca de un extremo.
+## Las altas no tapan ventanas; respeta puertas, pasos, armarios y lo ya colocado.
+func _pie(r: Dictionary, nombre: String, esquina: bool) -> Node3D:
+	if nombre == "":
+		return null
+	var real := _real(nombre)
+	if not m._props_info.has(real):
+		if DBG: print("PIE sin info ", nombre, " -> ", real)
+		return null
+	var t := m._prop_size(real)
+	var rect: Rect2 = r.rect
+	var f := _caras(r)
+	var fallos := [0, 0, 0, 0]
+	for intento in 40:
+		var lado := rng.randi_range(0, 3)
+		var horiz := lado < 2
+		var largo := rect.size.x if horiz else rect.size.y
+		var yaw: float = [0.0, PI, PI * 0.5, -PI * 0.5][lado]
+		var ext := t if horiz else Vector3(t.z, t.y, t.x)
+		var media := (ext.x if horiz else ext.z) * 0.5
+		var a := rng.randf_range(0.0, 1.0)
+		if esquina:
+			a = rng.randf_range(0.0, 0.15) if rng.randf() < 0.5 else rng.randf_range(0.85, 1.0)
+		var u := lerpf(media + 0.45, largo - media - 0.45, a)
+		var x: float = u if horiz else (f[0] + ext.x * 0.5 + 0.03 if lado == 2 else rect.size.x - f[1] - ext.x * 0.5 - 0.03)
+		var z: float = (f[2] + ext.z * 0.5 + 0.03 if lado == 0 else rect.size.y - f[3] - ext.z * 0.5 - 0.03) if horiz else u
+		var c := Vector3(rect.position.x + x, float(r.y), rect.position.y + z)
+		if not _libre(c, ext, rect.grow(0.3)):
+			fallos[0] += 1
+			continue
+		if t.y > 0.9 and m.ventana_cerca(Vector3(c.x, float(r.y), c.z), media + 0.7):
+			fallos[1] += 1
+			continue
+		if m._huella_en_escalera(c, ext, 0.0):
+			fallos[2] += 1
+			continue
+		var n := _en(r, real, x, z, yaw, 1.0, 0.0, true)
+		if n:
+			return n
+		fallos[3] += 1
+	if DBG: print("PIE falla ", r.name, " ", real, " ", fallos)
+	return null
+
+## Montón de leña ordenado (troncos de corteza apilados en pirámide).
+func _monton_lena(p: Vector3, yaw: float) -> void:
+	var fila := [4, 3, 2]
+	var lado := Vector3(cos(yaw), 0, -sin(yaw))
+	for nivel in 3:
+		for k in fila[nivel]:
+			var off: float = (k - (fila[nivel] - 1) * 0.5) * 0.13
+			var tr := m.cyl(0.06 + rng.randf() * 0.015, 0.065, 0.55 + rng.randf() * 0.08, p + lado * off + Vector3(0, 0.065 + nivel * 0.115, 0), m._mat.corteza, null, 7)
+			tr.rotation = Vector3(PI * 0.5, yaw + rng.randf_range(-0.06, 0.06), 0)
+
+## Aplique de pared: brazo de latón con vela (o farol de hierro en sótano y ático), sin luz propia.
+func _aplique(r: Dictionary, x: float, z: float, yaw: float, farol: bool) -> void:
+	var f := _caras(r)
+	var rect: Rect2 = r.rect
+	var dentro := Vector3(0, 0, 1).rotated(Vector3.UP, yaw)
+	var W: float = rect.size.x
+	var D: float = rect.size.y
+	if x < 0.5: x = f[0] + 0.02
+	elif x > W - 0.5: x = W - f[1] - 0.02
+	if z < 0.5: z = f[2] + 0.02
+	elif z > D - 0.5: z = D - f[3] - 0.02
+	var p := Vector3(rect.position.x + x, float(r.y) + 1.85, rect.position.y + z)
+	if m.ventana_cerca(Vector3(p.x, float(r.y), p.z), 1.2) or not _pared_libre(Vector3(p.x, float(r.y), p.z), 0.9):
+		return
+	_en_pared.append(Vector3(p.x, float(r.y), p.z))
+	if farol:
+		m.box(Vector3(0.03, 0.03, 0.22), p + dentro * 0.11 + Vector3(0, 0.12, 0), m._mat.hierro, false, null, false).rotation.y = yaw
+		m._prop("Lantern_01", p + dentro * 0.2 - Vector3(0, 0.1, 0), yaw, 1.0, false)
+		return
+	if not _ap_tipo.has(r.id):
+		_ap_tipo[r.id] = rng.randf() < 0.5
+	if _ap_tipo[r.id] and m._prop_size("obj_candle_wall_lamp") != Vector3.ONE:
+		# aplique de hierro con vela (modelo)
+		var tl := m._prop_size("obj_candle_wall_lamp")
+		m._prop("obj_candle_wall_lamp", p - Vector3(0, tl.y * 0.5, 0) + dentro * tl.z * 0.5, yaw, 1.0, false)
+		return
+	m.box(Vector3(0.12, 0.2, 0.025), p + dentro * 0.012, m._mat.oro, false, null, false).rotation.y = yaw
+	var brazo := m.cyl(0.01, 0.01, 0.2, p + dentro * 0.1 - Vector3(0, 0.05, 0), m._mat.oro, null, 6)
+	brazo.rotation = Vector3(PI * 0.5, yaw, 0)
+	m.cyl(0.035, 0.02, 0.03, p + dentro * 0.2 - Vector3(0, 0.05, 0), m._mat.oro, null, 8)
+	var vela := m.cyl(0.012, 0.012, 0.11 + rng.randf() * 0.06, p + dentro * 0.2 + Vector3(0, 0.02, 0), m._mat.sal, null, 8)
+	vela.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+## Estante de pared con cosas encima.
+func _estante(r: Dictionary, x: float, z: float, yaw: float, g: String) -> void:
+	var f := _caras(r)
+	var rect: Rect2 = r.rect
+	var W: float = rect.size.x
+	var D: float = rect.size.y
+	var dentro := Vector3(0, 0, 1).rotated(Vector3.UP, yaw)
+	var lado := Vector3(1, 0, 0).rotated(Vector3.UP, yaw)
+	if x < 0.5: x = f[0] + 0.01
+	elif x > W - 0.5: x = W - f[1] - 0.01
+	if z < 0.5: z = f[2] + 0.01
+	elif z > D - 0.5: z = D - f[3] - 0.01
+	var base := Vector3(rect.position.x + x, float(r.y) + 1.6, rect.position.y + z)
+	if m.ventana_cerca(Vector3(base.x, float(r.y), base.z), 1.6) or not _pared_libre(Vector3(base.x, float(r.y), base.z), 1.2):
+		if DBG: print("ESTANTE no ", r.name, " ventana=", m.ventana_cerca(Vector3(base.x, float(r.y), base.z), 1.6))
+		return
+	if DBG: print("ESTANTE ok ", r.name, " ", base)
+	_en_pared.append(Vector3(base.x, float(r.y), base.z))
+	var tabla := m.box(Vector3(1.0, 0.035, 0.24), base + dentro * 0.12, m._mat.madera, false, null, true)
+	tabla.rotation.y = yaw
+	for s in [-0.42, 0.42]:
+		var esc := m.box(Vector3(0.03, 0.16, 0.2), base + dentro * 0.1 + lado * s - Vector3(0, 0.09, 0), m._mat.madera, false, null, false)
+		esc.rotation.y = yaw
+	var pool: Array = ["jarron_peq", "libro", "vela", "taza", "perfume"] if g != "cocina" else ["cuenco", "jarra", "olla", "utensilio", "jarra"]
+	# fila ordenada: a veces la misma pieza repetida (botes iguales), a veces piezas distintas, siempre alineadas
+	var igual := rng.randf() < 0.35
+	var fija := _var(String(pool[rng.randi_range(0, pool.size() - 1)]))
+	var cuantos := 4 if g == "cocina" else 3
+	for k in cuantos:
+		var nombre := fija if igual else _var(String(pool[rng.randi_range(0, pool.size() - 1)]))
+		if nombre == "" or m._prop_size(_real(nombre)).y > 0.4 or maxf(m._prop_size(_real(nombre)).x, m._prop_size(_real(nombre)).z) > 0.3:
+			continue
+		var u := (-0.36 + k * 0.24) if cuantos == 4 else (-0.32 + k * 0.32)
+		m._prop(_real(nombre), base + dentro * 0.12 + lado * u + Vector3(0, 0.02, 0), yaw + rng.randf_range(-0.15, 0.15), 0.9, false)
+
+var _crucifijo: Dictionary = {}
+var DBG := OS.get_environment("DECO_DBG") != ""
+var _ap_tipo: Dictionary = {}
+var _tex_papel: Texture2D
+var _tex_hoja: Texture2D
+## Papeles y cartas por el suelo, trozos de yeso caídos del techo y hojas secas junto a las ventanas (MultiMesh: una llamada por tipo).
+func _restos(r: Dictionary, g: String) -> void:
+	var rect: Rect2 = r.rect
+	var y := float(r.y)
+	var area := rect.size.x * rect.size.y
+	if _tex_papel == null:
+		_tex_papel = _hacer_papel()
+		_tex_hoja = _hacer_hoja()
+	# papeles
+	var np := int(area * (0.12 if g in ["biblioteca", "atico"] else 0.05))
+	var xs: Array[Transform3D] = []
+	for k in np:
+		# los papeles caídos se quedan junto a muebles y paredes (por donde los empuja la corriente), no en mitad
+		var p := Vector3(rng.randf_range(rect.position.x + 0.3, rect.end.x - 0.3), y + 0.006 + rng.randf() * 0.004, rng.randf_range(rect.position.y + 0.3, rect.end.y - 0.3))
+		if rng.randf() < 0.7:
+			if rng.randf() < 0.5:
+				p.x = rect.position.x + rng.randf_range(0.25, 0.7) if rng.randf() < 0.5 else rect.end.x - rng.randf_range(0.25, 0.7)
+			else:
+				p.z = rect.position.y + rng.randf_range(0.25, 0.7) if rng.randf() < 0.5 else rect.end.y - rng.randf_range(0.25, 0.7)
+		if m._sobre_escalera(p, 0.1):
+			continue
+		var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, -PI * 0.5 + rng.randf_range(-0.05, 0.05))
+		xs.append(Transform3D(b.scaled(Vector3(rng.randf_range(0.55, 1.2), 1, rng.randf_range(0.55, 1.2))), p))
+	_multi(_quad(Vector2(0.21, 0.29)), _mat_tex(_tex_papel, Color(0.66, 0.6, 0.5)), xs)
+	# yeso y polvo caídos (más en las salas grandes y viejas)
+	var nc := int(area * (0.12 if g != "tunel" else 0.4))
+	var ys: Array[Transform3D] = []
+	for k in nc:
+		var junto := rng.randf() < 0.85
+		var px := rng.randf_range(rect.position.x + 0.2, rect.end.x - 0.2)
+		var pz := rng.randf_range(rect.position.y + 0.2, rect.end.y - 0.2)
+		if junto:
+			if rng.randf() < 0.5:
+				px = rect.position.x + rng.randf_range(0.18, 0.6) if rng.randf() < 0.5 else rect.end.x - rng.randf_range(0.18, 0.6)
+			else:
+				pz = rect.position.y + rng.randf_range(0.18, 0.6) if rng.randf() < 0.5 else rect.end.y - rng.randf_range(0.18, 0.6)
+		var sc := Vector3(rng.randf_range(0.03, 0.14), rng.randf_range(0.01, 0.04), rng.randf_range(0.03, 0.12))
+		var b := Basis(Vector3.UP, rng.randf() * TAU).rotated(Vector3.RIGHT, rng.randf_range(-0.3, 0.3)).scaled(sc)
+		ys.append(Transform3D(b, Vector3(px, y + sc.y * 0.3, pz)))
+	var mat_yeso: Material = m._mat.yeso if g != "tunel" and g != "sotano" else m._mat.muro_sotano
+	_multi(_caja_unidad(), mat_yeso, ys)
+	# hojas secas que entraron por las ventanas rotas
+	var hs: Array[Transform3D] = []
+	for v in m.ventanas:
+		if absf(v.y - y) > 1.0 or not rect.grow(0.5).has_point(Vector2(v.x, v.z)):
+			continue
+		var dentro := Vector2(rect.get_center().x - v.x, rect.get_center().y - v.z).normalized()
+		for k in rng.randi_range(6, 16):
+			var d := rng.randf_range(0.2, 2.2)
+			var q := Vector2(v.x, v.z) + dentro * d + Vector2(-dentro.y, dentro.x) * rng.randf_range(-1.2, 1.2)
+			if not rect.has_point(q):
+				continue
+			var b := Basis(Vector3.UP, rng.randf() * TAU) * Basis(Vector3.RIGHT, -PI * 0.5 + rng.randf_range(-0.25, 0.25))
+			hs.append(Transform3D(b.scaled(Vector3.ONE * rng.randf_range(0.7, 1.3)), Vector3(q.x, y + 0.008, q.y)))
+	_multi(_quad(Vector2(0.09, 0.12)), _mat_tex(_tex_hoja, Color(0.75, 0.6, 0.4)), hs)
+
+var _mallas_restos := {}
+func _quad(sz: Vector2) -> Mesh:
+	var k := "q%s" % sz
+	if not _mallas_restos.has(k):
+		var q := QuadMesh.new()
+		q.size = sz
+		_mallas_restos[k] = q
+	return _mallas_restos[k]
+
+func _caja_unidad() -> Mesh:
+	if not _mallas_restos.has("caja"):
+		var b := BoxMesh.new()
+		b.size = Vector3.ONE
+		_mallas_restos["caja"] = b
+	return _mallas_restos["caja"]
+
+func _mat_tex(tex: Texture2D, tinte: Color) -> StandardMaterial3D:
+	var k := "m%d" % tex.get_instance_id()
+	if not _mallas_restos.has(k):
+		var mt := StandardMaterial3D.new()
+		mt.albedo_texture = tex
+		mt.albedo_color = tinte
+		mt.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		mt.alpha_scissor_threshold = 0.4
+		mt.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mt.roughness = 0.95
+		_mallas_restos[k] = mt
+	return _mallas_restos[k]
+
+func _multi(mesh: Mesh, mat: Material, xs: Array[Transform3D]) -> void:
+	if xs.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = xs.size()
+	for i in xs.size():
+		mm.set_instance_transform(i, xs[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.multimesh = mm
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	m._house.add_child(mi)
+
+## Hoja de papel envejecido con renglones manuscritos y bordes gastados.
+func _hacer_papel() -> Texture2D:
+	var img := Image.create(64, 88, false, Image.FORMAT_RGBA8)
+	var nz := FastNoiseLite.new()
+	nz.frequency = 0.08
+	for yy in 88:
+		for xx in 64:
+			var borde := minf(minf(xx, 63 - xx), minf(yy, 87 - yy))
+			var a := 1.0 if borde > 1.5 + nz.get_noise_2d(xx * 3, yy * 3) * 1.5 else 0.0
+			var c := Color(0.93, 0.89, 0.78).darkened(0.08 + nz.get_noise_2d(xx, yy) * 0.12)
+			var linea := (yy - 10) % 6 == 0 and yy > 8 and yy < 80 and xx > 6 and xx < 58 - (yy * 7) % 13
+			if linea and absf(sin(xx * 0.9 + yy)) > 0.25:
+				c = Color(0.18, 0.15, 0.2)
+			img.set_pixel(xx, yy, Color(c.r, c.g, c.b, a))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+## Hoja seca (silueta de hoja de roble con nervio).
+func _hacer_hoja() -> Texture2D:
+	var img := Image.create(48, 64, false, Image.FORMAT_RGBA8)
+	for yy in 64:
+		for xx in 48:
+			var v := yy / 63.0
+			var ancho := sin(v * PI) * 0.42 * (0.8 + 0.2 * sin(v * 22.0))
+			var u := absf(xx / 47.0 - 0.5)
+			var dentro := u < ancho
+			var c := Color(0.45, 0.26, 0.1).lerp(Color(0.62, 0.42, 0.16), absf(sin(xx * 0.4 + yy * 0.2)) * 0.5)
+			if u < 0.025:
+				c = c.darkened(0.3)
+			img.set_pixel(xx, yy, Color(c.r, c.g, c.b, 1.0 if dentro else 0.0))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
 func vestir(r: Dictionary) -> void:
+	_vestir_base(r)
+	if not String(r.type) in ["jardin", "agua"]:
+		_relleno(r)
+
+func _vestir_base(r: Dictionary) -> void:
 	if String(r.name) == "Salón con chimenea":
 		_reservar_pasos(r)
 		_salon_chimenea(r)
