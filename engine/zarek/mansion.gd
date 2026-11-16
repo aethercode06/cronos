@@ -330,6 +330,12 @@ func _suelo(a: String, b: String, c: String, escala: float, t1: Color, t2: Color
 		m.set_shader_parameter("c" + cp[1], load(base + "color.jpg"))
 		if ResourceLoader.exists(base + "normal.jpg"):
 			m.set_shader_parameter("n" + cp[1], load(base + "normal.jpg"))
+		if ResourceLoader.exists(base + "height.jpg"):
+			m.set_shader_parameter("h" + cp[1], load(base + "height.jpg"))
+			if cp[1] == "1":
+				m.set_shader_parameter("con_alturas", true)
+		if cp[1] == "1" and ResourceLoader.exists(base + "ao.jpg"):
+			m.set_shader_parameter("a1", load(base + "ao.jpg"))
 	if ResourceLoader.exists("res://zarek/texturas/%s/rough.jpg" % a):
 		m.set_shader_parameter("r1", load("res://zarek/texturas/%s/rough.jpg" % a))
 	m.set_shader_parameter("ruido", _ruido_suelo)
@@ -738,9 +744,14 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 	var pieces: Array = []
 	if is_door:
 		var gap := 1.5
-		pieces = [[0.0, (len - gap) * 0.5, 0.0, h], [(len + gap) * 0.5, len, 0.0, h], [(len - gap) * 0.5, (len + gap) * 0.5, 2.5, h]]
+		var dintel := 2.5
+		if exterior and level == 0 and _es_entrada(center):
+			gap = 2.1
+			dintel = h
+		pieces = [[0.0, (len - gap) * 0.5, 0.0, h], [(len + gap) * 0.5, len, 0.0, h], [(len - gap) * 0.5, (len + gap) * 0.5, dintel, h]]
 	elif window:
-		pieces = [[0.0, 0.7, 0.0, h], [len - 0.7, len, 0.0, h], [0.7, len - 0.7, 0.0, 0.9], [0.7, len - 0.7, 2.9, h]]
+		# hueco de 1,6 × 2,0 m: exactamente el del cristal y el marco (sin franjas de muro dentro del recerco)
+		pieces = [[0.0, 0.4, 0.0, h], [len - 0.4, len, 0.0, h], [0.4, len - 0.4, 0.0, 0.9], [0.4, len - 0.4, 2.9, h]]
 	else:
 		pieces = [[0.0, len, 0.0, h]]
 	var inward := Vector3.ZERO
@@ -751,6 +762,8 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 	for pc in pieces:
 		var l: float = pc[1] - pc[0]
 		var hh: float = pc[3] - pc[2]
+		if hh <= 0.01:
+			continue
 		var pos: Vector3 = a + along * (pc[0] + l * 0.5) + Vector3(0, pc[2] + hh * 0.5, 0)
 		if exterior and level >= 0:
 			var half := Vector3(l, hh, thick * 0.5) if horiz else Vector3(thick * 0.5, hh, l)
@@ -991,7 +1004,20 @@ func _cortina_mesh(lado: int) -> ArrayMesh:
 	_cortinas[lado] = am
 	return am
 
+var _entrada_cache := Vector3.INF
+## ¿Este punto es la puerta principal? (marca «Entrada principal» del plano exterior)
+func _es_entrada(c: Vector3) -> bool:
+	if _entrada_cache == Vector3.INF:
+		_entrada_cache = Vector3(1e9, 0, 1e9)
+		for m in plan.exterior.get("marcas", []):
+			if m[0] == "puerta" and str(m[3]).begins_with("Entrada"):
+				_entrada_cache = cell_to_world("exterior", float(m[1]), float(m[2]))
+	return Vector2(c.x - _entrada_cache.x, c.z - _entrada_cache.z).length() < 2.6
+
 func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
+	if level == 0 and _es_entrada(c):
+		_puerta_principal(c, horiz, ids)
+		return
 	var gap := 1.5
 	var locked := false
 	for id in ids:
@@ -1103,6 +1129,148 @@ func _ornatos_fachada() -> void:
 			var imp := Vector3(l + 0.5, 0.2, 0.16) if horiz else Vector3(0.16, 0.2, l + 0.5)
 			box(imp, Vector3(cpos.x, lvl_y(lv) - 0.05, cpos.z) + fuera * 0.3, pc, false, self, false)
 
+## Puerta principal de la mansión: dos hojas de nogal tallado de 3,2 m con cuarterones en relieve, aldabón de
+## león, pomos y placas de latón; montante de abanico acristalado encima; portada de piedra con pilastras,
+## capiteles, entablamento y frontón partido con clave; escalinata de piedra y dos faroles a los lados.
+## Se abre como las demás (las dos hojas a la vez).
+func _puerta_principal(c: Vector3, horiz: bool, ids: Array) -> void:
+	var gap := 2.1
+	var alto := 3.2
+	var ej := Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	var r0: Dictionary = rooms[ids[0]]
+	var rc: Vector2 = (r0.rect as Rect2).get_center()
+	var dentro := Vector3(0, 0, signf(rc.y - c.z)) if horiz else Vector3(signf(rc.x - c.x), 0, 0)
+	var fuera := -dentro
+	var cara := fuera * 0.3
+	var yaw := atan2(fuera.x, fuera.z)
+	var pc: Material = _mat.piedra_clara
+	var nogal: Material = _mat.madera
+	var p0 := c + cara
+	# --- portada de piedra ---
+	for s2 in [-1.0, 1.0]:
+		var pil := box(Vector3(0.42, alto + 0.35, 0.22), Vector3.ZERO, pc, false, self, false)
+		pil.position = p0 + ej * s2 * (gap * 0.5 + 0.3) + Vector3(0, (alto + 0.35) * 0.5, 0)
+		pil.rotation.y = yaw
+		for k in 3:
+			var est := box(Vector3(0.05, alto - 0.4, 0.05), Vector3.ZERO, _mat.moldura, false, self, false)
+			est.position = p0 + ej * s2 * (gap * 0.5 + 0.3 + (k - 1) * 0.11) + fuera * 0.115 + Vector3(0, alto * 0.5 + 0.1, 0)
+			est.rotation.y = yaw
+		var base := box(Vector3(0.55, 0.45, 0.3), Vector3.ZERO, pc, false, self, false)
+		base.position = p0 + ej * s2 * (gap * 0.5 + 0.3) + Vector3(0, 0.225, 0)
+		base.rotation.y = yaw
+		var cap := box(Vector3(0.6, 0.25, 0.32), Vector3.ZERO, pc, false, self, false)
+		cap.position = p0 + ej * s2 * (gap * 0.5 + 0.3) + Vector3(0, alto + 0.42, 0)
+		cap.rotation.y = yaw
+	var arq := box(Vector3(gap + 1.6, 0.4, 0.34), Vector3.ZERO, pc, false, self, false)
+	arq.position = p0 + fuera * 0.03 + Vector3(0, alto + 0.75, 0)
+	arq.rotation.y = yaw
+	var cor := box(Vector3(gap + 1.9, 0.14, 0.5), Vector3.ZERO, pc, false, self, false)
+	cor.position = p0 + fuera * 0.08 + Vector3(0, alto + 1.0, 0)
+	cor.rotation.y = yaw
+	for s2 in [-1.0, 1.0]:
+		var fr := MeshInstance3D.new()
+		var pm := PrismMesh.new()
+		pm.size = Vector3(1.2, 0.7, 0.36)
+		pm.left_to_right = 1.0 if s2 < 0 else 0.0
+		fr.mesh = pm
+		fr.material_override = pc
+		fr.position = p0 + ej * s2 * (gap * 0.5 + 0.35) + fuera * 0.05 + Vector3(0, alto + 1.42, 0)
+		fr.rotation.y = yaw
+		add_child(fr)
+	var urna := cyl(0.12, 0.2, 0.55, p0 + fuera * 0.05 + Vector3(0, alto + 1.36, 0), pc, self, 12)
+	cyl(0.1, 0.1, 0.18, urna.position + Vector3(0, 0.36, 0), pc, self, 10)
+	# montante de abanico: medio óvalo acristalado con radios de madera, sobre un tablero que cierra el hueco
+	var tablero := box(Vector3(gap, WALL_H - alto, 0.08), Vector3.ZERO, nogal, false, self, false)
+	tablero.position = c + dentro * 0.1 + Vector3(0, (WALL_H + alto) * 0.5, 0)
+	tablero.rotation.y = yaw
+	var semi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = gap * 0.5
+	cm.bottom_radius = gap * 0.5
+	cm.height = 0.04
+	cm.radial_segments = 32
+	semi.mesh = cm
+	semi.material_override = _mat.ventana_luz
+	semi.basis = Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, PI * 0.5) * Basis.from_scale(Vector3(1.0, 1.0, 0.72))
+	semi.position = c + fuera * 0.02 + Vector3(0, alto, 0)
+	add_child(semi)
+	for k in 7:
+		var a := PI * (k + 0.5) / 7.0
+		var radio := box(Vector3(0.035, gap * 0.36, 0.05), Vector3.ZERO, nogal, false, self, false)
+		radio.basis = Basis(fuera, -(a - PI * 0.5)) * Basis(Vector3.UP, yaw)
+		radio.position = c + fuera * 0.05 + Vector3(0, alto, 0) + (ej * cos(a) + Vector3(0, sin(a) * 0.72, 0)) * gap * 0.25
+	var aro := box(Vector3(gap + 0.1, 0.1, 0.12), Vector3.ZERO, nogal, false, self, false)
+	aro.position = c + fuera * 0.05 + Vector3(0, alto, 0)
+	aro.rotation.y = yaw
+	# muro de piedra que cierra encima del montante (el hueco del muro es más alto que la puerta)
+	# --- escalinata ---
+	for k in 3:
+		var esc := box(Vector3(gap + 2.0 + k * 0.4, 0.16, 0.42 + k * 0.38), Vector3.ZERO, pc, true, self, false)
+		esc.position = c + fuera * (0.45 + k * 0.19) + Vector3(0, 0.25 - k * 0.08 - 0.08, 0)
+		esc.rotation.y = yaw
+	# --- faroles ---
+	for s2 in [-1.0, 1.0]:
+		_prop("Lantern_01", p0 + ej * s2 * (gap * 0.5 + 0.95) + fuera * 0.25 + Vector3(0, 2.0, 0), yaw, 1.6, false, self)
+		var brazo := box(Vector3(0.05, 0.05, 0.35), Vector3.ZERO, _mat.metal, false, self, false)
+		brazo.position = p0 + ej * s2 * (gap * 0.5 + 0.95) + fuera * 0.1 + Vector3(0, 2.55, 0)
+		brazo.rotation.y = yaw
+		var lz := OmniLight3D.new()
+		lz.light_color = Color(1.0, 0.68, 0.38)
+		lz.light_energy = 0.7
+		lz.omni_range = 5.0
+		lz.position = p0 + ej * s2 * (gap * 0.5 + 0.95) + fuera * 0.4 + Vector3(0, 2.4, 0)
+		add_child(lz)
+	# --- las dos hojas (cada una en su gozne) ---
+	var hojas: Array = []
+	for s2 in [-1.0, 1.0]:
+		var piv := Node3D.new()
+		piv.set_meta("dyn", true)
+		_house.add_child(piv)
+		piv.position = c + ej * s2 * gap * 0.5
+		var hacia: Vector3 = -s2 * ej
+		piv.rotation.y = atan2(-hacia.z, hacia.x)
+		var w := gap * 0.5 - 0.02
+		var lado := 1.0
+		box(Vector3(w, alto - 0.05, 0.09), Vector3(-s2 * 0 + w * 0.5 * lado * (1.0), alto * 0.5, 0), nogal, false, piv)
+		# cuarterones en relieve: alto arriba, mediano en medio y bajo abajo, con molduras
+		for pz in [[0.45, 0.55], [1.25, 0.75], [2.35, 1.2]]:
+			box(Vector3(w - 0.22, float(pz[1]), 0.13), Vector3(w * 0.5, float(pz[0]), 0), nogal, false, piv)
+			box(Vector3(w - 0.32, float(pz[1]) - 0.1, 0.15), Vector3(w * 0.5, float(pz[0]), 0), nogal, false, piv)
+		box(Vector3(w, 0.18, 0.12), Vector3(w * 0.5, 0.09, 0), _mat.oro, false, piv)
+		box(Vector3(0.06, 0.22, 0.15), Vector3(w - 0.12, 1.15, 0), _mat.oro, false, piv)
+		for zz in [0.08, -0.08]:
+			cyl(0.045, 0.045, 0.08, Vector3(w - 0.12, 1.05, zz), _mat.oro, piv, 10).rotation.x = PI * 0.5
+		hojas.append(piv)
+	# aldabones de león en cada hoja (van con la hoja al abrir)
+	for hj in hojas:
+		var piv2: Node3D = hj
+		var zf := signf((piv2.basis.inverse() * fuera).z)
+		var w2 := gap * 0.5 - 0.02
+		_prop("vict_lion_door_knocker", Vector3(w2 * 0.5, 1.55, 0.08 * zf), PI if zf < 0 else 0.0, 1.0, false, piv2)
+	# hueco del muro por encima de la puerta principal (cierra hasta el dintel)
+	var body := AnimatableBody3D.new()
+	body.sync_to_physics = false
+	body.collision_layer = 2
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(gap, alto, 0.12)
+	cs.shape = bs
+	cs.position = Vector3(0, alto * 0.5, 0)
+	body.add_child(cs)
+	var cuerpo := Node3D.new()
+	cuerpo.set_meta("dyn", true)
+	cuerpo.position = c
+	cuerpo.rotation.y = yaw
+	_house.add_child(cuerpo)
+	cuerpo.add_child(body)
+	var snd := AudioStreamPlayer3D.new()
+	snd.unit_size = 4.0
+	snd.max_distance = 30.0
+	cuerpo.add_child(snd)
+	var d := {"pivot": hojas[0], "pivot2": hojas[1], "shape": cs, "pos": c, "open": false, "locked": false, "ang": 0.0, "target": 0.0,
+		"base": hojas[0].rotation.y, "base2": hojas[1].rotation.y, "snd": snd, "level": 0, "principal": true}
+	doors.append(d)
+
 # ---------------- tejado y torre ----------------
 func _roof() -> void:
 	var r := house_rect
@@ -1202,7 +1370,7 @@ func _exterior() -> void:
 				box(Vector3(qr.size.x, 0.05, qr.size.y), Vector3(qr.get_center().x, 0.01, qr.get_center().y), _mat.cesped, false, self, false)
 			_stone_wall(r)
 		elif t == "camino":
-			for q in _split_holes(r, [house_rect]):
+			for q in _split_holes(r, cauces):
 				var qr: Rect2 = q
 				box(Vector3(qr.size.x, 0.05, qr.size.y), Vector3(qr.get_center().x, 0.03, qr.get_center().y), _mat.tierra, false, self, false)
 		elif t == "agua":
@@ -1224,6 +1392,7 @@ func _exterior() -> void:
 				sup.set_meta("dyn", true)
 				add_child(sup)
 				_cauce(r.grow(1.2), es_rio)
+				_orillas(r.grow(1.2), es_rio)
 				_sonidos_agua(r, "rio" if es_rio else "rio", 18.0 if es_rio else 12.0, -10.0)
 				if es_rio:
 					_stream_banks(r)
@@ -1304,8 +1473,9 @@ func _fountain(r: Rect2) -> void:
 	_static_cyl(3.2, 0.9, c + Vector3(0, 0.45, 0))
 	_static_cyl(0.7, 4.0, c + Vector3(0, 2.0, 0))
 	var agua := _mat_agua(false)
-	agua.set_shader_parameter("espuma_borde", 0.12)
-	agua.set_shader_parameter("color_hondo", Color(0.03, 0.05, 0.05))
+	agua.set_shader_parameter("espuma_orilla", 0.06)
+	agua.set_shader_parameter("claridad", 0.8)
+	agua.set_shader_parameter("color_cerca", Color(0.06, 0.08, 0.075))
 	var niveles: Dictionary = {}
 	for mi in f.find_children("*", "MeshInstance3D", true, false):
 		var m3 := mi as MeshInstance3D
@@ -1432,7 +1602,7 @@ func _cauce(r: Rect2, es_rio: bool) -> void:
 		if es_rio and largo_x and not horiz:
 			continue
 		var l := r.size.x if horiz else r.size.y
-		var t := box(Vector3(l if horiz else lt, 0.12, lt if horiz else l), Vector3.ZERO, _mat.barro, true, self, false)
+		var t := box(Vector3(l if horiz else lt, 0.12, lt if horiz else l), Vector3.ZERO, _mat.bosque, true, self, false)
 		var sgn := -1.0 if lado % 2 == 0 else 1.0
 		if horiz:
 			t.position = Vector3(r.get_center().x, fondo * 0.5, (r.position.y + talud * 0.5) if sgn < 0 else (r.end.y - talud * 0.5))
@@ -1452,33 +1622,81 @@ func _cauce(r: Rect2, es_rio: bool) -> void:
 		var pr := Vector3(lerpf(r.position.x, r.end.x, u), -0.5, r.get_center().y + lado2 * (r.size.y * 0.5 - 0.6)) if es_rio else Vector3(r.get_center().x + lado2 * r.size.x * 0.4, -0.5, lerpf(r.position.y, r.end.y, u))
 		_prop("rock_moss_set_02", pr, _rng.randf() * TAU, _rng.randf_range(0.25, 0.4), false)
 
+## Plantas de un GLB repartidas con MultiMesh (con viento si es vegetación).
+func _multi_planta(nombre: String, xs: Array) -> void:
+	var path := "res://zarek/muebles/%s.glb" % nombre
+	if xs.is_empty() or not ResourceLoader.exists(path):
+		return
+	var raiz: Node3D = (load(path) as PackedScene).instantiate()
+	for mi in raiz.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		var xf := _xf_rel(m3, raiz)
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = _con_viento(m3.mesh, float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else m3.mesh
+		mm.instance_count = xs.size()
+		for i in xs.size():
+			mm.set_instance_transform(i, (xs[i] as Transform3D) * xf)
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mmi)
+	raiz.free()
+
+## Orillas con vida: helechos, hierba alta y ortigas en lo alto del talud, y piedras medio hundidas en el agua.
+func _orillas(r: Rect2, es_rio: bool) -> void:
+	var plantas := {"fern_02": [], "grass_medium_01": [], "grass_medium_02": [], "nettle_plant": [], "shrub_03": []}
+	var claves: Array = plantas.keys()
+	var largo := maxf(r.size.x, r.size.y)
+	var paso := 0.7
+	var k := 0.0
+	while k < largo:
+		for lado in [-1.0, 1.0]:
+			var u := k + _rng.randf_range(0.0, paso)
+			var off := _rng.randf_range(-0.2, 0.8)
+			var p: Vector3
+			if r.size.x >= r.size.y:
+				p = Vector3(r.position.x + u, 0.0, (r.position.y - off) if lado < 0 else (r.end.y + off))
+			else:
+				p = Vector3((r.position.x - off) if lado < 0 else (r.end.x + off), 0.0, r.position.y + u)
+			var nm: String = claves[_rng.randi_range(0, claves.size() - 1)]
+			var sc := _rng.randf_range(0.8, 1.5)
+			(plantas[nm] as Array).append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), p))
+		k += paso
+	for nm in plantas:
+		_multi_planta(nm, plantas[nm])
+	# piedras en la línea del agua
+	var np := int(largo / 3.0)
+	for i in np:
+		var u := _rng.randf()
+		var lado := -1.0 if _rng.randf() < 0.5 else 1.0
+		var hund := _rng.randf_range(0.2, 0.9)
+		var p: Vector3
+		if r.size.x >= r.size.y:
+			p = Vector3(lerpf(r.position.x, r.end.x, u), -0.75, r.get_center().y + lado * (r.size.y * 0.5 - hund))
+		else:
+			p = Vector3(r.get_center().x + lado * (r.size.x * 0.5 - hund), -0.75, lerpf(r.position.y, r.end.y, u))
+		_prop("boulder_01", p, _rng.randf() * TAU, _rng.randf_range(0.45, 1.1), false)
+
 var _tex_olas: Array = []
 ## Material de agua (agua.gdshader) con olas de ruido: río con corriente o agua quieta (pilas, estanque).
 func _mat_agua(es_rio: bool) -> ShaderMaterial:
-	if _tex_olas.is_empty():
-		for k in 3:
-			var nt := NoiseTexture2D.new()
-			nt.width = 512
-			nt.height = 512
-			nt.seamless = true
-			nt.as_normal_map = k < 2
-			nt.bump_strength = 6.0 if k == 0 else 3.0
-			nt.generate_mipmaps = true
-			var fn := FastNoiseLite.new()
-			fn.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH if k != 1 else FastNoiseLite.TYPE_CELLULAR
-			fn.frequency = 0.02 if k == 0 else (0.035 if k == 1 else 0.05)
-			fn.fractal_octaves = 4 if k == 0 else 3
-			fn.seed = 1874 + k
-			nt.noise = fn
-			_tex_olas.append(nt)
 	var m := ShaderMaterial.new()
 	m.shader = load("res://zarek/agua.gdshader")
-	m.set_shader_parameter("olas1", _tex_olas[0])
-	m.set_shader_parameter("olas2", _tex_olas[1])
-	m.set_shader_parameter("espuma_tex", _tex_olas[2])
-	m.set_shader_parameter("es_rio", es_rio)
-	m.set_shader_parameter("fuerza_olas", 1.0 if es_rio else 0.4)
-	m.set_shader_parameter("escala", 0.16 if es_rio else 0.3)
+	m.set_shader_parameter("olas", load("res://zarek/texturas/agua/water1_normal_bump.png"))
+	m.set_shader_parameter("espuma_ruido", load("res://zarek/texturas/agua/foam_noise.png"))
+	if es_rio:
+		m.set_shader_parameter("corriente", Vector2(1.0, 0.0))
+		m.set_shader_parameter("fuerza", 1.4)
+		m.set_shader_parameter("velocidad", 0.7)
+		m.set_shader_parameter("escala", 0.2)
+	else:
+		m.set_shader_parameter("corriente", Vector2(0.6, 0.4))
+		m.set_shader_parameter("fuerza", 0.12)
+		m.set_shader_parameter("velocidad", 0.12)
+		m.set_shader_parameter("escala", 0.3)
+		m.set_shader_parameter("espuma", 0.8)
+		m.set_shader_parameter("relieve", 0.5)
 	return m
 
 ## Rumor de agua repartido a lo largo de una zona (varios emisores 3D en bucle).
@@ -3313,6 +3531,8 @@ func _process(delta: float) -> void:
 		if absf(d.ang - d.target) > 0.001:
 			d.ang = move_toward(d.ang, d.target, delta * float(d.get("speed", 3.0)))
 			d.pivot.rotation.y = d.base + d.ang
+			if d.has("pivot2"):
+				d.pivot2.rotation.y = d.base2 - d.ang
 	var t := Time.get_ticks_msec() / 1000.0
 	for s in seals:
 		if not s.taken:

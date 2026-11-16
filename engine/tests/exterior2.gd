@@ -28,6 +28,12 @@ func _ready() -> void:
 	var pu := m.cell_to_world("exterior", 31.0, 83.0)
 	var vistas := [[fu + Vector3(-7.5, 1.7, 5.0), fu + Vector3(0, 1.8, 0)], [fu + Vector3(-2.2, 1.6, 2.6), fu + Vector3(0, 1.0, 0)],
 		[pu + Vector3(-9.0, 1.7, -4.0), pu + Vector3(0, 0.4, 0)], [Vector3(hr.get_center().x - 9.0, 1.7, hr.end.y + 7.0), Vector3(hr.get_center().x - 4.0, 3.5, hr.end.y)]]
+	if OS.get_environment("VISTAS") == "todo":
+		var en := m.cell_to_world("exterior", 44.0, 42.0)
+		vistas = [[en + Vector3(-1.5, 1.7, 8.0), en + Vector3(0, 2.3, 0)], [en + Vector3(0.8, 1.7, 3.2), en + Vector3(0, 1.8, 0)],
+			[pu + Vector3(-7.0, 1.7, -3.5), pu + Vector3(0, -0.3, 0.5)], [pu + Vector3(-20.0, 1.7, -9.0), pu + Vector3(-20.0, 0.0, -6.0)]]
+	if OS.get_environment("VISTAS") == "agua":
+		vistas = [[pu + Vector3(-7.0, 1.7, -3.5), pu + Vector3(0, -0.3, 0.5)], [pu + Vector3(-14.0, 1.6, 1.5), pu + Vector3(-5.0, -0.4, 0.3)], [fu + Vector3(-2.2, 1.7, 2.6), fu + Vector3(0, 0.6, 0)]]
 	if OS.get_environment("VISTAS") == "fachada":
 		vistas = [[Vector3(hr.get_center().x - 2.0, 1.7, hr.end.y + 24.0), Vector3(hr.get_center().x, 5.5, hr.end.y)],
 			[Vector3(hr.position.x - 9.0, 1.7, hr.end.y + 11.0), Vector3(hr.position.x + 6.0, 4.5, hr.end.y - 2.0)],
