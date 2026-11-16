@@ -1,0 +1,20 @@
+pino_grande_1 {"preset":"Pine Large","seed":101,"vr":7817,"vh":14400,"bark":"pine","hoja":"pine"}
+pino_grande_2 {"preset":"Pine Large","seed":202,"vr":7817,"vh":14400,"bark":"pine","hoja":"pine"}
+pino_grande_3 {"preset":"Pine Large","seed":303,"vr":7817,"vh":14400,"bark":"pine","hoja":"pine"}
+pino_mediano_1 {"preset":"Pine Medium","seed":404,"vr":6431,"vh":19680,"bark":"pine","hoja":"pine"}
+pino_mediano_2 {"preset":"Pine Medium","seed":505,"vr":6431,"vh":19680,"bark":"pine","hoja":"pine"}
+pino_joven {"preset":"Pine Small","seed":606,"vr":7124,"vh":15288,"bark":"pine","hoja":"pine"}
+muerto_roble {"preset":"Oak Large","seed":707,"vr":8984,"vh":0,"bark":"oak","hoja":"oak"}
+muerto_fresno {"preset":"Ash Large","seed":808,"vr":8738,"vh":0,"bark":"oak","hoja":"ash"}
+muerto_roble_2 {"preset":"Oak Medium","seed":909,"vr":2780,"vh":0,"bark":"oak","hoja":"oak"}
+arbusto_1 {"preset":"Bush 1","seed":111,"vr":6331,"vh":9984,"bark":"oak","hoja":"ash"}
+arbusto_2 {"preset":"Bush 2","seed":222,"vr":2375,"vh":2816,"bark":"oak","hoja":"aspen"}
+arbusto_3 {"preset":"Bush 3","seed":333,"vr":10212,"vh":4992,"bark":"oak","hoja":"pine"}
+fresno_joven {"preset":"Ash Small","seed":121,"vr":3706,"vh":10912,"bark":"oak","hoja":"ash"}
+alamo_joven {"preset":"Aspen Small","seed":131,"vr":1642,"vh":2240,"bark":"birch","hoja":"aspen"}
+roble_joven {"preset":"Oak Small","seed":141,"vr":2344,"vh":7200,"bark":"oak","hoja":"oak"}
+roble_mediano {"preset":"Oak Medium","seed":151,"vr":2780,"vh":21280,"bark":"oak","hoja":"oak"}
+fresno_mediano {"preset":"Ash Medium","seed":161,"vr":6639,"vh":21760,"bark":"oak","hoja":"ash"}
+muerto_alamo {"preset":"Aspen Medium","seed":171,"vr":3376,"vh":0,"bark":"birch","hoja":"aspen"}
+muerto_joven {"preset":"Oak Small","seed":181,"vr":2344,"vh":0,"bark":"oak","hoja":"oak"}
+salida 0
