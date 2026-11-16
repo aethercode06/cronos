@@ -3100,5 +3100,95 @@
   "nombre": "Skeleton Key",
   "autor": "Oakieland",
   "licencia": "by"
+ },
+ {
+  "clave": "luz_bombilla_edison",
+  "uid": "aeb0e4832f04463280510e550e2cdbd5",
+  "nombre": "Edison Light Bulb",
+  "autor": "ministephen",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/aeb0e4832f04463280510e550e2cdbd5",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_bombilla_casquillo",
+  "uid": "53f9dab8e41e4ebabb3ca78bc2a4d683",
+  "nombre": "Bulb",
+  "autor": "miksherstud",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/53f9dab8e41e4ebabb3ca78bc2a4d683",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_aplique_doble",
+  "uid": "c723fa0a1ac3478790192acdb39161b0",
+  "nombre": "Wall Light",
+  "autor": "nocyde",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/c723fa0a1ac3478790192acdb39161b0",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_aplique_antiguo",
+  "uid": "ba2bc42641f34e07aeb36a5c99f4e654",
+  "nombre": "Antique Wall Light",
+  "autor": "rakshaan",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/ba2bc42641f34e07aeb36a5c99f4e654",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_aplique_cristal",
+  "uid": "e6f50aa09c324bdb8c8df2ee6358004f",
+  "nombre": "Wall lamp",
+  "autor": "neverfollow81",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/e6f50aa09c324bdb8c8df2ee6358004f",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_aplique_retro",
+  "uid": "8119ebfb30c147558e26c355c4232978",
+  "nombre": "Retro wall light-Freepoly.org",
+  "autor": "blackrray",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/8119ebfb30c147558e26c355c4232978",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_aplique_brazo",
+  "uid": "dda408533ef54915b69d90f230b5e929",
+  "nombre": "Unseen: Wall Lamp",
+  "autor": "JmCVoyager",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/dda408533ef54915b69d90f230b5e929",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_colgante_jaula",
+  "uid": "e03a1a714528414f93e8b55acc944427",
+  "nombre": "Industrial lamp",
+  "autor": "scorcho",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/e03a1a714528414f93e8b55acc944427",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_colgante_esmalte",
+  "uid": "a91c1806d0ee44b0a3db7490ae1c9695",
+  "nombre": "Ceiling lamp",
+  "autor": "MelaSoliToll",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a91c1806d0ee44b0a3db7490ae1c9695",
+  "cat": "luces"
+ },
+ {
+  "clave": "luz_colgante_industrial",
+  "uid": "ad87a1e1da604bfea9b1276aa33f7952",
+  "nombre": "Industrial lamp",
+  "autor": "helsingr",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/ad87a1e1da604bfea9b1276aa33f7952",
+  "cat": "luces"
  }
 ]

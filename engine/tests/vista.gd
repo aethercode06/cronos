@@ -58,6 +58,23 @@ func _ready() -> void:
 					vistas.append([desde, Vector3(c.x + rc.size.x * 0.15, float(r.y) + 0.9, c.y - rc.size.y * 0.15)])
 					print("SALA ", nombre)
 					break
+	elif modo == "luces":
+		# primer plano de lámparas eléctricas distintas
+		var vistos := {}
+		for l in m.lamps:
+			var nd: Node3D = l.node
+			var clave := ""
+			for c in nd.get_children():
+				if c.scene_file_path != "": clave = c.scene_file_path.get_file()
+				for cc in c.get_children():
+					if cc.scene_file_path != "": clave = cc.scene_file_path.get_file()
+			if clave == "" or vistos.has(clave): continue
+			vistos[clave] = true
+			var lp: Vector3 = (l.light as Node3D).global_position
+			var fuera: Vector3 = nd.global_transform.basis.z.normalized()
+			var desde := lp + fuera * 1.3 + Vector3(0.5, -0.4, 0.3) if nd.rotation.y != 0.0 or clave.begins_with("luz_aplique") else lp + Vector3(1.0, -0.9, 0.9)
+			vistas.append([desde, lp])
+			print("LUZ ", clave, " ", l.modo)
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")

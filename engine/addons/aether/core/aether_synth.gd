@@ -44,6 +44,7 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"lechuza": return _barn_screech()
 		"rana": return _frog()
 		"tictac": return _tictac()
+		"zumbido": return _hum()
 		"goteo": return _drip()
 		"piano": return _piano_note()
 		"chapoteo": return _splash()
@@ -553,3 +554,16 @@ static func _piano_note() -> AudioStreamWAV:
 		b[i] = v * minf(1.0, t * 200.0)
 	_normalize(b, 0.8)
 	return _wav(b)
+
+## Zumbido eléctrico de una bombilla vieja (2 s en bucle): 60 Hz y armónicos con chisporroteos sueltos.
+static func _hum() -> AudioStreamWAV:
+	var b := _buf(2.0)
+	for i in b.size():
+		var t := float(i) / RATE
+		b[i] = sin(TAU * 60.0 * t) * 0.3 + sin(TAU * 120.0 * t) * 0.5 + sin(TAU * 180.0 * t) * 0.15 + sin(TAU * 240.0 * t) * 0.1
+	for k in 6:
+		var ini := randi_range(0, b.size() - 800)
+		for j in 700:
+			b[ini + j] += (randf() * 2.0 - 1.0) * 0.5 * exp(-float(j) / 150.0)
+	_normalize(b, 0.5)
+	return _wav(b, true)

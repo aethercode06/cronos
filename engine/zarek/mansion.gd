@@ -148,6 +148,7 @@ func build(q := 2) -> void:
 	_exterior()
 	_tiempo("exterior", t0)
 	_markers()
+	if OS.get_environment("SIN_LUCES") == "": _iluminar_salas()
 	_portals()
 	_decorate()
 	_tiempo("decorado", t0)
@@ -183,7 +184,8 @@ func _optimizar() -> void:
 	for l in find_children("*", "Light3D", true, false):
 		if not (l is DirectionalLight3D):
 			(l as Light3D).distance_fade_enabled = true
-			(l as Light3D).distance_fade_begin = 22.0
+			# las bombillas pequeñas se apagan antes con la distancia (menos luces por objeto en el móvil)
+			(l as Light3D).distance_fade_begin = 14.0 if (l is OmniLight3D and (l as OmniLight3D).omni_range < 8.0) else 22.0
 			(l as Light3D).distance_fade_length = 6.0
 			(l as Light3D).distance_fade_shadow = 12.0
 
@@ -3452,10 +3454,302 @@ func _lamp(pos: Vector3) -> void:
 	light.light_energy = 2.6
 	light.visible = false
 	n.add_child(light)
-	var l := {"node": n, "light": light, "bulb": bm, "pos": pos, "room": id, "on": false, "broken": false, "base": 2.4, "flicker": 0.0}
+	var l := {"node": n, "light": light, "bulb": bm, "pos": pos, "room": id, "on": false, "broken": false, "base": 2.4, "flicker": 0.0, "modo": "fija", "e": 1.0, "obj": 1.0, "t": 0.0, "rafaga": 0}
 	lamps.append(l)
 	if id >= 0:
 		rooms[id]["lamps"] = rooms[id].get("lamps", []) + [l]
+
+# ---------------- luz eléctrica: bombillas de filamento, apliques y lámparas colgantes ----------------
+## Bombillas de filamento de carbón de principios de siglo (unos 2700 K). Cada sala o tramo de pasillo tiene un
+## modo: «fija» (luz estable), «parpadea» (la mayoría: caídas breves, ráfagas y apagones con el zumbido de la
+## corriente) o «apagada» (bombillas fundidas: salas y tramos oscuros).
+const COLOR_BOMBILLA := Color(1.0, 0.74, 0.46)
+var _malla_bombilla: Mesh
+var _malla_filamento: Mesh
+var _mat_vidrio_bombilla: StandardMaterial3D
+var _mat_esmalte: StandardMaterial3D
+var _mat_tulipa: StandardMaterial3D
+
+## Monta un modelo de lámpara (objetos/luz_*.glb) dentro de n y devuelve su caja en el espacio de n. Si es de
+## pared, se gira para que su lado plano quede contra la pared (local −Z) y se apoya en ella.
+const LUZ_PARED := {"aplique_antiguo": 0.0, "aplique_brazo": PI, "aplique_cristal": PI * 0.5, "aplique_doble": PI, "aplique_retro": PI * 0.5}
+func _modelo_luz(nombre: String, n: Node3D, pared: bool) -> AABB:
+	var real := _prop("luz_" + nombre, Vector3.ZERO, float(LUZ_PARED.get(nombre, 0.0)), 1.8 if nombre == "colgante_esmalte" else 1.0, false, n)
+	if real == null:
+		return AABB(Vector3(-0.1, -0.2, 0), Vector3(0.2, 0.2, 0.2))
+	var ab := AABB()
+	var primero := true
+	var inv := n.global_transform.affine_inverse()
+	for mi in real.find_children("*", "MeshInstance3D", true, false):
+		var g := (mi as MeshInstance3D)
+		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var caja: AABB = (inv * g.global_transform) * g.get_aabb()
+		ab = caja if primero else ab.merge(caja)
+		primero = false
+	# de pared: el centro a la altura del nodo y el fondo tocando la pared; colgante: la parte de arriba en el cable
+	var mover := Vector3(-ab.get_center().x, -ab.get_center().y, -ab.position.z) if pared else Vector3(-ab.get_center().x, -ab.end.y, -ab.get_center().z)
+	real.position += mover
+	ab.position += mover
+	return ab
+
+func _bombilla(padre: Node3D, pos: Vector3, compartido: StandardMaterial3D = null, solo_nucleo := false) -> StandardMaterial3D:
+	if _malla_bombilla == null:
+		var sm := SphereMesh.new()
+		sm.radius = 0.034
+		sm.height = 0.085
+		sm.radial_segments = 12
+		sm.rings = 6
+		_malla_bombilla = sm
+		var fm := CylinderMesh.new()
+		fm.top_radius = 0.004
+		fm.bottom_radius = 0.004
+		fm.height = 0.045
+		fm.radial_segments = 4
+		_malla_filamento = fm
+		_mat_vidrio_bombilla = _plain(Color(1.0, 0.92, 0.8, 0.35), 0.1)
+		_mat_vidrio_bombilla.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat_esmalte = _plain(Color(0.16, 0.22, 0.18), 0.35, 0.2)
+		_mat_tulipa = _plain(Color(0.95, 0.88, 0.75, 0.82), 0.3)
+		_mat_tulipa.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_mat_tulipa.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if solo_nucleo:
+		# solo el resplandor del filamento dentro de una pantalla o tulipa del modelo
+		var fil0 := compartido
+		if fil0 == null:
+			fil0 = _plain(Color(1, 0.8, 0.5), 0.5)
+			fil0.emission_enabled = true
+			fil0.emission = Color(1.0, 0.6, 0.25)
+			fil0.emission_energy_multiplier = 0.0
+		var nucleo := MeshInstance3D.new()
+		nucleo.mesh = _malla_bombilla
+		nucleo.scale = Vector3(0.5, 0.65, 0.5)
+		nucleo.material_override = fil0
+		nucleo.position = pos
+		nucleo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		nucleo.set_meta("dyn", true)
+		padre.add_child(nucleo)
+		return fil0
+	# casquillo de latón, ampolla de cristal y el filamento incandescente (su brillo sigue a la luz)
+	cyl(0.016, 0.016, 0.035, pos + Vector3(0, 0.055, 0), _mat.laton_viejo if _mat.has("laton_viejo") else _mat.oro, padre, 8)
+	var vidrio := MeshInstance3D.new()
+	vidrio.mesh = _malla_bombilla
+	vidrio.material_override = _mat_vidrio_bombilla
+	vidrio.position = pos
+	vidrio.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	padre.add_child(vidrio)
+	var fil := _plain(Color(1, 0.8, 0.5), 0.5)
+	fil.emission_enabled = true
+	fil.emission = Color(1.0, 0.6, 0.25)
+	fil.emission_energy_multiplier = 0.0
+	# halo: la ampolla entera brilla un poco
+	var halo := MeshInstance3D.new()
+	halo.mesh = _malla_bombilla
+	halo.scale = Vector3(0.45, 0.6, 0.45)
+	halo.material_override = fil
+	halo.position = pos
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	padre.add_child(halo)
+	halo.set_meta("dyn", true)
+	return fil
+
+## Crea una luz eléctrica. tipo: "colgante" (pantalla de esmalte), "desnuda" (bombilla colgando del cable),
+## "aplique" (brazo de latón y tulipa en la pared; dir = hacia dónde mira, fuera de la pared).
+func _luz_electrica(pos: Vector3, tipo: String, dir := Vector3.ZERO, alcance := 7.0) -> Dictionary:
+	var id := room_at(pos + Vector3(0, 0.3, 0))
+	var n := Node3D.new()
+	var centro_luz := Vector3.ZERO
+	var fil: StandardMaterial3D
+	var modelo := String(ZarekHistoria.LAMPARA.get(String(rooms[id].name) if id >= 0 else "", ""))
+	var t_sala := String(rooms[id].type) if id >= 0 else ""
+	if tipo == "aplique":
+		n.position = Vector3(pos.x, pos.y + 2.0, pos.z)
+		n.rotation.y = atan2(dir.x, dir.z)
+		add_child(n)
+		if modelo == "" or not modelo.begins_with("aplique"):
+			if t_sala in ["dormitorio", "epicentro"]:
+				modelo = ["aplique_doble", "aplique_antiguo"][_rng.randi() % 2]
+			elif t_sala in ["servicio", "sotano"]:
+				modelo = ["aplique_cristal", "aplique_retro"][_rng.randi() % 2]
+			else:
+				modelo = ["aplique_antiguo", "aplique_brazo", "aplique_retro"][_rng.randi() % 3]
+		var ab := _modelo_luz(modelo, n, true)
+		var c := ab.get_center()
+		if modelo == "aplique_doble":
+			fil = _bombilla(n, Vector3(-ab.size.x * 0.33, c.y + 0.02, c.z + 0.05), null, true)
+			_bombilla(n, Vector3(ab.size.x * 0.33, c.y + 0.02, c.z + 0.05), fil, true)
+		else:
+			fil = _bombilla(n, Vector3(0, c.y + 0.03, c.z + 0.02), null, true)
+		centro_luz = Vector3(0, c.y + 0.05, ab.end.z + 0.08)
+	else:
+		var techo := pos.y + (WALL_H if level_of(pos.y + 0.3) < 2 else 3.3)
+		var cable := 0.5 + _rng.randf() * 0.5 if tipo == "colgante" else 0.8 + _rng.randf() * 0.6
+		n.position = Vector3(pos.x, techo, pos.z)
+		add_child(n)
+		cyl(0.035, 0.035, 0.03, Vector3(0, -0.015, 0), _mat.oscuro, n, 10)
+		cyl(0.004, 0.004, cable, Vector3(0, -cable * 0.5, 0), _mat.oscuro, n, 4)
+		if tipo == "colgante":
+			if modelo == "" or not modelo.begins_with("colgante"):
+				modelo = "colgante_jaula" if t_sala in ["servicio", "sotano"] or int(rooms[id].level if id >= 0 else 0) >= 2 else "colgante_industrial"
+			var cuelga := Node3D.new()
+			cuelga.position = Vector3(0, -cable, 0)
+			n.add_child(cuelga)
+			var ab := _modelo_luz(modelo, cuelga, false)
+			fil = _bombilla(cuelga, Vector3(0, ab.position.y + ab.size.y * (0.22 if modelo == "colgante_jaula" else 0.12), 0), null, true)
+			centro_luz = Vector3(0, -cable + ab.position.y + ab.size.y * 0.1, 0)
+		else:
+			# bombilla de filamento desnuda colgando del cable, con su casquillo
+			var b := _prop("luz_bombilla_edison", Vector3(0, -cable - 0.135, 0), 0.0, 1.1, false, n)
+			if b:
+				b.rotation.x = PI
+				b.position.y = -cable
+			fil = _bombilla(n, Vector3(0, -cable - 0.07, 0), null, true)
+			centro_luz = Vector3(0, -cable - 0.09, 0)
+	var light := OmniLight3D.new()
+	light.position = centro_luz
+	light.light_color = COLOR_BOMBILLA
+	light.omni_range = alcance
+	light.omni_attenuation = 1.3
+	light.light_energy = 1.6 if tipo == "aplique" else 2.0
+	light.light_size = 0.04
+	light.light_specular = 0.6
+	light.visible = false
+	n.add_child(light)
+	var l := {"node": n, "light": light, "bulb": fil, "pos": pos, "room": id, "on": false, "broken": false,
+		"base": light.light_energy, "flicker": 0.0, "modo": "fija", "e": 1.0, "obj": 1.0, "t": _rng.randf() * 4.0, "rafaga": 0}
+	lamps.append(l)
+	if id >= 0:
+		rooms[id]["lamps"] = rooms[id].get("lamps", []) + [l]
+	return l
+
+## ¿Hay pared en ese borde de la sala (no puerta, ni hueco hacia la misma sala)?
+func _sep_pared(p: Vector3, fuera: Vector3) -> float:
+	return (WT * 0.5 + 0.04) if room_at(p + fuera * 0.4 + Vector3(0, 0.5, 0)) >= 0 else 0.27
+
+func _pared_libre(r: Dictionary, p: Vector3, fuera: Vector3) -> bool:
+	if not door_near(p, 1.25).is_empty():
+		return false
+	var otra := room_at(p + fuera * 0.4 + Vector3(0, 0.5, 0))
+	return otra != int(r.id)
+
+func _iluminar_salas() -> void:
+	for r in rooms:
+		var t := String(r.type)
+		if t in ["jardin", "tunel", "roca", "agua", "camino", "edificio"] or int(r.level) < -1:
+			continue
+		var nombre := String(r.name)
+		if nombre.begins_with("MANSI") or nombre.begins_with("Terrenos"):
+			continue
+		var rc: Rect2 = r.rect
+		var y := float(r.y)
+		var nuevas: Array = []
+		var es_pasillo := t == "pasillo" or nombre.begins_with("Pasillo") or nombre.begins_with("Galería")
+		if es_pasillo:
+			# apliques alternando paredes cada ~5,5 m a lo largo del pasillo
+			var largo_x := rc.size.x >= rc.size.y
+			var largo := rc.size.x if largo_x else rc.size.y
+			var n := maxi(2, int(largo / 5.5))
+			for i in n:
+				var f := (i + 0.5) / n
+				var lado := i % 2
+				var p: Vector3
+				var fuera: Vector3
+				if largo_x:
+					p = Vector3(rc.position.x + rc.size.x * f, y, rc.position.y if lado == 0 else rc.end.y)
+					fuera = Vector3(0, 0, -1 if lado == 0 else 1)
+				else:
+					p = Vector3(rc.position.x if lado == 0 else rc.end.x, y, rc.position.y + rc.size.y * f)
+					fuera = Vector3(-1 if lado == 0 else 1, 0, 0)
+				var hecho := false
+				for desliza in [0.0, 0.9, -0.9, 1.8, -1.8]:
+					var q := p + (Vector3(desliza, 0, 0) if largo_x else Vector3(0, 0, desliza))
+					for intento in 2:
+						var qq := q
+						var ff := fuera
+						if intento == 1:
+							ff = -fuera
+							qq = q - fuera * (rc.size.y if largo_x else rc.size.x)
+						if _pared_libre(r, qq, ff):
+							nuevas.append(_luz_electrica(qq - ff * _sep_pared(qq, ff), "aplique", -ff, 6.5))
+							hecho = true
+							break
+					if hecho:
+						break
+		elif r.get("lamps", []).is_empty():
+			var c := rc.get_center()
+			var tipo := "colgante"
+			if t in ["servicio", "sotano"] or int(r.level) >= 2:
+				tipo = "desnuda" if _rng.randf() < 0.6 else "colgante"
+			var alc := clampf(maxf(rc.size.x, rc.size.y) * 0.75, 5.5, 10.0)
+			if t == "dormitorio" or t == "epicentro":
+				# dos apliques a los lados del centro de la pared más larga
+				var largo_x := rc.size.x >= rc.size.y
+				for k in [-1, 1]:
+					var p := Vector3(c.x + (k * rc.size.x * 0.22 if largo_x else 0.0), y, c.y + (0.0 if largo_x else k * rc.size.y * 0.22))
+					var fuera := Vector3(0, 0, -1) if largo_x else Vector3(-1, 0, 0)
+					var q := Vector3(p.x if largo_x else rc.position.x, y, rc.position.y if largo_x else p.z)
+					if _pared_libre(r, q, fuera):
+						nuevas.append(_luz_electrica(q - fuera * _sep_pared(q, fuera), "aplique", -fuera, alc * 0.8))
+			if nuevas.is_empty():
+				nuevas.append(_luz_electrica(Vector3(c.x + 0.3, y, c.y + 0.3), tipo, Vector3.ZERO, alc))
+		# modo de cada luz: lo fija la historia o, si no, el azar (la mayoría parpadean)
+		var modo_sala := String(ZarekHistoria.LUZ_MODO.get(nombre, ""))
+		var todas: Array = r.get("lamps", [])
+		for i in todas.size():
+			var l: Dictionary = todas[i]
+			var modo := modo_sala
+			if modo == "tramos":
+				modo = ["fija", "parpadea", "apagada", "parpadea"][int(i / 2) % 4]
+			elif modo == "":
+				var dado := _rng.randf()
+				modo = "parpadea" if dado < 0.55 else ("fija" if dado < 0.85 else "apagada")
+			elif modo == "parpadea" and _rng.randf() < 0.15:
+				modo = "apagada"
+			l.modo = modo
+			if modo == "apagada":
+				l.broken = true
+			if ZarekHistoria.LUZ.has(nombre):
+				(l.light as OmniLight3D).light_color = ZarekHistoria.LUZ[nombre]
+			if modo == "parpadea":
+				var zum := AudioStreamPlayer3D.new()
+				zum.stream = AetherSynth.make("zumbido")
+				zum.volume_db = -26.0
+				zum.unit_size = 1.2
+				zum.max_distance = 7.0
+				zum.autoplay = true
+				zum.position = (l.light as OmniLight3D).position
+				(l.node as Node3D).add_child(zum)
+				l["zumbido"] = zum
+
+## Parpadeo realista de una bombilla vieja: casi siempre encendida, con caídas breves, ráfagas de cortes y algún
+## apagón de un par de segundos; el filamento tarda unas centésimas en enfriarse y calentarse.
+func _parpadeo(l: Dictionary, delta: float) -> void:
+	l.t -= delta
+	if l.t <= 0.0:
+		if l.rafaga > 0:
+			l.rafaga -= 1
+			l.obj = 0.05 if l.obj > 0.5 else 1.0
+			l.t = randf_range(0.03, 0.12)
+		else:
+			var dado := randf()
+			if l.obj < 0.5:
+				l.obj = 1.0
+				l.t = randf_range(1.5, 7.0)
+			elif dado < 0.45:
+				l.obj = randf_range(0.2, 0.6)
+				l.t = randf_range(0.05, 0.25)
+			elif dado < 0.85:
+				l.rafaga = randi_range(3, 9)
+				l.t = 0.0
+			else:
+				l.obj = 0.0
+				l.t = randf_range(0.6, 2.5)
+	var tau := 0.035 if l.obj < l.e else 0.06
+	l.e = lerpf(float(l.e), float(l.obj), 1.0 - exp(-delta / tau))
+	var e: float = l.e
+	(l.light as OmniLight3D).light_energy = float(l.base) * e
+	(l.bulb as StandardMaterial3D).emission_energy_multiplier = 4.0 * e * e
+	if l.has("zumbido"):
+		(l.zumbido as AudioStreamPlayer3D).volume_db = -26.0 + 10.0 * (1.0 - e) * float(e > 0.05)
 
 func lamp_near(p: Vector3, dist := 2.2) -> Dictionary:
 	for l in lamps:
@@ -3468,7 +3762,9 @@ func set_lamp(l: Dictionary, on: bool) -> void:
 		return
 	l.on = on
 	l.light.visible = on
-	l.bulb.emission_energy_multiplier = 3.0 if on else 0.0
+	l.bulb.emission_energy_multiplier = 3.5 if on else 0.0
+	if l.has("zumbido"):
+		(l.zumbido as AudioStreamPlayer3D).playing = on
 
 func break_lamp(l: Dictionary) -> void:
 	set_lamp(l, false)
@@ -4573,7 +4869,10 @@ func _merge_static() -> void:
 			continue
 		for par in sup:
 			var mat: Material = _canon_mat(par[1])
-			var key := "%d|%d|%d|%d" % [mat.get_instance_id(), int(gp.x / 40.0), int(gp.z / 40.0), m.cast_shadow]
+			# celdas más pequeñas dentro de la casa y una por planta: cada malla fusionada recibe solo las luces
+			# cercanas (el renderizador móvil admite 8 por objeto)
+			var tam := 28.0 if house_rect.grow(2.0).has_point(Vector2(gp.x, gp.z)) else 40.0
+			var key := "%d|%d|%d|%d" % [mat.get_instance_id(), int(floor(gp.x / tam)) * 4 + clampi(level_of(gp.y + 0.3) + 1, 0, 3), int(floor(gp.z / tam)), m.cast_shadow]
 			if not groups.has(key):
 				groups[key] = {"mat": mat, "items": [], "shadow": m.cast_shadow}
 			groups[key].items.append([m, par[0]])
@@ -4936,6 +5235,9 @@ func _process(delta: float) -> void:
 		var l: OmniLight3D = fires[i]
 		l.light_energy = l.get_meta("e") * (0.8 + 0.2 * sin(t * 11.0 + i * 1.7) * sin(t * 6.3 + i))
 	for l in lamps:
+		if l.on and not l.broken and l.modo == "parpadea" and l.flicker <= 0.0:
+			_parpadeo(l, delta)
+			continue
 		if l.on and not l.broken and l.flicker > 0.0:
 			l.flicker -= delta
 			l.light.light_energy = l.base * (0.15 if randf() < 0.5 else 1.0)

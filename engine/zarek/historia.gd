@@ -78,3 +78,20 @@ const ALFOMBRA := {
 	"Salón de baile": "oro", "EPICENTRO · cuarto de Elena": "", "Biblioteca": "", "Estudio del padre": "verde",
 	"Comedor formal": "azul", "Cuarto de niños": "oro", "Dormitorio de los padres": "", "Tocador de la madre": "azul",
 	"Galería de retratos": "verde", "Vestíbulo y gran escalera": ""}
+
+## Cómo está la luz eléctrica de cada sala: «fija», «parpadea», «apagada» (bombillas fundidas) o «tramos» (en los
+## pasillos largos: un tramo con luz, otro parpadeando, otro a oscuras…). Las que no salen aquí se sortean
+## (la mayoría parpadean).
+const LUZ_MODO := {
+	"Pasillo principal": "tramos", "Pasillo": "tramos", "Pasillo del sótano": "parpadea", "Galería de servicio": "apagada",
+	"Galería de retratos": "parpadea", "Vestíbulo y gran escalera": "fija", "Cocina": "parpadea", "Salón de baile": "fija",
+	"Biblioteca": "fija", "EPICENTRO · cuarto de Elena": "parpadea", "Cuarto de niños": "apagada", "Baño": "parpadea",
+	"Escalera de servicio": "apagada", "Sala de calderas": "parpadea", "Ático (vigas, baúles, muñecos tapados)": "parpadea",
+	"Estudio del padre": "fija", "Sala de música": "parpadea", "Comedor formal": "parpadea"}
+
+## Lámpara eléctrica concreta de algunas salas (modelos objetos/luz_*.glb); las demás se eligen por tipo de sala.
+const LAMPARA := {
+	"Cocina": "colgante_esmalte", "Sala de calderas": "colgante_jaula", "Cava de vinos": "colgante_jaula",
+	"Pasillo del sótano": "aplique_retro", "Archivo": "colgante_jaula", "Baño": "aplique_cristal", "Despensa": "colgante_esmalte",
+	"Cuarto de plancha": "colgante_esmalte", "Pasillo principal": "aplique_antiguo", "Pasillo": "aplique_brazo",
+	"Galería de retratos": "aplique_antiguo", "Galería de servicio": "aplique_retro"}

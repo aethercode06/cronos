@@ -2689,5 +2689,95 @@
   ],
   "tris": 3000,
   "escala": 0.0063
+ },
+ "luz_aplique_antiguo": {
+  "tam": [
+   0.179,
+   0.38,
+   0.236
+  ],
+  "tris": 6000,
+  "escala": 0.19
+ },
+ "luz_aplique_brazo": {
+  "tam": [
+   0.1,
+   0.38,
+   0.177
+  ],
+  "tris": 2413,
+  "escala": 0.0042
+ },
+ "luz_aplique_cristal": {
+  "tam": [
+   0.288,
+   0.38,
+   0.746
+  ],
+  "tris": 2806,
+  "escala": 0.3731
+ },
+ "luz_aplique_doble": {
+  "tam": [
+   0.612,
+   0.4,
+   0.315
+  ],
+  "tris": 2285,
+  "escala": 0.0063
+ },
+ "luz_aplique_retro": {
+  "tam": [
+   0.217,
+   0.38,
+   0.17
+  ],
+  "tris": 5999,
+  "escala": 0.0143
+ },
+ "luz_bombilla_casquillo": {
+  "tam": [
+   0.016,
+   0.3,
+   0.016
+  ],
+  "tris": 5999,
+  "escala": 0.102
+ },
+ "luz_bombilla_edison": {
+  "tam": [
+   0.067,
+   0.12,
+   0.067
+  ],
+  "tris": 6000,
+  "escala": 0.0134
+ },
+ "luz_colgante_esmalte": {
+  "tam": [
+   0.075,
+   0.3,
+   0.079
+  ],
+  "tris": 2168,
+  "escala": 0.1775
+ },
+ "luz_colgante_industrial": {
+  "tam": [
+   0.234,
+   0.4,
+   0.228
+  ],
+  "tris": 2684,
+  "escala": 0.0012
+ },
+ "luz_colgante_jaula": {
+  "tam": [
+   0.144,
+   0.4,
+   0.138
+  ],
+  "tris": 5999,
+  "escala": 0.8085
  }
 }

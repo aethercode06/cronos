@@ -115,6 +115,7 @@ func _ready() -> void:
 		cam.look_at_from_position(vistas[vv][0], vistas[vv][1])
 		var fr := cam.get_frustum()
 		var grupos := {}
+		var porobj := {}
 		for g in m.find_children("*", "GeometryInstance3D", true, false):
 			var gi := g as GeometryInstance3D
 			if not gi.is_visible_in_tree(): continue
@@ -139,9 +140,13 @@ func _ready() -> void:
 			elif gi is MeshInstance3D and gi.mesh:
 				tri = _tris(gi.mesh)
 			grupos[k] = grupos.get(k, 0) + tri
+			porobj[k] = porobj.get(k, 0) + 1
 		var kg := grupos.keys()
 		kg.sort_custom(func(a, b): return grupos[a] > grupos[b])
 		for k in kg.slice(0, 30): print("DES %-60s %d" % [k, grupos[k]])
+		var kc := porobj.keys()
+		kc.sort_custom(func(a, b): return porobj[a] > porobj[b])
+		for k in kc.slice(0, 30): print("CUENTA %-60s %d" % [k, porobj[k]])
 	if OS.get_environment("CAPA1") != "":
 		var gr := {}
 		for g in m.find_children("*", "GeometryInstance3D", true, false):

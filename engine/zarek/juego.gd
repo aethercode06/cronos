@@ -742,7 +742,37 @@ func _physics_process(_delta: float) -> void:
 				dir.y = 0.0
 				b.apply_central_impulse((dir.normalized() * 3.0 + Vector3(0, 1.0, 0)) * b.mass * 0.6)
 
+## Sombras solo en las bombillas más cercanas al jugador (las demás iluminan sin sombra): así cada sala tiene
+## sombras de verdad sin el coste de decenas de luces con sombra.
+var _t_sombras := 0.0
+var _con_sombra: Array = []
+func _sombras_cercanas(delta: float) -> void:
+	_t_sombras -= delta
+	if _t_sombras > 0.0 or player == null:
+		return
+	_t_sombras = 0.3
+	var n := 1 if OS.get_name() == "Android" else 3
+	var pp := player.global_position
+	var cerca: Array = []
+	for l in mansion.lamps:
+		if l.on and not l.broken and absf(float(l.pos.y) - pp.y) < 2.5:
+			var d := Vector2(pp.x - l.pos.x, pp.z - l.pos.z).length()
+			if d < 11.0:
+				cerca.append([d, l.light])
+	cerca.sort_custom(func(a, b): return a[0] < b[0])
+	var nuevas: Array = []
+	for i in mini(n, cerca.size()):
+		nuevas.append(cerca[i][1])
+	for li in _con_sombra:
+		if is_instance_valid(li) and not li in nuevas:
+			(li as OmniLight3D).shadow_enabled = false
+	for li in nuevas:
+		(li as OmniLight3D).shadow_enabled = true
+		(li as OmniLight3D).shadow_bias = 0.06
+	_con_sombra = nuevas
+
 func _process(delta: float) -> void:
+	_sombras_cercanas(delta)
 	# fundido negro y mensajes
 	black.color.a = move_toward(black.color.a, _black_target, delta * 1.2)
 	if _msg_t > 0.0:
