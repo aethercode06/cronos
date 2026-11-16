@@ -121,6 +121,14 @@ jobs:
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Descargar el emulador (con reintentos)
+        run: |
+          SDKM=$(ls $ANDROID_SDK_ROOT/cmdline-tools/*/bin/sdkmanager | head -1)
+          for i in 1 2 3 4 5; do
+            yes | $SDKM --install "emulator" "platform-tools" "system-images;android-34;google_apis;x86_64" > /dev/null 2>&1 && break
+            echo "reintento $i"; sleep 15
+          done
+          ls $ANDROID_SDK_ROOT/emulator | head -3
       - name: Probar en el emulador
         uses: reactivecircus/android-emulator-runner@v2
         with:

@@ -1585,7 +1585,9 @@ func _exterior() -> void:
 			_shed(name, r)
 		elif name == "Porche":
 			_porch(r)
+	var tz := Time.get_ticks_msec()
 	_trees(W, H)
+	print("ZAREK   bosque %d ms" % (Time.get_ticks_msec() - tz))
 
 func _zone(name: String) -> Rect2:
 	for z in plan.exterior.zonas:
@@ -2113,10 +2115,12 @@ func _trees(W: float, H: float) -> void:
 		"fresno_joven", "alamo_joven", "roble_joven", "roble_mediano", "fresno_mediano", "muerto_alamo", "muerto_joven"]
 	var peso := [14, 14, 14, 12, 12, 9, 4, 4, 5, 6, 4, 6, 6, 6, 3, 4]
 	var mallas: Array = []
+	var t_ar := Time.get_ticks_msec()
 	var medios: Array = []
 	for nm in pinos:
 		mallas.append(_malla_glb("res://zarek/arboles/%s.glb" % nm))
 		medios.append(_arbol_medio(mallas[-1]) if mallas[-1] != null else null)
+	print("ZAREK     mallas de arboles %d ms" % (Time.get_ticks_msec() - t_ar))
 	var lejos: Array = []
 	for v in 3:
 		lejos.append(_abeto_mesh(100 + v, 0.85 + v * 0.12))
@@ -2212,8 +2216,13 @@ func _trees(W: float, H: float) -> void:
 				porp[cl].append(t)
 			for cl in porp:
 				_multi_arbol(_con_viento(arb[k], 0.12, 0.03), porp[cl], 0.0, 45.0, false)
+	print("ZAREK     arboles+setas+helechos listos")
+	var t1 := Time.get_ticks_msec()
 	_sotobosque(W, H, avoid)
+	print("ZAREK     sotobosque %d ms" % (Time.get_ticks_msec() - t1))
+	t1 = Time.get_ticks_msec()
 	_jardin_salvaje()
+	print("ZAREK     jardin %d ms" % (Time.get_ticks_msec() - t1))
 	# colisión de troncos con un solo cuerpo
 	var sb := StaticBody3D.new()
 	add_child(sb)
