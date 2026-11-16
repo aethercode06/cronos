@@ -682,7 +682,18 @@ func oir_ruido(pos: Vector3, fuerza: float) -> void:
 	if elena:
 		elena.hear(pos, fuerza)
 
+var _pos_segura := Vector3.ZERO
+var _t_segura := 0.0
 func _physics_process(_delta: float) -> void:
+	# red de seguridad: si por cualquier hueco el jugador cae al vacío, vuelve al último sitio firme
+	if player and state in ["juego", "ritual", "intro"]:
+		_t_segura += _delta
+		if player.is_on_floor() and _t_segura > 0.5:
+			_t_segura = 0.0
+			_pos_segura = player.global_position
+		if player.global_position.y < -12.0:
+			player.global_position = _pos_segura if _pos_segura != Vector3.ZERO else respawn_pos
+			player.velocity = Vector3.ZERO
 	# el objeto cogido sigue a la mano (delante de la cámara) con física: choca, se frena y puede caerse
 	if is_instance_valid(llevado):
 		var cam := player.camera

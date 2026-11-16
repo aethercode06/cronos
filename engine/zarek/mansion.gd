@@ -1541,6 +1541,22 @@ func _exterior() -> void:
 	for z in ex.zonas:
 		if String(z[0]) in ["Arroyo", "Estanque"]:
 			cauces.append(Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL).grow(1.2))
+	# más allá del mapa: suelo de bosque que se pierde en la niebla (para no ver el borde) y un muro invisible
+	# a 1,5 m del borde que no deja salir
+	for anillo in [Rect2(-40, -40, W + 80, 40), Rect2(-40, H, W + 80, 40), Rect2(-40, 0, 40, H), Rect2(W, 0, 40, H)]:
+		var ar: Rect2 = anillo
+		var g2 := box(Vector3(ar.size.x, 0.4, ar.size.y), Vector3(ar.get_center().x, -0.2, ar.get_center().y), _mat.bosque, true, self, false)
+		g2.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for borde in [[Vector3(W * 0.5, 4.0, 1.0), Vector3(W + 4.0, 10.0, 1.0)], [Vector3(W * 0.5, 4.0, H - 1.0), Vector3(W + 4.0, 10.0, 1.0)],
+			[Vector3(1.0, 4.0, H * 0.5), Vector3(1.0, 10.0, H + 4.0)], [Vector3(W - 1.0, 4.0, H * 0.5), Vector3(1.0, 10.0, H + 4.0)]]:
+		var sb := StaticBody3D.new()
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = borde[1]
+		cs.shape = bs
+		sb.position = borde[0]
+		sb.add_child(cs)
+		add_child(sb)
 	for gr in _split_holes(Rect2(0, 0, W, H), cauces):
 		var grr: Rect2 = gr
 		var ground := box(Vector3(grr.size.x, 0.4, grr.size.y), Vector3(grr.get_center().x, -0.2, grr.get_center().y), _mat.bosque, true, self, false)
