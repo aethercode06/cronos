@@ -2046,8 +2046,9 @@ func _trees(W: float, H: float) -> void:
 		xforms.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(s, s * _rng.randf_range(0.9, 1.3), s)), Vector3(p.x, 0, p.y)))
 	# árboles realistas (Ez-Tree) cerca y abetos sencillos a lo lejos, repartidos en parcelas de 24 m para que
 	# solo se dibuje con detalle el bosque que rodea al jugador (la niebla tapa el resto)
-	var pinos := ["pino_grande_1", "pino_grande_2", "pino_grande_3", "pino_mediano_1", "pino_mediano_2", "pino_joven", "muerto_roble", "muerto_fresno", "muerto_roble_2"]
-	var peso := [16, 16, 16, 14, 14, 10, 4, 4, 6]
+	var pinos := ["pino_grande_1", "pino_grande_2", "pino_grande_3", "pino_mediano_1", "pino_mediano_2", "pino_joven", "muerto_roble", "muerto_fresno", "muerto_roble_2",
+		"fresno_joven", "alamo_joven", "roble_joven", "roble_mediano", "fresno_mediano", "muerto_alamo", "muerto_joven"]
+	var peso := [14, 14, 14, 12, 12, 9, 4, 4, 5, 6, 4, 6, 6, 6, 3, 4]
 	var mallas: Array = []
 	for nm in pinos:
 		mallas.append(_malla_glb("res://zarek/arboles/%s.glb" % nm))
@@ -2081,7 +2082,8 @@ func _trees(W: float, H: float) -> void:
 		for v in pc:
 			var lista: Array = pc[v]
 			if mallas[v] != null:
-				_multi_arbol(_con_viento(mallas[v], 0.025 if v < 6 else 0.012, 0.035 if v < 6 else 0.0), lista, 0.0, 68.0, true)
+				var muerto: bool = String(pinos[v]).begins_with("muerto")
+				_multi_arbol(_con_viento(mallas[v], 0.012 if muerto else (0.025 if v < 6 else 0.035), 0.0 if muerto else 0.035), lista, 0.0, 68.0, true)
 			if v < 6:
 				for k in lista.size():
 					lejos_xs[k % 3].append(lista[k])
@@ -2089,11 +2091,11 @@ func _trees(W: float, H: float) -> void:
 			if lejos_xs[k].size() > 0:
 				_multi_arbol(_con_viento(lejos[k], 0.02, 0.0), lejos_xs[k], 60.0, 0.0, false)
 	# arbustos bajo los árboles
-	var arb := [_malla_glb("res://zarek/arboles/arbusto_1.glb"), _malla_glb("res://zarek/arboles/arbusto_2.glb")]
-	var arb_xs: Array = [[], []]
+	var arb := [_malla_glb("res://zarek/arboles/arbusto_1.glb"), _malla_glb("res://zarek/arboles/arbusto_2.glb"), _malla_glb("res://zarek/arboles/arbusto_3.glb")]
+	var arb_xs: Array = [[], [], []]
 	var na := int(900 * (1.0 if quality >= 2 else 0.6))
 	var intentos := 0
-	while arb_xs[0].size() + arb_xs[1].size() < na and intentos < na * 6:
+	while arb_xs[0].size() + arb_xs[1].size() + arb_xs[2].size() < na and intentos < na * 6:
 		intentos += 1
 		var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
 		var mal := false
@@ -2104,8 +2106,8 @@ func _trees(W: float, H: float) -> void:
 		if mal:
 			continue
 		var sa := _rng.randf_range(0.7, 1.3)
-		arb_xs[_rng.randi_range(0, 1)].append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sa, sa, sa)), Vector3(p.x, -0.05, p.y)))
-	for k in 2:
+		arb_xs[_rng.randi_range(0, 2)].append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sa, sa, sa)), Vector3(p.x, -0.05, p.y)))
+	for k in 3:
 		if arb[k] != null:
 			var porp: Dictionary = {}
 			for t in arb_xs[k]:
