@@ -109,8 +109,10 @@ func _ready() -> void:
 	lc.add_theme_color_override("font_color", Color(0.75, 0.68, 0.6))
 	carga.add_child(lc)
 	add_child(carga)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# deja que la pantalla de carga llegue a verse antes de bloquear el hilo construyendo la casa
+	for i in 4:
+		await get_tree().process_frame
+	await get_tree().create_timer(0.25).timeout
 	var t_carga := Time.get_ticks_msec()
 	_environment()
 	mansion = ZarekMansion.new()
@@ -253,7 +255,8 @@ func _environment() -> void:
 	moon.light_color = Color(0.55, 0.65, 0.95)
 	moon.light_energy = 0.45
 	moon.rotation_degrees = Vector3(-38, -55, 0)
-	moon.shadow_enabled = true
+	# en el teléfono la luna no proyecta sombras (cuesta un pase entero); las da la linterna, que es lo que da miedo
+	moon.shadow_enabled = OS.get_name() != "Android"
 	moon.directional_shadow_max_distance = 32.0 if OS.get_name() == "Android" else 60.0
 	moon.shadow_bias = 0.06
 	moon.shadow_normal_bias = 2.5
@@ -365,9 +368,24 @@ func _bar(col: Color, w: float) -> ProgressBar:
 	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return b
 
+var lbl_fps: Label
 func _ui() -> void:
+	if OS.get_name() == "Android":
+		Engine.max_fps = 60
+	# contador de fps (arriba a la izquierda, pequeño): para medir en el teléfono de verdad
+	var capa_fps := CanvasLayer.new()
+	capa_fps.layer = 90
+	add_child(capa_fps)
+	lbl_fps = Label.new()
+	lbl_fps.position = Vector2(14, 8)
+	lbl_fps.add_theme_font_size_override("font_size", 18)
+	lbl_fps.add_theme_color_override("font_color", Color(0.6, 1.0, 0.6, 0.8))
+	lbl_fps.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	lbl_fps.add_theme_constant_override("outline_size", 4)
+	lbl_fps.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	capa_fps.add_child(lbl_fps)
 	# 2× MSAA: bordes limpios y agujas de los abetos sin dientes (barato en GPU móviles de teselas)
-	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if OS.get_name() == "Android" else Viewport.MSAA_2X
+	get_viewport().msaa_3d = Viewport.MSAA_2X
 	# posprocesado de cine (debajo de la interfaz, para que el texto no lleve grano)
 	var cine := CanvasLayer.new()
 	cine.layer = 40
@@ -707,6 +725,8 @@ func _process(delta: float) -> void:
 	vig_mat.set_shader_parameter("t", fmod(Time.get_ticks_msec() / 1000.0, 100.0))
 	# medición de rendimiento en el registro (logcat en Android): fps, llamadas de dibujo y triángulos
 	_t_fps += delta
+	if lbl_fps and Engine.get_process_frames() % 15 == 0:
+		lbl_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _t_fps >= 5.0:
 		_t_fps = 0.0
 		print("ZAREK FPS %d draws %d prims %d mem %d MB estado %s pos %s" % [Engine.get_frames_per_second(),
