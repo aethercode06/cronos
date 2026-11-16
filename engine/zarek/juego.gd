@@ -68,6 +68,8 @@ var lbl_lives: Label
 var lbl_salt: Label
 var vignette: ColorRect
 var vig_mat: ShaderMaterial
+var post_mat: ShaderMaterial
+var llevado: RigidBody3D = null   # objeto que el jugador lleva en la mano
 var black: ColorRect
 var slit_l: ColorRect
 var slit_r: ColorRect
@@ -188,6 +190,32 @@ func _environment() -> void:
 	sky.sky_material = sm
 	env.sky = sky
 	env.background_mode = Environment.BG_SKY
+	# gráficos altos (renderizador Forward+ en móviles potentes y ordenador): sombras de contacto (SSAO),
+	# reflejos en pantalla (agua, suelos encerados), luz indirecta en pantalla y niebla volumétrica con haces
+	# de luz de la luna y de la linterna
+	var fplus := RenderingServer.get_current_rendering_method() == "forward_plus"
+	if fplus:
+		env.tonemap_mode = Environment.TONE_MAPPER_AGX
+		env.tonemap_exposure = 1.25
+		env.ssao_enabled = true
+		env.ssao_radius = 1.4
+		env.ssao_intensity = 2.2
+		env.ssao_power = 1.6
+		env.ssil_enabled = OS.get_name() != "Android"
+		env.ssil_intensity = 0.8
+		env.ssr_enabled = true
+		env.ssr_max_steps = 48
+		env.ssr_fade_in = 0.1
+		env.ssr_fade_out = 2.5
+		env.volumetric_fog_enabled = true
+		env.volumetric_fog_density = 0.018
+		env.volumetric_fog_albedo = Color(0.55, 0.6, 0.68)
+		env.volumetric_fog_emission = Color(0.0, 0.0, 0.0)
+		env.volumetric_fog_anisotropy = 0.55
+		env.volumetric_fog_length = 48.0
+		env.volumetric_fog_detail_spread = 2.0
+		env.volumetric_fog_ambient_inject = 0.15
+		env.fog_density = 0.008
 	we.environment = env
 	add_child(we)
 	var moon := DirectionalLight3D.new()
@@ -315,6 +343,7 @@ func _ui() -> void:
 	var pm := ShaderMaterial.new()
 	pm.shader = load("res://zarek/post.gdshader")
 	cr.material = pm
+	post_mat = pm
 	cine.add_child(cr)
 	ui = CanvasLayer.new()
 	ui.layer = 50
@@ -592,6 +621,18 @@ func oir_ruido(pos: Vector3, fuerza: float) -> void:
 		elena.hear(pos, fuerza)
 
 func _physics_process(_delta: float) -> void:
+	# el objeto cogido sigue a la mano (delante de la cámara) con física: choca, se frena y puede caerse
+	if is_instance_valid(llevado):
+		var cam := player.camera
+		var meta := cam.global_position - cam.global_transform.basis.z * 1.0 - cam.global_transform.basis.y * 0.2
+		var dif := meta - llevado.global_position
+		if dif.length() > 2.0 or not hidden_in.is_empty():
+			llevado.gravity_scale = 1.0
+			llevado.angular_damp = 0.0
+			player.remove_collision_exception_with(llevado)
+			llevado = null
+		else:
+			llevado.linear_velocity = dif * 14.0 / maxf(1.0, llevado.mass * 0.15)
 	if player == null:
 		return
 	# el jugador empuja lo que toca
@@ -648,6 +689,11 @@ func _update_niebla(delta: float) -> void:
 	env.fog_height = 1.4
 	env.fog_height_density = lerpf(0.0, 0.32, _fuera)
 	env.fog_sky_affect = lerpf(0.0, 0.85, _fuera)
+	if env.volumetric_fog_enabled:
+		# con niebla volumética la de profundidad es más fina (si no, se suman y todo queda gris)
+		env.volumetric_fog_density = lerpf(0.008, 0.03, _fuera)
+		env.fog_density = lerpf(0.005, 0.022, _fuera)
+		env.fog_height_density = lerpf(0.0, 0.18, _fuera)
 	if niebla == null:
 		niebla = ZarekNiebla.new()
 		add_child(niebla)
@@ -796,6 +842,8 @@ func _play(delta: float) -> void:
 			target_d = maxf(target_d, 0.7)
 	_danger = lerpf(_danger, target_d, delta * 2.0)
 	vig_mat.set_shader_parameter("amount", clampf((100.0 - sanity) / 100.0 * 0.6 + _danger * 0.5, 0.0, 1.0))
+	if post_mat:
+		post_mat.set_shader_parameter("miedo", clampf((100.0 - sanity) / 100.0 * 0.7 + _danger * 0.6, 0.0, 1.0))
 	# Elena: escondite
 	elena.player_hidden = not hidden_in.is_empty()
 	if not hidden_in.is_empty() and _hide_seen and elena.state == ZarekElena.S.CHASE:
@@ -900,6 +948,8 @@ func _target() -> Dictionary:
 	var pp := player.global_position
 	if not hidden_in.is_empty():
 		return {"kind": "salir", "text": "USAR: salir del armario"}
+	if is_instance_valid(llevado):
+		return {"kind": "lanzar", "text": "USAR: lanzar"}
 	for s in mansion.seals:
 		if not s.taken and Vector2(pp.x - s.pos.x, pp.z - s.pos.z).length() < 1.7:
 			return {"kind": "sello", "obj": s, "text": "USAR: tomar el sello"}
@@ -924,6 +974,13 @@ func _target() -> Dictionary:
 		return {"kind": "lampara", "obj": l, "text": "USAR: " + ("apagar" if l.on else "encender") + " la lámpara"}
 	if not l.is_empty() and l.broken:
 		return {"kind": "nada", "text": "La bombilla está rota."}
+	# objetos sueltos al alcance de la mano: se pueden coger y lanzar
+	var cam := player.camera
+	var q := PhysicsRayQueryParameters3D.create(cam.global_position, cam.global_position - cam.global_transform.basis.z * 2.2, 1 | 2 | 8)
+	q.exclude = [player.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if not hit.is_empty() and hit.collider is RigidBody3D and (hit.collider as RigidBody3D).mass < 14.0:
+		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger"}
 	return {}
 
 func _interact_prompt() -> void:
@@ -964,6 +1021,21 @@ func _use() -> void:
 		"lampara":
 			mansion.set_lamp(t.obj, not t.obj.on)
 			_click()
+		"coger":
+			llevado = t.obj
+			llevado.sleeping = false
+			llevado.gravity_scale = 0.0
+			llevado.angular_damp = 6.0
+			player.add_collision_exception_with(llevado)
+		"lanzar":
+			var cam := player.camera
+			llevado.gravity_scale = 1.0
+			llevado.angular_damp = 0.0
+			llevado.linear_velocity = -cam.global_transform.basis.z * clampf(9.0 - llevado.mass * 0.5, 3.0, 9.0) + Vector3(0, 1.2, 0)
+			llevado.angular_velocity = Vector3(randf_range(-4, 4), randf_range(-4, 4), randf_range(-4, 4))
+			var lanzado := llevado
+			llevado = null
+			get_tree().create_timer(0.4).timeout.connect(func(): if is_instance_valid(lanzado): player.remove_collision_exception_with(lanzado))
 
 func _use_portal(pt: Dictionary) -> void:
 	player.frozen = true

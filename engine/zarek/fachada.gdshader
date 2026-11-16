@@ -9,6 +9,7 @@ uniform sampler2D ruido : filter_linear_mipmap, repeat_enable;
 uniform vec3 tinte : source_color = vec3(0.78, 0.75, 0.7);
 uniform float escala = 0.33;
 uniform float suciedad = 1.0;
+uniform bool usa_ao = true;
 varying vec3 mpos;
 varying vec3 mnor;
 
@@ -32,13 +33,22 @@ void fragment() {
 	vec2 q = vec2(dot(mpos.xz, vec2(0.7, 0.7)) * 0.9, h * 0.06);
 	float chorreo = texture(ruido, q).r;
 	float bajo_cornisa = smoothstep(0.2, 0.0, fract(h / 3.6 + 0.05)) * 0.6 + 0.4;
-	float sucio = smoothstep(0.45, 0.8, chorreo) * bajo_cornisa;
+	float sucio = smoothstep(0.38, 0.75, chorreo) * bajo_cornisa;
 	// base húmeda: más oscura y algo verde hasta ~1,2 m
 	float base = 1.0 - smoothstep(0.0, 1.3, h);
 	float manchas = texture(ruido, mpos.xz * 0.02 + vec2(h * 0.01)).r;
-	col *= 1.0 - sucio * 0.35 * suciedad;
-	col = mix(col, col * vec3(0.55, 0.6, 0.5), base * 0.7 * suciedad);
-	col *= mix(0.85, 1.08, manchas);
+	// hollín negro que cae desde cada cornisa y alféizar, más ancho cuanto más viejo
+	float hollin = smoothstep(0.55, 0.95, texture(ruido, vec2(dot(mpos.xz, vec2(0.7, 0.7)) * 2.3, h * 0.025 + 0.3)).r) * smoothstep(0.65, 0.0, fract(h / 3.6 + 0.12));
+	// musgo y líquenes: manchas verdosas grandes, más en lo bajo y donde hay humedad
+	float musgo = smoothstep(0.58, 0.8, texture(ruido, mpos.xz * 0.05 + vec2(h * 0.04, 0.0)).r) * (0.45 + base * 0.8);
+	float liquen = smoothstep(0.78, 0.86, texture(ruido, (mpos.xz + vec2(h)) * 0.9).r);
+	col *= 1.0 - sucio * 0.5 * suciedad;
+	col *= 1.0 - hollin * 0.65 * suciedad;
+	col = mix(col, col * vec3(0.5, 0.56, 0.42), base * 0.8 * suciedad);
+	col = mix(col, vec3(0.08, 0.1, 0.05), musgo * 0.55 * suciedad);
+	col = mix(col, vec3(0.42, 0.44, 0.32), liquen * 0.35 * suciedad);
+	col *= mix(0.7, 1.05, manchas);
+	col *= 0.82;
 	ALBEDO = col * mix(0.75, 1.0, ao);
 	NORMAL_MAP = nm;
 	NORMAL_MAP_DEPTH = 1.2;

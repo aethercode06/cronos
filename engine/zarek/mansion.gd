@@ -141,6 +141,7 @@ func build(q := 2) -> void:
 	_build_stairs()
 	_roof()
 	_ornatos_fachada()
+	_abandono_exterior()
 	_exterior()
 	_markers()
 	_portals()
@@ -417,7 +418,7 @@ func _materials() -> void:
 		_mat["papel%d" % i] = _papel(_rayas(papers[i], 30 + i), Color(1.15, 1.15, 1.15))
 	_mat["cortina"] = _pbr("Fabric085", 1.6, Color(0.42, 0.1, 0.11), 1.0, 1.4)
 	_mat["cortina"].cull_mode = BaseMaterial3D.CULL_DISABLED
-	var cristal := _plain(Color(0.35, 0.45, 0.6, 0.22), 0.05, 0.2)
+	var cristal := _plain(Color(0.2, 0.2, 0.17, 0.5), 0.35, 0.2)
 	cristal.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_mat["cristal"] = cristal
 	var persa := StandardMaterial3D.new()
@@ -432,8 +433,19 @@ func _materials() -> void:
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
-	_mat["fachada"] = _fachada_mat("Bricks066", 0.32, Color(0.8, 0.77, 0.7))
-	_mat["piedra_clara"] = _pbr("Travertine009", 0.45, Color(0.9, 0.87, 0.8), 0.9)
+	_mat["fachada"] = _fachada_mat("Bricks066", 0.32, Color(0.66, 0.64, 0.58))
+	_mat["fachada"].set_shader_parameter("suciedad", 1.35)
+	var torre := StandardMaterial3D.new()
+	torre.albedo_texture = load("res://zarek/texturas/Bricks066/color.jpg")
+	torre.albedo_color = Color(0.5, 0.48, 0.44)
+	torre.normal_enabled = true
+	torre.normal_texture = load("res://zarek/texturas/Bricks066/normal.jpg")
+	torre.roughness_texture = load("res://zarek/texturas/Bricks066/rough.jpg")
+	torre.uv1_scale = Vector3(8.5, 4.4, 1)
+	torre.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	_mat["fachada_torre"] = torre
+	_mat["piedra_clara"] = _fachada_mat("Travertine009", 0.45, Color(0.66, 0.63, 0.56))
+	_mat["piedra_clara"].set_shader_parameter("suciedad", 1.25)
 	_mat["contraventana"] = _pbr("Wood049", 0.8, Color(0.16, 0.2, 0.17), 0.7)
 	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
 	_mat["cesped"] = _suelo("Ground037", "ScatteredLeaves009", "Ground110", 0.25, Color(0.5, 0.52, 0.42), Color(0.66, 0.62, 0.56), Color(0.75, 0.72, 0.68), 0.3, 0.2)
@@ -895,7 +907,7 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	ventanas.append(c)
 	if level_of(c.y + 0.3) >= 0 and Vector3(LUNA_H.x, 0, LUNA_H.z).dot(inward) > 0.25:
 		_haz_luna(c, horiz, inward)
-	var lit := _rng.randf() < 0.3
+	var lit := _rng.randf() < 0.04
 	var glass := Vector3(1.6, 2.0, 0.04) if horiz else Vector3(0.04, 2.0, 1.6)
 	box(glass, c + Vector3(0, 1.9, 0), _mat.ventana_luz if lit else _mat.cristal, true, null, false)
 	var fr := Vector3(1.75, 0.1, thick + 0.1) if horiz else Vector3(thick + 0.1, 0.1, 1.75)
@@ -945,13 +957,32 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 		for sj in [-1.05, 1.05]:
 			var mn := Vector3(0.12, 0.3, 0.2) if horiz else Vector3(0.2, 0.3, 0.12)
 			box(mn, c + ej * sj + fuera - inward * 0.04 + Vector3(0, 3.12, 0), pc, false, null, false)
+	# abandono: algunas ventanas tapiadas con tablas clavadas
+	if _rng.randf() < 0.22:
+		for k in 3:
+			var tabla := box(Vector3(2.0, 0.22, 0.04) if horiz else Vector3(0.04, 0.22, 2.0), Vector3.ZERO, _mat.madera_vieja, false, null, false)
+			tabla.position = c + fuera - inward * 0.05 + Vector3(0, 1.3 + k * 0.6, 0)
+			if horiz:
+				tabla.rotation.z = _rng.randf_range(-0.35, 0.35)
+			else:
+				tabla.rotation.x = _rng.randf_range(-0.35, 0.35)
 	for sj in [-1.0, 1.0]:
+		var estado := _rng.randf()
+		if estado < 0.12:
+			continue  # contraventana que se perdió
 		var hoja := Vector3(0.82, 2.15, 0.05) if horiz else Vector3(0.05, 2.15, 0.82)
 		var cv := box(hoja, c + ej * sj * 1.5 + fuera + Vector3(0, 1.9, 0), _mat.contraventana, false, null, false)
+		if estado < 0.3:
+			# descolgada de un gozne: torcida y caída
+			if horiz:
+				cv.rotation.z = sj * _rng.randf_range(0.2, 0.45)
+			else:
+				cv.rotation.x = sj * _rng.randf_range(0.2, 0.45)
+			cv.position.y -= 0.25
 		# lamas de la persiana en relieve
 		for k in 7:
 			var lama := Vector3(0.7, 0.03, 0.035) if horiz else Vector3(0.035, 0.03, 0.7)
-			box(lama, c + ej * sj * 1.5 + fuera - inward * 0.03 + Vector3(0, 1.05 + k * 0.27, 0), _mat.contraventana, false, null, false)
+			box(lama, -inward * 0.03 + Vector3(0, 1.05 + k * 0.27 - 1.9, 0), _mat.contraventana, false, cv, false)
 	# cortinas pesadas con pliegues, barra y galería
 	var eje: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
 	var dentro: Vector3 = c + inward * (thick * 0.5 + 0.13)
@@ -1241,6 +1272,25 @@ func _puerta_principal(c: Vector3, horiz: bool, ids: Array) -> void:
 		for zz in [0.08, -0.08]:
 			cyl(0.045, 0.045, 0.08, Vector3(w - 0.12, 1.05, zz), _mat.oro, piv, 10).rotation.x = PI * 0.5
 		hojas.append(piv)
+	# arañazos profundos en la madera, como de garras, a la altura de una persona
+	var marcas := _tex_aranazos()
+	var mar := StandardMaterial3D.new()
+	mar.albedo_texture = marcas
+	mar.albedo_color = Color(0.1, 0.05, 0.03)
+	mar.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mar.roughness = 0.9
+	for hj in hojas:
+		var piv3: Node3D = hj
+		var zf2 := signf((piv3.basis.inverse() * fuera).z)
+		var qm := QuadMesh.new()
+		qm.size = Vector2(0.5, 1.1)
+		var ar := MeshInstance3D.new()
+		ar.mesh = qm
+		ar.material_override = mar
+		ar.position = Vector3((gap * 0.5 - 0.02) * 0.5 + randf_range(-0.1, 0.1), 1.25, 0.081 * zf2)
+		ar.rotation.y = 0.0 if zf2 > 0 else PI
+		ar.rotation.z = randf_range(-0.25, 0.25)
+		piv3.add_child(ar)
 	# aldabones de león en cada hoja (van con la hoja al abrir)
 	for hj in hojas:
 		var piv2: Node3D = hj
@@ -1270,6 +1320,102 @@ func _puerta_principal(c: Vector3, horiz: bool, ids: Array) -> void:
 	var d := {"pivot": hojas[0], "pivot2": hojas[1], "shape": cs, "pos": c, "open": false, "locked": false, "ang": 0.0, "target": 0.0,
 		"base": hojas[0].rotation.y, "base2": hojas[1].rotation.y, "snd": snd, "level": 0, "principal": true}
 	doors.append(d)
+
+## Un siglo de abandono por fuera: hiedra trepando por las esquinas y la torre, ventanas tapiadas con tablas,
+## contraventanas descolgadas o perdidas, arañazos en la puerta principal y una luz roja que tiembla en el ático.
+var ventanas_ext: Array = []
+var _luz_atico: OmniLight3D
+func _abandono_exterior() -> void:
+	var r := house_rect
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 666
+	# --- hiedra: tallos que suben con quiebros y se ramifican, cubiertos de hojas ---
+	var mh := StandardMaterial3D.new()
+	mh.albedo_texture = load("res://zarek/texturas/hiedra.png")
+	mh.albedo_color = Color(0.22, 0.3, 0.18)
+	mh.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+	mh.alpha_scissor_threshold = 0.4
+	mh.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mh.roughness = 0.7
+	var q := QuadMesh.new()
+	q.size = Vector2(0.55, 0.7)
+	q.material = mh
+	var hojas: Array[Transform3D] = []
+	var arranques: Array = []
+	for e in [[r.position, Vector3(-1, 0, -1)], [Vector2(r.end.x, r.position.y), Vector3(1, 0, -1)], [Vector2(r.position.x, r.end.y), Vector3(-1, 0, 1)], [r.end, Vector3(1, 0, 1)]]:
+		var p2: Vector2 = e[0]
+		var d: Vector3 = e[1]
+		for k in 3:
+			var sobre_x := k % 2 == 0
+			var off := rng.randf_range(0.3, 3.5)
+			var pos := Vector3(p2.x - d.x * (off if sobre_x else -0.27), 0, p2.y - d.z * (-0.27 if sobre_x else off))
+			arranques.append([pos, Vector3(0, 0, d.z) if sobre_x else Vector3(d.x, 0, 0)])
+	for k in 10:
+		var lado := rng.randi_range(0, 3)
+		var horiz := lado < 2
+		var u := rng.randf_range(2.0, (r.size.x if horiz else r.size.y) - 2.0)
+		var n := Vector3(0, 0, -1 if lado == 0 else 1) if horiz else Vector3(-1 if lado == 2 else 1, 0, 0)
+		var pos := Vector3(r.position.x + u, 0, (r.position.y - 0.27) if lado == 0 else (r.end.y + 0.27)) if horiz else Vector3((r.position.x - 0.27) if lado == 2 else (r.end.x + 0.27), 0, r.position.y + u)
+		arranques.append([pos, n])
+	for a in arranques:
+		_tallo(a[0], a[1], rng.randf_range(5.0, lvl_y(2) + 3.0), 0, rng, hojas)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = q
+	mm.instance_count = hojas.size()
+	for i in hojas.size():
+		mm.set_instance_transform(i, hojas[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	add_child(mmi)
+	# --- luz roja temblorosa en una ventana del ático ---
+	_luz_atico = OmniLight3D.new()
+	_luz_atico.light_color = Color(0.9, 0.12, 0.05)
+	_luz_atico.light_energy = 1.2
+	_luz_atico.omni_range = 4.0
+	_luz_atico.position = Vector3(r.get_center().x - r.size.x * 0.22, lvl_y(2) + 3.45 + 2.8, r.end.y - 0.3)
+	add_child(_luz_atico)
+
+## Textura de arañazos: cuatro surcos paralelos que bajan torciéndose, con astillas en los bordes.
+func _tex_aranazos() -> ImageTexture:
+	var img := Image.create(128, 256, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 13
+	for g in 2:
+		var x0 := rng.randf_range(20, 70) + g * 30
+		for k in 4:
+			var x := x0 + k * 9.0
+			for y in range(rng.randi_range(10, 40), rng.randi_range(190, 250)):
+				x += sin(y * 0.05 + k) * 0.25 + rng.randf_range(-0.3, 0.3)
+				var ancho := 1.5 + sin(PI * y / 256.0) * 1.8
+				for dx in range(-3, 4):
+					var xi := int(x) + dx
+					if xi >= 0 and xi < 128 and absf(dx) <= ancho:
+						var a := 1.0 - absf(dx) / (ancho + 0.5)
+						var vieja := img.get_pixel(xi, y)
+						img.set_pixel(xi, y, Color(0.6, 0.5, 0.4, maxf(vieja.a, a)))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+## Un tallo de hiedra pegado al muro (normal n): sube haciendo eses, a veces se abre en dos, y deja hojas.
+func _tallo(p: Vector3, n: Vector3, alto: float, prof: int, rng: RandomNumberGenerator, hojas: Array[Transform3D]) -> void:
+	var lado := Vector3(-n.z, 0, n.x)
+	var y := p.y
+	var x := 0.0
+	while y < alto:
+		y += rng.randf_range(0.12, 0.22)
+		x += rng.randf_range(-0.14, 0.14)
+		var c := p + lado * x + Vector3(0, y - p.y, 0) + n * rng.randf_range(0.0, 0.08)
+		for k in 2:
+			var b := Basis.looking_at(-n, Vector3.UP).rotated(n, rng.randf() * TAU)
+			b = b.rotated(lado, rng.randf_range(-0.5, 0.5))
+			var s := rng.randf_range(0.6, 1.2) * (1.0 - float(prof) * 0.15)
+			hojas.append(Transform3D(b.scaled(Vector3(s, s, s)), c + lado * rng.randf_range(-0.25, 0.25) + Vector3(0, rng.randf_range(-0.15, 0.15), 0)))
+		if prof < 2 and rng.randf() < 0.05:
+			_tallo(c, n, minf(alto, y + rng.randf_range(1.0, 3.5)), prof + 1, rng, hojas)
+			x += rng.randf_range(-0.6, 0.6)
 
 # ---------------- tejado y torre ----------------
 func _roof() -> void:
@@ -1321,7 +1467,12 @@ func _roof() -> void:
 		gr.material_override = _mat.tejado
 		gr.position = Vector3(c.x + sx, y + 3.9, r.end.y - 1.6)
 		add_child(gr)
-		var ow := cyl(0.9, 0.9, 0.1, Vector3(c.x + sx, y + 2.8, r.end.y + 1.05), _mat.ventana_luz, self, 14)
+		var roja := StandardMaterial3D.new()
+		roja.albedo_color = Color(0.05, 0.0, 0.0)
+		roja.emission_enabled = true
+		roja.emission = Color(0.7, 0.06, 0.02)
+		roja.emission_energy_multiplier = 0.8
+		var ow := cyl(0.9, 0.9, 0.1, Vector3(c.x + sx, y + 2.8, r.end.y + 1.05), roja if sx < 0 else _mat.vidrio, self, 14)
 		ow.rotation.x = PI * 0.5
 	for cp in [Vector2(r.position.x + 8, c.y - 6), Vector2(r.end.x - 10, c.y + 4), Vector2(c.x - 3, c.y + 6)]:
 		box(Vector3(1.6, 12.0, 1.6), Vector3(cp.x, y + 8.0, cp.y), _mat.piedra, false, self)
@@ -1334,14 +1485,16 @@ func _roof() -> void:
 	var rt := 4.2
 	var tc := t0 + Vector3(3.0, 0, 5.0)
 	var th := lvl_y(3) + 1.0
-	cyl(rt, rt, th, tc + Vector3(0, th * 0.5 - 0.02, 0), _mat.fachada, self, 24)
+	# tambor de la torre: mapeado por UV (no triplanar: en una superficie curva el triplanar hace bandas)
+	var tambor := cyl(rt, rt, th, tc + Vector3(0, th * 0.5 - 0.02, 0), _mat.fachada_torre, self, 48)
+	tambor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	cyl(0.0, rt + 1.0, 9.0, tc + Vector3(0, th + 4.5, 0), _mat.tejado, self, 24)
 	cyl(0.05, 0.05, 3.0, tc + Vector3(0, th + 10.0, 0), _mat.metal, self, 6)
 	for lv in 3:
 		for k in 6:
 			var a := TAU * k / 6.0 + 0.3
 			var wp := tc + Vector3(cos(a) * (rt + 0.05), lvl_y(lv) + 1.9, sin(a) * (rt + 0.05))
-			var w := box(Vector3(0.1, 2.0, 1.1), wp, _mat.ventana_luz if (k + lv) % 3 == 0 else _mat.vidrio, false, self)
+			var w := box(Vector3(0.1, 2.0, 1.1), wp, _mat.ventana_luz if (k == 2 and lv == 2) else _mat.vidrio, false, self)
 			w.rotation.y = -a
 
 # ---------------- exterior ----------------
@@ -2973,6 +3126,9 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 	if masa > 0.0 and _props_info.has(nombre):
 		var rb := ZarekObjetoFisico.new()
 		rb.mass = maxf(0.1, masa * escala)
+		for clave in ["vase", "porcelain", "teapot", "tea_set", "cup", "plate", "jar", "perfume", "jug", "bowl", "ceramic", "goblet", "wine_glass", "clock"]:
+			if nombre.contains(clave) and not nombre.contains("brass") and not nombre.contains("metal") and not nombre.contains("wooden"):
+				rb.rompible = true
 		if _es_metal(nombre):
 			rb.sonido = "tintineo"
 		rb.position = p
@@ -3527,6 +3683,9 @@ func random_floor(far_from := Vector3(-9999, 0, -9999), min_dist := 0.0, exclude
 	return front_door + Vector3(0, 0, -4)
 
 func _process(delta: float) -> void:
+	if _luz_atico:
+		var tt := Time.get_ticks_msec() / 1000.0
+		_luz_atico.light_energy = 0.9 + 0.5 * sin(tt * 7.3) * sin(tt * 2.1) + (0.6 if fmod(tt, 9.0) < 0.15 else 0.0)
 	for d in doors:
 		if absf(d.ang - d.target) > 0.001:
 			d.ang = move_toward(d.ang, d.target, delta * float(d.get("speed", 3.0)))

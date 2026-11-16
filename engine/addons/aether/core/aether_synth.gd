@@ -9,7 +9,7 @@ const RATE := 22050
 static var _cache := {}
 
 ## Nombres disponibles: drone, latido, paso, portazo, golpes, susurro, grito,
-## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza, rio, fuente
+## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza, rio, fuente, ceramica
 static func make(kind: String) -> AudioStreamWAV:
 	if not _cache.has(kind):
 		_cache[kind] = _build(kind)
@@ -39,6 +39,7 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"aleteo": return _flaps()
 		"ululato": return _hoot()
 		"rio": return _river()
+		"ceramica": return _ceramic_break()
 		"fuente": return _fountain_snd()
 		"lechuza": return _barn_screech()
 	return _chime()
@@ -332,6 +333,27 @@ static func _barn_screech() -> AudioStreamWAV:
 		f1 = y
 		b[i] = y * env
 	_normalize(b, 0.75)
+	return _wav(b)
+
+## Loza que se rompe: golpe seco y quebradizo con resonancias de porcelana y trozos que rebotan.
+static func _ceramic_break() -> AudioStreamWAV:
+	var b := _buf(1.1)
+	var modos := [[1850.0, 9.0], [2630.0, 12.0], [3420.0, 16.0], [1240.0, 7.0]]
+	for i in b.size():
+		var t := float(i) / RATE
+		var v := (randf() * 2.0 - 1.0) * exp(-t * 55.0) * 1.2
+		for md in modos:
+			v += sin(TAU * float(md[0]) * t) * exp(-t * float(md[1])) * 0.25
+		b[i] = v
+	for k in 9:
+		var t0 := randf_range(0.08, 0.9)
+		var f := randf_range(2200.0, 5200.0)
+		var ini := int(t0 * RATE)
+		for j in int(0.05 * RATE):
+			if ini + j < b.size():
+				var tt := float(j) / RATE
+				b[ini + j] += sin(TAU * f * tt) * exp(-tt * 90.0) * randf_range(0.15, 0.4)
+	_normalize(b, 0.85)
 	return _wav(b)
 
 ## Arroyo: rumor continuo (ruido rosa filtrado) con burbujeos y chapoteos sueltos. En bucle.

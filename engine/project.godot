@@ -37,14 +37,19 @@ pointing/emulate_touch_from_mouse=true
 
 [physics]
 
+3d/physics_engine="Jolt Physics"
+
 common/physics_ticks_per_second=120
 common/max_physics_steps_per_frame=8
 2d/default_gravity=0.0
 
 [rendering]
 
-renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="forward_plus"
+scaling_3d/mode=1
+scaling_3d/scale=0.8
+scaling_3d/scale.mobile=0.72
 textures/canvas_textures/default_texture_filter=1
 textures/vram_compression/import_etc2_astc=true
 viewport/hdr_2d=true
