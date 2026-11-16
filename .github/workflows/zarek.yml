@@ -81,6 +81,8 @@ jobs:
           i=s.index('name="Android Zarek"'); j=s.find('[preset.', i)
           seg=s[i:j if j>0 else len(s)]
           seg2=seg.replace('architectures/x86_64=false','architectures/x86_64=true').replace('architectures/arm64-v8a=true','architectures/arm64-v8a=false')
+          # el Vulkan por software del emulador no puede presentar imágenes sin ventana: allí se usa OpenGL
+          seg2=re.sub(r'command_line/extra_args=".*"', 'command_line/extra_args="--rendering-driver opengl3 --rendering-method gl_compatibility"', seg2)
           open(p,'w').write(s[:i]+seg2+(s[j:] if j>0 else ''))
           PY
           godot --headless --path engine --export-release "Android Zarek" ../build/Zarek_x86_64.apk > export_x86.log 2>&1 || true
