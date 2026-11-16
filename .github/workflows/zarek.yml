@@ -2,7 +2,7 @@ name: La Sombra de Zarek (Aether Engine)
 on:
   push:
     branches: [ main ]
-    paths: [ 'engine/zarek/**', 'engine/addons/aether/three_d/aether_player_fp.gd', 'engine/addons/aether/ui/aether_touch_fp.gd', 'engine/addons/aether/core/aether_synth.gd', 'engine/export_presets.cfg', '.github/workflows/zarek.yml' ]
+    paths: [ 'engine/zarek/**', 'engine/addons/aether/three_d/aether_player_fp.gd', 'engine/addons/aether/ui/aether_touch_fp.gd', 'engine/addons/aether/core/aether_synth.gd', 'engine/export_presets.cfg', 'engine/project.godot', '.github/workflows/zarek.yml' ]
   workflow_dispatch:
 permissions:
   contents: write
