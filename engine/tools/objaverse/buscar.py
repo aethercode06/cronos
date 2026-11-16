@@ -48,5 +48,6 @@ for cat, cfg in cons.items():
         except Exception:
             pass
         d.text((x + 2, y + S + 1), f"{i} {o['nombre'][:24]}", fill="black"); d.text((x + 2, y + S + 11), f"{o['caras']//1000}k {o['licencia']}", fill="gray")
-    sheet.save(os.path.join(OUT, f"hoja_{cat}.jpg"), quality=80)
+    if sel:
+        sheet.save(os.path.join(OUT, f"hoja_{cat}.jpg"), quality=80)
 json.dump(res, open(os.path.join(OUT, "resultados.json"), "w"), indent=1, ensure_ascii=False)

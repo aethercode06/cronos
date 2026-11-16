@@ -1,15 +1,15 @@
 {
  "r_vestidos": {
   "k": [
-   "victorian dress",
+   "dress",
+   "gown",
+   "mannequin",
    "dress form",
-   "mannequin dress",
-   "dressmaker dummy",
-   "antique dress",
-   "wedding dress",
-   "gown"
+   "corset",
+   "petticoat",
+   "nightgown"
   ],
-  "n": 50,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -66,15 +66,14 @@
  },
  "r_abrigos": {
   "k": [
-   "coat hanging",
-   "overcoat",
-   "victorian coat",
+   "coat",
    "cloak",
-   "jacket hanging",
-   "coat hanger",
-   "tailcoat"
+   "jacket",
+   "waistcoat",
+   "cape",
+   "overcoat"
   ],
-  "n": 50,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -132,13 +131,15 @@
  "r_sombreros": {
   "k": [
    "top hat",
-   "bowler hat",
+   "bowler",
    "victorian hat",
    "bonnet",
    "lady hat",
-   "hat box"
+   "hat box",
+   "hatbox",
+   "straw hat"
   ],
-  "n": 40,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -195,14 +196,13 @@
  },
  "r_zapatos": {
   "k": [
-   "victorian boots",
-   "old boots",
-   "leather boots",
-   "antique shoes",
-   "lady shoes",
-   "shoes pair"
+   "boots",
+   "boot",
+   "shoe",
+   "shoes",
+   "slipper"
   ],
-  "n": 40,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -259,14 +259,16 @@
  },
  "r_doblada": {
   "k": [
-   "folded clothes",
-   "folded towel",
-   "stack of clothes",
-   "linen stack",
-   "folded blanket",
-   "pile of clothes"
+   "towel",
+   "folded",
+   "blanket",
+   "linen",
+   "bedsheet",
+   "clothes",
+   "clothing",
+   "laundry"
   ],
-  "n": 40,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -323,15 +325,17 @@
  },
  "r_tirada": {
   "k": [
-   "clothes on floor",
-   "shirt",
-   "sweater",
-   "dress",
    "scarf",
-   "gloves",
-   "glove"
+   "glove",
+   "apron",
+   "umbrella",
+   "parasol",
+   "handbag",
+   "purse",
+   "stocking",
+   "shawl"
   ],
-  "n": 50,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -388,15 +392,17 @@
  },
  "r_costura": {
   "k": [
-   "sewing kit",
-   "thread spool",
-   "yarn basket",
+   "sewing",
+   "thread",
+   "spool",
+   "yarn",
    "knitting",
-   "sewing basket",
-   "fabric roll",
-   "clothes iron antique"
+   "thimble",
+   "fabric",
+   "old iron",
+   "antique iron"
   ],
-  "n": 40,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
@@ -453,14 +459,13 @@
  },
  "r_colgada": {
   "k": [
+   "hanger",
+   "clothesline",
    "clothes line",
-   "laundry",
-   "hanging clothes",
    "clothes rack",
-   "wardrobe clothes",
-   "hanger"
+   "coat hook"
   ],
-  "n": 40,
+  "n": 60,
   "max_caras": 80000,
   "no": [
    "modern",
