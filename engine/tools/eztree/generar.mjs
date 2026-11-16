@@ -13,7 +13,10 @@ const PEDIDOS = [
   ['pino_mediano_1', 'Pine Medium', 404, {}], ['pino_mediano_2', 'Pine Medium', 505, {}], ['pino_joven', 'Pine Small', 606, {}],
   ['muerto_roble', 'Oak Large', 707, { leaves: { count: 0 } }], ['muerto_fresno', 'Ash Large', 808, { leaves: { count: 0 } }],
   ['muerto_roble_2', 'Oak Medium', 909, { leaves: { count: 0 } }],
-  ['arbusto_1', 'Bush 1', 111, {}], ['arbusto_2', 'Bush 2', 222, {}],
+  ['arbusto_1', 'Bush 1', 111, {}], ['arbusto_2', 'Bush 2', 222, {}], ['arbusto_3', 'Bush 3', 333, {}],
+  ['fresno_joven', 'Ash Small', 121, {}], ['alamo_joven', 'Aspen Small', 131, {}], ['roble_joven', 'Oak Small', 141, {}],
+  ['roble_mediano', 'Oak Medium', 151, {}], ['fresno_mediano', 'Ash Medium', 161, {}], ['muerto_alamo', 'Aspen Medium', 171, { leaves: { count: 0 } }],
+  ['muerto_joven', 'Oak Small', 181, { leaves: { count: 0 } }],
 ];
 function dump(mesh) {
   const g = mesh.geometry;

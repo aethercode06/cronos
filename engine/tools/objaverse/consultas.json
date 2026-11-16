@@ -1,16 +1,23 @@
 {
- "f_fuente": {
+ "v_plantas": {
   "k": [
-   "fountain",
-   "garden fountain",
-   "stone fountain",
-   "victorian fountain",
-   "water fountain",
-   "tiered fountain",
-   "fountain basin"
+   "mushroom",
+   "toadstool",
+   "fern",
+   "reeds",
+   "cattail",
+   "thistle",
+   "bramble",
+   "foxglove",
+   "dead grass",
+   "weeds",
+   "nettle",
+   "ivy",
+   "bracken",
+   "heather"
   ],
-  "n": 60,
-  "max_caras": 200000,
+  "n": 72,
+  "max_caras": 60000,
   "no": [
    "modern",
    "plastic",
@@ -100,7 +107,12 @@
    "soda",
    "chocolate",
    "cartoon",
-   "low poly"
+   "low poly",
+   "mario",
+   "cartoon",
+   "stylized",
+   "emoji",
+   "pixel"
   ]
  }
 }
