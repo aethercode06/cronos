@@ -890,15 +890,25 @@ func _textura_hoja() -> ImageTexture:
 	img.generate_mipmaps()
 	return ImageTexture.create_from_image(img)
 
+var _color_linterna := Color.WHITE
+var _alcance_linterna := 0.0
 func _update_flash(delta: float) -> void:
+	if _alcance_linterna == 0.0:
+		_color_linterna = flash.light_color
+		_alcance_linterna = flash.spot_range
 	var cam := player.camera
 	flash_node.global_position = cam.global_position + cam.global_transform.basis * Vector3(0.18, -0.15, 0.0)
 	var target := cam.global_transform.basis.get_rotation_quaternion()
 	flash_node.quaternion = flash_node.quaternion.slerp(target, minf(1.0, delta * 14.0))
 	var on := flash_on and battery > 0.0 and hidden_in.is_empty()
-	var e := 6.0
-	if battery < 15.0:
-		e *= 0.5 + 0.5 * float(randf() > 0.08)
+	# como una linterna de bombilla con pilas de carbón: con la pila llena da luz blanca; por debajo del 40 % se
+	# va apagando poco a poco y amarilleando, y al final tiembla
+	var carga := clampf(battery / 40.0, 0.0, 1.0)
+	var e := 6.0 * lerpf(0.3, 1.0, carga)
+	flash.light_color = Color(1.0, 0.62, 0.32).lerp(_color_linterna, carga)
+	flash.spot_range = lerpf(9.0, _alcance_linterna, carga)
+	if battery < 8.0:
+		e *= 0.6 + 0.4 * float(randf() > 0.06)
 	# parpadea cuando Elena está cerca
 	if elena.visible and elena.global_position.distance_to(player.global_position) < 9.0:
 		_flicker_t -= delta
@@ -918,7 +928,9 @@ func _play(delta: float) -> void:
 	var lit := mansion.is_lit(pp)
 	var on := flash_on and battery > 0.0 and hidden_in.is_empty()
 	if on:
-		battery = maxf(0.0, battery - delta * 0.28)  # unos 6 minutos con la pila llena
+		battery = maxf(0.0, battery - delta * 0.065)  # unos 25 minutos con la pila llena
+		if battery < 40.0 and battery + delta * 0.065 >= 40.0:
+			message("La luz de la linterna empieza a amarillear.", 2.5)
 		if battery <= 0.0:
 			message("La linterna se quedó sin pilas.", 2.5)
 	# Elena a la vista
@@ -1187,7 +1199,7 @@ func _use() -> void:
 			k.taken = true
 			k.item.visible = false
 			if k.kind == "pila":
-				battery = minf(100.0, battery + 55.0)
+				battery = minf(100.0, battery + 50.0)
 				message("Pilas nuevas para la linterna.", 2.0)
 			else:
 				salt += 1
