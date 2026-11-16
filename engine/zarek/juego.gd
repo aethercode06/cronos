@@ -109,6 +109,11 @@ func _ready() -> void:
 	elena.global_position = mansion.circle_pos
 	elena.set_state(ZarekElena.S.DORMANT, 99999.0)
 	elena.visible = false
+	var ex0 := mansion.cell_to_world("exterior", 0.0, 0.0)
+	var ex1 := mansion.cell_to_world("exterior", 90.0, 104.0)
+	cuervos = ZarekCuervos.new()
+	add_child(cuervos)
+	cuervos.setup(player, self, mansion.cell_to_world("exterior", 79.0, 21.0), Rect2(ex0.x, ex0.z, ex1.x - ex0.x, ex1.z - ex0.z))
 	ghost = ZarekElena.new()
 	ghost.only_visual = true
 	add_child(ghost)
@@ -619,6 +624,7 @@ func _process(delta: float) -> void:
 	_update_audio(delta)
 
 var niebla: ZarekNiebla
+var cuervos: ZarekCuervos
 var _fuera := 1.0
 ## Fuera de la casa: niebla espesa azulada de luna, más densa a ras de suelo, y bancos de niebla que se mueven.
 ## Dentro: la niebla fina de siempre. Se pasa de una a otra poco a poco al cruzar la puerta.
@@ -775,7 +781,7 @@ func _events(pp: Vector3) -> void:
 					sound_at("crujido", pts[k] + Vector3(0, 2, 0), 4.0)
 					sound_behind("susurro", 2.0, 0.0)
 				"cuervos":
-					sound_at("risa", pts[k] + Vector3(0, 6, 0), 2.0)
+					message("Algo los ha espantado…", 2.5)
 
 func _in_circle(pp: Vector3) -> bool:
 	return absf(pp.y - mansion.circle_pos.y) < 1.5 and Vector2(pp.x - mansion.circle_pos.x, pp.z - mansion.circle_pos.z).length() < 1.9

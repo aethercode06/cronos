@@ -9,7 +9,7 @@ const RATE := 22050
 static var _cache := {}
 
 ## Nombres disponibles: drone, latido, paso, portazo, golpes, susurro, grito,
-## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera
+## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo
 static func make(kind: String) -> AudioStreamWAV:
 	if not _cache.has(kind):
 		_cache[kind] = _build(kind)
@@ -35,6 +35,8 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"vidrio": return _glass_break()
 		"tintineo": return _clink()
 		"golpe_madera": return _wood_hit()
+		"graznido": return _caw()
+		"aleteo": return _flaps()
 	return _chime()
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -253,6 +255,55 @@ static func _creak() -> AudioStreamWAV:
 		var pulse := 1.0 if fmod(ph, 1.0) < 0.08 else 0.0
 		b[i] = pulse * sin(PI * t / sec)
 	_normalize(b, 0.5)
+	return _wav(b)
+
+## Graznido de cuervo: dos o tres «craa» ásperos (pulsos glotales ricos filtrados por formantes, con ruido).
+static func _caw() -> AudioStreamWAV:
+	var n := 2 + randi() % 2
+	var dur := 0.34
+	var hueco := 0.16
+	var b := _buf(n * (dur + hueco) + 0.2)
+	var ph := 0.0
+	var f1 := [0.0, 0.0]
+	var f2 := [0.0, 0.0]
+	for c in n:
+		var ini := int(c * (dur + hueco) * RATE)
+		var base := 420.0 + randf() * 60.0 - c * 25.0
+		for i in int(dur * RATE):
+			var t := float(i) / RATE
+			var env := minf(1.0, t / 0.025) * pow(maxf(0.0, 1.0 - t / dur), 0.6)
+			var f := base * (1.0 + 0.12 * sin(PI * t / dur)) + (randf() - 0.5) * 60.0
+			ph += f / RATE
+			var g := pow(1.0 - fmod(ph, 1.0), 6.0) * 2.0 - 0.3
+			g += (randf() * 2.0 - 1.0) * 0.55
+			# dos resonancias (formantes ~1100 y ~1900 Hz) con filtros de dos polos
+			var o := 0.0
+			for k in 2:
+				var fc: float = [1150.0, 1950.0][k]
+				var w := TAU * fc / RATE
+				var r := 0.965
+				var y: float = g + 2.0 * r * cos(w) * f1[k] - r * r * f2[k]
+				f2[k] = f1[k]
+				f1[k] = y
+				o += y * (1.0 if k == 0 else 0.6)
+			if ini + i < b.size():
+				b[ini + i] = o * env
+	_normalize(b, 0.8)
+	return _wav(b)
+
+## Aleteo: golpes de aire graves y rápidos (para cuando una bandada levanta el vuelo).
+static func _flaps() -> AudioStreamWAV:
+	var sec := 1.6
+	var b := _buf(sec)
+	var lp := 0.0
+	var lp2 := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var ritmo := pow(maxf(0.0, sin(TAU * 7.5 * t + sin(TAU * 1.3 * t))), 3.0)
+		lp += ((randf() * 2.0 - 1.0) - lp) * 0.12
+		lp2 += (lp - lp2) * 0.2
+		b[i] = lp2 * ritmo * (1.0 - t / sec)
+	_normalize(b, 0.6)
 	return _wav(b)
 
 static func _laugh() -> AudioStreamWAV:
