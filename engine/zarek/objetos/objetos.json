@@ -2554,5 +2554,86 @@
   ],
   "tris": 6734,
   "escala": 0.0079
+ },
+ "veg_3d_fern_01": {
+  "tam": [
+   1.454,
+   0.701,
+   1.438
+  ],
+  "tris": 4999,
+  "escala": 0.0991
+ },
+ "veg_boletus_edulis_mushroom": {
+  "tam": [
+   0.078,
+   0.14,
+   0.08
+  ],
+  "tris": 4999,
+  "escala": 0.0137
+ },
+ "veg_cattail": {
+  "tam": [
+   3.129,
+   1.6,
+   0.247
+  ],
+  "tris": 632,
+  "escala": 0.0095
+ },
+ "veg_cattail_plant": {
+  "tam": [
+   0.854,
+   1.5,
+   0.979
+  ],
+  "tris": 1314,
+  "escala": 1.2293
+ },
+ "veg_chanterelle": {
+  "tam": [
+   0.056,
+   0.08,
+   0.052
+  ],
+  "tris": 1966,
+  "escala": 0.2907
+ },
+ "veg_mushroom": {
+  "tam": [
+   0.496,
+   0.21,
+   0.502
+  ],
+  "tris": 5000,
+  "escala": 0.0034
+ },
+ "veg_mushroom_on_tree_baked_l": {
+  "tam": [
+   0.455,
+   0.438,
+   0.8
+  ],
+  "tris": 15000,
+  "escala": 0.0005
+ },
+ "veg_shaggy_parasol_mushroom_": {
+  "tam": [
+   0.5,
+   0.258,
+   0.5
+  ],
+  "tris": 5000,
+  "escala": 0.039
+ },
+ "veg_tricholoma_murrillianum_": {
+  "tam": [
+   0.099,
+   0.1,
+   0.098
+  ],
+  "tris": 4999,
+  "escala": 0.6445
  }
 }

@@ -50,7 +50,7 @@ const FISICOS := {"vict_antique_chair": 7.0, "painted_wooden_chair_01": 6.0, "pa
 	"vict_cup___saucer": 0.3, "coti_typewriter": 9.0, "coti_three_candles_and_a_golden_c": 0.8, "brass_candleholders": 2.0, "mousetrap": 0.1}
 ## Modelos de Objaverse que vienen mirando de lado: giro para que miren a +Z como los demás.
 ## Plantas que mueve el viento: nombre → [flex, temblor].
-const VEG_VIENTO := {"fern_02": [0.15, 0.02], "shrub_02": [0.1, 0.02], "shrub_03": [0.1, 0.02], "shrub_04": [0.1, 0.02], "grass_medium_01": [0.3, 0.01],
+const VEG_VIENTO := {"veg_3d_fern_01": [0.15, 0.02], "veg_cattail": [0.25, 0.01], "veg_cattail_plant": [0.25, 0.01],"fern_02": [0.15, 0.02], "shrub_02": [0.1, 0.02], "shrub_03": [0.1, 0.02], "shrub_04": [0.1, 0.02], "grass_medium_01": [0.3, 0.01],
 	"grass_medium_02": [0.3, 0.01], "nettle_plant": [0.22, 0.015], "dandelion_01": [0.25, 0.01], "celandine_01": [0.22, 0.01]}
 const GIRO := {"obj_pendulum_clock": -PI * 0.5, "obj_withered_wooden_crucifix": -PI * 0.5, "obj_wooden_cuckoo_clock": -PI * 0.5,
 	"obj_teddy_bear_2": -PI * 0.5, "obj_old_violin": -PI * 0.5, "obj_biblical_scene_from_nurember": PI * 0.5, "obj_candle_wall_lamp": PI * 0.5, "ropa_towel_rail": -PI * 0.5}
@@ -1778,6 +1778,8 @@ func _cauce(r: Rect2, es_rio: bool) -> void:
 ## Plantas de un GLB repartidas con MultiMesh (con viento si es vegetación).
 func _multi_planta(nombre: String, xs: Array) -> void:
 	var path := "res://zarek/muebles/%s.glb" % nombre
+	if not ResourceLoader.exists(path):
+		path = "res://zarek/objetos/%s.glb" % nombre
 	if xs.is_empty() or not ResourceLoader.exists(path):
 		return
 	var raiz: Node3D = (load(path) as PackedScene).instantiate()
@@ -1798,7 +1800,7 @@ func _multi_planta(nombre: String, xs: Array) -> void:
 
 ## Orillas con vida: helechos, hierba alta y ortigas en lo alto del talud, y piedras medio hundidas en el agua.
 func _orillas(r: Rect2, es_rio: bool) -> void:
-	var plantas := {"fern_02": [], "grass_medium_01": [], "grass_medium_02": [], "nettle_plant": [], "shrub_03": []}
+	var plantas := {"fern_02": [], "grass_medium_01": [], "grass_medium_02": [], "nettle_plant": [], "shrub_03": [], "veg_cattail": [], "veg_cattail_plant": [], "veg_3d_fern_01": []}
 	var claves: Array = plantas.keys()
 	var largo := maxf(r.size.x, r.size.y)
 	var paso := 0.7
@@ -2090,6 +2092,33 @@ func _trees(W: float, H: float) -> void:
 		for k in 3:
 			if lejos_xs[k].size() > 0:
 				_multi_arbol(_con_viento(lejos[k], 0.02, 0.0), lejos_xs[k], 60.0, 0.0, false)
+	# setas al pie de los árboles (en corros de 2-6) y helechos grandes entre los troncos
+	var setas := ["veg_boletus_edulis_mushroom", "veg_chanterelle", "veg_tricholoma_murrillianum_", "veg_shaggy_parasol_mushroom_", "veg_mushroom", "veg_mushroom_on_tree_baked_l"]
+	var por_seta: Dictionary = {}
+	for k in int(260 * (1.0 if quality >= 2 else 0.6)):
+		var base: Transform3D = xforms[_rng.randi_range(0, xforms.size() - 1)]
+		var sn: String = setas[_rng.randi_range(0, setas.size() - 1)]
+		if not por_seta.has(sn):
+			por_seta[sn] = []
+		var a := _rng.randf() * TAU
+		var c0 := base.origin + Vector3(cos(a), 0, sin(a)) * _rng.randf_range(0.6, 1.4)
+		for j in (1 if sn.contains("tree") or sn == "veg_mushroom" else _rng.randi_range(2, 6)):
+			var sc := _rng.randf_range(0.7, 1.3)
+			(por_seta[sn] as Array).append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), c0 + Vector3(_rng.randf_range(-0.25, 0.25), -0.01, _rng.randf_range(-0.25, 0.25))))
+	for sn in por_seta:
+		_multi_planta(sn, por_seta[sn])
+	var helechos: Array = []
+	for k in int(700 * (1.0 if quality >= 2 else 0.6)):
+		var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+		var mal := false
+		for r in avoid:
+			if (r as Rect2).has_point(p):
+				mal = true
+				break
+		if not mal:
+			var sc := _rng.randf_range(0.7, 1.4)
+			helechos.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, -0.03, p.y)))
+	_multi_planta("veg_3d_fern_01", helechos)
 	# arbustos bajo los árboles
 	var arb := [_malla_glb("res://zarek/arboles/arbusto_1.glb"), _malla_glb("res://zarek/arboles/arbusto_2.glb"), _malla_glb("res://zarek/arboles/arbusto_3.glb")]
 	var arb_xs: Array = [[], [], []]

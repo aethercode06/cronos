@@ -2968,5 +2968,95 @@
   "url": "https://sketchfab.com/3d-models/1e2234e51a46400bbd3a71afd9c2b750",
   "caras": 6734,
   "cat": "f_fuente"
+ },
+ {
+  "clave": "veg_shaggy_parasol_mushroom_",
+  "uid": "7987d22903294567842a5304fcd542f5",
+  "nombre": "Shaggy Parasol Mushroom (Mature + Young)",
+  "autor": "nebulousflynn",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/7987d22903294567842a5304fcd542f5",
+  "caras": 36909,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_mushroom_on_tree_baked_l",
+  "uid": "96a59b9045f54a248ae44d3065815573",
+  "nombre": "Mushroom on Tree_Baked Lighting Map",
+  "autor": "ychiang6",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/96a59b9045f54a248ae44d3065815573",
+  "caras": 26520,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_3d_fern_01",
+  "uid": "165f3870237f488885faf406d9deddc0",
+  "nombre": "3D Fern - 01",
+  "autor": "GrandDogStudio",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/165f3870237f488885faf406d9deddc0",
+  "caras": 51348,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_boletus_edulis_mushroom",
+  "uid": "d4ce6c6ce6e5449485936f9efb46a97c",
+  "nombre": "Boletus edulis mushroom",
+  "autor": "JevinJ",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/d4ce6c6ce6e5449485936f9efb46a97c",
+  "caras": 10550,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_tricholoma_murrillianum_",
+  "uid": "4949f967e01c480388c5b32c48598c22",
+  "nombre": "Tricholoma murrillianum mushroom",
+  "autor": "JevinJ",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/4949f967e01c480388c5b32c48598c22",
+  "caras": 8824,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_cattail_plant",
+  "uid": "c50630051edd4a7daa9708f6b31c021f",
+  "nombre": "Cattail Plant",
+  "autor": "sxuno",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/c50630051edd4a7daa9708f6b31c021f",
+  "caras": 1314,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_cattail",
+  "uid": "00cf5598ba274050b784b8a4beb00f03",
+  "nombre": "Рогоз (Cattail)",
+  "autor": "hakujin",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/00cf5598ba274050b784b8a4beb00f03",
+  "caras": 634,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_chanterelle",
+  "uid": "136f5f6bac124b8bb7738945f12243b5",
+  "nombre": "Chanterelle",
+  "autor": "Zacxophone",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/136f5f6bac124b8bb7738945f12243b5",
+  "caras": 1966,
+  "cat": "v_plantas"
+ },
+ {
+  "clave": "veg_mushroom",
+  "uid": "3a4790001fab4caab00d7efed3331615",
+  "nombre": "Mushroom",
+  "autor": "alban",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/3a4790001fab4caab00d7efed3331615",
+  "caras": 57002,
+  "cat": "v_plantas"
  }
 ]
