@@ -7,7 +7,7 @@ func _ready() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.42, 0.38, 0.34); env.ambient_light_energy = 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC; env.tonemap_exposure = 1.35; env.tonemap_white = 6.0
-	env.fog_enabled = true; env.fog_light_color = Color(0.07, 0.065, 0.07); env.fog_density = 0.016
+	env.fog_enabled = true; env.fog_light_color = Color(0.12, 0.135, 0.18); env.fog_density = 0.05; env.fog_height = 1.4; env.fog_height_density = 0.32; env.fog_sky_affect = 0.85
 	env.glow_enabled = true; env.glow_intensity = 0.8; env.glow_bloom = 0.06; env.glow_hdr_threshold = 0.9
 	var sky := Sky.new(); var sm := ProceduralSkyMaterial.new()
 	sm.sky_top_color = Color(0.02, 0.03, 0.06); sm.sky_horizon_color = Color(0.06, 0.07, 0.1); sky.sky_material = sm
@@ -19,6 +19,7 @@ func _ready() -> void:
 	var pm := ShaderMaterial.new(); pm.shader = load("res://zarek/post.gdshader"); cr.material = pm; cl.add_child(cr); add_child(cl)
 	var m := ZarekMansion.new(); add_child(m); m.build(2)
 	var cam := Camera3D.new(); cam.fov = 70.0; cam.far = 300.0; add_child(cam)
+	var nb := ZarekNiebla.new(); add_child(nb); nb.objetivo = cam
 	var fl := SpotLight3D.new(); fl.light_color = Color(1, 0.9, 0.72); fl.light_energy = 6.0; fl.spot_range = 32.0; fl.spot_angle = 40.0
 	fl.spot_angle_attenuation = 1.6; fl.shadow_enabled = true; cam.add_child(fl)
 	var hr: Rect2 = m.house_rect

@@ -612,10 +612,31 @@ func _process(delta: float) -> void:
 			lbl_msg.modulate.a = maxf(0.0, _msg_t / 0.8)
 	vig_mat.set_shader_parameter("t", fmod(Time.get_ticks_msec() / 1000.0, 100.0))
 	_update_flash(delta)
+	_update_niebla(delta)
 	if state in ["juego", "escondido", "ritual"]:
 		_play(delta)
 	_update_hud()
 	_update_audio(delta)
+
+var niebla: ZarekNiebla
+var _fuera := 1.0
+## Fuera de la casa: niebla espesa azulada de luna, más densa a ras de suelo, y bancos de niebla que se mueven.
+## Dentro: la niebla fina de siempre. Se pasa de una a otra poco a poco al cruzar la puerta.
+func _update_niebla(delta: float) -> void:
+	if env == null or player == null:
+		return
+	var dentro := mansion != null and mansion.inside_house(player.global_position)
+	_fuera = move_toward(_fuera, 0.0 if dentro else 1.0, delta * 0.5)
+	env.fog_density = lerpf(0.016, 0.05, _fuera)
+	env.fog_light_color = Color(0.07, 0.065, 0.07).lerp(Color(0.12, 0.135, 0.18), _fuera)
+	env.fog_height = 1.4
+	env.fog_height_density = lerpf(0.0, 0.32, _fuera)
+	env.fog_sky_affect = lerpf(0.0, 0.85, _fuera)
+	if niebla == null:
+		niebla = ZarekNiebla.new()
+		add_child(niebla)
+		niebla.objetivo = player
+	niebla.fuerza = _fuera
 
 func _update_flash(delta: float) -> void:
 	var cam := player.camera

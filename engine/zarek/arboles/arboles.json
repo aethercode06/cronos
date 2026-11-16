@@ -1,0 +1,57 @@
+{
+ "arbusto_1": {
+  "alto": 1.6,
+  "tris_ramas": 1199,
+  "tris_hojas": 3060
+ },
+ "arbusto_2": {
+  "alto": 1.3,
+  "tris_ramas": 799,
+  "tris_hojas": 1126
+ },
+ "muerto_fresno": {
+  "alto": 12.0,
+  "tris_ramas": 3998,
+  "tris_hojas": 0
+ },
+ "muerto_roble": {
+  "alto": 11.0,
+  "tris_ramas": 3999,
+  "tris_hojas": 0
+ },
+ "muerto_roble_2": {
+  "alto": 7.5,
+  "tris_ramas": 2500,
+  "tris_hojas": 0
+ },
+ "pino_grande_1": {
+  "alto": 19.0,
+  "tris_ramas": 3000,
+  "tris_hojas": 4044
+ },
+ "pino_grande_2": {
+  "alto": 17.5,
+  "tris_ramas": 3000,
+  "tris_hojas": 4044
+ },
+ "pino_grande_3": {
+  "alto": 20.5,
+  "tris_ramas": 2999,
+  "tris_hojas": 4044
+ },
+ "pino_joven": {
+  "alto": 6.0,
+  "tris_ramas": 1598,
+  "tris_hojas": 4666
+ },
+ "pino_mediano_1": {
+  "alto": 13.0,
+  "tris_ramas": 2400,
+  "tris_hojas": 5020
+ },
+ "pino_mediano_2": {
+  "alto": 12.0,
+  "tris_ramas": 2399,
+  "tris_hojas": 5020
+ }
+}

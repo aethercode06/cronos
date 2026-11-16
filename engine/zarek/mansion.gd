@@ -279,6 +279,39 @@ func _shingles() -> Image:
 
 ## Material PBR con texturas fotográficas CC0 (ambientCG) de res://zarek/texturas/<id>/.
 ## escala = repeticiones por metro (proyección triplanar en coordenadas del mundo).
+var _ruido_suelo: NoiseTexture2D
+## Suelo exterior sin repetición visible (ver suelo.gdshader): base, manchas de una segunda capa y de una tercera.
+func _suelo(a: String, b: String, c: String, escala: float, t1: Color, t2: Color, t3: Color, k2: float, k3: float) -> ShaderMaterial:
+	if _ruido_suelo == null:
+		_ruido_suelo = NoiseTexture2D.new()
+		_ruido_suelo.width = 512
+		_ruido_suelo.height = 512
+		_ruido_suelo.seamless = true
+		_ruido_suelo.generate_mipmaps = true
+		var fn := FastNoiseLite.new()
+		fn.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		fn.frequency = 0.008
+		fn.fractal_octaves = 5
+		_ruido_suelo.noise = fn
+	var m := ShaderMaterial.new()
+	m.shader = load("res://zarek/suelo.gdshader")
+	var capas := [[a, "1"], [b, "2"], [c, "3"]]
+	for cp in capas:
+		var base := "res://zarek/texturas/%s/" % cp[0]
+		m.set_shader_parameter("c" + cp[1], load(base + "color.jpg"))
+		if ResourceLoader.exists(base + "normal.jpg"):
+			m.set_shader_parameter("n" + cp[1], load(base + "normal.jpg"))
+	if ResourceLoader.exists("res://zarek/texturas/%s/rough.jpg" % a):
+		m.set_shader_parameter("r1", load("res://zarek/texturas/%s/rough.jpg" % a))
+	m.set_shader_parameter("ruido", _ruido_suelo)
+	m.set_shader_parameter("escala", escala)
+	m.set_shader_parameter("tinte1", Vector3(t1.r, t1.g, t1.b))
+	m.set_shader_parameter("tinte2", Vector3(t2.r, t2.g, t2.b))
+	m.set_shader_parameter("tinte3", Vector3(t3.r, t3.g, t3.b))
+	m.set_shader_parameter("cantidad2", k2)
+	m.set_shader_parameter("cantidad3", k3)
+	return m
+
 func _pbr(id: String, escala: float, tinte := Color(1, 1, 1), rough_mul := 1.0, normal := 1.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	var base := "res://zarek/texturas/%s/" % id
@@ -295,6 +328,11 @@ func _pbr(id: String, escala: float, tinte := Color(1, 1, 1), rough_mul := 1.0, 
 		m.normal_enabled = true
 		m.normal_texture = load(base + "normal.jpg")
 		m.normal_scale = normal
+	if ResourceLoader.exists(base + "ao.jpg"):
+		m.ao_enabled = true
+		m.ao_texture = load(base + "ao.jpg")
+		m.ao_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_RED
+		m.ao_light_affect = 0.35
 	m.uv1_triplanar = true
 	m.uv1_world_triplanar = true
 	m.uv1_triplanar_sharpness = 4.0
@@ -361,9 +399,9 @@ func _materials() -> void:
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
 	_mat["fachada"] = _pbr("Planks040", 0.5, Color(0.55, 0.62, 0.6), 0.9)
 	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
-	_mat["cesped"] = _pbr("Ground037", 0.25, Color(0.5, 0.52, 0.42), 1.0)
-	_mat["bosque"] = _pbr("ScatteredLeaves009", 0.25, Color(0.7, 0.68, 0.62), 1.0)
-	_mat["tierra"] = _pbr("Ground110", 0.35, Color(0.85, 0.82, 0.78), 1.0)
+	_mat["cesped"] = _suelo("Ground037", "ScatteredLeaves009", "Ground110", 0.25, Color(0.5, 0.52, 0.42), Color(0.66, 0.62, 0.56), Color(0.75, 0.72, 0.68), 0.3, 0.2)
+	_mat["bosque"] = _suelo("ScatteredLeaves009", "Ground085", "Ground037", 0.25, Color(0.7, 0.68, 0.62), Color(0.55, 0.5, 0.45), Color(0.48, 0.52, 0.4), 0.32, 0.28)
+	_mat["tierra"] = _suelo("Ground110", "Ground085", "ScatteredLeaves009", 0.35, Color(0.85, 0.82, 0.78), Color(0.62, 0.56, 0.5), Color(0.66, 0.62, 0.56), 0.35, 0.15)
 	_mat["agua"] = _plain(Color(0.03, 0.05, 0.07), 0.05, 0.3)
 	_mat["madera"] = _pbr("Wood094", 0.6, Color(0.42, 0.27, 0.18), 0.75)
 	_mat["madera_clara"] = _pbr("WoodFloor043", 0.4, Color(0.9, 0.85, 0.8), 0.9)
@@ -1287,21 +1325,77 @@ func _trees(W: float, H: float) -> void:
 			continue
 		var s := _rng.randf_range(0.8, 1.45)
 		xforms.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(s, s * _rng.randf_range(0.9, 1.3), s)), Vector3(p.x, 0, p.y)))
-	# tres variantes de abeto repartidas entre los árboles
-	var grupos: Array = [[], [], []]
-	for i in xforms.size():
-		grupos[i % 3].append(xforms[i])
+	# árboles realistas (Ez-Tree) cerca y abetos sencillos a lo lejos, repartidos en parcelas de 24 m para que
+	# solo se dibuje con detalle el bosque que rodea al jugador (la niebla tapa el resto)
+	var pinos := ["pino_grande_1", "pino_grande_2", "pino_grande_3", "pino_mediano_1", "pino_mediano_2", "pino_joven", "muerto_roble", "muerto_fresno", "muerto_roble_2"]
+	var peso := [16, 16, 16, 14, 14, 10, 4, 4, 6]
+	var mallas: Array = []
+	for nm in pinos:
+		mallas.append(_malla_glb("res://zarek/arboles/%s.glb" % nm))
+	var lejos: Array = []
 	for v in 3:
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = _abeto_mesh(100 + v, 0.85 + v * 0.12)
-		mm.instance_count = grupos[v].size()
-		for i in grupos[v].size():
-			mm.set_instance_transform(i, grupos[v][i])
-		var mmi := MultiMeshInstance3D.new()
-		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-		add_child(mmi)
+		lejos.append(_abeto_mesh(100 + v, 0.85 + v * 0.12))
+	var PARC := 24.0
+	var parcelas: Dictionary = {}
+	var total_peso := 0
+	for w in peso:
+		total_peso += w
+	for i in xforms.size():
+		var t: Transform3D = xforms[i]
+		var tira := _rng.randi_range(0, total_peso - 1)
+		var v := 0
+		while tira >= int(peso[v]):
+			tira -= int(peso[v])
+			v += 1
+		var s := _rng.randf_range(0.85, 1.12)
+		var tt := Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(s, s * _rng.randf_range(0.95, 1.08), s)), t.origin)
+		var clave := Vector2i(int(t.origin.x / PARC), int(t.origin.z / PARC))
+		if not parcelas.has(clave):
+			parcelas[clave] = {}
+		var pc: Dictionary = parcelas[clave]
+		if not pc.has(v):
+			pc[v] = []
+		pc[v].append(tt)
+	for clave in parcelas:
+		var pc: Dictionary = parcelas[clave]
+		var lejos_xs: Array = [[], [], []]
+		for v in pc:
+			var lista: Array = pc[v]
+			if mallas[v] != null:
+				_multi_arbol(mallas[v], lista, 0.0, 68.0, true)
+			if v < 6:
+				for k in lista.size():
+					lejos_xs[k % 3].append(lista[k])
+		for k in 3:
+			if lejos_xs[k].size() > 0:
+				_multi_arbol(lejos[k], lejos_xs[k], 60.0, 0.0, false)
+	# arbustos bajo los árboles
+	var arb := [_malla_glb("res://zarek/arboles/arbusto_1.glb"), _malla_glb("res://zarek/arboles/arbusto_2.glb")]
+	var arb_xs: Array = [[], []]
+	var na := int(900 * (1.0 if quality >= 2 else 0.6))
+	var intentos := 0
+	while arb_xs[0].size() + arb_xs[1].size() < na and intentos < na * 6:
+		intentos += 1
+		var p := Vector2(_rng.randf_range(2, W - 2), _rng.randf_range(2, H - 2))
+		var mal := false
+		for r in avoid:
+			if (r as Rect2).has_point(p):
+				mal = true
+				break
+		if mal:
+			continue
+		var sa := _rng.randf_range(0.7, 1.3)
+		arb_xs[_rng.randi_range(0, 1)].append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sa, sa, sa)), Vector3(p.x, -0.05, p.y)))
+	for k in 2:
+		if arb[k] != null:
+			var porp: Dictionary = {}
+			for t in arb_xs[k]:
+				var cl := Vector2i(int(t.origin.x / PARC), int(t.origin.z / PARC))
+				if not porp.has(cl):
+					porp[cl] = []
+				porp[cl].append(t)
+			for cl in porp:
+				_multi_arbol(arb[k], porp[cl], 0.0, 45.0, false)
 	_sotobosque(W, H, avoid)
 	_jardin_salvaje()
 	# colisión de troncos con un solo cuerpo
@@ -1320,6 +1414,58 @@ func _trees(W: float, H: float) -> void:
 		if name.begins_with("Árbol") or name.begins_with("Claro del columpio"):
 			var c := Vector3((float(z[2]) + float(z[4]) * 0.5) * CELL, 0, (float(z[3]) + float(z[5]) * 0.5) * CELL)
 			_dead_tree(c, name.begins_with("Claro"))
+
+## Un GLB de árbol en una sola malla (ramas + hojas como superficies), con las hojas en recorte alfa
+## (sin transparencia real: barato en móvil y sin problemas de orden).
+func _malla_glb(path: String) -> ArrayMesh:
+	if not ResourceLoader.exists(path):
+		return null
+	var ps: PackedScene = load(path)
+	if ps == null:
+		return null
+	var raiz: Node3D = ps.instantiate()
+	var am := ArrayMesh.new()
+	for mi in raiz.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		var xf := _xf_rel(m3, raiz)
+		for si in m3.mesh.get_surface_count():
+			var arr: Array = m3.mesh.surface_get_arrays(si)
+			if xf != Transform3D.IDENTITY:
+				var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+				for k in vs.size():
+					vs[k] = xf * vs[k]
+				arr[Mesh.ARRAY_VERTEX] = vs
+			am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+			var mat := m3.mesh.surface_get_material(si)
+			if mat is BaseMaterial3D:
+				var bm: BaseMaterial3D = (mat as BaseMaterial3D).duplicate()
+				if bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or bm.albedo_texture != null and String(bm.resource_name).begins_with("hojas"):
+					bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					bm.alpha_scissor_threshold = 0.35
+					bm.alpha_antialiasing_mode = BaseMaterial3D.ALPHA_ANTIALIASING_ALPHA_TO_COVERAGE
+					bm.cull_mode = BaseMaterial3D.CULL_DISABLED
+					bm.backlight_enabled = true
+					bm.backlight = Color(0.1, 0.16, 0.08)
+				am.surface_set_material(am.get_surface_count() - 1, bm)
+	raiz.free()
+	return am
+
+func _multi_arbol(malla: Mesh, xs: Array, desde: float, hasta: float, sombra: bool) -> void:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = malla
+	mm.instance_count = xs.size()
+	for i in xs.size():
+		mm.set_instance_transform(i, xs[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if sombra else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.visibility_range_begin = desde
+	mmi.visibility_range_end = hasta
+	mmi.visibility_range_begin_margin = 6.0 if desde > 0.0 else 0.0
+	mmi.visibility_range_end_margin = 6.0 if hasta > 0.0 else 0.0
+	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+	add_child(mmi)
 
 var _mat_rama: StandardMaterial3D
 ## Abeto de unos 12 m: tronco con corteza real y verticilos de ramas (tarjetas con textura de rama y alfa).
