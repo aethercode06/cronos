@@ -100,9 +100,9 @@ void fragment() {
 	// de verdad; nada de rayas): se mueven a la misma velocidad que las ondas
 	if (fuerza > 0.5) {
 		vec2 fd = normalize(corriente);
-		vec2 mov = mundo.xz * 0.9 - fd * TIME * velocidad * fuerza * 0.42;
+		vec2 mov = mundo.xz * 2.6 - fd * TIME * velocidad * fuerza * 1.2;
 		float mota = texture(espuma_ruido, mov).r * texture(espuma_ruido, mov * 0.37 + vec2(0.31, 0.17)).r;
-		esp_total = clamp(esp_total + smoothstep(0.55, 0.72, mota) * 0.22, 0.0, 1.0);
+		esp_total = clamp(esp_total + smoothstep(0.6, 0.78, mota) * 0.13, 0.0, 1.0);
 	}
 	// espuma blanca donde golpea el chorro
 	esp_total = clamp(esp_total + salpica * (0.35 + 0.3 * azar), 0.0, 1.0);

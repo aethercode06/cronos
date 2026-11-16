@@ -1942,7 +1942,7 @@ func _cauce_natural(r: Rect2) -> void:
 ## Orillas del río: vegetación espesa siguiendo la orilla irregular (juncos y hierba en el agua somera, helechos,
 ## ortigas y arbustos arriba) y rocas medio hundidas en la línea del agua.
 func _orillas_rio(r: Rect2) -> void:
-	var cerca := {"veg_cattail": [], "veg_cattail_plant": [], "grass_medium_01": [], "grass_medium_02": []}
+	var cerca := {"veg_cattail_plant": [], "grass_medium_01": [], "grass_medium_02": []}
 	var arriba := {"fern_02": [], "veg_3d_fern_01": [], "nettle_plant": [], "shrub_03": [], "grass_medium_01": [], "dandelion_01": [], "celandine_01": []}
 	var rocas: Array = []
 	var musgo: Array = []
@@ -1956,7 +1956,7 @@ func _orillas_rio(r: Rect2) -> void:
 		for lado in [-1.0, 1.0]:
 			# en el agua somera y la misma orilla: juncos y hierba
 			for k in 2:
-				var d := f.y + _rng.randf_range(-0.5, 0.6)
+				var d := f.y + _rng.randf_range(-0.15, 0.6)
 				var nm: String = (cerca.keys() as Array)[_rng.randi_range(0, cerca.size() - 1)]
 				var sc := _rng.randf_range(0.8, 1.4)
 				var yy := -0.3 if d < f.y + 0.2 else -0.15
