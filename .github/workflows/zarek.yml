@@ -88,6 +88,9 @@ jobs:
           sed -i 's/^renderer\/rendering_method.mobile=.*/renderer\/rendering_method.mobile="gl_compatibility"/' engine/project.godot
           godot --headless --path engine --export-release "Android Zarek" ../build/Zarek_x86_64.apk > export_x86.log 2>&1 || true
           tail -5 export_x86.log
+          # diagnóstico: la misma APK sin audio, para saber si un cierre viene del sonido
+          printf '\n[audio]\n\ndriver/driver="Dummy"\n' >> engine/project.godot
+          godot --headless --path engine --export-release "Android Zarek" ../build/Zarek_x86_64_mudo.apk > export_mudo.log 2>&1 || true
           git checkout engine/export_presets.cfg engine/project.godot
           ls -la build
       - uses: actions/upload-artifact@v4
@@ -135,6 +138,12 @@ jobs:
             for t in 5 15 30 60 90 150 240; do sleep $(( t - ${prev:-0} )); prev=$t; adb exec-out screencap -p > emu/pantalla_${t}s.png; adb shell pidof com.aethercode.zarek > emu/pid_${t}s.txt || echo MUERTO > emu/pid_${t}s.txt; done
             adb logcat -d > emu/logcat.txt
             adb shell dumpsys meminfo com.aethercode.zarek > emu/memoria.txt || true
+            adb uninstall com.aethercode.zarek || true
+            adb install -r build/Zarek_x86_64_mudo.apk > emu/install_mudo.txt 2>&1 || true
+            adb logcat -c
+            adb shell monkey -p com.aethercode.zarek -c android.intent.category.LAUNCHER 1
+            sleep 150; adb exec-out screencap -p > emu/mudo_150s.png; adb shell pidof com.aethercode.zarek > emu/mudo_pid.txt || echo MUERTO > emu/mudo_pid.txt
+            adb logcat -d > emu/logcat_mudo.txt
             grep -E "ZAREK|godot|Godot|FATAL|AndroidRuntime" emu/logcat.txt | tail -80
       - name: Comprobar el resultado
         run: |
