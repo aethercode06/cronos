@@ -458,6 +458,15 @@ func _materials() -> void:
 	var papers := [Color(0.33, 0.15, 0.14), Color(0.17, 0.24, 0.2), Color(0.2, 0.22, 0.28), Color(0.44, 0.38, 0.28)]
 	for i in papers.size():
 		_mat["papel%d" % i] = _papel(_rayas(papers[i], 30 + i), Color(1.15, 1.15, 1.15))
+	# papeles propios de cada sala (tools/papeles/papeles.py): la textura ya viene envejecida
+	for nom in ZarekHistoria.PAPEL.values():
+		var ruta := "res://zarek/texturas/papeles/%s.jpg" % nom
+		if not _mat.has("p_" + nom) and ResourceLoader.exists(ruta):
+			var pm := _papel(Image.create(4, 4, false, Image.FORMAT_RGB8), Color(1.05, 1.05, 1.05))
+			pm.albedo_texture = load(ruta)
+			pm.normal_scale = 0.6
+			pm.uv1_scale = Vector3(0.5, 0.5, 0.5)
+			_mat["p_" + nom] = pm
 	_mat["cortina"] = _pbr("Fabric085", 1.6, Color(0.42, 0.1, 0.11), 1.0, 1.4)
 	_mat["cortina"].cull_mode = BaseMaterial3D.CULL_DISABLED
 	var cristal := _plain(Color(0.2, 0.2, 0.17, 0.5), 0.35, 0.2)
@@ -469,6 +478,12 @@ func _materials() -> void:
 	persa.albedo_color = Color(0.9, 0.85, 0.8)
 	persa.roughness = 1.0
 	_mat["persa"] = persa
+	for nom in ["verde", "azul", "oro"]:
+		var ruta := "res://zarek/texturas/alfombra_%s.jpg" % nom
+		if ResourceLoader.exists(ruta):
+			var am: StandardMaterial3D = persa.duplicate()
+			am.albedo_texture = load(ruta)
+			_mat["persa_" + nom] = am
 	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.5, 0.36, 0.27), 0.7)
 	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.64, 0.58, 0.54), 0.8)
 	_mat["baldosa"] = _pbr("Tiles140", 0.5, Color(1, 1, 1), 0.9)
@@ -729,6 +744,8 @@ func _level(key: String) -> void:
 			paper = "papel0"
 		if level == 2 and t in ["servicio", "epicentro"]:
 			paper = "tablas"
+		if ZarekHistoria.PAPEL.has(name) and _mat.has("p_" + String(ZarekHistoria.PAPEL[name])):
+			paper = "p_" + String(ZarekHistoria.PAPEL[name])
 		rooms.append({"name": name, "type": t, "level": level, "rect": r, "y": y, "id": id, "paper": paper})
 		if t == "epicentro" and level == 1:
 			epicentro_room = id
@@ -3789,6 +3806,7 @@ func _decorate() -> void:
 	for r in rooms:
 		deco.vestir(r)
 	_pinturas_distintas()
+	_identidad_salas()
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect
@@ -4321,6 +4339,11 @@ func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
 	pm.size = Vector2(sx, sz)
 	mi.mesh = pm
 	mi.material_override = _mat.persa
+	var sala := room_at(c + Vector3(0, 0.3, 0))
+	if sala >= 0:
+		var var_a := String(ZarekHistoria.ALFOMBRA.get(String(rooms[sala].name), ["", "verde", "azul", "oro"][sala % 4]))
+		if _mat.has("persa_" + var_a):
+			mi.material_override = _mat["persa_" + var_a]
 	mi.position = c + Vector3(0, 0.012, 0)
 	mi.rotation.y = yaw
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -4601,6 +4624,88 @@ func _merge_static() -> void:
 				mi.remove_child(c)
 				_house.add_child(c)
 		mi.queue_free()
+
+# ---------------- identidad de cada sala e historia ----------------
+var notas: Array = []
+func _sala_por_nombre(nombre: String) -> Dictionary:
+	for r in rooms:
+		if String(r.name) == nombre:
+			return r
+	return {}
+
+## Luz propia de cada sala, su sonido de fondo y las notas de la historia (hojas sueltas en el suelo, cerca del
+## centro y lejos de muebles grandes y puertas).
+func _identidad_salas() -> void:
+	for r in rooms:
+		var nombre := String(r.name)
+		if ZarekHistoria.LUZ.has(nombre):
+			for l in r.get("lamps", []):
+				(l.light as OmniLight3D).light_color = ZarekHistoria.LUZ[nombre]
+		if ZarekHistoria.SONIDO.has(nombre):
+			var cfg: Array = ZarekHistoria.SONIDO[nombre]
+			var son := AudioStreamPlayer3D.new()
+			son.stream = (AetherSynth.make(cfg[0]) as AudioStreamWAV).duplicate()
+			if son.stream is AudioStreamWAV:
+				(son.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+				(son.stream as AudioStreamWAV).loop_end = (son.stream as AudioStreamWAV).data.size() / 2
+			son.volume_db = float(cfg[1])
+			son.unit_size = 3.0
+			son.max_distance = maxf((r.rect as Rect2).size.length() * 0.7, 8.0)
+			son.autoplay = true
+			var rc: Rect2 = r.rect
+			son.position = Vector3(rc.get_center().x, float(r.y) + 2.0, rc.get_center().y)
+			_house.add_child(son)
+	for nt in ZarekHistoria.NOTAS:
+		var r := _sala_por_nombre(nt[0])
+		if r.is_empty():
+			continue
+		var rc: Rect2 = r.rect
+		var p := Vector3.ZERO
+		var hecho := false
+		for intento in 30:
+			p = Vector3(_rng.randf_range(rc.position.x + 0.8, rc.end.x - 0.8), float(r.y), _rng.randf_range(rc.position.y + 0.8, rc.end.y - 0.8))
+			if door_near(p, 1.4).is_empty() and not _huella_en_escalera(p, Vector3(0.6, 0.1, 0.6), 0.0):
+				hecho = true
+				break
+		if not hecho:
+			p = Vector3(rc.get_center().x, float(r.y), rc.get_center().y)
+		var hoja := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(0.21, 0.29)
+		hoja.mesh = pm
+		hoja.material_override = _mat_papel()
+		hoja.position = p + Vector3(0, 0.012, 0)
+		hoja.rotation.y = _rng.randf() * TAU
+		hoja.set_meta("dyn", true)
+		_house.add_child(hoja)
+		# un brillo tenue para encontrarla con la linterna
+		notas.append({"pos": p, "titulo": nt[1], "texto": nt[2], "nodo": hoja, "leida": false, "sala": nt[0]})
+
+var _hoja_mat: StandardMaterial3D
+func _mat_papel() -> StandardMaterial3D:
+	if _hoja_mat == null:
+		_hoja_mat = StandardMaterial3D.new()
+		var img := Image.create(64, 88, false, Image.FORMAT_RGB8)
+		var nz := FastNoiseLite.new()
+		nz.frequency = 0.08
+		for y in 88:
+			for x in 64:
+				var v := 0.78 + nz.get_noise_2d(x, y) * 0.08
+				var linea := (y > 10 and y < 80 and (y % 6) == 0 and x > 6 and x < 58 - (y * 7) % 13)
+				img.set_pixel(x, y, Color(v * 0.95, v * 0.88, v * 0.72) * (0.55 if linea else 1.0))
+		img.generate_mipmaps()
+		_hoja_mat.albedo_texture = ImageTexture.create_from_image(img)
+		_hoja_mat.roughness = 0.9
+		_hoja_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_hoja_mat.emission_enabled = true
+		_hoja_mat.emission = Color(0.08, 0.07, 0.05)
+	return _hoja_mat
+
+func nota_cerca(p: Vector3, dist := 1.3) -> Dictionary:
+	for n in notas:
+		if absf(p.y - (n.pos as Vector3).y) < 1.5 and Vector2(p.x - n.pos.x, p.z - n.pos.z).length() < dist:
+			return n
+	return {}
 
 # ---------------- pinturas ----------------
 ## Cada cuadro lleva una pintura distinta (retratos, paisajes, bodegones… de los siglos XVII-XIX, dominio público;

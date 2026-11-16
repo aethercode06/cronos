@@ -10,6 +10,8 @@ func _ready() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC; env.tonemap_exposure = 1.35; env.tonemap_white = 6.0
 	we.environment = env; add_child(we)
 	m = ZarekMansion.new(); add_child(m); m.build(1)
+	for k in 3: await get_tree().physics_frame
+	m.asentar()
 	for l in m.lamps: m.set_lamp(l, true)
 	var cam := Camera3D.new(); cam.fov = 75.0; add_child(cam)
 	var fl := SpotLight3D.new(); fl.light_color = Color(1, 0.9, 0.72); fl.light_energy = 5.0; fl.spot_range = 20.0; fl.spot_angle = 40.0; fl.shadow_enabled = true; cam.add_child(fl)
@@ -45,6 +47,17 @@ func _ready() -> void:
 			var fuera: Vector3 = piv.global_transform.basis.z.normalized()
 			vistas.append([mano + fuera * 0.45 + Vector3(-0.0, 0.08, 0), mano])
 			n += 1
+	elif modo == "salas":
+		# desde una esquina de cada sala nombrada, mirando al centro (SALAS="A;B;C")
+		for nombre in OS.get_environment("SALAS").split(";"):
+			for r in m.rooms:
+				if String(r.name) == nombre:
+					var rc: Rect2 = r.rect
+					var c := rc.get_center()
+					var desde := Vector3(rc.position.x + 0.7, float(r.y) + 1.7, rc.end.y - 0.7)
+					vistas.append([desde, Vector3(c.x + rc.size.x * 0.15, float(r.y) + 0.9, c.y - rc.size.y * 0.15)])
+					print("SALA ", nombre)
+					break
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")

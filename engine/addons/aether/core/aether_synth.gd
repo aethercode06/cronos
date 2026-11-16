@@ -43,6 +43,9 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"fuente": return _fountain_snd()
 		"lechuza": return _barn_screech()
 		"rana": return _frog()
+		"tictac": return _tictac()
+		"goteo": return _drip()
+		"piano": return _piano_note()
 		"chapoteo": return _splash()
 	return _chime()
 
@@ -508,5 +511,45 @@ static func _splash() -> AudioStreamWAV:
 			if ini + j < b.size():
 				var tt := float(j) / RATE
 				b[ini + j] += sin(TAU * f * (1.0 + tt * 10.0) * tt) * exp(-tt * 70.0) * randf_range(0.15, 0.35)
+	_normalize(b, 0.8)
+	return _wav(b)
+
+## Tic-tac de reloj de pie (2 s en bucle): dos golpecitos secos de madera y metal.
+static func _tictac() -> AudioStreamWAV:
+	var b := _buf(2.0)
+	for k in 2:
+		var ini := int(k * RATE)
+		var f := 2600.0 if k == 0 else 2200.0
+		for j in int(0.03 * RATE):
+			var tt := float(j) / RATE
+			b[ini + j] += (sin(TAU * f * tt) * 0.6 + (randf() * 2.0 - 1.0) * 0.4) * exp(-tt * 180.0)
+	_normalize(b, 0.6)
+	return _wav(b, true)
+
+## Goteo (3,5 s en bucle): gotas que caen en un charco a ritmo irregular.
+static func _drip() -> AudioStreamWAV:
+	var b := _buf(3.5)
+	for t0 in [0.3, 1.1, 1.6, 2.7]:
+		var ini := int(t0 * RATE)
+		var f0 := randf_range(900.0, 1400.0)
+		for j in int(0.08 * RATE):
+			var tt := float(j) / RATE
+			var f := f0 * (1.0 + tt * 6.0)
+			b[ini + j] += sin(TAU * f * tt) * exp(-tt * 55.0)
+	_normalize(b, 0.55)
+	return _wav(b, true)
+
+## Una nota grave de piano desafinado (resonancia larga con armónicos).
+static func _piano_note() -> AudioStreamWAV:
+	var b := _buf(3.5)
+	var f := 110.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var v := 0.0
+		for h in 6:
+			var fh := f * (h + 1) * (1.0 + 0.0007 * h * h)
+			v += sin(TAU * fh * t + h) * exp(-t * (1.2 + h * 0.6)) / (h + 1)
+		v += sin(TAU * f * 1.006 * t) * exp(-t * 1.0) * 0.4
+		b[i] = v * minf(1.0, t * 200.0)
 	_normalize(b, 0.8)
 	return _wav(b)

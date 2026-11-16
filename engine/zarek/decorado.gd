@@ -37,7 +37,7 @@ func _init(mansion: ZarekMansion) -> void:
 const O := "objetos/"
 # ---- catálogos por tipo de sala: [pared], [centro], [encima], [suelo] ----
 const SALA := {
-	"vestibulo": {"pared": ["vict_grandfather_clock", "ClassicConsole_01", "vict_dusty_antique_mirror___fre", "vict_antique_iron_safe"], "centro": [], "techo": ["pian_medieval_chandelier"], "encima": ["pian_candelabra", "coti_three_candles_and_a_golde"]},
+	"vestibulo": {"pared": ["vict_grandfather_clock", "ClassicConsole_01", "vict_dusty_antique_mirror___fre"], "centro": [], "techo": ["pian_medieval_chandelier"], "encima": ["pian_candelabra", "coti_three_candles_and_a_golde"]},
 	"salon": {"pared": ["pian_victorian_fire_place___fre", "pian_dusty_old_piano", "vict_antique_wooden_bookcase__", "vict_grandfather_clock", "vict_antique_wardrobe"], "centro": ["vict_victorian_lounge_sofa", "vict_victorian_two_seat_sofa", "vict_victorian_armchair", "vict_victorian_coffee_table", "vict_antique_chair"], "techo": ["pian_chandelier"], "encima": ["coci_old_teapot", "vict_cup___saucer", "coti_three_candles_and_a_golde", "coti_pocket_watch", "vict_torsion_pendulum_clock___ani"], "suelo": ["coti_simple_bookstack", "coti_shabby_books"]},
 	"musica": {"pared": ["pian_old_piano", "pian_dusty_piano", "pian_candelabra"], "centro": ["pian_old_wooden_grand_piano", "pian_piano_chair__free_downloa", "vict_victorian_armchair"], "techo": ["pian_medieval_chandelier"], "encima": ["coti_three_candles_and_a_golde"]},
 	"baile": {"pared": ["pian_candelabra", "pian_medieval_candelabra__free", "vict_victorian_lounge_sofa", "pian_grandfather_clock"], "centro": ["pian_old_wooden_grand_piano"], "techo": ["pian_medieval_chandelier", "pian_medieval_chandelier"]},
@@ -45,7 +45,7 @@ const SALA := {
 	"cocina": {"pared": ["coci_old_kitchen_cabinets", "coci_old_gas_stove_and_oven", "coci_vintage_wooden_cabinets", "coci_hanging_kitchen_cupboards", "bano_washbasin"], "centro": ["vict_table"], "encima": ["coci_vintage_kettle", "coci_teapot_old_2_100517", "coci_basic_bowl", "coci_wooden_cutting_board", "coci_simple_cutting_board", "coci_sliced_bread", "coci_old_spoon", "coti_glass_bottle", "coti_basic_bottle", "coci_pantry_shelf"]},
 	"servicio": {"pared": ["coci_old_kitchen_shelf", "terr_old_and_dusty_multi_crat", "bano_washbasin", "vict_antique_wardrobe", "coci_vintage_wooden_cabinets"], "centro": ["vict_table", "vict_antique_chair"], "encima": ["coti_three_candles_and_a_golde", "coti_glass_bottle", "coci_basic_bowl", "coti_bread_in_basket", "coti_shabby_books"], "suelo": ["vintage_suitcase", "terr_old_and_dusty_multi_crat"]},
 	"despensa": {"pared": ["coci_old_kitchen_shelf", "coci_vintage_wooden_cabinets", "terr_old_and_dusty_multi_crat"], "encima": ["coti_glass_bottle", "coti_small_bottle", "coti_wine_bottle", "coci_basic_bowl", "coci_pantry_shelf"], "suelo": ["terr_old_and_dusty_multi_crat"]},
-	"biblioteca": {"pared": ["vict_antique_wooden_bookcase__", "terr_dusty_bookshelfs", "coti_chocolate_beech_bookshel", "vict_antique_wooden_bookcase__"], "centro": ["vict_antique_wooden_desk", "vict_antique_chair", "coti_celestial_globe", "vict_victorian_armchair"], "techo": ["pian_chandelier"], "encima": ["coti_typewriter", "coti_occult_books", "vict_old_books___free_download", "coti_three_candles_and_a_golde", "coti_celestial_globe", "vict_key"], "suelo": ["coti_12_old_books", "coti_simple_bookstack"]},
+	"biblioteca": {"pared": ["vict_antique_wooden_bookcase__", "terr_dusty_bookshelfs", "coti_chocolate_beech_bookshel", "vict_antique_wooden_bookcase__"], "centro": ["vict_antique_wooden_desk", "vict_antique_chair", "coti_celestial_globe", "vict_victorian_armchair"], "techo": ["pian_chandelier"], "encima": ["coti_occult_books", "vict_old_books___free_download", "coti_three_candles_and_a_golde", "coti_celestial_globe", "vict_key"], "suelo": ["coti_12_old_books", "coti_simple_bookstack"]},
 	"estudio": {"pared": ["vict_antique_iron_safe", "vict_antique_wooden_bookcase__", "vict_grandfather_clock"], "centro": ["vict_antique_desk", "vict_antique_chair"], "encima": ["coti_typewriter", "coti_pocket_watch", "coti_joachim_liebermann_s_pock", "vict_old_books___free_download", "coti_three_candles_and_a_golde"], "suelo": ["coti_shabby_books"]},
 	"billar": {"pared": ["vict_antique_wooden_bookcase__", "pian_victorian_fire_place___fre"], "centro": ["vict_victorian_armchair", "vict_antique_chair"], "encima": ["coti_wine_bottle", "coti_glass_bottle"]},
 	"dormitorio": {"pared": ["vict_antique_wardrobe", "vict_dusty_antique_mirror___fre", "vict_antique_desk"], "centro": ["vict_antique_chair"], "encima": ["coti_three_candles_and_a_golde", "vict_old_books___free_download", "coti_pocket_watch", "vict_cup___saucer"], "suelo": ["vintage_suitcase"]},
@@ -54,7 +54,7 @@ const SALA := {
 	"costura": {"pared": ["vict_singer_15___old_sewing_ma", "coti_willoughsby_sewing_machin", "vict_antique_wardrobe__free"], "centro": ["vict_antique_chair", "vict_table"], "encima": ["coti_three_candles_and_a_golde", "coti_bread_in_basket"]},
 	"bano": {"pared": ["bano_classic_bathtub", "bano_washbasin_model", "vict_ornate_mirror"], "encima": ["coti_small_bottle", "coti_glass_bottle"]},
 	"pasillo": {"pared": ["ClassicConsole_01", "vict_victorian_lounge_sofa", "pian_candelabra", "vict_grandfather_clock"], "encima": ["coti_three_candles_and_a_golde", "vict_torsion_pendulum_clock___ani"]},
-	"atico": {"pared": ["terr_old_and_dusty_multi_crat", "vict_antique_wardrobe", "pian_dusty_old_piano"], "centro": ["jugu_rocking_horse", "jugu_dollhouse", "treasure_chest", "vintage_suitcase", "terr_creepy_lady_bust_statue_s", "terr_old_and_dusty_multi_crat"], "suelo": ["coti_12_old_books", "coti_shabby_books"]},
+	"atico": {"pared": ["terr_old_and_dusty_multi_crat", "vict_antique_wardrobe", "pian_dusty_old_piano"], "centro": ["treasure_chest", "vintage_suitcase", "terr_creepy_lady_bust_statue_s", "terr_old_and_dusty_multi_crat"], "suelo": ["coti_12_old_books", "coti_shabby_books"]},
 	"sotano": {"pared": ["terr_old_and_dusty_multi_crat", "coci_old_kitchen_shelf"], "centro": ["terr_old_and_dusty_multi_crat"], "suelo": ["coti_wine_bottle", "coti_glass_bottle"]},
 	"cava": {"pared": ["coci_old_kitchen_shelf"], "centro": ["terr_old_and_dusty_multi_crat"], "suelo": ["coti_wine_bottle", "coti_wine_bottle"]},
 	"calderas": {"pared": ["pian_old_stove", "pian_small_stove", "terr_old_and_dusty_multi_crat"], "centro": ["terr_old_and_dusty_multi_crat"]},
@@ -402,7 +402,7 @@ func _vestibulo(r: Dictionary) -> void:
 	_en(r, "vict_victorian_armchair", 2.6, 0.9, -0.5)
 	_en(r, "small_wooden_table_01", 1.8, 1.6, 0.2, 0.8)
 	_en(r, "gothic_statue", W - 1.0, 1.1, -PI * 0.75, 0.75)
-	_en(r, "vict_antique_iron_safe", W - 0.5, 3.5, -PI * 0.5)
+	_en(r, "obj_coat_rack_bowler_hat", W - 0.5, 3.5, -PI * 0.5)
 	# bajo la escalera: baúles y maletas olvidadas
 	_en(r, "treasure_chest", 3.6, 5.6, 0.2, 0.9)
 	_en(r, "vintage_suitcase", 5.4, 5.4, -0.3)
@@ -639,7 +639,7 @@ func _cuarto_elena(r: Dictionary) -> void:
 	_en(r, "painted_wooden_nightstand", 2.55, 0.35, 0.0)
 	_en(r, "jugu_music_box_prop", 2.55, 0.35, 0.3, 1.2, 0.62, false)
 	_en(r, "wooden_candlestick", 2.7, 0.45, 0.0, 1.0, 0.62, false)
-	_en(r, "jugu_dollhouse", W - 0.6, 0.6, -PI * 0.75)
+	_en(r, "obj_birdcage", W - 0.6, 0.6, -PI * 0.75)
 	# tocador con el espejo donde se mira lo que no es ella
 	_en(r, "GothicCommode_01", W - 0.36, 4.4, -PI * 0.5)
 	_en(r, "vict_ornate_mirror", W - 0.1, 4.4, -PI * 0.5, 0.6, 1.25, false)
@@ -647,7 +647,7 @@ func _cuarto_elena(r: Dictionary) -> void:
 	_en(r, "terr_creepy_lady_bust_statue_scan", W - 0.42, 4.85, -PI * 0.5, 0.6, 1.21, false)
 	_en(r, "GothicCabinet_01", 0.6, 5.4, PI * 0.5)
 	_en(r, "Rockingchair_01", 7.9, 7.6, -2.4)
-	_en(r, "jugu_rocking_horse", 7.4, 2.4, -0.6)
+	_en(r, "ropa_wedding_dress", 7.4, 2.4, -0.6)
 	# velas alrededor del círculo, alguna caída; páginas arrancadas por el suelo
 	for k in 6:
 		var a := TAU * k / 6.0 + 0.3
@@ -684,6 +684,10 @@ func _cuarto_ninos(r: Dictionary) -> void:
 	_en(r, "painted_wooden_stool", 2.3, 8.6, -0.4)
 	_en(r, "tea_set_01", 1.6, 8.5, 0.2, 0.45, 0.43, false)
 	_en(r, "coti_simple_bookstack", 4.6, 7.8, 1.2, 0.6, 0.0, false)
+	# juguetes: el tren a medio camino, el oso en la cama, la gallina de madera
+	_en(r, "obj_wooden_toy_train", 3.4, 6.6, 0.9, 1.0, 0.0, false)
+	_en(r, "obj_craft_teddy_bear_photogramme", 1.2, 1.5, 0.3, 0.6, 0.62, false)
+	_en(r, "obj_pecking_chicken_wooden_toy", 4.2, 4.4, 2.0, 1.0, 0.0, false)
 	_cuadro(r, "fancy_picture_frame_01", 3.6, 0.09, 0.0, 1.2, 1.9)
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
@@ -729,6 +733,9 @@ func _salon_baile(r: Dictionary) -> void:
 		_en(r, "pian_medieval_candelabra__free_do", esq.x, esq.y, 0.0)
 	_en(r, "painted_wooden_sofa", 3.6, 0.5, 0.0, 0.9)
 	_en(r, "gothic_statue", W - 2.0, 4.8, -PI * 0.5, 0.6)
+	# el fonógrafo que se enciende solo con el segundo sello
+	_en(r, "small_wooden_table_01", 1.6, 1.5, 0.3, 0.9)
+	_en(r, "obj_phonograph_v2", 1.6, 1.5, 0.6, 1.0, 0.48, false)
 	_cuadro(r, "fancy_picture_frame_02", 11.0, 0.09, 0.0, 2.0, 2.0)
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 1.0, ZarekMansion.WALL_H - 0.9, false)
@@ -842,7 +849,7 @@ func _hermano(r: Dictionary) -> void:
 	_en(r, "vict_old_books___free_download", 1.6, D - 0.4, 0.4, 0.5, 0.8, false)
 	_en(r, "vict_antique_wooden_bookcase___ga", 0.17, 5.4, PI * 0.5)
 	_en(r, "treasure_chest", 3.2, 2.4, 0.2, 0.8)
-	_en(r, "jugu_rocking_horse", 5.6, 8.3, -2.6)
+	_en(r, "obj_floor_globe", 5.6, 8.3, -2.6)
 	_en(r, "hatchet", 4.6, 8.9, 1.2, 1.0, 0.0, false)
 	_cuadro(r, "fancy_picture_frame_01", 0.09, 1.4, PI * 0.5, 1.2, 2.2)
 	_telas(r, [0, 2, 3])
@@ -1246,7 +1253,7 @@ func _galeria_servicio(r: Dictionary) -> void:
 		cub.rotation.y = rng.randf() * 0.6
 	_en(r, "treasure_chest", 1.6, D - 0.5, 0.0, 0.9)
 	_en(r, "vintage_suitcase", 7.4, D - 0.4, 0.2)
-	_en(r, "jugu_rocking_horse", 8.6, 10.0, 2.4)
+	_en(r, "obj_sack_v1", 8.6, 10.0, 2.4)
 	_en(r, "wooden_crate_02", W - 0.4, D - 0.8, 0.0)
 	_en(r, "watering_can_metal_01", W - 1.2, D - 0.4, 0.6)
 	_telas(r)
@@ -1269,7 +1276,7 @@ func _archivo(r: Dictionary) -> void:
 	_en(r, "coti_typewriter", 5.2, 6.4, 0.1, 1.0, 0.8, false)
 	_en(r, "vintage_oil_lamp", 5.9, 6.3, 0.0, 0.5, 0.8, false)
 	_en(r, "vict_old_books___free_download", 4.8, 6.5, 0.6, 0.5, 0.8, false)
-	_en(r, "vict_antique_iron_safe", 2.6, D - 0.55, PI)
+	_en(r, "terr_old_and_dusty_multi_crate_st", 2.6, D - 0.55, PI, 0.8)
 	for q in [Vector2(3.2, 8.2), Vector2(8.0, 9.6), Vector2(7.2, 3.0)]:
 		_en(r, "coti_12_old_books", q.x, q.y, q.x, 1.0, 0.0, false)
 	_en(r, "terr_old_and_dusty_multi_crate_st", 9.5, D - 0.7, 0.0, 0.8)
@@ -1425,8 +1432,8 @@ func _atico(r: Dictionary) -> void:
 	for q in [[33.5, 20.5, 0.0], [34.4, 18.8, 0.6], [9.6, 22.6, 0.3], [21.0, 22.8, 0.0]]:
 		_en(r, "terr_old_and_dusty_multi_crate_st", q[0], q[1], q[2], 0.8)
 	# juguetes de los niños, olvidados
-	_en(r, "jugu_rocking_horse", 13.0, 16.0, 2.6)
-	_en(r, "jugu_dollhouse", 10.4, 18.4, 0.8)
+	_en(r, "ropa_mannequin_1900s_m_size", 13.0, 16.0, 2.6)
+	_en(r, "obj_birdcage_2", 10.4, 18.4, 0.8)
 	_en(r, "Ottoman_01", 19.0, 15.0, 0.4)
 	# cuadros apoyados contra las paredes, de cara a la pared alguno
 	for q in [[0.35, 6.0, PI * 0.5], [0.35, 7.1, PI * 0.5], [W - 0.35, 5.0, -PI * 0.5], [17.0, D - 0.35, PI], [18.2, D - 0.35, 0.0]]:
@@ -1463,7 +1470,7 @@ func _torre(r: Dictionary) -> void:
 	else:
 		_en(r, "vict_antique_desk", 1.1, 3.6, PI * 0.5)
 		_en(r, "vict_antique_chair", 1.8, 3.6, -PI * 0.5)
-		_en(r, "coti_typewriter", 1.1, 3.4, PI * 0.5, 1.0, 0.8, false)
+		_en(r, "obj_military_telescope", 1.1, 3.4, PI * 0.5, 1.0, 0.8, false)
 		_en(r, "vintage_suitcase", W - 1.0, D - 0.6, 0.4)
 	_telas(r)
 

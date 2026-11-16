@@ -759,6 +759,7 @@ func _process(delta: float) -> void:
 		print("ZAREK FPS %d draws %d prims %d mem %d MB estado %s pos %s" % [Engine.get_frames_per_second(),
 			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 			int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1e6), state, player.global_position.snapped(Vector3.ONE) if player else Vector3.ZERO])
+	_eventos_sala(delta)
 	# de vez en cuando salta un pez en el río si el jugador anda cerca
 	if mansion and player and mansion.rio_rect.size != Vector2.ZERO:
 		_t_pez -= delta
@@ -1064,6 +1065,9 @@ func _target() -> Dictionary:
 	for s in mansion.seals:
 		if not s.taken and Vector2(pp.x - s.pos.x, pp.z - s.pos.z).length() < 1.7:
 			return {"kind": "sello", "obj": s, "text": "USAR: tomar el sello"}
+	var nota := mansion.nota_cerca(pp + player.forward() * 0.5, 1.2)
+	if not nota.is_empty():
+		return {"kind": "nota", "obj": nota, "text": "USAR: leer «" + String(nota.titulo).get_slice(" · ", 0) + "»"}
 	for k in mansion.pickups:
 		if not k.taken and Vector2(pp.x - k.pos.x, pp.z - k.pos.z).length() < 1.6:
 			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + ("las pilas" if k.kind == "pila" else "la sal")}
@@ -1094,6 +1098,77 @@ func _target() -> Dictionary:
 		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger"}
 	return {}
 
+# ---------------- notas y salas ----------------
+var panel_nota: PanelContainer
+var lbl_nota: Label
+var _t_nota := 0.0
+var notas_leidas := 0
+func _leer_nota(n: Dictionary) -> void:
+	if panel_nota == null:
+		var capa := CanvasLayer.new()
+		capa.layer = 60
+		add_child(capa)
+		panel_nota = PanelContainer.new()
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.86, 0.8, 0.66, 0.96)
+		sb.border_color = Color(0.35, 0.28, 0.18)
+		sb.set_border_width_all(3)
+		sb.set_content_margin_all(28)
+		panel_nota.add_theme_stylebox_override("panel", sb)
+		panel_nota.set_anchors_preset(Control.PRESET_CENTER)
+		panel_nota.custom_minimum_size = Vector2(760, 0)
+		panel_nota.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl_nota = Label.new()
+		lbl_nota.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_nota.custom_minimum_size = Vector2(700, 0)
+		lbl_nota.add_theme_font_size_override("font_size", 26)
+		lbl_nota.add_theme_color_override("font_color", Color(0.15, 0.1, 0.06))
+		panel_nota.add_child(lbl_nota)
+		capa.add_child(panel_nota)
+	if panel_nota.visible and _t_nota > 0.0:
+		panel_nota.visible = false
+		_t_nota = 0.0
+		return
+	lbl_nota.text = String(n.titulo).to_upper() + "\n\n" + String(n.texto)
+	panel_nota.visible = true
+	panel_nota.reset_size()
+	panel_nota.position = (get_viewport().get_visible_rect().size - panel_nota.size) * 0.5
+	_t_nota = 14.0
+	if not n.leida:
+		n.leida = true
+		notas_leidas += 1
+		message("Nota %d de %d" % [notas_leidas, mansion.notas.size()], 2.0)
+	snd_ui.stream = _s("crujido")
+	snd_ui.volume_db = -14.0
+	snd_ui.play()
+
+var _salas_vistas := {}
+var _sala_actual := -1
+func _eventos_sala(delta: float) -> void:
+	if _t_nota > 0.0:
+		_t_nota -= delta
+		if _t_nota <= 0.0 and panel_nota:
+			panel_nota.visible = false
+	if state != "juego":
+		return
+	var id := mansion.room_at(player.global_position)
+	if id == _sala_actual:
+		return
+	_sala_actual = id
+	if id < 0 or _salas_vistas.has(id):
+		return
+	_salas_vistas[id] = true
+	var nombre := String(mansion.rooms[id].name)
+	if ZarekHistoria.EVENTO.has(nombre):
+		var ev: Array = ZarekHistoria.EVENTO[nombre]
+		var rc: Rect2 = mansion.rooms[id].rect
+		var donde := Vector3(rc.get_center().x + randf_range(-1.5, 1.5), float(mansion.rooms[id].y) + 1.2, rc.get_center().y + randf_range(-1.5, 1.5))
+		get_tree().create_timer(randf_range(1.2, 3.0)).timeout.connect(func():
+			if _sala_actual == id:
+				sound_at(ev[0], donde, -2.0)
+				message(ev[1], 3.0)
+				sanity = maxf(0.0, sanity - 4.0))
+
 func _interact_prompt() -> void:
 	var t := _target()
 	lbl_prompt.text = str(t.get("text", ""))
@@ -1103,6 +1178,8 @@ func _use() -> void:
 	match str(t.get("kind", "")):
 		"salir":
 			_exit_wardrobe(true)
+		"nota":
+			_leer_nota(t.obj)
 		"sello":
 			_take_seal(t.obj)
 		"pick":
