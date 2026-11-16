@@ -89,7 +89,7 @@ func _hacer_ruta() -> void:
 	var puntos: Array = []   # [posición, velocidad m/s]
 	var ini := m.start_pos + Vector3(0, 1.65, 0)
 	puntos.append([ini, 3.2])
-	for c in [[49.0, 97.0], [49.0, 89.0], [31.0, 88.0], [31.0, 82.0], [31.0, 77.0], [44.0, 77.0], [44.0, 71.0], [44.0, 66.0], [44.0, 56.0], [44.0, 47.0], [44.0, 44.0]]:
+	for c in [[49.0, 97.0], [49.0, 89.0], [31.0, 88.0], [31.0, 82.0], [31.0, 77.0], [44.0, 77.0], [44.0, 71.0], [44.0, 66.0], [44.0, 59.0], [40.0, 56.5], [39.3, 52.5], [40.5, 49.5], [44.0, 47.5], [44.0, 44.0]]:
 		puntos.append([_c(c[0], c[1]), 4.0])
 	var vest := _sala("Vestíbulo y gran escalera")
 	var salon := _sala("Salón con chimenea")
