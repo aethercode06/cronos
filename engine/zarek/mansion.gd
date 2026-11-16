@@ -49,6 +49,9 @@ const FISICOS := {"vict_antique_chair": 7.0, "painted_wooden_chair_01": 6.0, "pa
 	"sweet_potato": 0.15, "wooden_spoon": 0.1, "round_spectacles": 0.05, "coti_pocket_watch": 0.1, "vintage_pocket_watch": 0.1, "magnifying_glass_01": 0.2,
 	"vict_cup___saucer": 0.3, "coti_typewriter": 9.0, "coti_three_candles_and_a_golden_c": 0.8, "brass_candleholders": 2.0, "mousetrap": 0.1}
 ## Modelos de Objaverse que vienen mirando de lado: giro para que miren a +Z como los demás.
+## Plantas que mueve el viento: nombre → [flex, temblor].
+const VEG_VIENTO := {"fern_02": [0.15, 0.02], "shrub_02": [0.1, 0.02], "shrub_03": [0.1, 0.02], "shrub_04": [0.1, 0.02], "grass_medium_01": [0.3, 0.01],
+	"grass_medium_02": [0.3, 0.01], "nettle_plant": [0.22, 0.015], "dandelion_01": [0.25, 0.01], "celandine_01": [0.22, 0.01]}
 const GIRO := {"obj_pendulum_clock": -PI * 0.5, "obj_withered_wooden_crucifix": -PI * 0.5, "obj_wooden_cuckoo_clock": -PI * 0.5,
 	"obj_teddy_bear_2": -PI * 0.5, "obj_old_violin": -PI * 0.5, "obj_biblical_scene_from_nurember": PI * 0.5, "obj_candle_wall_lamp": PI * 0.5, "ropa_towel_rail": -PI * 0.5}
 ## Objetos de pared o fijos: nunca sueltos con física.
@@ -1362,13 +1365,13 @@ func _trees(W: float, H: float) -> void:
 		for v in pc:
 			var lista: Array = pc[v]
 			if mallas[v] != null:
-				_multi_arbol(mallas[v], lista, 0.0, 68.0, true)
+				_multi_arbol(_con_viento(mallas[v], 0.025 if v < 6 else 0.012, 0.035 if v < 6 else 0.0), lista, 0.0, 68.0, true)
 			if v < 6:
 				for k in lista.size():
 					lejos_xs[k % 3].append(lista[k])
 		for k in 3:
 			if lejos_xs[k].size() > 0:
-				_multi_arbol(lejos[k], lejos_xs[k], 60.0, 0.0, false)
+				_multi_arbol(_con_viento(lejos[k], 0.02, 0.0), lejos_xs[k], 60.0, 0.0, false)
 	# arbustos bajo los árboles
 	var arb := [_malla_glb("res://zarek/arboles/arbusto_1.glb"), _malla_glb("res://zarek/arboles/arbusto_2.glb")]
 	var arb_xs: Array = [[], []]
@@ -1395,7 +1398,7 @@ func _trees(W: float, H: float) -> void:
 					porp[cl] = []
 				porp[cl].append(t)
 			for cl in porp:
-				_multi_arbol(arb[k], porp[cl], 0.0, 45.0, false)
+				_multi_arbol(_con_viento(arb[k], 0.12, 0.03), porp[cl], 0.0, 45.0, false)
 	_sotobosque(W, H, avoid)
 	_jardin_salvaje()
 	# colisión de troncos con un solo cuerpo
@@ -1449,6 +1452,53 @@ func _malla_glb(path: String) -> ArrayMesh:
 				am.surface_set_material(am.get_surface_count() - 1, bm)
 	raiz.free()
 	return am
+
+var _shader_veg: Shader
+var _cache_viento: Dictionary = {}
+## Copia de una malla de planta con sus materiales cambiados por el de viento (vegetacion.gdshader).
+## flex: cuánto se dobla la punta (fracción de la altura); temblor: vibración de hojas en metros.
+func _con_viento(malla: Mesh, flex: float, temblor: float) -> Mesh:
+	if malla == null:
+		return null
+	var clave := "%d_%.3f_%.3f" % [malla.get_instance_id(), flex, temblor]
+	if _cache_viento.has(clave):
+		return _cache_viento[clave]
+	if _shader_veg == null:
+		_shader_veg = load("res://zarek/vegetacion.gdshader")
+	var copia: Mesh = malla.duplicate()
+	var alto := maxf(malla.get_aabb().end.y, 0.05)
+	for si in copia.get_surface_count():
+		var orig := malla.surface_get_material(si)
+		var sm := ShaderMaterial.new()
+		sm.shader = _shader_veg
+		sm.set_shader_parameter("altura", alto)
+		var es_tronco := false
+		if orig is BaseMaterial3D:
+			var bm := orig as BaseMaterial3D
+			sm.set_shader_parameter("color", bm.albedo_color)
+			if bm.albedo_texture:
+				sm.set_shader_parameter("albedo_tex", bm.albedo_texture)
+				sm.set_shader_parameter("usa_albedo", true)
+			if bm.normal_enabled and bm.normal_texture:
+				sm.set_shader_parameter("normal_tex", bm.normal_texture)
+				sm.set_shader_parameter("usa_normal", true)
+			if bm.roughness_texture:
+				sm.set_shader_parameter("rough_tex", bm.roughness_texture)
+				sm.set_shader_parameter("usa_rough", true)
+			sm.set_shader_parameter("rugosidad", bm.roughness)
+			if bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+				sm.set_shader_parameter("corte", maxf(bm.alpha_scissor_threshold, 0.3))
+			else:
+				es_tronco = String(bm.resource_name).contains("corteza") or String(bm.resource_name).contains("bark") or String(bm.resource_name).contains("trunk")
+			if bm.backlight_enabled:
+				sm.set_shader_parameter("trasluz", Vector3(bm.backlight.r, bm.backlight.g, bm.backlight.b))
+			elif bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+				sm.set_shader_parameter("trasluz", Vector3(0.08, 0.12, 0.06))
+		sm.set_shader_parameter("flex", flex)
+		sm.set_shader_parameter("temblor", 0.0 if es_tronco else temblor)
+		copia.surface_set_material(si, sm)
+	_cache_viento[clave] = copia
+	return copia
 
 func _multi_arbol(malla: Mesh, xs: Array, desde: float, hasta: float, sombra: bool) -> void:
 	var mm := MultiMesh.new()
@@ -1583,7 +1633,7 @@ func _sotobosque(W: float, H: float, avoid: Array) -> void:
 		for pt in partes:
 			var mm := MultiMesh.new()
 			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.mesh = pt[0]
+			mm.mesh = _con_viento(pt[0], float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else pt[0]
 			mm.instance_count = xs.size()
 			for i in xs.size():
 				mm.set_instance_transform(i, xs[i] * (pt[1] as Transform3D))
@@ -1638,7 +1688,7 @@ func _jardin_salvaje() -> void:
 		for pt in partes:
 			var mm := MultiMesh.new()
 			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.mesh = pt[0]
+			mm.mesh = _con_viento(pt[0], float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else pt[0]
 			mm.instance_count = xs.size()
 			for i in xs.size():
 				mm.set_instance_transform(i, xs[i] * (pt[1] as Transform3D))

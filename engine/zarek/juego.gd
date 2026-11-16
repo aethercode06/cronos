@@ -625,6 +625,7 @@ func _process(delta: float) -> void:
 	vig_mat.set_shader_parameter("t", fmod(Time.get_ticks_msec() / 1000.0, 100.0))
 	_update_flash(delta)
 	_update_niebla(delta)
+	_update_viento(delta)
 	if state in ["juego", "escondido", "ritual"]:
 		_play(delta)
 	_update_hud()
@@ -650,6 +651,84 @@ func _update_niebla(delta: float) -> void:
 		add_child(niebla)
 		niebla.objetivo = player
 	niebla.fuerza = _fuera
+
+## Viento: brisa constante que cambia de dirección poco a poco y rachas cada 6-18 s que doblan los árboles,
+## suben el sonido del viento, arrastran hojas secas y a veces hacen crujir un tronco cercano.
+var _viento_dir := 0.6
+var _racha := 0.0
+var _racha_obj := 0.0
+var _t_racha := 5.0
+var hojas_caen: CPUParticles3D
+func _update_viento(delta: float) -> void:
+	_viento_dir += sin(Time.get_ticks_msec() / 23000.0) * delta * 0.05
+	_t_racha -= delta
+	if _t_racha <= 0.0:
+		if _racha_obj > 0.1:
+			_racha_obj = 0.0
+			_t_racha = randf_range(6.0, 18.0)
+		else:
+			_racha_obj = randf_range(0.5, 1.0)
+			_t_racha = randf_range(2.5, 5.0)
+			if _fuera > 0.5 and randf() < 0.5 and player:
+				var lado := Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized()
+				sound_at("crujido", player.global_position + lado * randf_range(6.0, 12.0) + Vector3(0, 4, 0), -6.0)
+	_racha = move_toward(_racha, _racha_obj, delta * (0.45 if _racha_obj > _racha else 0.25))
+	var d := Vector2(cos(_viento_dir), sin(_viento_dir))
+	var fuerza := 0.35 + 0.1 * sin(Time.get_ticks_msec() / 7000.0)
+	RenderingServer.global_shader_parameter_set("viento", Vector4(d.x, d.y, fuerza, _racha))
+	if snd_wind:
+		snd_wind.volume_db = lerpf(-30.0, lerpf(-16.0, -6.0, _racha), _fuera)
+		snd_wind.pitch_scale = 0.9 + _racha * 0.25
+	# hojas secas arrastradas por el viento alrededor del jugador (solo fuera)
+	if hojas_caen == null and player:
+		hojas_caen = CPUParticles3D.new()
+		hojas_caen.top_level = true
+		hojas_caen.amount = 70
+		hojas_caen.lifetime = 8.0
+		hojas_caen.preprocess = 8.0
+		hojas_caen.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+		hojas_caen.emission_box_extents = Vector3(16, 2, 16)
+		hojas_caen.direction = Vector3(0, -1, 0)
+		hojas_caen.spread = 30.0
+		hojas_caen.initial_velocity_min = 0.2
+		hojas_caen.initial_velocity_max = 0.6
+		hojas_caen.angle_min = 0.0
+		hojas_caen.angle_max = 360.0
+		hojas_caen.angular_velocity_min = -220.0
+		hojas_caen.angular_velocity_max = 220.0
+		hojas_caen.scale_amount_min = 0.6
+		hojas_caen.scale_amount_max = 1.2
+		var q := QuadMesh.new()
+		q.size = Vector2(0.07, 0.05)
+		var m := StandardMaterial3D.new()
+		m.albedo_texture = _textura_hoja()
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		m.alpha_scissor_threshold = 0.4
+		m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		m.albedo_color = Color(0.55, 0.42, 0.3)
+		q.material = m
+		hojas_caen.mesh = q
+		add_child(hojas_caen)
+	if hojas_caen:
+		hojas_caen.global_position = player.global_position + Vector3(0, 6.0, 0)
+		hojas_caen.emitting = _fuera > 0.5
+		hojas_caen.visible = _fuera > 0.1
+		var arrastre := (1.2 + _racha * 4.5)
+		hojas_caen.gravity = Vector3(d.x * arrastre, -0.9 + _racha * 0.4, d.y * arrastre)
+
+func _textura_hoja() -> ImageTexture:
+	var img := Image.create(32, 24, false, Image.FORMAT_RGBA8)
+	for y in 24:
+		for x in 32:
+			var u := (x - 16.0) / 16.0
+			var v := (y - 12.0) / 12.0
+			var dentro := u * u + v * v * (1.0 + absf(u)) < 0.85
+			var nervio := absf(v) < 0.08
+			var t := randf_range(0.75, 1.05) * (0.8 if nervio else 1.0)
+			img.set_pixel(x, y, Color(t, t * 0.92, t * 0.8, 1.0 if dentro else 0.0))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
 
 func _update_flash(delta: float) -> void:
 	var cam := player.camera
