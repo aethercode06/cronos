@@ -65,3 +65,12 @@ viento={
 "type": "vec4",
 "value": Vector4(0.8, 0.6, 0.35, 0)
 }
+
+[importer_defaults]
+
+texture={
+"compress/mode": 2,
+"mipmaps/generate": true,
+"process/size_limit": 1024,
+"detect_3d/compress_to": 1
+}
