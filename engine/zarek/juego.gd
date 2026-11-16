@@ -120,6 +120,10 @@ func _ready() -> void:
 	# en el teléfono, densidad media de bosque y objetos (la alta va a tirones)
 	mansion.build(mini(Aether.quality, 1) if OS.get_name() == "Android" else Aether.quality)
 	mansion.bake_nav()
+	# con la física ya en marcha, los objetos que quedaron en el aire bajan a su sitio
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	mansion.asentar()
 	for l in mansion.lamps:
 		mansion.set_lamp(l, true)
 	respawn_pos = mansion.cell_to_world("baja", 9.0, 11.2)

@@ -477,14 +477,11 @@ func _materials() -> void:
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
 	_mat["fachada"] = _fachada_mat("Bricks066", 0.32, Color(0.66, 0.64, 0.58))
 	_mat["fachada"].set_shader_parameter("suciedad", 1.35)
-	var torre := StandardMaterial3D.new()
-	torre.albedo_texture = load("res://zarek/texturas/Bricks066/color.jpg")
-	torre.albedo_color = Color(0.5, 0.48, 0.44)
-	torre.normal_enabled = true
-	torre.normal_texture = load("res://zarek/texturas/Bricks066/normal.jpg")
-	torre.roughness_texture = load("res://zarek/texturas/Bricks066/rough.jpg")
-	torre.uv1_scale = Vector3(8.5, 4.4, 1)
-	torre.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	var torre := ShaderMaterial.new()
+	torre.shader = load("res://zarek/torre.gdshader")
+	torre.set_shader_parameter("albedo_tex", load("res://zarek/texturas/Bricks066/color.jpg"))
+	torre.set_shader_parameter("normal_tex", load("res://zarek/texturas/Bricks066/normal.jpg"))
+	torre.set_shader_parameter("rough_tex", load("res://zarek/texturas/Bricks066/rough.jpg"))
 	_mat["fachada_torre"] = torre
 	_mat["piedra_clara"] = _fachada_mat("Travertine009", 0.45, Color(0.66, 0.63, 0.56))
 	_mat["piedra_clara"].set_shader_parameter("suciedad", 1.25)
@@ -583,7 +580,20 @@ var stairs_spec := [
 	{"key": "baja", "r": [16.0, 9.9, 17.0, 12.0], "low": "s", "from": -1, "to": 0},
 ]
 
+## Escaleras de caracol: [planta de abajo, x, y (celdas), planta de arriba]. Se ven enteras: suben por un
+## hueco en el techo de la planta de abajo y llegan a un rellano con barandilla en la de arriba.
+const CARACOLES := [["baja", 1.5, 10.5, "alta"], ["alta", 1.5, 10.5, "atico"], ["alta", 17.4, 8.5, "atico"]]
+
+func _caracol_centro(c: Array) -> Vector3:
+	return cell_to_world(c[0], c[1], c[2])
+
 func _stairs_plan() -> void:
+	for c in CARACOLES:
+		var p := _caracol_centro(c)
+		var nivel := int(plan[c[3]].nivel)
+		if not _hole.has(nivel):
+			_hole[nivel] = []
+		_hole[nivel].append(Rect2(p.x - 1.2, p.z - 1.2, 2.4, 2.4))
 	for s in stairs_spec:
 		var a := cell_to_world(s.key, s.r[0], s.r[1])
 		var b := cell_to_world(s.key, s.r[2], s.r[3])
@@ -600,6 +610,10 @@ func stair_rects() -> Array[Rect2]:
 		var b := cell_to_world(st.key, st.r[2], st.r[3])
 		# la escalera y un rellano de 1,4 m en cada extremo (a lo largo de la escalera)
 		out.append(Rect2(a.x - 0.3, a.z - 1.4, b.x - a.x + 0.6, b.z - a.z + 2.8))
+	# escaleras de caracol: su sitio abajo y el hueco con rellano arriba
+	for c in CARACOLES:
+		var p := _caracol_centro(c)
+		out.append(Rect2(p.x - 1.9, p.z - 1.9, 3.8, 3.8))
 	return out
 
 func _build_stairs() -> void:
@@ -1519,6 +1533,7 @@ func _roof() -> void:
 	var tc := t0 + Vector3(3.0, 0, 5.0)
 	var th := lvl_y(3) + 1.0
 	# tambor de la torre: mapeado por UV (no triplanar: en una superficie curva el triplanar hace bandas)
+	(_mat.fachada_torre as ShaderMaterial).set_shader_parameter("casa", Vector4(house_rect.position.x, house_rect.position.y, house_rect.size.x, house_rect.size.y))
 	var tambor := cyl(rt, rt, th, tc + Vector3(0, th * 0.5 - 0.02, 0), _mat.fachada_torre, self, 48)
 	tambor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	cyl(0.0, rt + 1.0, 9.0, tc + Vector3(0, th + 4.5, 0), _mat.tejado, self, 24)
@@ -1527,6 +1542,8 @@ func _roof() -> void:
 		for k in 6:
 			var a := TAU * k / 6.0 + 0.3
 			var wp := tc + Vector3(cos(a) * (rt + 0.05), lvl_y(lv) + 1.9, sin(a) * (rt + 0.05))
+			if house_rect.grow(-0.12).has_point(Vector2(wp.x, wp.z)):
+				continue  # ventana que caería dentro de una sala
 			var w := box(Vector3(0.1, 2.0, 1.1), wp, _mat.ventana_luz if (k == 2 and lv == 2) else _mat.vidrio, false, self)
 			w.rotation.y = -a
 
@@ -3176,10 +3193,24 @@ func _pickup(pos: Vector3, kind: String) -> void:
 
 # ---------------- pasos especiales ----------------
 func _portals() -> void:
+	# escaleras de caracol: una sola escalera entera por tramo; arriba se llega al borde del hueco
+	var textos := [["subir por la escalera de caracol", "bajar por la escalera de caracol"], ["subir al mirador de la torre", "bajar de la torre"], ["subir al ático", "bajar del ático"]]
+	for i in CARACOLES.size():
+		var c: Array = CARACOLES[i]
+		var abajo := _caracol_centro(c)
+		var y_arriba := lvl_y(int(plan[c[3]].nivel))
+		_caracol(abajo, y_arriba - abajo.y)
+		# punto de llegada arriba: junto al hueco, hacia el interior de la sala de arriba
+		var sala := room_at(Vector3(abajo.x, y_arriba + 0.5, abajo.z))
+		var hacia := Vector3(1, 0, 0)
+		if sala >= 0:
+			var cr: Vector2 = (rooms[sala].rect as Rect2).get_center()
+			hacia = Vector3(cr.x - abajo.x, 0, cr.y - abajo.z).normalized()
+		var llegada := Vector3(abajo.x, y_arriba, abajo.z) + hacia * 1.8
+		_barandilla_hueco(Vector3(abajo.x, y_arriba, abajo.z), hacia)
+		portals.append({"pos": abajo + Vector3(0, 0, 0) - hacia * 0.0 + hacia * 1.1, "to": llegada, "text": textos[i][0]})
+		portals.append({"pos": llegada, "to": abajo + hacia * 1.3, "text": textos[i][1]})
 	var links := [
-		[["baja", 1.5, 10.5], ["alta", 1.2, 10.8], "subir por la escalera de caracol", "bajar por la escalera de caracol"],
-		[["alta", 2.0, 10.0], ["atico", 1.5, 10.5], "subir al mirador de la torre", "bajar de la torre"],
-		[["alta", 17.4, 8.5], ["atico", 15.5, 7.5], "subir al ático", "bajar del ático"],
 		[["baja", 5.0, 3.2], ["sotano", 13.0, 2.5], "empujar el librero (pasadizo)", "volver por el pasadizo"],
 		[["exterior", 30.5, 36.5], ["sotano", 1.5, 6.5], "bajar por el pozo", "subir por la escalera del pozo"],
 		[["exterior", 58.0, 47.0], ["sotano", 29.0, 17.0], "bajar al túnel", "subir a la superficie"],
@@ -3213,14 +3244,65 @@ func _portals() -> void:
 var _caracoles: Array[Vector3] = []
 var chimeneas: Array = []
 
-## Escalera de caracol de hierro con peldaños de madera (subidas a la torre y al ático).
-func _caracol(p: Vector3) -> void:
-	cyl(0.07, 0.09, 3.6, p + Vector3(0, 1.8, 0), _mat.metal, self, 10)
-	for k in 12:
-		var st := box(Vector3(0.95, 0.05, 0.32), p + Vector3(0, 0.25 + k * 0.3, 0), _mat.madera, false, self)
-		st.rotation.y = k * 0.52
-		var bal := cyl(0.012, 0.012, 0.9, p + Vector3(cos(-k * 0.52) * 0.9, 0.7 + k * 0.3, sin(-k * 0.52) * 0.9), _mat.metal, self, 5)
+## Escalera de caracol de hierro con peldaños de madera: sube «alto» metros (hasta el suelo de la planta de
+## arriba, a través del hueco del techo), con pasamanos en espiral.
+func _caracol(p: Vector3, alto := LEVEL_H) -> void:
+	var n := int(round(alto / 0.27))
+	var sube := alto / n
+	var giro := TAU * 1.05 / n
+	cyl(0.08, 0.1, alto + 0.1, p + Vector3(0, alto * 0.5, 0), _mat.metal, self, 12)
+	var mano_prev := Vector3.ZERO
+	for k in n:
+		var ang := k * giro
+		var y := (k + 1) * sube
+		var dir := Vector3(cos(ang), 0, sin(ang))
+		# peldaño en abanico: más ancho por fuera
+		var st := box(Vector3(0.98, 0.05, 0.3), p + dir * 0.55 + Vector3(0, y - 0.025, 0), _mat.madera, false, self)
+		st.rotation.y = -ang
+		var tab := box(Vector3(0.9, 0.012, 0.36), p + dir * 0.58 + Vector3(0, y + 0.005, 0), _mat.madera_clara, false, self, false)
+		tab.rotation.y = -ang
+		# balaustre y tramo de pasamanos
+		var bp := p + dir * 1.02 + Vector3(0, y, 0)
+		var bal := cyl(0.012, 0.012, 0.92, bp + Vector3(0, 0.46, 0), _mat.metal, self, 5)
 		bal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var mano := bp + Vector3(0, 0.93, 0)
+		if k > 0:
+			var seg := cyl(0.018, 0.018, mano.distance_to(mano_prev), (mano + mano_prev) * 0.5, _mat.metal, self, 6)
+			seg.look_at_from_position(seg.position, mano, Vector3.UP if absf((mano - mano_prev).normalized().y) < 0.99 else Vector3.RIGHT)
+			seg.rotate_object_local(Vector3.RIGHT, PI * 0.5)
+			seg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mano_prev = mano
+
+## Barandilla de madera alrededor del hueco de una escalera de caracol en la planta de arriba, con el lado que da a
+## «hacia» abierto (por ahí se sale de la escalera). Paredes invisibles para no caer por el hueco.
+func _barandilla_hueco(c: Vector3, hacia: Vector3) -> void:
+	var lados := [[Vector3(-1.2, 0, -1.2), Vector3(1.2, 0, -1.2), Vector3(0, 0, -1)], [Vector3(1.2, 0, -1.2), Vector3(1.2, 0, 1.2), Vector3(1, 0, 0)],
+		[Vector3(1.2, 0, 1.2), Vector3(-1.2, 0, 1.2), Vector3(0, 0, 1)], [Vector3(-1.2, 0, 1.2), Vector3(-1.2, 0, -1.2), Vector3(-1, 0, 0)]]
+	var abierto := 0
+	var mejor := -2.0
+	for i in 4:
+		var d: float = (lados[i][2] as Vector3).dot(hacia)
+		if d > mejor:
+			mejor = d
+			abierto = i
+	for i in 4:
+		var p0: Vector3 = c + lados[i][0]
+		var p1: Vector3 = c + lados[i][1]
+		var lg := p0.distance_to(p1)
+		var md := (p0 + p1) * 0.5
+		var horiz := absf(p1.x - p0.x) > 0.01
+		# canto del suelo alrededor del hueco
+		box(Vector3(lg, 0.2, 0.06) if horiz else Vector3(0.06, 0.2, lg), md + Vector3(0, -0.1, 0), _mat.madera, false, null, false)
+		if i == abierto:
+			continue
+		box(Vector3(lg, 0.07, 0.09) if horiz else Vector3(0.09, 0.07, lg), md + Vector3(0, 0.98, 0), _mat.madera, false)
+		var nb := int(lg / 0.22)
+		for k in nb:
+			var bal := cyl(0.016, 0.024, 0.92, p0.lerp(p1, (k + 0.5) / nb) + Vector3(0, 0.49, 0), _mat.madera, null, 6)
+			bal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var col := box(Vector3(lg, 1.1, 0.1) if horiz else Vector3(0.1, 1.1, lg), md + Vector3(0, 0.55, 0), _mat.madera, true)
+		col.visible = false
+		col.set_meta("dyn", true)
 
 ## Escalera de mano contra la pared (pozo, túnel, salida del pasadizo).
 func _escalera_mano(p: Vector3) -> Vector3:
@@ -3258,6 +3340,7 @@ func _decorate() -> void:
 	var deco := ZarekDecorado.new(self)
 	for r in rooms:
 		deco.vestir(r)
+	_pinturas_distintas()
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect
@@ -4070,6 +4153,171 @@ func _merge_static() -> void:
 				mi.remove_child(c)
 				_house.add_child(c)
 		mi.queue_free()
+
+# ---------------- pinturas ----------------
+## Cada cuadro lleva una pintura distinta (retratos, paisajes, bodegones… de los siglos XVII-XIX, dominio público;
+## zarek/pinturas/creditos.json), elegida con la misma orientación que el lienzo y recortada para llenarlo, con
+## el barniz amarillento de los cuadros viejos.
+func _pinturas_distintas() -> void:
+	var lista: Array = JSON.parse_string(FileAccess.open("res://zarek/pinturas/creditos.json", FileAccess.READ).get_as_text())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var orden: Array = range(lista.size())
+	for i in range(orden.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t = orden[i]; orden[i] = orden[j]; orden[j] = t
+	var usadas := {}
+	var cache := {}
+	var k := 0
+	for c in find_children("*", "Node3D", true, false):
+		var n := c as Node3D
+		if not n.scene_file_path.contains("picture_frame") and not n.scene_file_path.contains("portrait") and not n.scene_file_path.contains("biblical"):
+			continue
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m3 := mi as MeshInstance3D
+			for si in m3.mesh.get_surface_count():
+				var arr := m3.mesh.surface_get_arrays(si)
+				var ix = arr[Mesh.ARRAY_INDEX]
+				var ntri: int = (ix.size() / 3) if ix != null else (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 3
+				var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+				var ab := AABB(vs[0], Vector3.ZERO)
+				for v in vs:
+					ab = ab.expand(v)
+				var dims := [ab.size.x, ab.size.y, ab.size.z]
+				dims.sort()
+				if ntri > 4 or dims[0] > 0.005 or dims[1] < 0.15:
+					continue
+				# aspecto del lienzo (ancho/alto) y de las pinturas: se elige la siguiente con la misma orientación
+				var ancho := maxf(ab.size.x, ab.size.z)
+				var aspecto := ancho / maxf(ab.size.y, 0.01)
+				var elegida := -1
+				for intento in orden.size():
+					var idx: int = orden[(k + intento) % orden.size()]
+					var p: Dictionary = lista[idx]
+					var asp := float(p.ancho) / float(p.alto)
+					if (asp > 1.0) == (aspecto > 1.0) and not usadas.has(idx):
+						elegida = idx
+						break
+				if elegida < 0:
+					elegida = orden[k % orden.size()]
+				usadas[elegida] = true
+				if usadas.size() >= lista.size():
+					usadas.clear()
+				k += 1
+				var pd: Dictionary = lista[elegida]
+				var tex: Texture2D = cache.get(pd.archivo, null)
+				if tex == null:
+					tex = load("res://zarek/pinturas/" + String(pd.archivo))
+					cache[pd.archivo] = tex
+				var mat := StandardMaterial3D.new()
+				mat.albedo_texture = tex
+				mat.albedo_color = Color(0.82, 0.76, 0.64)
+				mat.roughness = 0.5
+				var orig := m3.mesh.surface_get_material(si)
+				if orig is BaseMaterial3D and (orig as BaseMaterial3D).normal_texture:
+					mat.normal_enabled = true
+					mat.normal_texture = (orig as BaseMaterial3D).normal_texture
+					mat.normal_scale = 0.5
+				# recorte centrado para llenar el lienzo sin deformar
+				var asp_img := float(pd.ancho) / float(pd.alto)
+				if asp_img > aspecto:
+					var f := aspecto / asp_img
+					mat.uv1_scale = Vector3(f, 1, 1)
+					mat.uv1_offset = Vector3((1.0 - f) * 0.5, 0, 0)
+				else:
+					var f2 := asp_img / aspecto
+					mat.uv1_scale = Vector3(1, f2, 1)
+					mat.uv1_offset = Vector3(0, (1.0 - f2) * 0.5, 0)
+				m3.set_surface_override_material(si, mat)
+	print("ZAREK pinturas: %d lienzos con %d pinturas" % [k, lista.size()])
+
+# ---------------- asentar objetos (después de la primera vuelta de física) ----------------
+const COLGADOS := ["chandelier", "lamp", "lantern", "curtain", "cortina", "frame", "picture", "mirror", "head", "clock", "towel", "hanger",
+	"rail", "cobweb", "shelf", "shelves", "percha", "crucifix", "sconce", "bell", "cage", "ropa_", "hanging", "wall", "biblical", "portrait",
+	"knocker", "bed", "torment", "painting", "icon"]
+
+func _caja_mallas(n: Node3D) -> AABB:
+	var ab := AABB()
+	var primero := true
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var b: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).get_aabb()
+		ab = b if primero else ab.merge(b)
+		primero = false
+	return ab
+
+## Baja hasta su apoyo los objetos que quedaron flotando (p. ej. cosas de una mesa que no se pudo poner) y pega a la
+## pared los cuadros y espejos separados; quita los cuadros que no tienen pared detrás. Devuelve cuántos tocó.
+func asentar() -> Dictionary:
+	var esp := get_world_3d().direct_space_state
+	var hr := house_rect.grow(1.0)
+	var bajados := 0
+	var pegados := 0
+	var quitados := 0
+	for c in find_children("*", "Node3D", true, false):
+		var n := c as Node3D
+		if not is_instance_valid(n) or n.is_queued_for_deletion():
+			continue
+		var es_glb := n.scene_file_path != ""
+		var es_rb := n is RigidBody3D
+		if not (es_glb or es_rb) or (es_glb and n.get_parent() is RigidBody3D):
+			continue
+		if not hr.has_point(Vector2(n.global_position.x, n.global_position.z)):
+			continue
+		var nombre := n.scene_file_path.get_file().to_lower()
+		if es_rb and n.get_child_count() > 0:
+			nombre = n.get_child(0).scene_file_path.get_file().to_lower()
+		var ab := _caja_mallas(n)
+		if ab.size == Vector3.ZERO:
+			continue
+		var ex: Array[RID] = []
+		for co in n.find_children("*", "CollisionObject3D", true, false):
+			ex.append((co as CollisionObject3D).get_rid())
+		if es_rb:
+			ex.append((n as RigidBody3D).get_rid())
+		var colgado := false
+		for k in COLGADOS:
+			if nombre.contains(k):
+				colgado = true
+		if colgado:
+			if not (nombre.contains("frame") or nombre.contains("picture") or nombre.contains("mirror") or nombre.contains("portrait") or nombre.contains("biblical")):
+				continue
+			if nombre.contains("bed"):
+				continue
+			# el cuadro mira hacia su +Z: detrás (−Z) tiene que estar la pared
+			var centro := ab.get_center()
+			var mejor := 99.0
+			var dir_mejor := Vector3.ZERO
+			for d in [Vector3(1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)]:
+				var q := PhysicsRayQueryParameters3D.create(centro, centro + d * 1.3)
+				q.exclude = ex
+				q.collision_mask = 1
+				var h := esp.intersect_ray(q)
+				if h and centro.distance_to(h.position) < mejor:
+					mejor = centro.distance_to(h.position)
+					dir_mejor = d
+			var grosor := (ab.size.x if absf(dir_mejor.x) > 0.5 else ab.size.z) * 0.5
+			if mejor > 1.25:
+				n.queue_free()
+				quitados += 1
+			elif mejor - grosor > 0.035:
+				n.global_position += dir_mejor * (mejor - grosor - 0.012)
+				pegados += 1
+			continue
+		# objetos apoyados: lo de debajo tiene que estar a menos de 3 cm
+		var hueco := 99.0
+		for pt in [ab.get_center(), ab.position + Vector3(ab.size.x * 0.3, 0, ab.size.z * 0.3), ab.position + Vector3(ab.size.x * 0.7, 0, ab.size.z * 0.7)]:
+			var desde := Vector3(pt.x, ab.position.y + 0.04, pt.z)
+			var q := PhysicsRayQueryParameters3D.create(desde, desde - Vector3(0, 1.0, 0))
+			q.exclude = ex
+			var h := esp.intersect_ray(q)
+			if h:
+				hueco = minf(hueco, ab.position.y - h.position.y)
+		# más de 95 cm sin nada debajo suele ser una repisa decorativa sin colisión: se deja
+		if hueco > 0.03 and hueco < 0.95:
+			n.global_position.y -= hueco - 0.003
+			bajados += 1
+	print("ZAREK asentar: bajados %d, cuadros pegados %d, quitados %d" % [bajados, pegados, quitados])
+	return {"bajados": bajados, "pegados": pegados, "quitados": quitados}
 
 # ---------------- navegación de Elena ----------------
 func bake_nav() -> void:

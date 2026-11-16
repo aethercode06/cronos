@@ -993,18 +993,106 @@ func _pasillo(r: Dictionary) -> void:
 		else:
 			x += 0.6
 
-## Cama de hierro con colchón, sábana arrugada y almohada (el armazón solo parecía abandonado de más).
+## Cama de hierro con colchón mullido de bordes redondos, manta que cae por los lados con arrugas y almohada
+## hinchada (antes eran cajas: parecían de Minecraft).
 func _cama_hierro(r: Dictionary, x: float, z: float, yaw: float, escala := 1.0) -> void:
 	var n := _en(r, "old_bed_frame", x, z, yaw, escala)
 	if n == null:
 		return
 	var c := n.global_position if n.is_inside_tree() else n.position
-	var colchon := m.box(Vector3(0.84, 0.16, 1.9) * Vector3(escala, 1, escala), c + Vector3(0, 0.5, 0), m._mat.sabana, false)
-	colchon.rotation.y = yaw
-	var manta := m.box(Vector3(0.9, 0.04, 1.2) * Vector3(escala, 1, escala), c + Vector3(0, 0.6, 0) + Vector3(0, 0, 0.3 * escala).rotated(Vector3.UP, yaw), m._mat.tela_roja, false)
-	manta.rotation = Vector3(0.03, yaw + 0.05, 0.02)
-	var alm := m.box(Vector3(0.6, 0.12, 0.35) * Vector3(escala, 1, escala), c + Vector3(0, 0.64, 0) + Vector3(0, 0, -0.75 * escala).rotated(Vector3.UP, yaw), m._mat.sabana, false)
-	alm.rotation.y = yaw + 0.08
+	var giro := Basis(Vector3.UP, yaw)
+	var colchon := MeshInstance3D.new()
+	colchon.mesh = _blando(Vector3(0.84 * escala, 0.17, 1.9 * escala), 0.06, 0.03, 0.006)
+	colchon.material_override = m._mat.sabana
+	colchon.transform = Transform3D(giro, c + Vector3(0, 0.5, 0))
+	m._house.add_child(colchon)
+	var manta := MeshInstance3D.new()
+	manta.mesh = _manta(Vector2(1.02 * escala, 1.3 * escala), Vector2(0.84 * escala, 1.9 * escala), 0.62 * escala, c.x + c.z)
+	if _mat_manta == null:
+		_mat_manta = (m._mat.tela_roja as StandardMaterial3D).duplicate()
+		_mat_manta.cull_mode = BaseMaterial3D.CULL_DISABLED
+	manta.material_override = _mat_manta
+	manta.transform = Transform3D(giro * Basis(Vector3.UP, 0.04), c + Vector3(0, 0.595, 0) + giro * Vector3(0, 0, 0.3 * escala))
+	m._house.add_child(manta)
+	var alm := MeshInstance3D.new()
+	alm.mesh = _blando(Vector3(0.6 * escala, 0.13, 0.36 * escala), 0.06, 0.05, 0.008)
+	alm.material_override = m._mat.sabana
+	alm.transform = Transform3D(giro * Basis(Vector3.UP, 0.08) * Basis(Vector3.RIGHT, -0.12), c + Vector3(0, 0.66, 0) + giro * Vector3(0, 0, -0.72 * escala))
+	m._house.add_child(alm)
+
+var _blandos: Dictionary = {}
+var _mat_manta: StandardMaterial3D
+## Malla blanda (colchón, almohada, cojín): caja de bordes redondeados (radio), cara de arriba abombada y un poco
+## de ruido para que no parezca perfecta.
+func _blando(tam: Vector3, radio: float, abombado: float, ruido: float) -> ArrayMesh:
+	var clave := "%s|%.3f|%.3f" % [tam, radio, abombado]
+	if _blandos.has(clave):
+		return _blandos[clave]
+	var bm := BoxMesh.new()
+	bm.size = tam
+	bm.subdivide_width = 10
+	bm.subdivide_height = 3
+	bm.subdivide_depth = 14
+	var arr := bm.surface_get_arrays(0)
+	var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var h := tam * 0.5
+	var nz := FastNoiseLite.new()
+	nz.frequency = 6.0
+	for i in vs.size():
+		var v: Vector3 = vs[i]
+		var dentro := Vector3(clampf(v.x, -h.x + radio, h.x - radio), clampf(v.y, -h.y + radio, h.y - radio), clampf(v.z, -h.z + radio, h.z - radio))
+		var d := v - dentro
+		if d.length() > 0.0001:
+			v = dentro + d.normalized() * radio
+		if v.y > 0.0:
+			var fx := 1.0 - pow(v.x / h.x, 2.0)
+			var fz := 1.0 - pow(v.z / h.z, 2.0)
+			v.y += abombado * clampf(fx, 0.0, 1.0) * clampf(fz, 0.0, 1.0) * (v.y / h.y)
+		v += Vector3(0, nz.get_noise_2d(v.x * 3.0, v.z * 3.0) * ruido, 0)
+		vs[i] = v
+	arr[Mesh.ARRAY_VERTEX] = vs
+	var st := SurfaceTool.new()
+	st.create_from_arrays(arr)
+	st.generate_normals()
+	st.generate_tangents()
+	var am := st.commit()
+	_blandos[clave] = am
+	return am
+
+## Manta: tela de «tam» sobre un colchón de «base» (ancho × largo); lo que sobra cae por los lados con pliegues.
+func _manta(tam: Vector2, base: Vector2, caida: float, semilla: float) -> ArrayMesh:
+	var pm := PlaneMesh.new()
+	pm.size = tam + Vector2(caida, 0.0) * 0.0
+	pm.size = Vector2(tam.x + caida * 0.7, tam.y + caida * 0.35)
+	pm.subdivide_width = 24
+	pm.subdivide_depth = 28
+	var arr := pm.surface_get_arrays(0)
+	var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var nz := FastNoiseLite.new()
+	nz.seed = int(semilla * 10.0)
+	nz.frequency = 3.5
+	var hx := base.x * 0.5
+	for i in vs.size():
+		var v: Vector3 = vs[i]
+		var fuera := maxf(0.0, absf(v.x) - hx)
+		# cae por el borde: se dobla hacia abajo y un poco hacia dentro
+		if fuera > 0.0:
+			v.y -= fuera * 0.95
+			v.x = signf(v.x) * (hx + fuera * 0.25)
+		var pie := maxf(0.0, v.z - (tam.y * 0.5 - 0.02))
+		if pie > 0.0:
+			v.y -= pie * 0.9
+			v.z = tam.y * 0.5 + pie * 0.25
+		# arrugas
+		v.y += nz.get_noise_2d(v.x * 4.0, v.z * 4.0) * 0.022 + sin(v.x * 18.0 + v.z * 3.0) * 0.004
+		vs[i] = v
+	arr[Mesh.ARRAY_VERTEX] = vs
+	var st := SurfaceTool.new()
+	st.create_from_arrays(arr)
+	st.generate_normals()
+	st.generate_tangents()
+	var am := st.commit()
+	return am
 
 ## Despensa (7,2 × 7,2): baja la escalera al sótano por x 2,4-4,8; puerta al oeste (z 2,4-4,8).
 func _despensa(r: Dictionary) -> void:
