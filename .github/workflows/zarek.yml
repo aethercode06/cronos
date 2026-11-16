@@ -63,32 +63,35 @@ jobs:
           mkdir -p zarek_shots
           SHOTS_DIR=$PWD/zarek_shots timeout 300 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 --resolution 1280x720 res://zarek/prueba.tscn -- --capturas > shots.log 2>&1 || true
           ls -la zarek_shots
-      - name: Exportar APK de Android
+      - name: Exportar APK (versión release, más rápida que la de depuración) y APK de prueba para el emulador
         env:
-          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/engine/keys/debug.keystore
-          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
-          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: ${{ github.workspace }}/engine/keys/debug.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: android
         run: |
           mkdir -p build
           sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/; s/^version\/name=.*/version\/name=\"1.0.${{ github.run_number }}\"/" engine/export_presets.cfg
-          godot --headless --path engine --export-debug "Android Zarek" ../build/LaSombraDeZarek.apk > export.log 2>&1 || true
+          godot --headless --path engine --export-release "Android Zarek" ../build/LaSombraDeZarek.apk > export.log 2>&1 || true
           tail -30 export.log
-          ls -la build
           test -s build/LaSombraDeZarek.apk
-      - name: Publicar en Descargas
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release delete zarek -y --cleanup-tag || true
-          gh release create zarek build/LaSombraDeZarek.apk \
-            --title "La Sombra de Zarek · Noche I (1.0.${{ github.run_number }})" \
-            --notes "**La Sombra de Zarek — Noche I**, hecho con Aether Engine. Toca **LaSombraDeZarek.apk** para instalarlo. Usa auriculares." \
-            --latest=false
-          for i in 1 2 3 4 5; do
-            gh release edit zarek --draft=false || true
-            sleep 4
-            if [ "$(gh release view zarek --json isDraft -q .isDraft)" = "false" ]; then echo "publicada"; break; fi
-          done
+          # copia del preset con x86_64 para probarla en el emulador de Android
+          python3 - <<'PY'
+          import re
+          p='engine/export_presets.cfg'; s=open(p).read()
+          i=s.index('name="Android Zarek"'); j=s.find('[preset.', i)
+          seg=s[i:j if j>0 else len(s)]
+          seg2=seg.replace('architectures/x86_64=false','architectures/x86_64=true').replace('architectures/arm64-v8a=true','architectures/arm64-v8a=false')
+          open(p,'w').write(s[:i]+seg2+(s[j:] if j>0 else ''))
+          PY
+          godot --headless --path engine --export-release "Android Zarek" ../build/Zarek_x86_64.apk > export_x86.log 2>&1 || true
+          tail -5 export_x86.log
+          git checkout engine/export_presets.cfg
+          ls -la build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: build/*.apk
+          retention-days: 3
       - name: Guardar registros y capturas en la rama zarek-logs
         if: always()
         run: |
@@ -98,3 +101,82 @@ jobs:
           git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
           git add -A && git commit -qm "Registros de la ejecución ${{ github.run_number }}" || true
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" zarek-logs
+
+  emulador:
+    # Antes de publicar: se instala en un teléfono Android emulado, se abre y se comprueba que carga, que no se
+    # cierra y que la pantalla no queda negra. Capturas, fps y registro en la rama zarek-emu.
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: apks, path: build }
+      - name: Activar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Probar en el emulador
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          ram-size: 6144M
+          disk-size: 8G
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            mkdir -p emu && adb install -r build/Zarek_x86_64.apk > emu/install.txt 2>&1; cat emu/install.txt
+            adb logcat -c
+            adb shell monkey -p com.aethercode.zarek -c android.intent.category.LAUNCHER 1
+            for t in 5 15 30 60 90 150 240; do sleep $(( t - ${prev:-0} )); prev=$t; adb exec-out screencap -p > emu/pantalla_${t}s.png; adb shell pidof com.aethercode.zarek > emu/pid_${t}s.txt || echo MUERTO > emu/pid_${t}s.txt; done
+            adb logcat -d > emu/logcat.txt
+            adb shell dumpsys meminfo com.aethercode.zarek > emu/memoria.txt || true
+            grep -E "ZAREK|godot|Godot|FATAL|AndroidRuntime" emu/logcat.txt | tail -80
+      - name: Comprobar el resultado
+        run: |
+          pip install -q pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageStat
+          import os, re, sys
+          log = open('emu/logcat.txt', errors='ignore').read()
+          fallos = []
+          if 'ZAREK CARGA' not in log: fallos.append('no terminó de cargar')
+          if open('emu/pid_240s.txt').read().strip() in ('', 'MUERTO'): fallos.append('la app se cerró')
+          if re.search(r'FATAL EXCEPTION|SIGSEGV|SIGABRT', log): fallos.append('cierre inesperado')
+          st = ImageStat.Stat(Image.open('emu/pantalla_240s.png').convert('L'))
+          print('brillo medio', st.mean[0], 'variación', st.stddev[0])
+          if st.stddev[0] < 4: fallos.append('pantalla negra o plana')
+          for l in re.findall(r'ZAREK (?:CARGA|FPS)[^\n]*', log): print(l)
+          open('emu/resultado.txt', 'w').write('OK' if not fallos else 'FALLO: ' + ', '.join(fallos))
+          print(open('emu/resultado.txt').read())
+          sys.exit(1 if fallos else 0)
+          PY
+      - name: Guardar capturas y registro en la rama zarek-emu
+        if: always()
+        run: |
+          cd emu && git init -q && git checkout -q -b zarek-emu
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Emulador, ejecución ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" zarek-emu
+
+  publicar:
+    needs: [build, emulador]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: apks, path: build }
+      - name: Publicar en Descargas
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete zarek -y --cleanup-tag -R ${{ github.repository }} || true
+          gh release create zarek build/LaSombraDeZarek.apk -R ${{ github.repository }} \
+            --title "La Sombra de Zarek · Noche I (1.0.${{ github.run_number }})" \
+            --notes "**La Sombra de Zarek — Noche I**, hecho con Aether Engine. Toca **LaSombraDeZarek.apk** para instalarlo. Usa auriculares." \
+            --latest=false
+          for i in 1 2 3 4 5; do
+            gh release edit zarek --draft=false -R ${{ github.repository }} || true
+            sleep 4
+            if [ "$(gh release view zarek --json isDraft -q .isDraft -R ${{ github.repository }})" = "false" ]; then echo "publicada"; break; fi
+          done

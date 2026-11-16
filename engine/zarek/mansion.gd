@@ -147,6 +147,34 @@ func build(q := 2) -> void:
 	_portals()
 	_decorate()
 	_merge_static()
+	_optimizar()
+
+func _optimizar() -> void:
+	_oclusores()
+	# los muebles y objetos de dentro van en la capa 2: la luna no calcula su sombra (el tejado ya la tapa);
+	# la linterna y las lámparas sí
+	var dentro := house_rect.grow(0.5)
+	for g in find_children("*", "GeometryInstance3D", true, false):
+		var gi := g as GeometryInstance3D
+		var en_casa := dentro.has_point(Vector2(gi.global_position.x, gi.global_position.z))
+		# piezas sueltas hechas por código (platos, cubiertos, libros, botellas...): alcance según tamaño
+		if gi.visibility_range_end <= 0.0 and gi.get_parent() is RigidBody3D:
+			var lado := gi.get_aabb().size.length() * gi.global_transform.basis.get_scale().x
+			gi.visibility_range_end = 8.0 if lado < 0.4 else (14.0 if lado < 1.0 else 24.0)
+			gi.visibility_range_end_margin = 1.5
+			if en_casa:
+				gi.layers = 2
+			continue
+		if gi.owner != null and en_casa:
+			gi.layers = 2
+		elif not en_casa and (gi.owner != null or gi is MultiMeshInstance3D):
+			gi.layers = 4
+	for l in find_children("*", "Light3D", true, false):
+		if not (l is DirectionalLight3D):
+			(l as Light3D).distance_fade_enabled = true
+			(l as Light3D).distance_fade_begin = 22.0
+			(l as Light3D).distance_fade_length = 6.0
+			(l as Light3D).distance_fade_shadow = 12.0
 
 # ---------------- materiales ----------------
 func _plain(col: Color, rough := 0.85, metal := 0.0) -> StandardMaterial3D:
@@ -1359,16 +1387,7 @@ func _abandono_exterior() -> void:
 		arranques.append([pos, n])
 	for a in arranques:
 		_tallo(a[0], a[1], rng.randf_range(5.0, lvl_y(2) + 3.0), 0, rng, hojas)
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = q
-	mm.instance_count = hojas.size()
-	for i in hojas.size():
-		mm.set_instance_transform(i, hojas[i])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-	add_child(mmi)
+	_mm_trozos(q, hojas, quality >= 2, 50.0)
 	# --- luz roja temblorosa en una ventana del ático ---
 	_luz_atico = OmniLight3D.new()
 	_luz_atico.light_color = Color(0.9, 0.12, 0.05)
@@ -1776,6 +1795,44 @@ func _cauce(r: Rect2, es_rio: bool) -> void:
 		_prop("rock_moss_set_02", pr, _rng.randf() * TAU, _rng.randf_range(0.25, 0.4), false)
 
 ## Plantas de un GLB repartidas con MultiMesh (con viento si es vegetación).
+## Reparte instancias en trozos de 16 m: cada trozo se recorta fuera de cámara, elige su nivel de detalle (LOD)
+## según su distancia y desaparece más allá de «hasta» metros (la niebla lo tapa). Un solo MultiMesh gigante
+## obligaba a dibujar todo el bosque con el detalle máximo.
+func _mm_trozos(malla: Mesh, xs: Array, sombra: bool, hasta: float, desde := 0.0) -> void:
+	var trozos := {}
+	for x in xs:
+		var o: Vector3 = (x as Transform3D).origin
+		var k := Vector2i(floori(o.x / 16.0), floori(o.z / 16.0))
+		if not trozos.has(k):
+			trozos[k] = []
+		(trozos[k] as Array).append(x)
+	for k in trozos:
+		var lista: Array = trozos[k]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = malla
+		mm.instance_count = lista.size()
+		for i in lista.size():
+			mm.set_instance_transform(i, lista[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if sombra else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_begin = desde
+		mmi.visibility_range_begin_margin = 4.0 if desde > 0.0 else 0.0
+		mmi.visibility_range_end = hasta
+		mmi.visibility_range_end_margin = 4.0
+		add_child(mmi)
+
+## Distancia a la que deja de dibujarse una planta u objeto disperso, según su tamaño.
+func _alcance(nombre: String) -> float:
+	if nombre.begins_with("veg_") and not nombre.contains("fern") and not nombre.contains("cattail"):
+		return 14.0
+	if nombre.begins_with("grass") or nombre in ["dandelion_01", "celandine_01", "bark_debris_01", "dry_branches_medium_01", "moss_01", "nettle_plant"]:
+		return 22.0
+	if nombre.contains("fern") or nombre.contains("shrub") or nombre.contains("cattail") or nombre.contains("root"):
+		return 30.0
+	return 45.0
+
 func _multi_planta(nombre: String, xs: Array) -> void:
 	var path := "res://zarek/muebles/%s.glb" % nombre
 	if not ResourceLoader.exists(path):
@@ -1786,16 +1843,11 @@ func _multi_planta(nombre: String, xs: Array) -> void:
 	for mi in raiz.find_children("*", "MeshInstance3D", true, false):
 		var m3 := mi as MeshInstance3D
 		var xf := _xf_rel(m3, raiz)
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.mesh = _con_viento(m3.mesh, float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else m3.mesh
-		mm.instance_count = xs.size()
-		for i in xs.size():
-			mm.set_instance_transform(i, (xs[i] as Transform3D) * xf)
-		var mmi := MultiMeshInstance3D.new()
-		mmi.multimesh = mm
-		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(mmi)
+		var malla: Mesh = _con_viento(m3.mesh, float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else m3.mesh
+		var xs2: Array = []
+		for x in xs:
+			xs2.append((x as Transform3D) * xf)
+		_mm_trozos(malla, xs2, false, _alcance(nombre))
 	raiz.free()
 
 ## Orillas con vida: helechos, hierba alta y ortigas en lo alto del talud, y piedras medio hundidas en el agua.
@@ -2052,8 +2104,10 @@ func _trees(W: float, H: float) -> void:
 		"fresno_joven", "alamo_joven", "roble_joven", "roble_mediano", "fresno_mediano", "muerto_alamo", "muerto_joven"]
 	var peso := [14, 14, 14, 12, 12, 9, 4, 4, 5, 6, 4, 6, 6, 6, 3, 4]
 	var mallas: Array = []
+	var medios: Array = []
 	for nm in pinos:
 		mallas.append(_malla_glb("res://zarek/arboles/%s.glb" % nm))
+		medios.append(_arbol_medio(mallas[-1]) if mallas[-1] != null else null)
 	var lejos: Array = []
 	for v in 3:
 		lejos.append(_abeto_mesh(100 + v, 0.85 + v * 0.12))
@@ -2085,13 +2139,16 @@ func _trees(W: float, H: float) -> void:
 			var lista: Array = pc[v]
 			if mallas[v] != null:
 				var muerto: bool = String(pinos[v]).begins_with("muerto")
-				_multi_arbol(_con_viento(mallas[v], 0.012 if muerto else (0.025 if v < 6 else 0.035), 0.0 if muerto else 0.035), lista, 0.0, 68.0, true)
+				var fx := 0.012 if muerto else (0.025 if v < 6 else 0.035)
+				var tb := 0.0 if muerto else 0.035
+				_multi_arbol(_con_viento(mallas[v], fx, tb), lista, 0.0, 22.0, true)
+				_multi_arbol(_con_viento(medios[v], fx, tb), lista, 20.0, 68.0 if quality >= 2 else 46.0, true)
 			if v < 6:
 				for k in lista.size():
 					lejos_xs[k % 3].append(lista[k])
 		for k in 3:
 			if lejos_xs[k].size() > 0:
-				_multi_arbol(_con_viento(lejos[k], 0.02, 0.0), lejos_xs[k], 60.0, 0.0, false)
+				_multi_arbol(_con_viento(lejos[k], 0.02, 0.0), lejos_xs[k], 60.0 if quality >= 2 else 40.0, 0.0, false)
 	# setas al pie de los árboles (en corros de 2-6) y helechos grandes entre los troncos
 	var setas := ["veg_boletus_edulis_mushroom", "veg_chanterelle", "veg_tricholoma_murrillianum_", "veg_shaggy_parasol_mushroom_", "veg_mushroom", "veg_mushroom_on_tree_baked_l"]
 	var por_seta: Dictionary = {}
@@ -2186,6 +2243,22 @@ func _malla_glb(path: String) -> ArrayMesh:
 					vs[k] = xf * vs[k]
 				arr[Mesh.ARRAY_VERTEX] = vs
 			am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+			# guarda un nivel de detalle reducido de la malla original (para el árbol de media distancia)
+			var sd: Dictionary = RenderingServer.mesh_get_surface(m3.mesh.get_rid(), si)
+			var lods: Array = sd.get("lods", [])
+			var n_ix: int = (arr[Mesh.ARRAY_INDEX] as PackedInt32Array).size() if arr[Mesh.ARRAY_INDEX] != null else 0
+			var mejor := PackedInt32Array()
+			for l in lods:
+				var bytes: PackedByteArray = l.get("index_data", PackedByteArray())
+				var ancho := 2 if (arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() <= 65535 else 4
+				var cnt := bytes.size() / ancho
+				if cnt >= n_ix / 5 and (mejor.is_empty() or cnt < mejor.size()):
+					mejor = PackedInt32Array()
+					mejor.resize(cnt)
+					for q in cnt:
+						mejor[q] = bytes.decode_u16(q * 2) if ancho == 2 else bytes.decode_u32(q * 4)
+			if not mejor.is_empty():
+				am.set_meta("lod_%d" % (am.get_surface_count() - 1), mejor)
 			var mat := m3.mesh.surface_get_material(si)
 			if mat is BaseMaterial3D:
 				var bm: BaseMaterial3D = (mat as BaseMaterial3D).duplicate()
@@ -2199,6 +2272,43 @@ func _malla_glb(path: String) -> ArrayMesh:
 				am.surface_set_material(am.get_surface_count() - 1, bm)
 	raiz.free()
 	return am
+
+## Árbol para media distancia: un 30 % de las tarjetas de hojas (más grandes, para tapar lo mismo) y la
+## corteza con su nivel de detalle reducido. De ~10.000 triángulos pasa a ~3.000.
+func _arbol_medio(am: ArrayMesh) -> ArrayMesh:
+	var out := ArrayMesh.new()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	for si in am.get_surface_count():
+		var arr: Array = am.surface_get_arrays(si)
+		var mat := am.surface_get_material(si)
+		var ix: PackedInt32Array = arr[Mesh.ARRAY_INDEX] if arr[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+		var hojas := mat is BaseMaterial3D and (mat as BaseMaterial3D).transparency != BaseMaterial3D.TRANSPARENCY_DISABLED
+		if hojas and ix.size() % 6 == 0 and ix.size() > 0:
+			var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+			var nix := PackedInt32Array()
+			for g in range(0, ix.size(), 6):
+				if rng.randf() > 0.3:
+					continue
+				var c := Vector3.ZERO
+				var us: Array = []
+				for k in 6:
+					if not (ix[g + k] in us):
+						us.append(ix[g + k])
+				for u in us:
+					c += vs[u]
+				c /= float(us.size())
+				for u in us:
+					vs[u] = c + (vs[u] - c) * 1.6
+				for k in 6:
+					nix.append(ix[g + k])
+			arr[Mesh.ARRAY_VERTEX] = vs
+			arr[Mesh.ARRAY_INDEX] = nix
+		elif am.has_meta("lod_%d" % si):
+			arr[Mesh.ARRAY_INDEX] = am.get_meta("lod_%d" % si)
+		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		out.surface_set_material(si, mat)
+	return out
 
 var _shader_veg: Shader
 var _cache_viento: Dictionary = {}
@@ -2378,17 +2488,11 @@ func _sotobosque(W: float, H: float, avoid: Array) -> void:
 			var sc := _rng.randf_range(float(it[2]), float(it[3]))
 			xs.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, -0.02, p.y)))
 		for pt in partes:
-			var mm := MultiMesh.new()
-			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.mesh = _con_viento(pt[0], float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else pt[0]
-			mm.instance_count = xs.size()
-			for i in xs.size():
-				mm.set_instance_transform(i, xs[i] * (pt[1] as Transform3D))
-			var mmi := MultiMeshInstance3D.new()
-			mmi.multimesh = mm
-			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if nombre in ["boulder_01", "dead_tree_trunk", "dead_tree_trunk_02", "tree_stump_02"] else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			mmi.visibility_range_end = 0.0
-			add_child(mmi)
+			var malla: Mesh = _con_viento(pt[0], float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else pt[0]
+			var xs2: Array = []
+			for x in xs:
+				xs2.append(x * (pt[1] as Transform3D))
+			_mm_trozos(malla, xs2, nombre in ["boulder_01", "dead_tree_trunk", "dead_tree_trunk_02", "tree_stump_02"], _alcance(nombre))
 
 ## Los jardines de la mansión llevan años sin cuidar: hierba alta, matorral, ortigas y flores silvestres.
 func _jardin_salvaje() -> void:
@@ -2433,16 +2537,11 @@ func _jardin_salvaje() -> void:
 			var sc := _rng.randf_range(float(it[2]), float(it[3]))
 			xs.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, 0.0, p.y)))
 		for pt in partes:
-			var mm := MultiMesh.new()
-			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.mesh = _con_viento(pt[0], float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else pt[0]
-			mm.instance_count = xs.size()
-			for i in xs.size():
-				mm.set_instance_transform(i, xs[i] * (pt[1] as Transform3D))
-			var mmi := MultiMeshInstance3D.new()
-			mmi.multimesh = mm
-			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			add_child(mmi)
+			var malla: Mesh = _con_viento(pt[0], float(VEG_VIENTO[nombre][0]), float(VEG_VIENTO[nombre][1])) if VEG_VIENTO.has(nombre) else pt[0]
+			var xs2: Array = []
+			for x in xs:
+				xs2.append(x * (pt[1] as Transform3D))
+			_mm_trozos(malla, xs2, false, _alcance(nombre))
 
 ## Transformación de un nodo relativa a un antecesor (sin estar en el árbol de escena).
 func _xf_rel(n: Node3D, raiz: Node3D) -> Transform3D:
@@ -3116,6 +3215,46 @@ func _decorate() -> void:
 var _props := {}
 var _props_info := {}
 ## Coloca un mueble de res://zarek/muebles/<nombre>.glb (origen en la base, frente hacia +Z).
+## Distancia de dibujo de un objeto según su tamaño: una taza no se ve a 20 m, un armario sí.
+func _alcance_prop(nombre: String, escala: float) -> float:
+	if not _props_info.has(nombre):
+		return 30.0
+	var t: Array = _props_info[nombre].tam
+	var lado := maxf(float(t[0]), maxf(float(t[1]), float(t[2]))) * escala
+	if lado < 0.35:
+		return 9.0
+	if lado < 0.9:
+		return 16.0
+	if lado < 2.0:
+		return 28.0
+	return 60.0
+
+## Oclusores: cada muro, suelo y techo macizo tapa lo que hay detrás, así desde fuera no se dibujan las
+## habitaciones y desde una habitación no se dibuja el resto de la casa.
+func _oclusores() -> void:
+	var n := 0
+	for c in _house.find_children("*", "CollisionShape3D", true, false):
+		var cs := c as CollisionShape3D
+		if not (cs.shape is BoxShape3D) or cs.disabled:
+			continue
+		var cuerpo := cs.get_parent()
+		if not (cuerpo is StaticBody3D) or _is_dyn(cuerpo):
+			continue
+		var sz: Vector3 = (cs.shape as BoxShape3D).size
+		var g: Vector3 = cs.global_transform.basis.get_scale()
+		sz = sz * g.abs()
+		var dims := [sz.x, sz.y, sz.z]
+		dims.sort()
+		if dims[0] > 0.7 or dims[1] < 1.6 or dims[2] < 1.6:
+			continue
+		var oc := OccluderInstance3D.new()
+		var bo := BoxOccluder3D.new()
+		bo.size = (cs.shape as BoxShape3D).size * 0.97
+		oc.occluder = bo
+		cs.add_child(oc)
+		n += 1
+	print("ZAREK oclusores: ", n)
+
 func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true, parent: Node3D = null) -> Node3D:
 	_load_props_info()
 	var path := "res://zarek/muebles/%s.glb" % nombre
@@ -3180,10 +3319,15 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 		rb.sleeping = true
 		for mi in n.find_children("*", "MeshInstance3D", true, false):
 			(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if rb.mass > 2.0 else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			(mi as MeshInstance3D).visibility_range_end = _alcance_prop(nombre, escala)
+			(mi as MeshInstance3D).visibility_range_end_margin = 2.0
 		return rb
 	(parent if parent else _house).add_child(n)
+	var alcance := _alcance_prop(nombre, escala)
 	for mi in n.find_children("*", "MeshInstance3D", true, false):
-		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if alcance > 20.0 else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		(mi as MeshInstance3D).visibility_range_end = alcance
+		(mi as MeshInstance3D).visibility_range_end_margin = 2.0
 	if choca and _props_info.has(nombre) and lvl_y(level_of(p.y + 0.3)) + 0.3 > p.y:
 		var tt: Array = _props_info[nombre].tam
 		n.add_child(_sombra(Vector2(float(tt[0]), float(tt[2])) * 1.35))
@@ -3375,19 +3519,21 @@ func _mancha_tex(tipo: int) -> Texture2D:
 			_tex_mancha.append(ImageTexture.create_from_image(img))
 	return _tex_mancha[tipo]
 
+var _mat_suciedad: Dictionary = {}
 func _mancha(pos: Vector3, normal: Vector3, tam: Vector2, tipo: int) -> void:
 	var mi := MeshInstance3D.new()
 	var qm := QuadMesh.new()
 	qm.size = tam
 	mi.mesh = qm
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
-	mat.albedo_texture = _mancha_tex(tipo)
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mi.material_override = mat
+	if not _mat_suciedad.has(tipo):
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+		mat.albedo_texture = _mancha_tex(tipo)
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mat_suciedad[tipo] = mat
+	mi.material_override = _mat_suciedad[tipo]
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.set_meta("dyn", true)
 	_house.add_child(mi)
 	mi.position = pos + normal * 0.012
 	if absf(normal.y) > 0.9:
@@ -3454,7 +3600,6 @@ func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
 	mi.position = c + Vector3(0, 0.012, 0)
 	mi.rotation.y = yaw
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.set_meta("dyn", true)
 	_house.add_child(mi)
 
 ## Techo artesonado: vigas de madera oscura en retícula y rosetón de yeso sobre la araña.
@@ -3519,6 +3664,7 @@ func _sombra(tam: Vector2) -> MeshInstance3D:
 	mi.material_override = _sombra_mat
 	mi.position.y = 0.018
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.visibility_range_end = 14.0
 	mi.set_meta("dyn", true)
 	return mi
 
@@ -3553,7 +3699,6 @@ func _oclusion(r: Dictionary) -> void:
 			var pos := c + dir * (0.15 + float(alto[1]) * 0.5)
 			mi.position = Vector3(pos.x, y + float(alto[0]), pos.y)
 			mi.rotation.y = float(l[2])
-			mi.set_meta("dyn", true)
 			_house.add_child(mi)
 
 ## Haz de luz de luna que entra por una ventana (solo en las salas de muestra: cada luz cuesta en móvil).
@@ -3632,39 +3777,105 @@ func _is_dyn(n: Node) -> bool:
 		q = q.get_parent()
 	return false
 
+## Materiales iguales creados por separado (p. ej. uno por ventana) se cuentan como uno solo, para que la
+## fusión junte sus piezas en una sola llamada de dibujo.
+var _canon: Dictionary = {}
+func _canon_mat(mat: Material) -> Material:
+	if not (mat is StandardMaterial3D):
+		return mat
+	var m := mat as StandardMaterial3D
+	var firma := [m.albedo_color, m.albedo_texture, m.normal_enabled, m.normal_texture, m.normal_scale, m.roughness, m.roughness_texture, m.metallic,
+		m.transparency, m.shading_mode, m.blend_mode, m.cull_mode, m.uv1_scale, m.uv1_offset, m.uv1_triplanar, m.uv1_world_triplanar,
+		m.emission_enabled, m.emission, m.emission_energy_multiplier, m.vertex_color_use_as_albedo, m.alpha_scissor_threshold,
+		m.texture_filter, m.render_priority, m.no_depth_test, m.disable_receive_shadows, m.depth_draw_mode, m.ao_enabled, m.ao_texture,
+		m.heightmap_enabled, m.rim_enabled, m.clearcoat_enabled, m.backlight_enabled, m.specular_mode, m.diffuse_mode, m.billboard_mode]
+	var h := str(firma).hash()
+	if not _canon.has(h):
+		_canon[h] = mat
+	return _canon[h]
+
 func _merge_static() -> void:
 	var groups := {}
 	var nodes: Array = []
+	# se fusionan todas las piezas hechas por código que no se mueven (muros, molduras, marcos, contraventanas,
+	# tablas, telarañas...): por material, planta y celda de 24 m. Los modelos importados no (tienen LOD propio).
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
-		if _is_dyn(m) or m.mesh == null or not (m.mesh is PrimitiveMesh) or m.material_override == null:
+		if _is_dyn(m) or m.mesh == null or m.owner != null or m.visibility_range_end > 0.0:
+			continue
+		if not (m.mesh is PrimitiveMesh or m.mesh is ArrayMesh) or (m.mesh is ArrayMesh and (m.mesh as ArrayMesh).get_blend_shape_count() > 0) or m.skeleton != NodePath("") and m.get_node_or_null(m.skeleton) is Skeleton3D:
+			continue
+		var movil := false
+		var q: Node = m.get_parent()
+		while q and q != self:
+			if q is RigidBody3D or q is AnimatableBody3D or q is CharacterBody3D or q is VehicleBody3D or q.get_script() != null:
+				movil = true
+				break
+			q = q.get_parent()
+		if movil:
 			continue
 		var gp := m.global_position
-		var key := "%d|%d|%d|%d|%d" % [m.material_override.get_instance_id(), level_of(gp.y + 0.3), int(gp.x / 36.0), int(gp.z / 36.0), m.cast_shadow]
-		if not groups.has(key):
-			groups[key] = {"mat": m.material_override, "items": [], "shadow": m.cast_shadow}
-		groups[key].items.append(m)
+		var sup: Array = []
+		for si in m.mesh.get_surface_count():
+			var mat: Material = m.material_override if m.material_override else m.get_active_material(si)
+			if mat == null or (m.mesh is ArrayMesh and (m.mesh as ArrayMesh).surface_get_primitive_type(si) != Mesh.PRIMITIVE_TRIANGLES):
+				sup.clear()
+				break
+			sup.append([si, mat])
+		if sup.is_empty():
+			continue
+		for par in sup:
+			var mat: Material = _canon_mat(par[1])
+			var key := "%d|%d|%d|%d|%d" % [mat.get_instance_id(), level_of(gp.y + 0.3), int(gp.x / 24.0), int(gp.z / 24.0), m.cast_shadow]
+			if not groups.has(key):
+				groups[key] = {"mat": mat, "items": [], "shadow": m.cast_shadow}
+			groups[key].items.append([m, par[0]])
 		nodes.append(m)
+	if OS.get_environment("DEBUG_FUSION") != "":
+		var pm := {}
+		for key in groups:
+			var mt: Material = groups[key].mat
+			var nm := "%s" % [mt.resource_name if mt.resource_name != "" else (str(mt.albedo_color) if mt is StandardMaterial3D else mt.get_class())]
+			pm[nm] = pm.get(nm, 0) + 1
+		var kk := pm.keys()
+		kk.sort_custom(func(a, b): return pm[a] > pm[b])
+		print("FUSION grupos=", groups.size(), " materiales=", pm.size())
+		var ids := {}
+		var celdas := {}
+		for key in groups:
+			ids[key.get_slice("|", 0)] = 1
+			celdas[key.get_slice("|", 1) + "|" + key.get_slice("|", 2) + "|" + key.get_slice("|", 3) + "|" + key.get_slice("|", 4)] = 1
+		print("FUSION ids_material=", ids.size(), " celdas=", celdas.size(), " ", celdas.keys().slice(0, 40))
+		for k in kk.slice(0, 25):
+			print("FUSION ", k, " ", pm[k])
 	for key in groups:
 		var g: Dictionary = groups[key]
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		for m in g.items:
-			st.append_from(m.mesh, 0, m.global_transform)
+		for it in g.items:
+			st.append_from(it[0].mesh, it[1], it[0].global_transform)
 		var am := st.commit()
 		var out := MeshInstance3D.new()
 		out.mesh = am
 		out.material_override = g.mat
 		out.cast_shadow = g.shadow
 		_house.add_child(out)
+	var fusionados := {}
+	for m in nodes:
+		fusionados[m] = true
 	for m in nodes:
 		var mi := m as MeshInstance3D
 		for c in mi.get_children():
-			if c is StaticBody3D:
+			if fusionados.has(c):
+				continue
+			if c is Node3D:
 				var xf: Transform3D = c.global_transform
 				mi.remove_child(c)
 				_house.add_child(c)
 				c.global_transform = xf
+			else:
+				mi.remove_child(c)
+				_house.add_child(c)
 		mi.queue_free()
 
 # ---------------- navegación de Elena ----------------

@@ -80,14 +80,38 @@ var lbl_end_t: Label
 var lbl_end_s: Label
 var _black_target := 0.0
 var top: VBoxContainer
+var _t_fps := 0.0
 
 func _ready() -> void:
+	set_process(false)
+	set_physics_process(false)
+	set_process_input(false)
+	set_process_unhandled_input(false)
 	var args := OS.get_cmdline_user_args()
 	if "--prueba" in args:
 		autotest = true
 	if "--capturas" in args:
 		shots = true
 	_inputs()
+	# pantalla de carga: se ve desde el primer fotograma mientras se construye la mansión
+	var carga := CanvasLayer.new()
+	carga.layer = 100
+	var fondo := ColorRect.new()
+	fondo.color = Color(0, 0, 0)
+	fondo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	carga.add_child(fondo)
+	var lc := Label.new()
+	lc.text = "LA SOMBRA DE ZAREK\n\nCargando…"
+	lc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lc.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lc.add_theme_font_size_override("font_size", 34)
+	lc.add_theme_color_override("font_color", Color(0.75, 0.68, 0.6))
+	carga.add_child(lc)
+	add_child(carga)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var t_carga := Time.get_ticks_msec()
 	_environment()
 	mansion = ZarekMansion.new()
 	add_child(mansion)
@@ -138,6 +162,12 @@ func _ready() -> void:
 		["sal", "SAL", Vector2(-300, -290), 58.0],
 	]
 	add_child(touch)
+	carga.queue_free()
+	print("ZAREK CARGA %d ms (calidad %d, %s, %s)" % [Time.get_ticks_msec() - t_carga, Aether.quality, OS.get_name(), RenderingServer.get_current_rendering_method()])
+	set_process(true)
+	set_physics_process(true)
+	set_process_input(true)
+	set_process_unhandled_input(true)
 	if autotest or shots:
 		start_game(true)
 	else:
@@ -227,6 +257,10 @@ func _environment() -> void:
 	moon.directional_shadow_max_distance = 32.0 if OS.get_name() == "Android" else 60.0
 	moon.shadow_bias = 0.06
 	moon.shadow_normal_bias = 2.5
+	moon.shadow_caster_mask = 0xFFFFF & ~2
+	# en el teléfono, dos cascadas en vez de cuatro (cada cascada vuelve a dibujar todo lo que hace sombra)
+	if OS.get_name() == "Android":
+		moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	add_child(moon)
 
 func _flashlight() -> void:
@@ -671,6 +705,17 @@ func _process(delta: float) -> void:
 		if _msg_t < 0.8:
 			lbl_msg.modulate.a = maxf(0.0, _msg_t / 0.8)
 	vig_mat.set_shader_parameter("t", fmod(Time.get_ticks_msec() / 1000.0, 100.0))
+	# medición de rendimiento en el registro (logcat en Android): fps, llamadas de dibujo y triángulos
+	_t_fps += delta
+	if _t_fps >= 5.0:
+		_t_fps = 0.0
+		print("ZAREK FPS %d draws %d prims %d mem %d MB estado %s pos %s" % [Engine.get_frames_per_second(),
+			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
+			int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1e6), state, player.global_position.snapped(Vector3.ONE) if player else Vector3.ZERO])
+	# la linterna solo calcula sombras de lo que está del mismo lado de las paredes que el jugador
+	if flash and player:
+		var en_casa := mansion.house_rect.grow(0.3).has_point(Vector2(player.global_position.x, player.global_position.z))
+		flash.shadow_caster_mask = (0xFFFFF & ~4) if en_casa else (0xFFFFF & ~2)
 	_update_flash(delta)
 	_update_niebla(delta)
 	_update_viento(delta)
