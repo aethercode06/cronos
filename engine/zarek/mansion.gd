@@ -1653,6 +1653,7 @@ func _exterior() -> void:
 				if es_rio:
 					_cauce_natural(r.grow(1.2))
 					_hojas_rio(r)
+					_vida_rio(r)
 					_orillas_rio(r.grow(1.2))
 					(sup.material_override as ShaderMaterial).set_shader_parameter("borde", 0.32)
 				else:
@@ -2219,9 +2220,10 @@ func _mat_agua(es_rio: bool) -> ShaderMaterial:
 	if es_rio:
 		m.set_shader_parameter("corriente", Vector2(1.0, 0.0))
 		m.set_shader_parameter("fuerza", 1.4)
-		m.set_shader_parameter("velocidad", 0.7)
+		m.set_shader_parameter("fuerza", 2.0)
+		m.set_shader_parameter("velocidad", 1.0)
 		m.set_shader_parameter("escala", 0.2)
-		m.set_shader_parameter("relieve", 2.2)
+		m.set_shader_parameter("relieve", 2.4)
 	else:
 		m.set_shader_parameter("corriente", Vector2(0.6, 0.4))
 		m.set_shader_parameter("fuerza", 0.12)
@@ -2230,6 +2232,124 @@ func _mat_agua(es_rio: bool) -> ShaderMaterial:
 		m.set_shader_parameter("espuma", 0.8)
 		m.set_shader_parameter("relieve", 0.5)
 	return m
+
+var rio_rect := Rect2()
+## Vida en el río: ranas que croan en las orillas y luciérnagas sobre el agua.
+func _vida_rio(r: Rect2) -> void:
+	rio_rect = r
+	var x := r.position.x + 6.0
+	while x < r.end.x:
+		var f := _rio_forma(r.grow(1.2), x)
+		var son := AudioStreamPlayer3D.new()
+		son.stream = AetherSynth._frog()
+		son.unit_size = 3.0
+		son.max_distance = 26.0
+		son.volume_db = -8.0
+		son.pitch_scale = _rng.randf_range(0.85, 1.2)
+		son.autoplay = true
+		son.position = Vector3(x, 0.0, f.x + (f.y + 0.5) * (-1.0 if _rng.randf() < 0.5 else 1.0))
+		add_child(son)
+		x += _rng.randf_range(14.0, 24.0)
+	var lu := CPUParticles3D.new()
+	lu.amount = 90
+	lu.lifetime = 6.0
+	lu.preprocess = 6.0
+	lu.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	lu.emission_box_extents = Vector3(r.size.x * 0.5, 0.6, r.size.y * 0.5 + 2.0)
+	lu.gravity = Vector3(0, 0.02, 0)
+	lu.direction = Vector3(1, 0, 0)
+	lu.spread = 180.0
+	lu.initial_velocity_min = 0.05
+	lu.initial_velocity_max = 0.25
+	lu.scale_amount_min = 0.6
+	lu.scale_amount_max = 1.2
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 0.0))
+	g.set_color(1, Color(1, 1, 1, 0.0))
+	g.add_point(0.25, Color(1, 1, 1, 1.0))
+	g.add_point(0.5, Color(1, 1, 1, 0.2))
+	g.add_point(0.75, Color(1, 1, 1, 1.0))
+	lu.color_ramp = g
+	var q := QuadMesh.new()
+	q.size = Vector2(0.035, 0.035)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_color = Color(0.85, 1.0, 0.4)
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	var tx := GradientTexture2D.new()
+	var g2 := Gradient.new()
+	g2.set_color(0, Color(1, 1, 1, 1)); g2.set_color(1, Color(1, 1, 1, 0))
+	tx.gradient = g2
+	tx.fill = GradientTexture2D.FILL_RADIAL
+	tx.fill_from = Vector2(0.5, 0.5); tx.fill_to = Vector2(0.5, 0.0)
+	mat.albedo_texture = tx
+	q.material = mat
+	lu.mesh = q
+	lu.position = Vector3(r.get_center().x, 0.7, r.get_center().y)
+	lu.visibility_aabb = AABB(Vector3(-r.size.x * 0.5, -1, -r.size.y), Vector3(r.size.x, 3, r.size.y * 2))
+	add_child(lu)
+
+## Un pez salta en el río cerca de «cerca»: gotas, anillo que se abre en el agua y chapoteo.
+func salto_pez(cerca: Vector3) -> void:
+	if rio_rect.size == Vector2.ZERO:
+		return
+	var x := clampf(cerca.x + _rng.randf_range(-9.0, 9.0), rio_rect.position.x + 2.0, rio_rect.end.x - 2.0)
+	var f := _rio_forma(rio_rect.grow(1.2), x)
+	var p := Vector3(x, -0.27, f.x + _rng.randf_range(-f.y, f.y) * 0.6)
+	var gotas := CPUParticles3D.new()
+	gotas.one_shot = true
+	gotas.emitting = true
+	gotas.amount = 24
+	gotas.lifetime = 0.8
+	gotas.explosiveness = 0.95
+	gotas.direction = Vector3.UP
+	gotas.spread = 40.0
+	gotas.initial_velocity_min = 1.0
+	gotas.initial_velocity_max = 2.2
+	gotas.gravity = Vector3(0, -9.8, 0)
+	gotas.scale_amount_min = 0.6
+	gotas.scale_amount_max = 1.2
+	gotas.mesh = _gota_mesh()
+	gotas.position = p
+	add_child(gotas)
+	var anillo := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(1, 1)
+	anillo.mesh = pm
+	var sm := ShaderMaterial.new()
+	sm.shader = _shader_anillo()
+	anillo.material_override = sm
+	anillo.position = p + Vector3(0, 0.01, 0)
+	anillo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(anillo)
+	var son := AudioStreamPlayer3D.new()
+	son.stream = AetherSynth.make("chapoteo")
+	son.unit_size = 4.0
+	son.max_distance = 30.0
+	son.position = p
+	add_child(son)
+	son.play()
+	var tw := create_tween()
+	tw.tween_method(func(v: float): sm.set_shader_parameter("t", v); anillo.scale = Vector3.ONE * (0.3 + v * 3.2), 0.0, 1.0, 2.4)
+	tw.tween_callback(func(): anillo.queue_free(); gotas.queue_free(); son.queue_free())
+
+var _sh_anillo: Shader
+func _shader_anillo() -> Shader:
+	if _sh_anillo == null:
+		_sh_anillo = Shader.new()
+		_sh_anillo.code = """shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled;
+uniform float t = 0.0;
+void fragment() {
+	float d = length(UV - 0.5) * 2.0;
+	float aro = exp(-pow((d - 0.8) * 9.0, 2.0)) + 0.5 * exp(-pow((d - 0.55) * 12.0, 2.0));
+	ALBEDO = vec3(0.55, 0.62, 0.7);
+	ALPHA = aro * (1.0 - t) * 0.6;
+}
+"""
+	return _sh_anillo
 
 ## Hojas secas y ramitas que bajan flotando por el río (se ve la corriente y el agua deja de parecer un suelo).
 func _hojas_rio(r: Rect2) -> void:

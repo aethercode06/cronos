@@ -19,6 +19,8 @@ func _ready() -> void:
 	var pm := ShaderMaterial.new(); pm.shader = load("res://zarek/post.gdshader"); cr.material = pm; cl.add_child(cr); add_child(cl)
 	var m := ZarekMansion.new(); add_child(m); m.build(int(OS.get_environment("Q")) if OS.get_environment("Q") != "" else 2)
 	await m.crear_impostores()
+	if OS.get_environment("PEZ") != "":
+		m.salto_pez(m.cell_to_world("exterior", 31.0, 83.0) + Vector3(-7, 0, 0))
 	if OS.get_environment("DEPURAR_AGUA") != "":
 		for g in m.find_children("*", "MeshInstance3D", true, false):
 			var mt = (g as MeshInstance3D).material_override

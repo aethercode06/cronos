@@ -96,6 +96,16 @@ void fragment() {
 	float mascara = clamp((1.0 - smoothstep(0.0, espuma_orilla, hondo)) * 1.4 + azar * 0.15 * fuerza, 0.0, 1.0);
 	float esp = clamp(fbm * espuma - 0.5 / max(espuma, 0.001), 0.0, 1.0);
 	float esp_total = clamp(mix(clamp(esp - (1.0 - mascara), 0.0, 1.0), esp * mascara, 0.3), 0.0, 1.0);
+	// vetas de espuma que la corriente arrastra (se ve hacia dónde corre el agua)
+	if (fuerza > 0.5) {
+		vec2 fd = normalize(corriente);
+		vec2 lat = vec2(-fd.y, fd.x);
+		float a_lo = dot(mundo.xz, fd);
+		float a_an = dot(mundo.xz, lat);
+		float veta = texture(espuma_ruido, vec2(a_lo * 0.06 - TIME * velocidad * 0.22, a_an * 0.9)).r;
+		veta *= texture(espuma_ruido, vec2(a_lo * 0.13 - TIME * velocidad * 0.35, a_an * 0.35 + 0.5)).r;
+		esp_total = clamp(esp_total + smoothstep(0.42, 0.62, veta) * 0.45, 0.0, 1.0);
+	}
 	// espuma blanca donde golpea el chorro
 	esp_total = clamp(esp_total + salpica * (0.35 + 0.3 * azar), 0.0, 1.0);
 	SPECULAR = 0.6;

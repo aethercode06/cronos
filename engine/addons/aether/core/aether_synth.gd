@@ -9,7 +9,7 @@ const RATE := 22050
 static var _cache := {}
 
 ## Nombres disponibles: drone, latido, paso, portazo, golpes, susurro, grito,
-## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza, rio, fuente, ceramica
+## estatica, caja_musica, recoger, aliento, viento, crujido, campana, risa, vidrio, tintineo, golpe_madera, graznido, aleteo, ululato, lechuza, rio, fuente, ceramica, rana, chapoteo
 static func make(kind: String) -> AudioStreamWAV:
 	if not _cache.has(kind):
 		_cache[kind] = _build(kind)
@@ -42,6 +42,8 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"ceramica": return _ceramic_break()
 		"fuente": return _fountain_snd()
 		"lechuza": return _barn_screech()
+		"rana": return _frog()
+		"chapoteo": return _splash()
 	return _chime()
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -469,4 +471,42 @@ static func _wood_hit() -> AudioStreamWAV:
 		lp += (randf() * 2.0 - 1.0 - lp) * 0.18
 		b[i] = lp * exp(-t * 22.0) * 1.3 + sin(TAU * (120.0 - t * 40.0) * t) * exp(-t * 14.0) + sin(TAU * 310.0 * t) * exp(-t * 30.0) * 0.4
 	_normalize(b, 0.85)
+	return _wav(b)
+
+## Rana: dos o tres croares graves (pulsos de un tono con armónicos y vibrato) y silencio. En bucle (5 s).
+static func _frog() -> AudioStreamWAV:
+	var b := _buf(5.0)
+	var t0 := randf_range(0.2, 0.8)
+	for k in randi_range(2, 3):
+		var dur := randf_range(0.22, 0.32)
+		var f0 := randf_range(160.0, 230.0)
+		for j in int(dur * RATE):
+			var tt := float(j) / RATE
+			var env := sin(PI * tt / dur)
+			var pulso: float = 0.5 + 0.5 * signf(sin(TAU * 38.0 * tt))
+			var f := f0 * (1.0 + 0.04 * sin(TAU * 7.0 * tt))
+			var v: float = (sin(TAU * f * tt) + 0.5 * sin(TAU * f * 2.0 * tt) + 0.25 * sin(TAU * f * 3.1 * tt)) * env * (0.4 + 0.6 * pulso)
+			var i := int((t0 + tt) * RATE)
+			if i < b.size():
+				b[i] += v
+		t0 += dur + randf_range(0.12, 0.3)
+	_normalize(b, 0.7)
+	return _wav(b, true)
+
+## Chapoteo de un pez que salta: golpe de agua (ruido filtrado) y gotas que caen después.
+static func _splash() -> AudioStreamWAV:
+	var b := _buf(0.9)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp += ((randf() * 2.0 - 1.0) - lp) * 0.35
+		b[i] = lp * exp(-t * 14.0) * 0.9
+	for k in 10:
+		var ini := int(randf_range(0.05, 0.75) * RATE)
+		var f := randf_range(700.0, 1600.0)
+		for j in int(0.04 * RATE):
+			if ini + j < b.size():
+				var tt := float(j) / RATE
+				b[ini + j] += sin(TAU * f * (1.0 + tt * 10.0) * tt) * exp(-tt * 70.0) * randf_range(0.15, 0.35)
+	_normalize(b, 0.8)
 	return _wav(b)

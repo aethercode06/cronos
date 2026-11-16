@@ -81,6 +81,7 @@ var lbl_end_s: Label
 var _black_target := 0.0
 var top: VBoxContainer
 var _t_fps := 0.0
+var _t_pez := 5.0
 
 func _ready() -> void:
 	set_process(false)
@@ -758,6 +759,13 @@ func _process(delta: float) -> void:
 		print("ZAREK FPS %d draws %d prims %d mem %d MB estado %s pos %s" % [Engine.get_frames_per_second(),
 			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 			int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1e6), state, player.global_position.snapped(Vector3.ONE) if player else Vector3.ZERO])
+	# de vez en cuando salta un pez en el río si el jugador anda cerca
+	if mansion and player and mansion.rio_rect.size != Vector2.ZERO:
+		_t_pez -= delta
+		var dz := absf(player.global_position.z - mansion.rio_rect.get_center().y)
+		if _t_pez <= 0.0 and dz < 22.0 and player.global_position.y > -1.0:
+			_t_pez = randf_range(6.0, 15.0)
+			mansion.salto_pez(player.global_position)
 	# la linterna solo calcula sombras de lo que está del mismo lado de las paredes que el jugador
 	if flash and player:
 		var en_casa := mansion.house_rect.grow(0.3).has_point(Vector2(player.global_position.x, player.global_position.z))
