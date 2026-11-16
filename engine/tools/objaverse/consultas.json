@@ -1,1 +1,3 @@
-{}
+{"l_bombillas": {"k": ["edison bulb", "edison light bulb", "filament bulb", "vintage light bulb", "light bulb", "incandescent bulb", "lightbulb"], "n": 36, "max_caras": 30000, "no": ["led", "cartoon", "idea", "emoji", "smart", "lowpoly", "low poly", "neon", "sci-fi", "toy", "logo"]},
+ "l_apliques": {"k": ["wall sconce", "sconce", "wall lamp", "gas lamp", "victorian lamp", "antique wall light", "wall light"], "n": 36, "max_caras": 60000, "no": ["modern", "led", "neon", "sci-fi", "scifi", "cartoon", "office", "ikea", "futuristic", "toy"]},
+ "l_colgantes": {"k": ["pendant lamp", "hanging lamp", "industrial lamp", "ceiling lamp", "hanging light", "factory lamp", "enamel lamp", "barn lamp"], "n": 36, "max_caras": 60000, "no": ["modern", "led", "neon", "sci-fi", "scifi", "cartoon", "office", "ikea", "futuristic", "toy", "paper lantern", "chinese"]}}
