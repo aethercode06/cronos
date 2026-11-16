@@ -1136,11 +1136,35 @@ func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
 	for cara in [1.0, -1.0]:
 		var giro: float = 0.0 if cara > 0.0 else PI
 		var z: float = 0.036 * cara
-		var tirador := _prop("pomo_laton" if con_pomo else "picaporte_laton", Vector3(gap - 0.17, 1.02, z), giro, 1.45, false, pivot)
+		var tirador := _prop("pomo_laton" if con_pomo else "picaporte_laton", Vector3(gap - 0.105, 1.02, z), giro, 1.45, false, pivot)
 		if tirador and con_pomo:
 			tirador.rotation = Vector3(PI * 0.5 * cara, 0.0, 0.0)
-			tirador.position = Vector3(gap - 0.17, 1.05, z)
-		var boca := _prop("bocallave_laton", Vector3(gap - 0.17, 0.86, z), giro, 1.45, false, pivot)
+			tirador.position = Vector3(gap - 0.105, 1.05, z)
+		var boca := _prop("bocallave_laton", Vector3(gap - 0.105, 0.86, z), giro, 1.45, false, pivot)
+		# el ojo de la cerradura es un hueco oscuro hacia dentro de la puerta (no se ve la madera); la placa se aplana
+		# a 4 mm (el modelo era muy grueso y el agujero parecía un túnel)
+		if boca:
+			boca.scale = Vector3(boca.scale.x, boca.scale.y, boca.scale.z * 0.3)
+			boca.position.z = 0.0365 * cara
+			if _mat_hueco == null:
+				_mat_hueco = StandardMaterial3D.new()
+				_mat_hueco.albedo_color = Color(0.0, 0.0, 0.0)
+				_mat_hueco.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			# centro real de la placa (el origen del modelo no está en su centro)
+			var cb := Vector3.ZERO
+			var nb := 0
+			for mi in boca.find_children("*", "MeshInstance3D", true, false):
+				var t3: Transform3D = Transform3D.IDENTITY
+				var q: Node = mi
+				while q and q != boca.get_parent():
+					t3 = (q as Node3D).transform * t3
+					q = q.get_parent()
+				cb += t3 * (mi as MeshInstance3D).get_aabb().get_center()
+				nb += 1
+			if nb > 0:
+				cb /= nb
+			var hueco := box(Vector3(0.042, 0.075, 0.004), Vector3(cb.x, cb.y, 0.0356 * cara), _mat_hueco, false, pivot, false)
+			hueco.set_meta("dyn", true)
 		for pieza in [tirador, boca]:
 			if pieza:
 				for mi in (pieza as Node3D).find_children("*", "MeshInstance3D", true, false):
@@ -3421,6 +3445,7 @@ func _portals() -> void:
 		portals.append({"pos": ub, "to": a, "text": l[3]})
 
 var _caracoles: Array[Vector3] = []
+var _mat_hueco: StandardMaterial3D
 var chimeneas: Array = []
 
 ## Escalera de caracol de hierro con peldaños de madera: sube «alto» metros (hasta el suelo de la planta de

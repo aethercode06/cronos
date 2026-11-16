@@ -41,7 +41,7 @@ func _ready() -> void:
 			if n >= 4 or not d.has("pivot2") and d.get("pivot") == null: continue
 			var piv: Node3D = d.pivot
 			piv.rotation.y = d.base
-			var mano: Vector3 = piv.global_transform * Vector3(1.33, 0.98, 0.0)
+			var mano: Vector3 = piv.global_transform * Vector3(1.395, 0.98, 0.0)
 			var fuera: Vector3 = piv.global_transform.basis.z.normalized()
 			vistas.append([mano + fuera * 0.45 + Vector3(-0.0, 0.08, 0), mano])
 			n += 1
