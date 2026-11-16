@@ -1,19 +1,26 @@
 {
- "hd": {
-  "ids": [
-   "WoodFloor070",
-   "WoodFloor051",
-   "WoodFloor043",
-   "Planks040",
-   "Planks037A",
-   "Bricks108A",
-   "Ground085",
-   "ScatteredLeaves009",
-   "Ground037",
-   "Ground110",
-   "Plaster007",
-   "RoofingTiles013A"
-  ],
-  "res": "2K"
+ "madera_vieja": {
+  "q": "weathered planks",
+  "n": 8
+ },
+ "madera_fina": {
+  "q": "wood",
+  "n": 10
+ },
+ "fachada_piedra": {
+  "q": "stone wall",
+  "n": 8
+ },
+ "fachada_ladrillo": {
+  "q": "bricks",
+  "n": 8
+ },
+ "sillar": {
+  "q": "stone bricks",
+  "n": 6
+ },
+ "piedra_fuente": {
+  "q": "marble",
+  "n": 4
  }
 }

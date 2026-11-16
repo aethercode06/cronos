@@ -1,18 +1,16 @@
 {
- "a_buho": {
+ "f_fuente": {
   "k": [
-   "owl",
-   "owls",
-   "barn owl",
-   "eagle owl",
-   "horned owl",
-   "snowy owl",
-   "tawny owl",
-   "owl flying",
-   "owl animated"
+   "fountain",
+   "garden fountain",
+   "stone fountain",
+   "victorian fountain",
+   "water fountain",
+   "tiered fountain",
+   "fountain basin"
   ],
   "n": 60,
-  "max_caras": 120000,
+  "max_caras": 200000,
   "no": [
    "modern",
    "plastic",
@@ -96,7 +94,13 @@
    "bowl",
    "cup",
    "toy",
-   "pottery"
+   "pottery",
+   "drinking",
+   "pen",
+   "soda",
+   "chocolate",
+   "cartoon",
+   "low poly"
   ]
  }
 }
