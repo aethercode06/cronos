@@ -22,6 +22,7 @@ EXACTO.update({'ropa_1830s_frock_coat_unbuttoned': ('h', 1.2), 'ropa_dress_of_a_
 EXACTO.update({'ave_common_barn_owl': ('h', 0.55), 'ave_snowy_owl': ('h', 0.6), 'ave_my_grandfather_s_owl': ('h', 0.62), 'ave_eastern_screech_owl': ('h', 0.36), 'ave_great_horned_owl': ('h', 0.7), 'ave_owl_download': ('h', 0.5), 'ave_moth_number_1': ('m', 0.12), 'ave_townsend_bat': ('m', 0.32), 'ave_owl': ('m', 1.0)})
 EXACTO.update({'fuente_huntington': ('m', 7.0), 'fuente_vieja': ('m', 7.0), 'fuente_festoneada': ('m', 6.5)})
 EXACTO.update({'veg_3d_fern_01': ('h', 0.7), 'veg_boletus_edulis_mushroom': ('h', 0.14), 'veg_cattail': ('h', 1.6), 'veg_cattail_plant': ('h', 1.5), 'veg_chanterelle': ('h', 0.08), 'veg_ivy_patch': ('m', 0.8), 'veg_mushroom': ('m', 0.5), 'veg_mushroom_on_tree_baked_l': ('m', 0.8), 'veg_mushroom_scan': ('m', 0.35), 'veg_oyster_mushrooms': ('m', 0.35), 'veg_shaggy_parasol_mushroom_': ('m', 0.5), 'veg_tricholoma_murrillianum_': ('h', 0.1), 'veg_weeds_and_grass': ('m', 1.5)})
+EXACTO.update({'pomo_simple': ('m', 0.075), 'pomo_laton': ('m', 0.075), 'picaporte_laton': ('m', 0.13), 'bocallave_hierro': ('m', 0.1), 'bocallave_laton': ('m', 0.085), 'candado_viejo': ('m', 0.1), 'llave_antigua': ('m', 0.11)})
 GRANDE = ("piano", "wardrobe", "bookcase", "bookshel", "fireplace", "fire_place", "sofa", "lounge", "bathtub", "tree", "pine", "spruce", "fir", "stove", "cabinet", "clock", "desk", "table", "safe", "armchair", "chair", "mirror")
 os.makedirs(OUT, exist_ok=True)
 info = {}

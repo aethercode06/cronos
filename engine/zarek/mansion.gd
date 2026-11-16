@@ -475,6 +475,12 @@ func _materials() -> void:
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
+	var laton := StandardMaterial3D.new()
+	laton.albedo_color = Color(0.62, 0.48, 0.24)
+	laton.metallic = 0.9
+	laton.roughness = 0.38
+	laton.metallic_specular = 0.6
+	_mat["laton_viejo"] = laton
 	_mat["fachada"] = _fachada_mat("Bricks066", 0.32, Color(0.66, 0.64, 0.58))
 	_mat["fachada"].set_shader_parameter("suciedad", 1.35)
 	var torre := ShaderMaterial.new()
@@ -1125,10 +1131,25 @@ func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
 	for py in [0.65, 1.75]:
 		box(Vector3(gap * 0.32, 0.8, 0.09), Vector3(gap * 0.27, py, 0), mat, false, pivot)
 		box(Vector3(gap * 0.32, 0.8, 0.09), Vector3(gap * 0.73, py, 0), mat, false, pivot)
-	box(Vector3(0.07, 0.07, 0.16), Vector3(gap - 0.18, 1.05, 0), _mat.oro, false, pivot)
+	# herrajes de latón de verdad a las dos caras: picaporte o pomo (según la puerta) y bocallave debajo
+	var con_pomo := _rng.randf() < 0.45
+	for cara in [1.0, -1.0]:
+		var giro: float = 0.0 if cara > 0.0 else PI
+		var z: float = 0.036 * cara
+		var tirador := _prop("pomo_laton" if con_pomo else "picaporte_laton", Vector3(gap - 0.17, 1.02, z), giro, 1.45, false, pivot)
+		if tirador and con_pomo:
+			tirador.rotation = Vector3(PI * 0.5 * cara, 0.0, 0.0)
+			tirador.position = Vector3(gap - 0.17, 1.05, z)
+		var boca := _prop("bocallave_laton", Vector3(gap - 0.17, 0.86, z), giro, 1.45, false, pivot)
+		for pieza in [tirador, boca]:
+			if pieza:
+				for mi in (pieza as Node3D).find_children("*", "MeshInstance3D", true, false):
+					(mi as MeshInstance3D).material_override = _mat.laton_viejo
 	if locked:
+		# cerrada con cadenas y un candado viejo
 		box(Vector3(gap * 0.9, 0.06, 0.12), Vector3(gap * 0.5, 1.2, 0.05), _mat.metal, false, pivot)
 		box(Vector3(gap * 0.9, 0.06, 0.12), Vector3(gap * 0.5, 1.45, 0.05), _mat.metal, false, pivot)
+		_prop("candado_viejo", Vector3(gap * 0.5, 1.22, 0.12), 0.0, 1.4, false, pivot)
 	var body := AnimatableBody3D.new()
 	body.sync_to_physics = false
 	body.collision_layer = 2  # capa de puertas: no cuenta para la navegación de Elena (las abre ella)

@@ -35,6 +35,16 @@ func _ready() -> void:
 				var f: Vector3 = c.global_transform.basis.z
 				vistas.append([p + f * 1.9 + c.global_transform.basis.x * 1.2 + Vector3(0, 1.5, 0), p + Vector3(0, 0.5, 0)])
 				n += 1
+	elif modo == "puertas":
+		var n := 0
+		for d in m.doors:
+			if n >= 4 or not d.has("pivot2") and d.get("pivot") == null: continue
+			var piv: Node3D = d.pivot
+			piv.rotation.y = d.base
+			var mano: Vector3 = piv.global_transform * Vector3(1.33, 0.98, 0.0)
+			var fuera: Vector3 = piv.global_transform.basis.z.normalized()
+			vistas.append([mano + fuera * 0.45 + Vector3(-0.0, 0.08, 0), mano])
+			n += 1
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")
