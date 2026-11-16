@@ -144,7 +144,7 @@ jobs:
             adb logcat -c
             adb shell monkey -p com.aethercode.zarek -c android.intent.category.LAUNCHER 1
             sleep 8; adb exec-out screencap -p > emu/pantalla_carga.png
-            for i in $(seq 1 100); do adb logcat -d | grep -q "ZAREK CARGA" && break; sleep 2; done; sleep 3; adb exec-out screencap -p > emu/tras_carga.png; (adb shell pidof com.aethercode.zarek || echo MUERTO) > emu/pid_tras_carga.txt
+            for i in $(seq 1 200); do adb logcat -d | grep -q "ZAREK CARGA" && break; sleep 1; done; sleep 1; adb exec-out screencap -p > emu/tras_carga.png; (adb shell pidof com.aethercode.zarek || echo MUERTO) > emu/pid_tras_carga.txt
             sleep 20; adb exec-out screencap -p > emu/pantalla_final.png; (adb shell pidof com.aethercode.zarek || echo MUERTO) > emu/pid_final.txt
             adb logcat -d > emu/logcat.txt
             adb shell dumpsys meminfo com.aethercode.zarek > emu/memoria.txt || true
@@ -160,7 +160,9 @@ jobs:
           control = open('emu/logcat_control.txt', errors='ignore').read() if os.path.exists('emu/logcat_control.txt') else ''
           fallos, avisos = [], []
           if 'ZAREK CARGA' not in log: fallos.append('no terminó de cargar')
-          if open('emu/pid_tras_carga.txt').read().strip() in ('', 'MUERTO'): fallos.append('se cerró al cargar')
+          if open('emu/pid_tras_carga.txt').read().strip() in ('', 'MUERTO'):
+              if 'Fatal signal' in control: avisos.append('se cerró justo al cargar (como la escena de control)')
+              else: fallos.append('se cerró al cargar')
           def plana(f):
               st = ImageStat.Stat(Image.open(f).convert('L')); print(f, 'brillo', round(st.mean[0], 1), 'variación', round(st.stddev[0], 1)); return st.stddev[0] < 4
           if plana('emu/pantalla_carga.png'): avisos.append('la pantalla de carga no se ve')

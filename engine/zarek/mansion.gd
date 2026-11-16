@@ -2154,8 +2154,8 @@ func _trees(W: float, H: float) -> void:
 				var muerto: bool = String(pinos[v]).begins_with("muerto")
 				var fx := 0.012 if muerto else (0.025 if v < 6 else 0.035)
 				var tb := 0.0 if muerto else 0.035
-				_multi_arbol(_con_viento(mallas[v], fx, tb), lista, 0.0, 22.0, true)
-				_multi_arbol(_con_viento(medios[v], fx, tb), lista, 20.0, 68.0 if quality >= 2 else 46.0, true)
+				_multi_arbol(_con_viento(mallas[v], fx, tb), lista, 0.0, 22.0 if quality >= 2 else 16.0, true)
+				_multi_arbol(_con_viento(medios[v], fx, tb), lista, 20.0 if quality >= 2 else 14.0, 68.0 if quality >= 2 else 46.0, quality >= 2)
 			if v < 6:
 				for k in lista.size():
 					lejos_xs[k % 3].append(lista[k])
@@ -3844,7 +3844,7 @@ func _merge_static() -> void:
 			continue
 		for par in sup:
 			var mat: Material = _canon_mat(par[1])
-			var key := "%d|%d|%d|%d|%d" % [mat.get_instance_id(), level_of(gp.y + 0.3), int(gp.x / 24.0), int(gp.z / 24.0), m.cast_shadow]
+			var key := "%d|%d|%d|%d" % [mat.get_instance_id(), int(gp.x / 40.0), int(gp.z / 40.0), m.cast_shadow]
 			if not groups.has(key):
 				groups[key] = {"mat": mat, "items": [], "shadow": m.cast_shadow}
 			groups[key].items.append([m, par[0]])

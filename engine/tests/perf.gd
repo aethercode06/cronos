@@ -89,7 +89,7 @@ func _ready() -> void:
 	var cam := Camera3D.new(); cam.far = 60.0; cam.fov = 70.0; add_child(cam)
 	if OS.get_environment("CULL") != "": cam.cull_mask = int(OS.get_environment("CULL"))
 	var fl := SpotLight3D.new(); fl.spot_range = 32.0; fl.spot_angle = 40.0; fl.light_energy = 6.0; fl.shadow_enabled = OS.get_environment("SINSOMBRA") == ""; cam.add_child(fl)
-	var moon := DirectionalLight3D.new(); moon.shadow_enabled = OS.get_environment("SINSOMBRA") == ""; moon.directional_shadow_max_distance = 32.0; moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_caster_mask = 0xFFFFF & ~2; moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS; add_child(moon)
+	var moon := DirectionalLight3D.new(); moon.shadow_enabled = OS.get_environment("SINSOMBRA") == "" and OS.get_environment("SINLUNA") == ""; moon.directional_shadow_max_distance = 32.0; moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_caster_mask = 0xFFFFF & ~2; moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS; add_child(moon)
 	get_viewport().use_occlusion_culling = OS.get_environment("SINOCL") == ""
 	print("OCLUSION ", get_viewport().use_occlusion_culling)
 	var hr: Rect2 = m.house_rect
@@ -109,7 +109,8 @@ func _ready() -> void:
 			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
 			Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), (Time.get_ticks_usec() - t0) / 5000.0])
 	if OS.get_environment("DESGLOSE") != "":
-		cam.look_at_from_position(vistas["fachada"][0], vistas["fachada"][1])
+		var vv: String = OS.get_environment("DESGLOSE")
+		cam.look_at_from_position(vistas[vv][0], vistas[vv][1])
 		var fr := cam.get_frustum()
 		var grupos := {}
 		for g in m.find_children("*", "GeometryInstance3D", true, false):
@@ -117,7 +118,8 @@ func _ready() -> void:
 			if not gi.is_visible_in_tree(): continue
 			var ab: AABB = gi.global_transform * gi.get_aabb()
 			var d := ab.get_center().distance_to(cam.global_position)
-			if gi.visibility_range_end > 0.0 and d > gi.visibility_range_end: continue
+			if gi.visibility_range_end > 0.0 and d > gi.visibility_range_end + ab.size.length() * 0.5: continue
+			if gi.visibility_range_begin > 0.0 and d < gi.visibility_range_begin - ab.size.length() * 0.5: continue
 			if d > 60.0: continue
 			var dentro := true
 			for pl in fr:
@@ -128,7 +130,13 @@ func _ready() -> void:
 			else:
 				var mm = gi.get("mesh")
 				k = "%s:%s<%s dyn=%s r=%d" % [gi.get_class(), (mm.get_class() if mm else "-"), String(gi.get_parent().name).left(18), m._is_dyn(gi), int(gi.visibility_range_end)]
-			grupos[k] = grupos.get(k, 0) + 1
+			var tri := 0
+			if gi is MultiMeshInstance3D and gi.multimesh and gi.multimesh.mesh:
+				tri = _tris(gi.multimesh.mesh) * gi.multimesh.instance_count
+				k = "MM " + gi.multimesh.mesh.resource_name.left(30) + " %d" % _tris(gi.multimesh.mesh)
+			elif gi is MeshInstance3D and gi.mesh:
+				tri = _tris(gi.mesh)
+			grupos[k] = grupos.get(k, 0) + tri
 		var kg := grupos.keys()
 		kg.sort_custom(func(a, b): return grupos[a] > grupos[b])
 		for k in kg.slice(0, 30): print("DES %-60s %d" % [k, grupos[k]])
