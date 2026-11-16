@@ -124,6 +124,7 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	mansion.asentar()
+	await mansion.crear_impostores()
 	for l in mansion.lamps:
 		mansion.set_lamp(l, true)
 	respawn_pos = mansion.cell_to_world("baja", 9.0, 11.2)

@@ -1605,6 +1605,8 @@ func _exterior() -> void:
 				sup.set_meta("dyn", true)
 				add_child(sup)
 				_cauce(r.grow(1.2), es_rio)
+				if es_rio:
+					_hojas_rio(r)
 				_orillas(r.grow(1.2), es_rio)
 				_sonidos_agua(r, "rio" if es_rio else "rio", 18.0 if es_rio else 12.0, -10.0)
 				if es_rio:
@@ -2045,6 +2047,7 @@ func _mat_agua(es_rio: bool) -> ShaderMaterial:
 		m.set_shader_parameter("fuerza", 1.4)
 		m.set_shader_parameter("velocidad", 0.7)
 		m.set_shader_parameter("escala", 0.2)
+		m.set_shader_parameter("relieve", 2.2)
 	else:
 		m.set_shader_parameter("corriente", Vector2(0.6, 0.4))
 		m.set_shader_parameter("fuerza", 0.12)
@@ -2053,6 +2056,60 @@ func _mat_agua(es_rio: bool) -> ShaderMaterial:
 		m.set_shader_parameter("espuma", 0.8)
 		m.set_shader_parameter("relieve", 0.5)
 	return m
+
+## Hojas secas y ramitas que bajan flotando por el río (se ve la corriente y el agua deja de parecer un suelo).
+func _hojas_rio(r: Rect2) -> void:
+	var tramos := int(r.size.x / 30.0) + 1
+	for i in tramos:
+		var p := CPUParticles3D.new()
+		p.amount = 26
+		p.lifetime = 30.0
+		p.preprocess = 30.0
+		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+		p.emission_box_extents = Vector3(15.0, 0.0, r.size.y * 0.42)
+		p.direction = Vector3(1, 0, 0)
+		p.spread = 6.0
+		p.gravity = Vector3.ZERO
+		p.initial_velocity_min = 0.35
+		p.initial_velocity_max = 0.7
+		p.angle_min = 0.0
+		p.angle_max = 360.0
+		p.angular_velocity_min = -12.0
+		p.angular_velocity_max = 12.0
+		p.scale_amount_min = 0.6
+		p.scale_amount_max = 1.3
+		p.particle_flag_rotate_y = true
+		p.local_coords = false
+		var q := PlaneMesh.new()
+		q.size = Vector2(0.09, 0.06)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = _textura_hoja_rio()
+		mat.albedo_color = Color(0.5, 0.36, 0.22)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		mat.alpha_scissor_threshold = 0.4
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mat.roughness = 0.6
+		q.material = mat
+		p.mesh = q
+		p.position = Vector3(r.position.x + 15.0 + i * 30.0, -0.26, r.get_center().y)
+		p.visibility_aabb = AABB(Vector3(-30, -1, -r.size.y), Vector3(60, 2, r.size.y * 2))
+		add_child(p)
+
+var _hoja_rio_tex: ImageTexture
+func _textura_hoja_rio() -> ImageTexture:
+	if _hoja_rio_tex:
+		return _hoja_rio_tex
+	var img := Image.create(32, 24, false, Image.FORMAT_RGBA8)
+	for y in 24:
+		for x in 32:
+			var u := (x - 16.0) / 15.0
+			var v := (y - 12.0) / 10.0
+			var dentro := u * u + v * v * (1.0 + absf(u) * 0.8) < 1.0
+			var tono := 0.8 + 0.2 * sin(x * 0.9) * cos(y * 0.7)
+			img.set_pixel(x, y, Color(tono, tono * 0.85, tono * 0.6, 1.0 if dentro else 0.0))
+	img.generate_mipmaps()
+	_hoja_rio_tex = ImageTexture.create_from_image(img)
+	return _hoja_rio_tex
 
 ## Rumor de agua repartido a lo largo de una zona (varios emisores 3D en bucle).
 func _sonidos_agua(r: Rect2, tipo: String, cada: float, db: float) -> void:
@@ -2284,7 +2341,7 @@ func _trees(W: float, H: float) -> void:
 	var lejos: Array = []
 	for v in 3:
 		lejos.append(_abeto_mesh(100 + v, 0.85 + v * 0.12))
-	var PARC := 40.0
+	var PARC := 16.0
 	var parcelas: Dictionary = {}
 	var total_peso := 0
 	for w in peso:
@@ -2315,7 +2372,10 @@ func _trees(W: float, H: float) -> void:
 				var fx := 0.012 if muerto else (0.025 if v < 6 else 0.035)
 				var tb := 0.0 if muerto else 0.035
 				_multi_arbol(_con_viento(mallas[v], fx, tb), lista, 0.0, 22.0 if quality >= 2 else 16.0, true)
-				_multi_arbol(_con_viento(medios[v], fx, tb), lista, 20.0 if quality >= 2 else 14.0, 68.0 if quality >= 2 else 46.0, quality >= 2)
+				# media distancia: árbol aligerado; más lejos, impostor (imagen del árbol en dos planos cruzados) que se
+				# crea al terminar de cargar. Si no se puede crear (sin pantalla), el árbol aligerado llega hasta el final.
+				var mm_medio := _multi_arbol(_con_viento(medios[v], fx, tb), lista, 20.0 if quality >= 2 else 14.0, 68.0 if quality >= 2 else 46.0, quality >= 2)
+				_imp_pendientes.append({"v": v, "malla": mallas[v], "xs": lista, "medio": mm_medio})
 			if v < 6:
 				for k in lista.size():
 					lejos_xs[k % 3].append(lista[k])
@@ -2537,7 +2597,7 @@ func _con_viento(malla: Mesh, flex: float, temblor: float) -> Mesh:
 	_cache_viento[clave] = copia
 	return copia
 
-func _multi_arbol(malla: Mesh, xs: Array, desde: float, hasta: float, sombra: bool) -> void:
+func _multi_arbol(malla: Mesh, xs: Array, desde: float, hasta: float, sombra: bool) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = malla
@@ -2553,6 +2613,104 @@ func _multi_arbol(malla: Mesh, xs: Array, desde: float, hasta: float, sombra: bo
 	mmi.visibility_range_end_margin = 6.0 if hasta > 0.0 else 0.0
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 	add_child(mmi)
+	return mmi
+
+var _imp_pendientes: Array = []
+var _imp_cache: Dictionary = {}
+## Impostores de los árboles lejanos: cada tipo de árbol se fotografía de frente y de lado (cámara ortográfica,
+## fondo transparente, luz plana) y lejos se dibuja con esas dos imágenes en dos planos cruzados. Un árbol de
+## ~10.000 triángulos y hojas superpuestas pasa a 4 triángulos: es lo que más pesaba en el bosque del teléfono.
+func crear_impostores() -> void:
+	if _imp_pendientes.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	var t0 := Time.get_ticks_msec()
+	var corte := 30.0 if quality >= 2 else 26.0
+	for pend in _imp_pendientes:
+		var v: int = pend.v
+		if not _imp_cache.has(v):
+			_imp_cache[v] = await _foto_impostor(pend.malla)
+		var imp: Mesh = _imp_cache[v]
+		if imp == null:
+			continue
+		var medio: MultiMeshInstance3D = pend.medio
+		var fin := medio.visibility_range_end
+		medio.visibility_range_end = corte
+		medio.visibility_range_end_margin = 3.0
+		var mmi := _multi_arbol(imp, pend.xs, corte - 2.0, fin, false)
+		mmi.visibility_range_begin_margin = 3.0
+	print("ZAREK impostores: %d tipos en %d ms" % [_imp_cache.size(), Time.get_ticks_msec() - t0])
+
+func _foto_impostor(malla: Mesh) -> Mesh:
+	if malla == null:
+		return null
+	var ab := malla.get_aabb()
+	var alto := ab.size.y
+	var ancho := maxf(ab.size.x, ab.size.z)
+	var res := Vector2i(256, int(clampf(256.0 * alto / maxf(ancho, 0.1), 256.0, 512.0)))
+	var imagenes: Array[Image] = []
+	for lado in 2:
+		var sv := SubViewport.new()
+		sv.size = res
+		sv.transparent_bg = true
+		sv.own_world_3d = true
+		sv.render_target_update_mode = SubViewport.UPDATE_ONCE
+		add_child(sv)
+		var mi := MeshInstance3D.new()
+		mi.mesh = malla
+		mi.rotation.y = lado * PI * 0.5
+		sv.add_child(mi)
+		var cam := Camera3D.new()
+		cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+		cam.size = alto * 1.02
+		cam.keep_aspect = Camera3D.KEEP_HEIGHT
+		cam.position = Vector3(0, ab.position.y + alto * 0.5, 50.0)
+		var env := Environment.new()
+		env.background_mode = Environment.BG_CLEAR_COLOR
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		env.ambient_light_color = Color(1, 1, 1)
+		env.ambient_light_energy = 1.0
+		cam.environment = env
+		sv.add_child(cam)
+		var luz := DirectionalLight3D.new()
+		luz.rotation_degrees = Vector3(-35, 20, 0)
+		luz.light_energy = 0.4
+		sv.add_child(luz)
+		await RenderingServer.frame_post_draw
+		await RenderingServer.frame_post_draw
+		var img := sv.get_texture().get_image()
+		sv.queue_free()
+		if img == null or img.is_empty():
+			return null
+		img.convert(Image.FORMAT_RGBA8)
+		if OS.get_environment("GUARDAR_IMPOSTORES") != "":
+			img.save_png("%s/imp_%d_%d.png" % [OS.get_environment("GUARDAR_IMPOSTORES"), malla.get_instance_id() % 1000, lado])
+		img.generate_mipmaps()
+		imagenes.append(img)
+	# dos planos cruzados con su foto cada uno
+	var st := SurfaceTool.new()
+	var am := ArrayMesh.new()
+	var w := alto * float(res.x) / float(res.y) * 0.5
+	for lado in 2:
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var eje := Vector3(1, 0, 0) if lado == 0 else Vector3(0, 0, -1)
+		var y0 := ab.position.y
+		var y1 := ab.position.y + alto
+		var q := [eje * -w + Vector3(0, y0, 0), eje * w + Vector3(0, y0, 0), eje * w + Vector3(0, y1, 0), eje * -w + Vector3(0, y1, 0)]
+		var uv := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+		st.set_normal(Vector3.UP.lerp(eje.cross(Vector3.UP), 0.5).normalized())
+		for k in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(uv[k])
+			st.add_vertex(q[k])
+		var mat := StandardMaterial3D.new()
+		mat.albedo_texture = ImageTexture.create_from_image(imagenes[lado])
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+		mat.alpha_scissor_threshold = 0.45
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mat.roughness = 0.95
+		mat.albedo_color = Color(0.82, 0.86, 0.8)
+		st.set_material(mat)
+		st.commit(am)
+	return am
 
 var _mat_rama: StandardMaterial3D
 ## Abeto de unos 12 m: tronco con corteza real y verticilos de ramas (tarjetas con textura de rama y alfa).

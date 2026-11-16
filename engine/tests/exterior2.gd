@@ -18,6 +18,12 @@ func _ready() -> void:
 	var cl := CanvasLayer.new(); var cr := ColorRect.new(); cr.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var pm := ShaderMaterial.new(); pm.shader = load("res://zarek/post.gdshader"); cr.material = pm; cl.add_child(cr); add_child(cl)
 	var m := ZarekMansion.new(); add_child(m); m.build(int(OS.get_environment("Q")) if OS.get_environment("Q") != "" else 2)
+	await m.crear_impostores()
+	if OS.get_environment("DEPURAR_AGUA") != "":
+		for g in m.find_children("*", "MeshInstance3D", true, false):
+			var mt = (g as MeshInstance3D).material_override
+			if mt is ShaderMaterial and (mt as ShaderMaterial).shader.resource_path.ends_with("agua.gdshader"):
+				(mt as ShaderMaterial).set_shader_parameter("depurar", int(OS.get_environment("DEPURAR_AGUA")))
 	var cam := Camera3D.new(); cam.fov = 70.0; cam.far = 300.0; add_child(cam)
 	var nb := ZarekNiebla.new(); add_child(nb); nb.objetivo = cam
 	var fl := SpotLight3D.new(); fl.light_color = Color(1, 0.9, 0.72); fl.light_energy = 6.0; fl.spot_range = 32.0; fl.spot_angle = 40.0

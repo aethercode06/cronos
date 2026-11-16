@@ -25,10 +25,11 @@ uniform float refraccion = 0.05;
 uniform vec3 color_espuma : source_color = vec3(0.72, 0.74, 0.72);
 uniform float espuma = 1.6;
 uniform float espuma_orilla = 0.35;        // metros de agua somera con espuma
-uniform vec3 color_cielo : source_color = vec3(0.16, 0.19, 0.27);
+uniform vec3 color_cielo : source_color = vec3(0.2, 0.25, 0.36);
 uniform vec3 luna_dir = vec3(0.645, -0.616, -0.452);     // dirección hacia la que va la luz de la luna
 uniform vec3 color_luna : source_color = vec3(0.55, 0.65, 0.95);
 uniform float borde = 0.06;
+uniform int depurar = 0;
 varying vec3 mundo;
 
 vec3 flujo_uvw(vec2 uv, vec2 f, vec2 salto, float t, bool b) {
@@ -76,7 +77,7 @@ void fragment() {
 	float mascara = clamp((1.0 - smoothstep(0.0, espuma_orilla, hondo)) * 1.4 + azar * 0.15 * fuerza, 0.0, 1.0);
 	float esp = clamp(fbm * espuma - 0.5 / max(espuma, 0.001), 0.0, 1.0);
 	float esp_total = clamp(mix(clamp(esp - (1.0 - mascara), 0.0, 1.0), esp * mascara, 0.3), 0.0, 1.0);
-	SPECULAR = 0.35;
+	SPECULAR = 0.6;
 	ROUGHNESS = max(mix(rugosidad, 0.7, esp_total), 0.12);
 	NORMAL_MAP = vec3(nor, 0.0);
 	NORMAL_MAP_DEPTH = relieve;
@@ -95,7 +96,7 @@ void fragment() {
 	float pasa = 1.0 - clamp(cla + esp_total, 0.0, 1.0);
 	vec3 col = mix(color_cerca, color_lejos, pow(clamp(hondo2 / max(hondura_color, 0.001), 0.0, 1.0), 0.5));
 	// reflejo del cielo según el ángulo (de lado el agua refleja más)
-	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 5.0);
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	col = mix(col, color_cielo, fres * 0.9);
 	// reflejo de lo que hay alrededor (árboles, ventanas encendidas, linterna): se refleja la imagen de la
 	// pantalla respecto a la línea del horizonte del agua, torcida por las olas (barato y convincente de noche)
@@ -110,13 +111,18 @@ void fragment() {
 	vec2 ruv = vec2(SCREEN_UV.x, 2.0 * horizonte - SCREEN_UV.y) + n.xy * 0.035;
 	float dentro_p = step(0.0, ruv.y) * step(ruv.y, 1.0) * smoothstep(0.0, 0.08, ruv.y) * smoothstep(1.0, 0.92, ruv.y);
 	vec3 reflejo = textureLod(pantalla, clamp(ruv, vec2(0.001), vec2(0.999)), 1.5).rgb * dentro_p;
-	float k_refl = mix(0.25, 0.85, fres) * (1.0 - esp_total);
+	float k_refl = mix(0.35, 0.95, fres) * (1.0 - esp_total);
 	// destello de la luna sobre las ondas (reflejo especular nítido, como en el agua de verdad)
 	vec3 l_vista = normalize((VIEW_MATRIX * vec4(-luna_dir, 0.0)).xyz);
 	vec3 refl = reflect(-VIEW, NORMAL);
 	float brillo = pow(max(dot(refl, l_vista), 0.0), 220.0) * 6.0 + pow(max(dot(refl, l_vista), 0.0), 18.0) * 0.12;
+	// camino de luz de la luna: muchos destellos pequeños sobre las ondas en la dirección de la luna
+	float camino = pow(max(dot(refl, l_vista), 0.0), 40.0) * smoothstep(0.55, 0.9, fbm + n.x * 0.5) * 1.8;
 	ALBEDO = mix(col, color_espuma, esp_total) * (1.0 - pasa);
-	EMISSION += color_luna * brillo * (1.0 - esp_total) + color_cielo * fres * 0.6 + reflejo * k_refl;
+	EMISSION += color_luna * (brillo + camino) * (1.0 - esp_total) + color_cielo * fres * 1.3 + reflejo * k_refl;
 	EMISSION += textureLod(pantalla, ro, rugosidad * hondo2 * 2.0).rgb * pasa * (1.0 - fres * 0.6);
 	ALPHA = smoothstep(0.0, max(borde, 0.001), hondo);
+	if (depurar == 1) { ALBEDO = vec3(0.0); EMISSION = vec3(nor, 0.0); }
+	if (depurar == 2) { ALBEDO = vec3(0.0); EMISSION = reflejo; }
+	if (depurar == 3) { ALBEDO = vec3(0.0); EMISSION = vec3(clamp(hondo / 2.0, 0.0, 1.0), fres, pasa); }
 }

@@ -30,6 +30,8 @@ func _ready() -> void:
 	_t("fusionar", m._merge_static)
 	_t("optimizar", m._optimizar)
 	_t("navegacion", m.bake_nav)
+	if OS.get_environment("IMP") != "":
+		await m.crear_impostores()
 	print("CARGA TOTAL %d ms" % (Time.get_ticks_msec() - t_all))
 	# contenido
 	var cuenta := {"nodos": 0, "mesh": 0, "multimesh": 0, "inst_mm": 0, "luces": 0, "luces_sombra": 0, "cuerpos": 0, "rigid": 0, "particulas": 0, "audio": 0, "tris_mesh": 0, "tris_mm": 0}
