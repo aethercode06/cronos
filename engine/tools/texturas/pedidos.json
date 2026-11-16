@@ -1,11 +1,1 @@
-{
- "relieve": {
-  "ids": [
-   "Ground085",
-   "ScatteredLeaves009",
-   "Ground037",
-   "Ground110"
-  ],
-  "res": "2K"
- }
-}
+{"papel": {"q": "wallpaper", "n": 14}, "azulejo": {"q": "tiles", "n": 4}, "madera_pared": {"q": "wood paneling", "n": 3}}
