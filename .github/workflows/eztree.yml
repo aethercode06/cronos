@@ -1,0 +1,28 @@
+name: Árboles Ez-Tree
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/eztree/**", ".github/workflows/eztree.yml"]
+permissions:
+  contents: write
+jobs:
+  arboles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Generar
+        run: |
+          mkdir -p /tmp/gen && cp engine/tools/eztree/generar.mjs /tmp/gen/ && cd /tmp/gen
+          npm init -y > /dev/null && npm i three @dgreenheck/ez-tree > /dev/null
+          node generar.mjs out 2>&1 | tee out_registro.txt || true
+          cp out_registro.txt out/registro.txt
+      - name: Publicar en la rama aether-eztree
+        run: |
+          cd /tmp/gen/out
+          git init -q && git checkout -q -b aether-eztree
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git add -A && git commit -qm "Ez-Tree $GITHUB_RUN_NUMBER"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" aether-eztree
