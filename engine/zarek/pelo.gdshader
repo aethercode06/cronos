@@ -12,6 +12,9 @@ uniform float largo = 0.006;       // largo del pelo (unidades del modelo ya esc
 uniform float densidad = 900.0;    // pelos por unidad de UV
 uniform float gravedad = 0.35;     // el pelo cae un poco
 uniform float oscuro_raiz = 0.45;
+// pupila del gato: rendija vertical en forma de lente (puntas afiladas) que se abre en óvalo en la oscuridad
+uniform float pupila = 0.35;          // 0,05 = rendija fina con mucha luz; 0,6 = casi redonda a oscuras
+uniform vec3 ojo_centro = vec3(0.864, 0.950, 0.026);  // centro de la isla UV del ojo y radio del iris
 
 // islas UV sin pelo (coordenadas UV de Godot): ojos, nariz, lengua; las orejas por dentro con poco pelo
 uniform vec4 sin_pelo_1 = vec4(0.828, 0.908, 0.907, 0.994);
@@ -56,6 +59,19 @@ void fragment() {
 	c *= mix(oscuro_raiz, 1.0, capa);
 	if (liso) {
 		c = texture(color_piel, UV).rgb * tinte;
+	}
+	if (ojo) {
+		vec2 d = (UV - ojo_centro.xy) / ojo_centro.z;
+		float alto_p = 0.84;
+		float t = clamp(1.0 - pow(abs(d.y) / alto_p, 2.0), 0.0, 1.0);
+		float ancho = mix(pupila * 0.28, pupila, smoothstep(0.25, 0.6, pupila)) * pow(t, 0.7);
+		ancho = max(ancho, mix(0.0, pupila * 0.9, smoothstep(0.35, 0.65, pupila)) * sqrt(t));
+		float borde = fwidth(d.x) * 1.5 + 0.01;
+		float dentro_p = 1.0 - smoothstep(ancho - borde, ancho + borde, abs(d.x));
+		dentro_p *= step(abs(d.y), alto_p);
+		// el iris se oscurece un poco alrededor de la pupila
+		c *= 1.0 - 0.35 * (1.0 - smoothstep(ancho, ancho + 0.12, abs(d.x))) * step(abs(d.y), alto_p);
+		c = mix(c, vec3(0.006, 0.006, 0.007), dentro_p);
 	}
 	ALBEDO = c;
 	ROUGHNESS = ojo ? 0.03 : (liso ? 0.45 : 0.85);

@@ -130,10 +130,8 @@ t=np.clip((r-0.18)/0.8,0,1)[...,None]
 iris=(oro*(1-t)+oliva*t)*(0.6+0.65*fib[...,None])+ndimage.gaussian_filter(r2.normal(0,1,(N,N)),1.5)[...,None]*12
 iris=iris*(1-0.7*np.clip((r-0.86)/0.12,0,1))[...,None]
 iris[r>1.0]=(18,16,10)
-borde=np.sqrt((du/0.075)**2+(dvv/0.8)**2)<1.0
-pup=np.sqrt((du/0.045)**2+(dvv/0.76)**2)<1.0
-iris[borde]=iris[borde]*0.6
-iris[pup]=(4,4,4)
+# la pupila la dibuja el sombreador (cambia de tamaño con la luz); aquí solo el iris, algo más oscuro en el centro
+iris*=(0.8+0.2*np.clip(np.abs(du)/0.3,0,1))[...,None]
 col[ojo]=iris[ojo]
 Image.fromarray(col.clip(0,255).astype(np.uint8)).save('/home/claude/cronos/engine/zarek/fauna/gato_pelo.jpg',quality=93)
 print("PINTADO OK")

@@ -128,9 +128,19 @@ func _pelaje_real(n: Node3D) -> void:
 				primero = m
 			ant = m
 		mi.material_override = primero
+		_mat_ojos = primero
 
 ## Animaciones del gato real (57): andar, trote, carrera, quieto, sentado, tumbado, dormir, bufar, comer…
 var anims_gato := {}
+var _mat_ojos: ShaderMaterial
+var _pupila := 0.35
+## La pupila se cierra en rendija cuando le da la linterna y se abre en óvalo en la oscuridad.
+func _actualizar_pupila(delta: float) -> void:
+	if _mat_ojos == null:
+		return
+	var objetivo := 0.07 if _en_la_linterna() else 0.4
+	_pupila = lerpf(_pupila, objetivo, 1.0 - exp(-delta * 3.0))
+	_mat_ojos.set_shader_parameter("pupila", _pupila)
 func _preparar_anims_gato() -> void:
 	if anim == null:
 		return
@@ -363,6 +373,7 @@ func _physics_process(delta: float) -> void:
 	# animación al ritmo del paso
 	if tipo == "gato" and not anims_gato.is_empty():
 		_ajustar_suelo(delta)
+		_actualizar_pupila(delta)
 		var rp := Vector2(velocity.x, velocity.z).length()
 		if _bufando > 0.0:
 			_bufando -= delta

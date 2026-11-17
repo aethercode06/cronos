@@ -14,10 +14,11 @@ func _ready() -> void:
 	a.set_physics_process(false)
 	var cam := Camera3D.new(); cam.fov = 40.0; add_child(cam)
 	var esq: Skeleton3D = a.modelo.find_children("*", "Skeleton3D", true, false)[0]
-	var tomas := [["Idle_2", "cara"], ["Idle_2", "ojo"], ["Idle_2", "perfil"], ["Idle_2", "nuca"], ["Idle_2", "flanco"], ["Sit_idle_1", "lado"]]
+	var tomas := [["Idle_2", "cara", 0.07], ["Idle_2", "ojo", 0.07], ["Idle_2", "cara", 0.3], ["Idle_2", "ojo", 0.3], ["Idle_2", "cara", 0.55], ["Idle_2", "ojo", 0.55]]
 	var n := 0
 	for t in tomas:
 		a._gato_anim(t[0])
+		if t.size() > 2 and a._mat_ojos: a._mat_ojos.set_shader_parameter("pupila", t[2])
 		for k in 25:
 			a._ajustar_suelo(0.2)
 			await get_tree().process_frame
