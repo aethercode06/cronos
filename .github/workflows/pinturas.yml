@@ -1,6 +1,10 @@
 name: Pinturas de dominio público (Met Museum CC0)
 on:
   workflow_dispatch:
+    inputs:
+      script:
+        description: "bajar.py (pinturas) o alfombras.py"
+        default: "bajar.py"
 permissions:
   contents: write
 jobs:
@@ -11,7 +15,7 @@ jobs:
       - run: pip install -q pillow
       - run: |
           mkdir -p /tmp/out && cd /tmp/out
-          python3 $GITHUB_WORKSPACE/engine/tools/pinturas/bajar.py | tee bajar.log
-          git init -q && git checkout -q -b aether-pinturas
+          python3 $GITHUB_WORKSPACE/engine/tools/pinturas/${{ inputs.script || 'bajar.py' }} | tee bajar.log
+          git init -q && git checkout -q -b aether-${{ inputs.script == 'alfombras.py' && 'alfombras' || 'pinturas' }}
           git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
-          git add -A && git commit -qm "Pinturas CC0" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-pinturas
+          git add -A && git commit -qm "Pinturas CC0" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-${{ inputs.script == 'alfombras.py' && 'alfombras' || 'pinturas' }}
