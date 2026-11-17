@@ -23,10 +23,13 @@ func _ready() -> void:
 		await _capturas()
 		get_tree().quit()
 		return
-	var m := g.mansion
 	var t0 := Time.get_ticks_msec()
-	while not m.nav_ready and Time.get_ticks_msec() - t0 < 120000:
+	# la carga es por pasos: esperar a que termine entera (jugador y Elena creados) y a la navegación
+	while (g.mansion == null or g.player == null or g.elena == null or not g.mansion.nav_ready) and Time.get_ticks_msec() - t0 < 180000:
 		await get_tree().process_frame
+	var m := g.mansion
+	for k in 10:
+		await get_tree().physics_frame
 	print("ZAREK: navegación lista en %.1f s" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	print("ZAREK: habitaciones %d, sellos %d, armarios %d, lámparas %d, puertas %d, pasos %d" % [m.rooms.size(), m.seals.size(), m.wardrobes.size(), m.lamps.size(), m.doors.size(), m.portals.size()])
 	_check(m.nav_ready, "navegación de Elena horneada")
