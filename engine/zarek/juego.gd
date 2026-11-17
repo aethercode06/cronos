@@ -273,30 +273,95 @@ func _environment() -> void:
 		moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	add_child(moon)
 
+var flash_foco: SpotLight3D
+var _rebote: OmniLight3D
+var _polvo: GPUParticles3D
+## Linterna de bombilla con reflector (años 70): dos luces como una linterna de verdad: el FOCO, un cono estrecho
+## con el centro brillante y las sombras; y el HALO, el cono ancho y tenue de la luz que se escapa por los lados
+## (sin sombras: así las sombras solo se calculan en el cono estrecho y el teléfono va mucho más ligero).
+## (Se probó una textura proyectada con los anillos del reflector, pero no es fiable en todos los móviles.)
+## Además: luz que rebota en lo que alumbras (la pared ilumina un poco la sala) y polvo flotando en el haz.
 func _flashlight() -> void:
 	flash_node = Node3D.new()
 	add_child(flash_node)
 	flash = SpotLight3D.new()
-	flash.light_color = Color(1.0, 0.9, 0.72)
+	flash.light_color = Color(1.0, 0.88, 0.7)
 	flash.light_energy = 6.0
 	flash.spot_range = 32.0
 	flash.spot_angle = 40.0
-	flash.spot_angle_attenuation = 1.6
+	flash.spot_angle_attenuation = 1.8
 	flash.spot_attenuation = 0.8
-	flash.shadow_enabled = true
-	flash.shadow_bias = 0.04
-	if OS.get_name() == "Android":
-		# en el teléfono la linterna solo calcula la sombra de muros, suelos y techos (capa 1): la luz sale casi
-		# del ojo y la sombra de los muebles queda escondida detrás de ellos; ahorra cientos de llamadas de dibujo
-		flash.shadow_caster_mask = 1
+	flash.shadow_enabled = false
+	flash.light_specular = 0.35
 	flash_node.add_child(flash)
-	# halo cercano para que se vea el entorno inmediato
+	flash_foco = SpotLight3D.new()
+	flash_foco.name = "foco"
+	flash_foco.light_color = flash.light_color
+	flash_foco.light_energy = 6.0
+	flash_foco.spot_range = 32.0
+	flash_foco.spot_angle = 17.0
+	flash_foco.spot_angle_attenuation = 1.1
+	flash_foco.spot_attenuation = 0.8
+	flash_foco.shadow_enabled = true
+	flash_foco.shadow_bias = 0.04
+	flash_foco.shadow_blur = 1.6
+	flash_node.add_child(flash_foco)
+	# halo cercano muy suave (la mano y lo que tienes delante)
 	var near := OmniLight3D.new()
 	near.light_color = Color(1.0, 0.88, 0.7)
-	near.omni_range = 4.5
-	near.light_energy = 0.7
+	near.omni_range = 2.5
+	near.light_energy = 0.25
 	near.name = "cerca"
 	flash_node.add_child(near)
+	# luz que rebota: un poco de luz cálida sale de donde da el haz y alumbra lo de alrededor
+	_rebote = OmniLight3D.new()
+	_rebote.light_color = Color(1.0, 0.85, 0.68)
+	_rebote.omni_range = 5.0
+	_rebote.omni_attenuation = 1.6
+	_rebote.light_energy = 0.0
+	_rebote.light_specular = 0.0
+	add_child(_rebote)
+	# polvo en el aire: motas que solo se ven donde las alumbra la linterna
+	_polvo = GPUParticles3D.new()
+	_polvo.amount = 70 if OS.get_name() == "Android" else 140
+	_polvo.lifetime = 9.0
+	_polvo.preprocess = 9.0
+	_polvo.local_coords = false
+	_polvo.visibility_aabb = AABB(Vector3(-3, -3, -6), Vector3(6, 6, 7))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(1.6, 1.2, 2.2)
+	pm.gravity = Vector3(0, -0.006, 0)
+	pm.initial_velocity_min = 0.0
+	pm.initial_velocity_max = 0.03
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 180.0
+	pm.turbulence_enabled = true
+	pm.turbulence_noise_strength = 0.05
+	pm.turbulence_noise_scale = 1.5
+	pm.turbulence_influence_min = 0.02
+	pm.turbulence_influence_max = 0.06
+	pm.scale_min = 0.5
+	pm.scale_max = 1.3
+	var curva := Curve.new()
+	curva.add_point(Vector2(0, 0)); curva.add_point(Vector2(0.15, 1)); curva.add_point(Vector2(0.85, 1)); curva.add_point(Vector2(1, 0))
+	var ct := CurveTexture.new()
+	ct.curve = curva
+	pm.scale_curve = ct
+	_polvo.process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.006, 0.006)
+	var mm := StandardMaterial3D.new()
+	mm.albedo_color = Color(0.9, 0.85, 0.75, 0.75)
+	mm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mm.roughness = 1.0
+	mm.metallic_specular = 0.0
+	mm.disable_receive_shadows = true
+	q.material = mm
+	_polvo.draw_pass_1 = q
+	_polvo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_polvo)
 
 func _player_snd(stream: AudioStream, db := 0.0, loop := false) -> AudioStreamPlayer:
 	var p := AudioStreamPlayer.new()
@@ -827,7 +892,10 @@ func _process(delta: float) -> void:
 	# la linterna solo calcula sombras de lo que está del mismo lado de las paredes que el jugador
 	if flash and player:
 		var en_casa := mansion.house_rect.grow(0.3).has_point(Vector2(player.global_position.x, player.global_position.z))
-		flash.shadow_caster_mask = (0xFFFFF & ~4) if en_casa else (0xFFFFF & ~2)
+		flash_foco.shadow_caster_mask = (0xFFFFF & ~4) if en_casa else (0xFFFFF & ~2)
+		if _polvo:
+			_polvo.emitting = en_casa
+			_polvo.visible = en_casa or _polvo.emitting
 	_update_flash(delta)
 	_update_niebla(delta)
 	_update_viento(delta)
@@ -949,14 +1017,20 @@ func _textura_hoja() -> ImageTexture:
 
 var _color_linterna := Color.WHITE
 var _alcance_linterna := 0.0
+var _t_mano := 0.0
 func _update_flash(delta: float) -> void:
 	if _alcance_linterna == 0.0:
 		_color_linterna = flash.light_color
 		_alcance_linterna = flash.spot_range
 	var cam := player.camera
 	flash_node.global_position = cam.global_position + cam.global_transform.basis * Vector3(0.18, -0.15, 0.0)
-	var target := cam.global_transform.basis.get_rotation_quaternion()
-	flash_node.quaternion = flash_node.quaternion.slerp(target, minf(1.0, delta * 14.0))
+	# la mano no es una cámara: la linterna va con un poco de retraso y un temblor muy leve
+	_t_mano += delta
+	var temblor := Quaternion(Vector3(1, 0, 0), sin(_t_mano * 1.7) * 0.004 + sin(_t_mano * 4.3) * 0.0015) * Quaternion(Vector3(0, 1, 0), sin(_t_mano * 1.3 + 1.0) * 0.005)
+	var target := cam.global_transform.basis.get_rotation_quaternion() * temblor
+	flash_node.quaternion = flash_node.quaternion.slerp(target, minf(1.0, delta * 11.0))
+	if _polvo:
+		_polvo.global_position = flash_node.global_position - flash_node.global_transform.basis.z * 2.4
 	var on := flash_on and battery > 0.0 and hidden_in.is_empty()
 	# como una linterna de bombilla con pilas de carbón: con la pila llena da luz blanca; por debajo del 40 % se
 	# va apagando poco a poco y amarilleando, y al final tiembla
@@ -975,8 +1049,27 @@ func _update_flash(delta: float) -> void:
 		if flash.get_meta("off", false):
 			e *= 0.08
 	flash.visible = on
-	flash.light_energy = e
+	flash.light_energy = e * 0.32
+	flash_foco.visible = on
+	flash_foco.light_energy = e
+	flash_foco.light_color = flash.light_color
+	flash_foco.spot_range = flash.spot_range
 	flash_node.get_node("cerca").visible = on
+	# rebote: donde da el centro del haz sale un poco de luz (más cuanto más cerca está la superficie)
+	if _rebote:
+		var dir := -flash_node.global_transform.basis.z
+		var desde := flash_node.global_position
+		var q := PhysicsRayQueryParameters3D.create(desde, desde + dir * flash.spot_range)
+		q.exclude = [player.get_rid()]
+		var hit := get_world_3d().direct_space_state.intersect_ray(q) if on else {}
+		if hit.is_empty():
+			_rebote.light_energy = move_toward(_rebote.light_energy, 0.0, delta * 3.0)
+		else:
+			var d: float = desde.distance_to(hit.position)
+			_rebote.global_position = (hit.position as Vector3) + (hit.normal as Vector3) * 0.45
+			var objetivo := e / 6.0 * 0.55 * clampf(1.0 - d / 14.0, 0.0, 1.0)
+			_rebote.light_energy = lerpf(_rebote.light_energy, objetivo, minf(1.0, delta * 8.0))
+			_rebote.light_color = flash.light_color
 	elena.flashlight_on = on
 
 func _play(delta: float) -> void:
