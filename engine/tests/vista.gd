@@ -89,6 +89,20 @@ func _ready() -> void:
 			hacia = hacia.normalized()
 			vistas.append([v + hacia * 2.6 + Vector3(0.5, 1.6, 0), v + Vector3(0, 1.6, 0)])
 			print("VENTANA ", m.rooms[sala].name)
+	elif modo == "objetos":
+		# primer plano de objetos cuyo archivo empieza por PREFIJO (p. ej. d_ = objetos de 1974)
+		var pre := OS.get_environment("PREFIJO")
+		for c in m.find_children("*", "Node3D", true, false):
+			var n := c as Node3D
+			if n.scene_file_path.get_file().begins_with(pre) and vistas.size() < 8:
+				var q := n.global_position + Vector3(0, 0.25, 0)
+				var al_centro := Vector3.ZERO
+				var sala := m.room_at(q)
+				if sala >= 0:
+					var cc: Vector2 = (m.rooms[sala].rect as Rect2).get_center()
+					al_centro = Vector3(cc.x - q.x, 0, cc.y - q.z).normalized()
+				vistas.append([q + al_centro * 1.3 + Vector3(0.3, 0.5, 0.2), q])
+				print("OBJ ", n.scene_file_path.get_file())
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")

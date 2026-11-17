@@ -489,6 +489,11 @@ func _materials() -> void:
 	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.42, 0.4, 0.4), 0.7)
 	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.6, 0.66, 0.95), 0.8)
 	_mat["baldosa"] = _pbr("Tiles140", 0.5, Color(1, 1, 1), 0.9)
+	# suelos propios (ambientCG, CC0): damero de mármol, baldosa hidráulica, baldosa de piedra gastada, tablones viejos
+	_mat["s_damero"] = _pbr("Tiles074", 0.4, Color(0.85, 0.85, 0.85), 0.6)
+	_mat["s_hidraulica"] = _pbr("Tiles081", 0.5, Color(0.8, 0.8, 0.78), 0.8)
+	_mat["s_cocina"] = _pbr("Tiles141", 0.45, Color(0.85, 0.84, 0.8), 0.9)
+	_mat["s_tablones"] = _pbr("Wood080", 0.4, Color(0.75, 0.72, 0.68), 1.0)
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
 	_mat["techo"] = _pbr("PaintedPlaster017", 0.3, Color(0.86, 0.8, 0.68), 1.0, 0.8)
@@ -763,7 +768,9 @@ func _level(key: String) -> void:
 		if t == "jardin":
 			fmat = _mat.madera_clara
 		if level == 2 and t != "jardin":
-			fmat = _mat.tablas
+			fmat = _mat.s_tablones
+		if ZarekHistoria.SUELO.has(name):
+			fmat = _mat[ZarekHistoria.SUELO[name]]
 		for fr in _split_holes(r, _hole.get(level, [])):
 			box(Vector3(fr.size.x, 0.2, fr.size.y), Vector3(fr.position.x + fr.size.x * 0.5, y - 0.1, fr.position.y + fr.size.y * 0.5), fmat, true, null, false)
 		if t != "jardin" and level < 2:
@@ -4152,6 +4159,7 @@ func _decorate() -> void:
 		deco.vestir(r)
 	_pinturas_distintas()
 	_identidad_salas()
+	ZarekAbandono.aplicar(self)
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect

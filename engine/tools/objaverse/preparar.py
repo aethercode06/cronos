@@ -4,7 +4,7 @@ import bpy, sys, os, glob, json, mathutils
 A = [a for a in sys.argv if not a.startswith('--')]
 SRC, OUT, MAXT, MAXTEX = A[-4], A[-3], int(A[-2]), int(A[-1])
 # altura real aproximada (m) por palabra clave del nombre
-ALTO = [("cortina", 2.9), ("bombilla_casquillo", 0.3), ("bombilla", 0.12), ("aplique_doble", 0.4), ("aplique", 0.38), ("colgante_esmalte", 0.3), ("colgante", 0.4), ("grandfather", 2.1), ("wardrobe", 2.1), ("bookcase", 2.1), ("bookshel", 2.0), ("cabinet", 1.9), ("cupboard", 1.0), ("piano_stool", 0.75), ("stool", 0.7),
+ALTO = [("d_telefono", 0.2), ("d_radio_capilla", 0.48), ("d_radio_1937", 0.35), ("d_radio", 0.25), ("d_tele_patas", 1.05), ("d_tele", 0.55), ("d_tocadiscos", 0.2), ("d_foto", 0.22), ("cortina", 2.9), ("bombilla_casquillo", 0.3), ("bombilla", 0.12), ("aplique_doble", 0.4), ("aplique", 0.38), ("colgante_esmalte", 0.3), ("colgante", 0.4), ("grandfather", 2.1), ("wardrobe", 2.1), ("bookcase", 2.1), ("bookshel", 2.0), ("cabinet", 1.9), ("cupboard", 1.0), ("piano_stool", 0.75), ("stool", 0.7),
         ("grand_piano", 1.0), ("piano", 1.3), ("fireplace", 1.4), ("fire_place", 1.4), ("caminetto", 1.5), ("stove", 0.9), ("chandelier", 0.9), ("candelabra", 1.5),
         ("bathtub", 0.7), ("bathtube", 0.7), ("tub", 0.7), ("washbasin", 0.95), ("sink", 0.9), ("sofa", 0.95), ("lounge", 0.95), ("armchair", 1.05), ("chair", 1.0),
         ("desk", 0.8), ("coffee_table", 0.5), ("table", 0.78), ("mirror", 1.7), ("safe", 1.1), ("sewing", 1.0), ("typewriter", 0.25), ("globe", 0.5),

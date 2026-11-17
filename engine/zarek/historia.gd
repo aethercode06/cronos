@@ -101,3 +101,9 @@ const CORTINA := {
 	"Salón de baile": "botella", "Biblioteca": "botella", "Estudio del padre": "salvia", "Comedor formal": "mostaza",
 	"Dormitorio de los padres": "marino", "Tocador de la madre": "crema", "Cuarto de niños": "crema", "Galería de retratos": "gris",
 	"Vestíbulo y gran escalera": "marino", "EPICENTRO · cuarto de Elena": "granate", "Sala de música": "salvia"}
+
+## Suelo propio de algunas salas (el resto: parquet, baldosa de servicio, losa o tablones según el tipo).
+const SUELO := {
+	"Vestíbulo y gran escalera": "s_damero", "Baño": "s_hidraulica", "Baño de servicio": "s_hidraulica",
+	"Cocina": "s_cocina", "Despensa": "s_cocina", "Antecocina": "s_cocina", "Cuarto de plancha": "s_cocina",
+	"Lavandería": "s_cocina", "Salón de baile": "parquet", "Comedor formal": "parquet"}

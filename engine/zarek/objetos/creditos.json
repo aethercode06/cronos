@@ -3244,5 +3244,104 @@
   "licencia": "by",
   "url": "https://sketchfab.com/3d-models/9b65e93a238b4f9c8e69b508bf0e4946",
   "cat": "textiles"
+ },
+ {
+  "clave": "d_telefono_negro",
+  "uid": "75b7add8107d4b91bf7f943300048ca7",
+  "nombre": "Vintage telephone",
+  "autor": "ioanaoprisan",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/75b7add8107d4b91bf7f943300048ca7",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_telefono_viejo",
+  "uid": "5b5d2f1ece3745279f2129fff13933d5",
+  "nombre": "Vintage Telephone",
+  "autor": "mvrc.art",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5b5d2f1ece3745279f2129fff13933d5",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_radio_1937",
+  "uid": "234e6bfc7dd346e9a0f821020a336ea1",
+  "nombre": "Vintage Radio (1937 General Electric F-70)",
+  "autor": "AleixoAlonso",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/234e6bfc7dd346e9a0f821020a336ea1",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_radio_capilla",
+  "uid": "71259ea274b942f8abf82f4c606e2350",
+  "nombre": "Silverton Radio",
+  "autor": "adriansade98",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/71259ea274b942f8abf82f4c606e2350",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_tele_madera",
+  "uid": "05321a3b4f0b4612a14be3346c710a6a",
+  "nombre": "Old Retro Television",
+  "autor": "Prabhath077",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/05321a3b4f0b4612a14be3346c710a6a",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_tele_retro",
+  "uid": "e938241a182a4229ad48a1fc589e676e",
+  "nombre": "Retro Television",
+  "autor": "bloodmeat08",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/e938241a182a4229ad48a1fc589e676e",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_tele_patas",
+  "uid": "ef8cd1ed88024c0fae9e61d4d85cb524",
+  "nombre": "Retro Television",
+  "autor": "Trevor.Seits",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/ef8cd1ed88024c0fae9e61d4d85cb524",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_tocadiscos_maleta",
+  "uid": "5d903cf6f2b8433b9863f13959c04357",
+  "nombre": "Record Player",
+  "autor": "monicavilla",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5d903cf6f2b8433b9863f13959c04357",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_tocadiscos",
+  "uid": "ad7a6bf146db48dcb22f20f5b3b048a2",
+  "nombre": "Record Player",
+  "autor": "bullwa",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/ad7a6bf146db48dcb22f20f5b3b048a2",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_fotos_familia",
+  "uid": "a94047d9c35a4db98e5737e47a61ffb5",
+  "nombre": "Picture Frame",
+  "autor": "blackrray",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a94047d9c35a4db98e5737e47a61ffb5",
+  "cat": "1974"
+ },
+ {
+  "clave": "d_foto_rota",
+  "uid": "29fa46bae1924c4bba0e28bdcb74d841",
+  "nombre": "Picture Frame Broken",
+  "autor": "s4101141",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/29fa46bae1924c4bba0e28bdcb74d841",
+  "cat": "1974"
  }
 ]
