@@ -93,6 +93,9 @@ jobs:
           open(p,'w').write(s[:i]+seg2+(s[j:] if j>0 else ''))
           PY
           sed -i 's/^renderer\/rendering_method.mobile=.*/renderer\/rendering_method.mobile="gl_compatibility"/' engine/project.godot
+          # sin sonido en esta copia de prueba (los argumentos de la línea de órdenes no llegan en Android): el audio
+          # del emulador x86 tumba Godot con un SIGSEGV en AudioTrack, también a la escena vacía de control
+          printf '\n[audio]\n\ndriver/driver="Dummy"\ndriver/driver.android="Dummy"\n' >> engine/project.godot
           godot --headless --path engine --export-release "Android Zarek" ../build/Zarek_x86_64.apk > export_x86.log 2>&1 || true
           tail -5 export_x86.log
           # control: escena mínima con un cubo y sonido; si también se cierra, el fallo es del emulador
