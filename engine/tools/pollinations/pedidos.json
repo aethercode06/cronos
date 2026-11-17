@@ -1,4 +1,26 @@
 [
-  {"nombre": "prueba_burbuja", "prompt": "single glossy translucent green swamp bubble projectile, game sprite, dark fantasy painterly style, centered, plain flat grey background", "w": 512, "h": 512, "seed": 3},
-  {"nombre": "prueba_duende", "prompt": "original dark fantasy forest goblin shaman character, full body side view, painterly 2D game art, warm rim light, plain flat grey background", "w": 768, "h": 1024, "seed": 7}
+ {
+  "nombre": "damian_j",
+  "w": 768,
+  "h": 1344,
+  "seed": 127,
+  "modelo": "flux",
+  "prompt": "dark horror video game character concept art, full body. A huge grotesque obese man nearly 2 meters tall, very hairy body: thick dark hair on his chest, belly, shoulders and arms, huge hairy fat belly, thick strong arms, hunched heavy posture, absolutely no tattoos, plain dirty pale skin with grime, sweat and sores, filthy ragged denim overalls stained with dried blood and mud, no shirt, barefoot with filthy feet, bald scalp with long greasy matted black hair hanging from the sides and back, holding a rusty meat cleaver. On his face he wears an old cracked dirty white plastic face mask with two plain eye holes, an ordinary mask he found somewhere, not a monster mask, plain and expressionless, the lower edge stops above his mouth so his rotten broken yellow teeth show. He looks disturbing and menacing because of his size, filth and posture. Standing in a dark rotting victorian mansion corridor lit by a weak flashlight, deep shadows, photorealistic, highly detailed, cinematic, unreal engine 5"
+ },
+ {
+  "nombre": "damian_k",
+  "w": 768,
+  "h": 1344,
+  "seed": 127,
+  "modelo": "flux",
+  "prompt": "dark horror video game character concept art, full body. A huge grotesque obese man nearly 2 meters tall, very hairy body: thick dark hair on his chest, belly, shoulders and arms, huge hairy fat belly, thick strong arms, hunched heavy posture, absolutely no tattoos, plain dirty pale skin with grime, sweat and sores, filthy ragged denim overalls stained with dried blood and mud, no shirt, barefoot with filthy feet, bald scalp with long greasy matted black hair hanging from the sides and back, holding a rusty meat cleaver. On his face he wears a dirty stained beige cloth pillowcase cut and tied around his head with two crooked eye holes, an ordinary mask he found somewhere, not a monster mask, plain and expressionless, the lower edge stops above his mouth so his rotten broken yellow teeth show. He looks disturbing and menacing because of his size, filth and posture. Standing in a dark rotting victorian mansion corridor lit by a weak flashlight, deep shadows, photorealistic, highly detailed, cinematic, unreal engine 5"
+ },
+ {
+  "nombre": "damian_l",
+  "w": 768,
+  "h": 1344,
+  "seed": 127,
+  "modelo": "flux",
+  "prompt": "dark horror video game character concept art, full body. A huge grotesque obese man nearly 2 meters tall, very hairy body: thick dark hair on his chest, belly, shoulders and arms, huge hairy fat belly, thick strong arms, hunched heavy posture, absolutely no tattoos, plain dirty pale skin with grime, sweat and sores, filthy ragged denim overalls stained with dried blood and mud, no shirt, barefoot with filthy feet, bald scalp with long greasy matted black hair hanging from the sides and back, holding a rusty meat cleaver. On his face he wears an old faded dirty rubber mask of a bland expressionless man's face, too small for his head, an ordinary mask he found somewhere, not a monster mask, plain and expressionless, the lower edge stops above his mouth so his rotten broken yellow teeth show. He looks disturbing and menacing because of his size, filth and posture. Standing in a dark rotting victorian mansion corridor lit by a weak flashlight, deep shadows, photorealistic, highly detailed, cinematic, unreal engine 5"
+ }
 ]
