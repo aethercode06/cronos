@@ -116,6 +116,14 @@ func _ready() -> void:
 					al_centro = Vector3(cc.x - q.x, 0, cc.y - q.z).normalized()
 				vistas.append([q + al_centro * 2.2 + Vector3(0.6, 0.8, 0.4), q])
 				print("SAB ", n.get_parent().scene_file_path.get_file(), " ", m.rooms[sala].name if sala >= 0 else "")
+	elif modo == "puertas":
+		for d in m.doors:
+			if vistas.size() >= 4 or d.open:
+				continue
+			var pv: Node3D = d.pivot
+			var n := pv.global_transform.basis.z.normalized()
+			var c: Vector3 = d.pos + Vector3(0, 1.1, 0)
+			vistas.append([c + n * 1.3 + Vector3(0, 0.3, 0), c])
 	elif modo == "calcos":
 		# calcomanías de terror (escritos, manos, sal…): de frente a 1,8 m
 		var vistos := {}

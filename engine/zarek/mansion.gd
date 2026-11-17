@@ -177,6 +177,18 @@ func _optimizar() -> void:
 			if en_casa:
 				gi.layers = 2
 			continue
+		# muebles y objetos importados: según su tamaño, dejan de dibujarse de lejos (y los pequeños no dan sombra:
+		# la sombra de una taza no se ve y cuesta lo mismo que la de un armario)
+		if gi.owner != null and gi.visibility_range_end <= 0.0 and OS.get_environment("SIN_ALCANCE") == "":
+			var raiz := gi.owner as Node3D
+			if raiz and raiz.scene_file_path != "":
+				var t := _prop_size(raiz.scene_file_path.get_file().get_basename()) * raiz.scale.abs().x
+				var lado := maxf(t.x, maxf(t.y, t.z))
+				if lado > 0.0 and lado < 2.2:
+					gi.visibility_range_end = 9.0 if lado < 0.35 else (16.0 if lado < 0.9 else 26.0)
+					gi.visibility_range_end_margin = 1.5
+				if lado > 0.0 and lado < 0.3:
+					gi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if gi.owner != null and en_casa:
 			gi.layers = 2
 		elif not en_casa and (gi.owner != null or gi is MultiMeshInstance3D):
@@ -1254,6 +1266,15 @@ func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
 		box(Vector3(gap * 0.9, 0.06, 0.12), Vector3(gap * 0.5, 1.2, 0.05), _mat.metal, false, pivot)
 		box(Vector3(gap * 0.9, 0.06, 0.12), Vector3(gap * 0.5, 1.45, 0.05), _mat.metal, false, pivot)
 		_prop("candado_viejo", Vector3(gap * 0.5, 1.22, 0.12), 0.0, 1.4, false, pivot)
+	# toda la hoja (madera, paneles, herrajes) en una malla por material: de ~12 llamadas de dibujo a 3
+	_fusionar_hijos(pivot)
+	# la hoja cerrada tapa lo que hay al otro lado: el teléfono no dibuja la sala de detrás
+	var oc := OccluderInstance3D.new()
+	var bo := BoxOccluder3D.new()
+	bo.size = Vector3(gap - 0.1, 2.35, 0.04)
+	oc.occluder = bo
+	oc.position = Vector3(gap * 0.5, 1.2, 0)
+	pivot.add_child(oc)
 	var body := AnimatableBody3D.new()
 	body.sync_to_physics = false
 	body.collision_layer = 2  # capa de puertas: no cuenta para la navegación de Elena (las abre ella)
@@ -1277,6 +1298,43 @@ func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
 		cs.disabled = true
 		pivot.rotation.y = d.base + d.ang
 	doors.append(d)
+
+## Junta todas las mallas de un nodo (y de sus modelos) en una malla por material, en el espacio del nodo.
+## Para piezas que se mueven juntas (la hoja de una puerta con sus herrajes).
+func _fusionar_hijos(raiz: Node3D) -> void:
+	var grupos := {}
+	var quitar: Array = []
+	for c in raiz.find_children("*", "MeshInstance3D", true, false):
+		var mi := c as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var t := Transform3D.IDENTITY
+		var q: Node = mi
+		while q and q != raiz:
+			t = (q as Node3D).transform * t
+			q = q.get_parent()
+		for si in mi.mesh.get_surface_count():
+			var mat: Material = mi.material_override if mi.material_override else mi.get_active_material(si)
+			if mat == null:
+				continue
+			if not grupos.has(mat):
+				var st := SurfaceTool.new()
+				grupos[mat] = st
+			(grupos[mat] as SurfaceTool).append_from(mi.mesh, si, t)
+		# se quita el modelo entero (su raíz es hija directa de la puerta) o la pieza suelta
+		var r: Node = mi
+		while r.get_parent() != raiz:
+			r = r.get_parent()
+		if not r in quitar:
+			quitar.append(r)
+	for r in quitar:
+		raiz.remove_child(r)
+		r.free()
+	for mat in grupos:
+		var nm := MeshInstance3D.new()
+		nm.mesh = (grupos[mat] as SurfaceTool).commit()
+		nm.material_override = mat
+		raiz.add_child(nm)
 
 func door_near(p: Vector3, dist := 2.3) -> Dictionary:
 	var best := {}
@@ -4926,6 +4984,10 @@ func _canon_mat(mat: Material) -> Material:
 		_canon[h] = mat
 	return _canon[h]
 
+## Modelos pequeños y repetidos que se pueden fusionar por material como las piezas hechas por código
+## (telarañas, perchas, libros…): cientos de llamadas de dibujo menos.
+## (solo los que no hace falta asentar después de la física: los de encima de mesas y estantes se quedan sueltos)
+const FUSIONABLES := ["terr_cobwebs", "ropa_wood_clothes_hanger"]
 func _merge_static() -> void:
 	var groups := {}
 	var nodes: Array = []
@@ -4933,7 +4995,8 @@ func _merge_static() -> void:
 	# tablas, telarañas...): por material, planta y celda de 24 m. Los modelos importados no (tienen LOD propio).
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
-		if _is_dyn(m) or m.mesh == null or m.owner != null or m.visibility_range_end > 0.0:
+		var fusionable := m.owner != null and (m.owner as Node).scene_file_path.get_file().get_basename() in FUSIONABLES
+		if _is_dyn(m) or m.mesh == null or (m.owner != null and not fusionable) or (m.visibility_range_end > 0.0 and not fusionable):
 			continue
 		if not (m.mesh is PrimitiveMesh or m.mesh is ArrayMesh) or (m.mesh is ArrayMesh and (m.mesh as ArrayMesh).get_blend_shape_count() > 0) or m.skeleton != NodePath("") and m.get_node_or_null(m.skeleton) is Skeleton3D:
 			continue
@@ -4962,8 +5025,15 @@ func _merge_static() -> void:
 			# cercanas (el renderizador móvil admite 8 por objeto)
 			var tam := 28.0 if house_rect.grow(2.0).has_point(Vector2(gp.x, gp.z)) else 40.0
 			var key := "%d|%d|%d|%d" % [mat.get_instance_id(), int(floor(gp.x / tam)) * 4 + clampi(level_of(gp.y + 0.3) + 1, 0, 3), int(floor(gp.z / tam)), m.cast_shadow]
+			# (prueba: por sala; resultó peor que por celdas, se deja apagado)
+			if OS.get_environment("FUSION_SALA") != "":
+				var sala := room_at(gp + Vector3(0, 0.3, 0)) if (m.mesh.get_aabb().size * m.global_transform.basis.get_scale().abs()).length() < 6.0 else -1
+				if sala >= 0:
+					key = "%d|s%d|%d" % [mat.get_instance_id(), sala, m.cast_shadow]
+			if fusionable:
+				key += "|f"
 			if not groups.has(key):
-				groups[key] = {"mat": mat, "items": [], "shadow": m.cast_shadow}
+				groups[key] = {"mat": mat, "items": [], "shadow": m.cast_shadow, "capa": 2 if fusionable else 1}
 			groups[key].items.append([m, par[0]])
 		nodes.append(m)
 	if OS.get_environment("DEBUG_FUSION") != "":
@@ -4994,6 +5064,7 @@ func _merge_static() -> void:
 		out.mesh = am
 		out.material_override = g.mat
 		out.cast_shadow = g.shadow
+		out.layers = g.capa
 		_house.add_child(out)
 	var fusionados := {}
 	for m in nodes:

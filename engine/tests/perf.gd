@@ -87,10 +87,23 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 	print("ESCENA materiales=%d texturas=%d (generadas_en_codigo=%d) megapixeles=%.1f" % [mats.size(), texs.size(), img_tex, px / 1e6])
+	if OS.get_environment("SUPERFICIES") != "":
+		var sup := {}
+		for g in m.find_children("*", "MeshInstance3D", true, false):
+			var mi := g as MeshInstance3D
+			if mi.owner == null or mi.mesh == null or not mi.is_visible_in_tree():
+				continue
+			var k := (mi.owner as Node).scene_file_path.get_file()
+			sup[k] = sup.get(k, 0) + mi.mesh.get_surface_count()
+		var ks2 := sup.keys()
+		ks2.sort_custom(func(a, b): return sup[a] > sup[b])
+		for k in ks2.slice(0, 45):
+			print("SUP %-50s %d" % [k, sup[k]])
 	# vistas
 	var cam := Camera3D.new(); cam.far = 60.0; cam.fov = 70.0; add_child(cam)
 	if OS.get_environment("CULL") != "": cam.cull_mask = int(OS.get_environment("CULL"))
-	var fl := SpotLight3D.new(); fl.spot_range = 32.0; fl.spot_angle = 40.0; fl.light_energy = 6.0; fl.shadow_enabled = OS.get_environment("SINSOMBRA") == ""; cam.add_child(fl)
+	var fl := SpotLight3D.new(); fl.spot_range = float(OS.get_environment("FLASH_R")) if OS.get_environment("FLASH_R") != "" else 32.0; fl.spot_angle = 40.0; fl.light_energy = 6.0; fl.shadow_enabled = OS.get_environment("SINSOMBRA") == ""; cam.add_child(fl)
+	if OS.get_environment("FLASH_MASK") != "": fl.shadow_caster_mask = int(OS.get_environment("FLASH_MASK"))
 	var moon := DirectionalLight3D.new(); moon.shadow_enabled = OS.get_environment("SINSOMBRA") == "" and OS.get_environment("SINLUNA") == ""; moon.directional_shadow_max_distance = 32.0; moon.rotation_degrees = Vector3(-38, -55, 0); moon.shadow_caster_mask = 0xFFFFF & ~2; moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS; add_child(moon)
 	get_viewport().use_occlusion_culling = OS.get_environment("SINOCL") == ""
 	print("OCLUSION ", get_viewport().use_occlusion_culling)

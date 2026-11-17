@@ -285,6 +285,10 @@ func _flashlight() -> void:
 	flash.spot_attenuation = 0.8
 	flash.shadow_enabled = true
 	flash.shadow_bias = 0.04
+	if OS.get_name() == "Android":
+		# en el teléfono la linterna solo calcula la sombra de muros, suelos y techos (capa 1): la luz sale casi
+		# del ojo y la sombra de los muebles queda escondida detrás de ellos; ahorra cientos de llamadas de dibujo
+		flash.shadow_caster_mask = 1
 	flash_node.add_child(flash)
 	# halo cercano para que se vea el entorno inmediato
 	var near := OmniLight3D.new()
@@ -789,6 +793,9 @@ func _sombras_cercanas(delta: float) -> void:
 	for li in nuevas:
 		(li as OmniLight3D).shadow_enabled = true
 		(li as OmniLight3D).shadow_bias = 0.06
+		if OS.get_name() == "Android":
+			# dos pasadas de sombra en vez de seis (cubo)
+			(li as OmniLight3D).omni_shadow_mode = OmniLight3D.SHADOW_DUAL_PARABOLOID
 	_con_sombra = nuevas
 
 func _process(delta: float) -> void:
