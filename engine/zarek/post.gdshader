@@ -74,8 +74,7 @@ void fragment() {
 	float raya = step(0.6, hash1(floor(t * 12.0) + 7.0)) * smoothstep(0.0012, 0.0, abs(uv.x - raya_x)) * 0.25;
 	vec2 pg = floor(uv * vec2(320.0, 180.0));
 	float polvo = step(0.9985, hash(pg + floor(t * 12.0) * 13.1)) * 0.35;
-	col = mix(col, vec3(0.75, 0.72, 0.62), raya);
-	col -= polvo;
+	// (rayas y motas de película quitadas: en el teléfono parecían fallos de imagen)
 	// grano
 	float n = hash(SCREEN_UV * vec2(1920.0, 1080.0) + fract(t * 7.13) * 91.7) - 0.5;
 	col += n * (grano + miedo * 0.05) * (1.0 - l * 0.5);

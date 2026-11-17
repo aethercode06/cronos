@@ -155,6 +155,14 @@ func _ready() -> void:
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")
 			vistas.append([Vector3(float(v[0]), float(v[1]), float(v[2])), Vector3(float(v[3]), float(v[4]), float(v[5]))])
+	if OS.get_environment("CERCA") != "":
+		var v := OS.get_environment("CERCA").split(",")
+		var q := Vector3(float(v[0]), float(v[1]), float(v[2]))
+		for n in m.find_children("*", "MeshInstance3D", true, false):
+			var mi := n as MeshInstance3D
+			var ab: AABB = mi.global_transform * mi.get_aabb()
+			if ab.grow(0.1).has_point(q) or ab.get_center().distance_to(q) < 0.8:
+				print("CERCA ", mi.get_path(), " ", ab)
 	for i in vistas.size():
 		cam.look_at_from_position(vistas[i][0], vistas[i][1])
 		for k in 6: await get_tree().process_frame

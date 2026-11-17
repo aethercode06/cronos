@@ -1612,7 +1612,10 @@ func _relleno(r: Dictionary) -> void:
 		return
 	var g := _grupo(r)
 	if g != "tunel":
-		_paredes(r, g)
+		# las salas amuebladas a mano ya tienen sus muebles grandes: el relleno de paredes ponía otra bañera u
+		# otro lavabo pegado al suyo
+		if not String(r.name) in ZarekMansion.SALAS_A_MANO:
+			_paredes(r, g)
 		_suelo_con_sentido(r, g)
 		_ropa(r, g)
 		for sf in _superficies:
@@ -2322,7 +2325,8 @@ func _aplique(r: Dictionary, x: float, z: float, yaw: float, farol: bool) -> voi
 		return
 	if not _ap_tipo.has(r.id):
 		_ap_tipo[r.id] = rng.randf() < 0.5
-	if _ap_tipo[r.id] and m._prop_size("obj_candle_wall_lamp") != Vector3.ONE:
+	# (el modelo obj_candle_wall_lamp se veía como una placa negra: se usa el aplique dorado hecho por código)
+	if false and _ap_tipo[r.id] and m._prop_size("obj_candle_wall_lamp") != Vector3.ONE:
 		# aplique de hierro con vela (modelo)
 		var tl := m._prop_size("obj_candle_wall_lamp")
 		m._prop("obj_candle_wall_lamp", p - Vector3(0, tl.y * 0.5, 0) + dentro * tl.z * 0.5, yaw, 1.0, false)

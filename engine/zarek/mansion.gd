@@ -967,7 +967,7 @@ func _haz_luna(c: Vector3, horiz: bool, inward: Vector3) -> void:
 		_mat_mancha.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		_mat_mancha.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		_mat_mancha.albedo_texture = ImageTexture.create_from_image(img)
-		_mat_mancha.albedo_color = Color(0.42, 0.55, 0.9, 0.9)
+		_mat_mancha.albedo_color = Color(0.3, 0.36, 0.5, 0.32)
 		_mat_mancha.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_mat_haz = StandardMaterial3D.new()
 		_mat_haz.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -1038,7 +1038,7 @@ var velas_capilla: Array = []
 var ventanas_info: Array = []  # {c, horiz, inward}: para tapiar algunas con tablas
 func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	ventanas.append(c)
-	ventanas_info.append({"c": c, "horiz": horiz, "inward": inward})
+	ventanas_info.append({"c": c, "horiz": horiz, "inward": inward, "thick": thick})
 	if level_of(c.y + 0.3) >= 0 and Vector3(LUNA_H.x, 0, LUNA_H.z).dot(inward) > 0.25:
 		_haz_luna(c, horiz, inward)
 	var lit := _rng.randf() < 0.04
@@ -1144,7 +1144,8 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 			for g in pg.find_children("*", "MeshInstance3D", true, false):
 				(g as MeshInstance3D).material_override = tela
 			hecho = true
-	if (sala % 2) == 0:
+	# (los visillos de tul rotos se veían como papel recortado: quitados)
+	if false and (sala % 2) == 0:
 		var tul := _prop("cortina_tul", dentro - inward * 0.07, giro, 1.0, false)
 		if tul:
 			tul.scale = Vector3(1.6, 1.07, 1.0)
@@ -2635,6 +2636,23 @@ func _stream_banks(r: Rect2) -> void:
 	var piso := box(Vector3(3.6, 0.1, largo), Vector3(bx, 0.28, bz), mv, true, self)
 	piso.visible = false
 	piso.set_meta("dyn", true)
+	# rampas en las dos puntas: el piso del puente está a 0,33 m y el jugador no sube escalones así
+	var alto := 0.33
+	var lr := 1.7
+	var ang := atan2(alto, lr)
+	for lado in ([] if OS.get_environment("SIN_RAMPAS") != "" else [-1.0, 1.0]):
+		var z_fin: float = bz + lado * largo * 0.5
+		var centro := Vector3(bx, alto * 0.5, z_fin + lado * lr * 0.5)
+		var b := Basis(Vector3(1, 0, 0), ang * lado)
+		var normal := b * Vector3.UP
+		var rampa := box(Vector3(3.6, 0.1, lr / cos(ang) + 0.1), centro - normal * 0.05, mv, true, self)
+		rampa.visible = false
+		rampa.set_meta("dyn", true)
+		rampa.transform = Transform3D(b, centro - normal * 0.05)
+		# a la vista: dos tablones inclinados que bajan a la orilla
+		for s2 in [-0.9, 0.9]:
+			var t := box(Vector3(1.6, 0.05, lr / cos(ang) + 0.1), Vector3.ZERO, mv, false, self)
+			t.transform = Transform3D(b, centro + Vector3(s2, 0.0, 0.0) + normal * 0.005)
 	# barandillas: postes, pasamanos y tornapuntas en diagonal
 	for s2 in [-1.0, 1.0]:
 		box(Vector3(0.1, 0.12, largo), Vector3(bx + s2 * 1.75, 1.25, bz), mv, false, self)
@@ -3532,10 +3550,13 @@ func _ropa_armario(n: Node3D) -> void:
 			continue
 		var t := _prop_size(nombre)
 		var esc := minf(1.0, 1.45 / maxf(t.y, 0.1))
-		var ancho := minf(1.0, 0.7 / maxf(t.x * esc, 0.1))
-		var pr := _prop(nombre, Vector3(x + _rng.randf_range(-0.02, 0.02), 1.96 - t.y * esc, 0.0), PI * 0.5 + _rng.randf_range(-0.08, 0.08), esc, false, n)
+		# la prenda girada: su ancho va hacia el fondo del armario y su grosor hacia los lados; las dos medidas se
+		# limitan para que no se salga por las paredes (antes asomaba una tela blanca por el costado)
+		var ancho := minf(1.0, 0.56 / maxf(t.x * esc, 0.1))
+		var grosor := minf(0.6, 2.0 * (0.72 - absf(x)) / maxf(t.z * esc, 0.05))
+		var pr := _prop(nombre, Vector3(x, 1.96 - t.y * esc, 0.07), PI * 0.5, esc, false, n)
 		if pr:
-			pr.scale = Vector3(esc * ancho, esc, esc * 0.6)
+			pr.scale = Vector3(esc * ancho, esc, esc * grosor)
 		var pe := _prop("ropa_wood_clothes_hanger", Vector3(x, 1.86, 0.0), PI * 0.5, 0.9, false, n)
 	for k in 2:
 		if _rng.randf() < 0.6:

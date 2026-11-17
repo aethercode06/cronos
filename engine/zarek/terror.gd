@@ -23,8 +23,9 @@ static func aplicar(m: ZarekMansion) -> void:
 		if nd and nd.scene_file_path != "":
 			var nom := nd.scene_file_path.get_file().get_basename()
 			var t := m._prop_size(nom) * nd.scale.x
-			_muebles.append([nd.global_position, t.y, maxf(t.x, t.z) * 0.5, nom.contains("frame") or nom.contains("mirror") or nom.contains("portrait") or nom.contains("head") or nom.contains("clock")])
+			_muebles.append([nd.global_position, t.y, maxf(t.x, t.z) * 0.5, nom.contains("frame") or nom.contains("mirror") or nom.contains("portrait") or nom.contains("head") or nom.contains("clock"), nom.begins_with("cortina") or nom.begins_with("luz_")])
 	var t0 := Time.get_ticks_msec()
+	_cortinas_tapadas(m)
 	_escritos(m)
 	_retratos_rayados(m)
 	_espejos(m)
@@ -234,6 +235,29 @@ static func _retratos_rayados(m: ZarekMansion) -> void:
 				n += 1
 	print("ZAREK   retratos rayados: %d" % n)
 
+# ---------------- cortinas detrás de armarios y estanterías: se quitan (asomaban por un lado) ----------------
+static func _cortinas_tapadas(m: ZarekMansion) -> void:
+	var altos: Array = []
+	var cortinas: Array = []
+	for n in m._house.get_children():
+		var nd := n as Node3D
+		if nd == null or nd.scene_file_path == "":
+			continue
+		var nom := nd.scene_file_path.get_file()
+		if nom.begins_with("cortina"):
+			cortinas.append(nd)
+		elif m._prop_size(nom.get_basename()).y * nd.scale.y > 1.3:
+			altos.append(m._caja_mallas(nd))
+	var quitadas := 0
+	for c in cortinas:
+		var cc: AABB = m._caja_mallas(c).grow(-0.03)
+		for ab in altos:
+			if (ab as AABB).grow(0.05).intersects(cc):
+				c.queue_free()
+				quitadas += 1
+				break
+	print("ZAREK   cortinas tapadas por muebles: %d de %d" % [quitadas, cortinas.size()])
+
 # ---------------- espejos: tapados con telas; el del baño, roto ----------------
 static func _espejos(m: ZarekMansion) -> void:
 	for c in m._house.get_children():
@@ -245,15 +269,24 @@ static func _espejos(m: ZarekMansion) -> void:
 		var ab := m._caja_mallas(nd)
 		if ab.size.y < 0.3:
 			continue
-		var id := m.room_at(nd.global_position + Vector3(0, 0.3, 0))
+		var id := m.room_at(nd.global_position - Vector3(0, 1.6, 0)) if nd.global_position.y - floorf(nd.global_position.y / 4.2) * 4.2 > 0.8 else m.room_at(nd.global_position + Vector3(0, 0.3, 0))
 		var sala := String(m.rooms[id].name) if id >= 0 else ""
-		var frente := nd.global_transform.basis.z.normalized()
+		# el frente del espejo: el eje delgado de su caja, hacia el centro de la sala (el eje z del modelo no
+		# siempre mira al frente y la tela quedaba al lado del espejo)
+		var cen := ab.get_center()
+		var sc: Vector2 = (m.rooms[id].rect as Rect2).get_center() if id >= 0 else Vector2(cen.x, cen.z)
+		var frente := Vector3(signf(sc.x - cen.x), 0, 0) if ab.size.x < ab.size.z else Vector3(0, 0, signf(sc.y - cen.z))
+		if frente == Vector3.ZERO:
+			frente = Vector3(0, 0, 1)
 		if sala == "Baño" or sala == "Tocador de la madre":
 			# roto: grietas sobre el cristal
 			var cc := ab.get_center()
 			var ancho := maxf(ab.size.x, ab.size.z) * 0.8
 			var g := _calco(m, "grietas_espejo", cc + frente * (minf(ab.size.x, ab.size.z) * 0.5 + 0.01), frente, Vector2(ancho, ab.size.y * 0.8))
 			g.reparent(nd)
+			continue
+		# solo espejos planos y alineados con la pared: en uno girado en diagonal la tela quedaba al lado
+		if minf(ab.size.x, ab.size.z) > maxf(ab.size.x, ab.size.z) * 0.4:
 			continue
 		_tela_espejo(m, nd, ab, frente)
 
@@ -304,24 +337,28 @@ static func _banera(m: ZarekMansion) -> void:
 		if nd == null or nd.scene_file_path == "" or not (nd.scene_file_path.get_file().contains("bathtub") or nd.scene_file_path.get_file().contains("bathtube")):
 			continue
 		var ab := m._caja_mallas(nd)
+		# agua: un óvalo plano dentro de la bañera (no un rectángulo que se sale por los bordes)
 		var agua := MeshInstance3D.new()
-		var pm := PlaneMesh.new()
-		var lx := ab.size.x * 0.78
-		var lz := ab.size.z * 0.62
-		if ab.size.z > ab.size.x:
-			lx = ab.size.x * 0.62
-			lz = ab.size.z * 0.78
-		pm.size = Vector2(lx, lz)
-		agua.mesh = pm
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.5
+		cm.bottom_radius = 0.5
+		cm.height = 0.004
+		cm.radial_segments = 32
+		cm.rings = 1
+		agua.mesh = cm
+		var largo_x := ab.size.x > ab.size.z
+		agua.scale = Vector3(ab.size.x * (0.72 if largo_x else 0.5), 1.0, ab.size.z * (0.5 if largo_x else 0.72))
 		var mt := StandardMaterial3D.new()
 		mt.albedo_texture = load("res://zarek/terror/agua_sucia.png")
 		mt.albedo_color = Color(0.55, 0.5, 0.35)
-		mt.roughness = 0.05
-		mt.metallic_specular = 0.9
+		mt.roughness = 0.08
+		mt.metallic_specular = 0.8
 		agua.material_override = mt
 		agua.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		nd.add_child(agua)
-		agua.global_position = Vector3(ab.get_center().x, ab.position.y + ab.size.y * 0.62, ab.get_center().z)
+		print("ZAREK   bañera: ", ab.get_center())
+		agua.global_position = Vector3(ab.get_center().x, ab.position.y + ab.size.y * 0.5, ab.get_center().z)
+		agua.global_basis = Basis().scaled(agua.scale)
 
 # ---------------- ventanas tapiadas con tablas ----------------
 static func _ventanas_tapiadas(m: ZarekMansion) -> void:
@@ -336,6 +373,13 @@ static func _ventanas_tapiadas(m: ZarekMansion) -> void:
 		if _rng.randf() > (0.45 if lv == 0 else 0.15):
 			continue
 		var dentro: Vector3 = w.inward
+		var tapada := false
+		for mu in _muebles:
+			var pm: Vector3 = mu[0]
+			if not mu[4] and mu[1] > 1.3 and absf(pm.y - c.y) < 1.0 and Vector2(pm.x - c.x, pm.z - c.z).length() < 0.9 + mu[2]:
+				tapada = true
+		if tapada:
+			continue
 		var along := Vector3(1, 0, 0) if w.horiz else Vector3(0, 0, 1)
 		var yaw := atan2(along.x, along.z) - PI * 0.5
 		var cuantas := _rng.randi_range(3, 5)
@@ -347,7 +391,7 @@ static func _ventanas_tapiadas(m: ZarekMansion) -> void:
 			bm.size = Vector3(largo, _rng.randf_range(0.16, 0.24), 0.035)
 			tabla.mesh = bm
 			tabla.material_override = mad
-			var p := c + dentro * (0.26 + k * 0.012) + Vector3(0, hy, 0) + along * _rng.randf_range(-0.12, 0.12)
+			var p := c + dentro * (float(w.get("thick", 0.45)) * 0.5 + 0.03 + k * 0.006) + Vector3(0, hy, 0) + along * _rng.randf_range(-0.12, 0.12)
 			tabla.transform = Transform3D(Basis(Vector3.UP, yaw).rotated(dentro, _rng.randf_range(-0.22, 0.22)), p)
 			m._house.add_child(tabla)
 			# clavos

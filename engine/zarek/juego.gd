@@ -208,7 +208,7 @@ func _environment() -> void:
 	env.background_color = Color(0, 0, 0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.42, 0.38, 0.34)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.85
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.65
 	env.tonemap_white = 10.0
@@ -493,7 +493,7 @@ func _ui() -> void:
 	post_mat = pm
 	if OS.get_name() == "Android":
 		pm.set_shader_parameter("brillo", 1.35)
-		pm.set_shader_parameter("vineta", 0.55)
+		pm.set_shader_parameter("vineta", 0.38)
 		pm.set_shader_parameter("contraste", 1.08)
 	cine.add_child(cr)
 	ui = CanvasLayer.new()

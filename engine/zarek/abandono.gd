@@ -150,7 +150,11 @@ static func _tiene_sabana(n: Node3D) -> bool:
 		for h in n.get_children():
 			if h is Node3D and (h as Node3D).scene_file_path != "":
 				interior = h
-	return ResourceLoader.exists("res://zarek/sabanas/%s.glb" % interior.scene_file_path.get_file().get_basename())
+	var modelo := interior.scene_file_path.get_file().get_basename()
+	# la cama gótica tiene columnas: la tela simulada las atravesaba
+	if modelo in ["GothicBed_01"]:
+		return false
+	return ResourceLoader.exists("res://zarek/sabanas/%s.glb" % modelo)
 
 static func _sabana_codigo(m: ZarekMansion, n: Node3D, rng: RandomNumberGenerator) -> void:
 	var ab := AABB()

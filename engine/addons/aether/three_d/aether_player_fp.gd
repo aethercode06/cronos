@@ -82,6 +82,33 @@ func _turn(d: Vector2) -> void:
 	rotation.y = _yaw
 	head.rotation.x = _pitch
 
+## Altura máxima de un escalón que se sube andando (umbrales, tablones, bordillos, el borde de un puente).
+@export var step_height := 0.36
+
+## Si al andar te para un borde bajo (más bajo que step_height), sube encima en vez de quedarte atascado.
+func _subir_escalon(antes: Vector3, quiere: Vector3, delta: float) -> void:
+	var hq := Vector3(quiere.x, 0, quiere.z)
+	if hq.length() < 0.5 or not is_on_floor():
+		return
+	var avance := Vector3(global_position.x - antes.x, 0, global_position.z - antes.z).length()
+	if avance > hq.length() * delta * 0.5:
+		return  # avanza bien: no hay escalón
+	var paso := hq.normalized() * maxf(0.12, hq.length() * delta)
+	var t := global_transform
+	# ¿hay sitio arriba y hacia delante?
+	if test_move(t, Vector3(0, step_height, 0)):
+		return
+	var arriba := t.translated(Vector3(0, step_height, 0))
+	if test_move(arriba, paso):
+		return
+	# baja hasta tocar el escalón
+	var adelante := arriba.translated(paso)
+	var col := KinematicCollision3D.new()
+	if test_move(adelante, Vector3(0, -step_height - 0.05, 0), col):
+		var subida: float = step_height + 0.05 - col.get_travel().length()
+		if subida > 0.02 and col.get_normal().y > 0.7:
+			global_position = adelante.origin + col.get_travel()
+
 func _physics_process(delta: float) -> void:
 	if Aether.look_delta != Vector2.ZERO:
 		if not frozen:
@@ -114,7 +141,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= gravity * delta
 	else:
 		velocity.y = -0.5
+	var antes := global_position
 	move_and_slide()
+	_subir_escalon(antes, target, delta)
 	var hv := Vector2(velocity.x, velocity.z).length()
 	moving = clampf(hv / walk_speed, 0.0, 1.6)
 	# Balanceo de cabeza y pasos.
