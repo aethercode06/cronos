@@ -1,0 +1,52 @@
+name: Damián con MakeHuman (MPFB)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/damian_mh/**", ".github/workflows/damian_mh.yml"]
+permissions:
+  contents: write
+jobs:
+  crear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: engine/tools/damian_mh
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Blender (bpy) y librerías del sistema
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libxrender1 libxi6 libxkbcommon0 libsm6 libgl1 libegl1 >/dev/null
+          pip install -q bpy
+      - name: MPFB y recursos CC0
+        run: |
+          set +e
+          mkdir -p out/damian; exec > >(tee out/damian/instalacion.txt) 2>&1
+          git clone -q --depth 1 https://github.com/makehumancommunity/mpfb2 /tmp/mpfb2
+          (cd /tmp/mpfb2/src && zip -qr /tmp/mpfb.zip mpfb) ; ls -la /tmp/mpfb.zip
+          mkdir -p /tmp/rec /tmp/zips
+          git fetch -q origin aether-mh:aether-mh; echo "fetch $?"
+          for z in makehuman_system_assets_cc0 hair01_cc0 skins01_cc0; do
+            for p in aa ab ac ad; do git show aether-mh:$z.zip.part_$p 2>/dev/null; done > /tmp/zips/$z.zip
+            ls -la /tmp/zips/$z.zip; unzip -qo /tmp/zips/$z.zip -d /tmp/rec; echo "unzip $z $?"
+          done
+          bajar() { curl -sSfL --retry 2 -o /tmp/zips/$1.zip "$2" || curl -sSfL --retry 2 -o /tmp/zips/$1.zip "${2/files2./files.}"; unzip -qo /tmp/zips/$1.zip -d /tmp/rec && echo "OK $1" || echo "FALLO $1"; }
+          bajar faceunits01 https://files2.makehumancommunity.org/functional/faceunits01.zip
+          mkdir -p out/damian/miniaturas; for f in /tmp/rec/clothes/*/*.thumb; do cp "$f" "out/damian/miniaturas/$(basename $(dirname $f)).png"; done
+          find /tmp/rec -maxdepth 2 -type d | sort | head -150
+          ls /tmp/rec
+          python engine/tools/damian_mh/instalar_mpfb.py /tmp/mpfb.zip /tmp/rec 2>&1 | tail -20
+          exit 0
+      - name: Crear a Damián
+        run: python engine/tools/damian_mh/crear_damian.py out/damian 2>&1 | grep -vE "^Fra|Sample" | tail -150 | tee out/damian/creacion.txt
+      - name: Guardar en la rama aether-damian
+        if: always()
+        run: |
+          mkdir -p out && cd out && git init -q && git checkout -q -b aether-damian
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Damian MH ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-damian
