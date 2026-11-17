@@ -25,6 +25,8 @@ for cat, cfg in cons.items():
         txt = (a.get("name", "") + " " + " ".join(t["name"] for t in a.get("tags", []))).lower()
         if not any(re.search(r"(?<![a-z])" + re.escape(k.strip()) + r"(?![a-z])", txt) for k in kws) or any(k in txt for k in excl):
             continue
+        if cfg.get("animado") and not (a.get("animationCount") or 0) > 0:
+            continue
         fc = a.get("faceCount") or 0
         if fc <= 0 or fc > cfg.get("max_caras", 150000):
             continue
@@ -35,7 +37,7 @@ for cat, cfg in cons.items():
     for sc, uid, nm, fc, L in sel:
         a = ann[uid]
         th = sorted(a.get("thumbnails", {}).get("images", []), key=lambda i: abs(i.get("width", 0) - 256))
-        res[cat].append({"uid": uid, "nombre": nm, "caras": fc, "licencia": L, "autor": a.get("user", {}).get("username", ""), "url": a.get("viewerUrl", ""), "mini": th[0]["url"] if th else ""})
+        res[cat].append({"uid": uid, "nombre": nm, "caras": fc, "licencia": L, "autor": a.get("user", {}).get("username", ""), "url": a.get("viewerUrl", ""), "mini": th[0]["url"] if th else "", "anim": a.get("animationCount") or 0})
     print(cat, len(hits), "->", len(sel), flush=True)
     # hoja de miniaturas
     S, W = 180, 6
@@ -47,7 +49,7 @@ for cat, cfg in cons.items():
             sheet.paste(im, (x, y))
         except Exception:
             pass
-        d.text((x + 2, y + S + 1), f"{i} {o['nombre'][:24]}", fill="black"); d.text((x + 2, y + S + 11), f"{o['caras']//1000}k {o['licencia']}", fill="gray")
+        d.text((x + 2, y + S + 1), f"{i} {o['nombre'][:24]}", fill="black"); d.text((x + 2, y + S + 11), f"{o['caras']//1000}k {o['licencia']} anim{o.get('anim', 0)}", fill="gray")
     if sel:
         sheet.save(os.path.join(OUT, f"hoja_{cat}.jpg"), quality=80)
 json.dump(res, open(os.path.join(OUT, "resultados.json"), "w"), indent=1, ensure_ascii=False)
