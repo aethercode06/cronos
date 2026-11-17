@@ -1,26 +1,26 @@
 [
  {
-  "nombre": "fachada",
-  "w": 1344,
-  "h": 768,
-  "seed": 7,
+  "nombre": "damian_a",
+  "w": 768,
+  "h": 1344,
+  "seed": 31,
   "space": "black-forest-labs/FLUX.1-schnell",
-  "prompt": "beautiful grand victorian mansion at night in the middle of a dense pine forest, ornate gothic victorian architecture, tall corner tower with conical roof, steep gabled roofs, decorative carved wooden trim, wraparound porch with columns, tall narrow arched windows with warm candle light, stone fountain in front garden, fog, full moon, elegant and eerie, cinematic, photorealistic, unreal engine 5"
+  "prompt": "full body character concept art of a huge disgusting hillbilly cannibal killer, nearly 2 meters tall, massive heavy body, fat belly but very strong thick arms and shoulders, wearing filthy torn denim overalls with no shirt underneath, barefoot with dirty bare feet and black toenails, wearing a terrifying mask made of stitched pale human skin covering the upper face with crude eye holes, the mouth is exposed showing rotten broken brown yellow teeth and drool, bald on top of the head with long greasy stringy dark hair hanging from the sides and back, skin covered in grime, dried blood stains and mud, standing in a dark abandoned victorian mansion hallway, dim lantern light, horror video game character design, photorealistic, highly detailed, cinematic lighting, unreal engine 5"
  },
  {
-  "nombre": "vestibulo",
-  "w": 1344,
-  "h": 768,
-  "seed": 11,
+  "nombre": "damian_b",
+  "w": 768,
+  "h": 1344,
+  "seed": 38,
   "space": "black-forest-labs/FLUX.1-schnell",
-  "prompt": "interior of a beautiful victorian mansion grand hall at night, wide carved dark wood staircase, crystal chandelier with warm dim light, rich damask wallpaper, dark wood wainscoting, ornate ceiling moldings, family portraits in golden frames, persian rug, antique furniture, elegant, mysterious, slightly abandoned with dust, cinematic lighting, photorealistic, unreal engine 5"
+  "prompt": "full body character concept art of a huge disgusting hillbilly cannibal killer, nearly 2 meters tall, massive heavy body, fat belly but very strong thick arms and shoulders, wearing filthy torn denim overalls with no shirt underneath, barefoot with dirty bare feet and black toenails, wearing a terrifying mask made of an old burlap sack with stitched eye holes cut away at the mouth, the mouth is exposed showing rotten broken brown yellow teeth and drool, bald on top of the head with long greasy stringy dark hair hanging from the sides and back, skin covered in grime, dried blood stains and mud, standing in a dark abandoned victorian mansion hallway, dim lantern light, horror video game character design, photorealistic, highly detailed, cinematic lighting, unreal engine 5"
  },
  {
-  "nombre": "salon",
-  "w": 1344,
-  "h": 768,
-  "seed": 21,
+  "nombre": "damian_c",
+  "w": 768,
+  "h": 1344,
+  "seed": 45,
   "space": "black-forest-labs/FLUX.1-schnell",
-  "prompt": "interior of a beautiful victorian parlor at night, marble fireplace with glowing embers, velvet armchairs, grand piano, tall windows with heavy red curtains and moonlight, damask wallpaper, oil lamps, bookshelves, elegant and eerie atmosphere, a few furniture pieces covered with white sheets, cinematic, photorealistic, unreal engine 5"
+  "prompt": "full body character concept art of a huge disgusting hillbilly cannibal killer, nearly 2 meters tall, massive heavy body, fat belly but very strong thick arms and shoulders, wearing filthy torn denim overalls with no shirt underneath, barefoot with dirty bare feet and black toenails, wearing a terrifying mask made of a cracked dirty porcelain doll face covering the upper face, the mouth is exposed showing rotten broken brown yellow teeth and drool, bald on top of the head with long greasy stringy dark hair hanging from the sides and back, skin covered in grime, dried blood stains and mud, standing in a dark abandoned victorian mansion hallway, dim lantern light, horror video game character design, photorealistic, highly detailed, cinematic lighting, unreal engine 5"
  }
 ]
