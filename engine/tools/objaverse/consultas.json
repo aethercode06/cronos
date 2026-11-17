@@ -1,2 +1,6 @@
-{"c_cortinas": {"k": ["curtain", "curtains", "drapes", "drape", "velvet curtain", "victorian curtain", "window curtain", "theater curtain"], "n": 42, "max_caras": 60000, "no": ["shower", "cartoon", "lowpoly", "low poly", "stage", "toy", "anime", "sci-fi", "blinds", "roller"]},
- "c_alfombras": {"k": ["persian rug", "rug", "carpet", "oriental rug", "antique rug", "kilim", "area rug", "turkish carpet"], "n": 42, "max_caras": 30000, "no": ["cartoon", "lowpoly", "toy", "anime", "flying", "magic", "sci-fi", "bathroom", "doormat", "car mat"]}}
+{"d_telefono": {"k": ["rotary phone", "rotary telephone", "vintage telephone", "old telephone", "antique phone"], "n": 24, "max_caras": 20000, "no": ["cartoon", "lowpoly", "low poly", "toy", "smartphone", "iphone", "mobile"]},
+ "d_radio": {"k": ["vintage radio", "old radio", "tube radio", "retro radio", "antique radio"], "n": 24, "max_caras": 25000, "no": ["cartoon", "lowpoly", "low poly", "toy", "walkie", "modern"]},
+ "d_tele": {"k": ["crt tv", "old television", "vintage tv", "retro television", "70s tv", "crt television"], "n": 24, "max_caras": 25000, "no": ["cartoon", "lowpoly", "low poly", "toy", "flat screen", "lcd", "modern", "smart"]},
+ "d_tocadiscos": {"k": ["record player", "turntable", "vinyl player", "vintage record player"], "n": 18, "max_caras": 25000, "no": ["cartoon", "lowpoly", "dj", "modern", "toy"]},
+ "d_fotos": {"k": ["photo frame", "picture frame", "old photo", "vintage photo frame", "family photo"], "n": 24, "max_caras": 8000, "no": ["cartoon", "modern", "digital", "toy"]},
+ "d_plantas": {"k": ["dead plant", "withered plant", "dry plant pot", "dried flowers vase", "dead flowers"], "n": 18, "max_caras": 25000, "no": ["cartoon", "lowpoly", "low poly", "toy"]}}

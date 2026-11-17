@@ -1,1 +1,1 @@
-{"papel": {"q": "wallpaper", "n": 14}, "azulejo": {"q": "tiles", "n": 4}, "madera_pared": {"q": "wood paneling", "n": 3}}
+{"suelo_damero": {"q": "marble tiles", "n": 4}, "suelo_baldosa": {"q": "floor tiles", "n": 6}, "tablones": {"q": "old planks", "n": 4}, "yeso_roto": {"q": "plaster", "n": 4}}
