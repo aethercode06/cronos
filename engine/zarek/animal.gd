@@ -3,7 +3,7 @@ extends CharacterBody3D
 ## Un bicho de la casa con física (gravedad, choca con paredes y muebles, empujado al pisarlo) y su propia
 ## inteligencia. tipo: "rata", "gato", "gusano" o "larva".
 
-enum E { ANDA, PARA, HUYE, ESCONDE, SIGUE, SENTADO, MUERTO }
+enum E { ANDA, PARA, HUYE, ESCONDE, SIGUE, SENTADO, MUERTO, DUERME, COME, ACECHA, SALTA, VENTANA, MIRA_NADA, MIMOS }
 var tipo := "rata"
 var fauna: ZarekFauna
 var estado := E.PARA
@@ -22,6 +22,8 @@ var ronroneo: AudioStreamPlayer3D
 var _avisado_elena := 0.0
 var _bufando := 0.0
 var _escala := Vector3.ONE
+var _t_atasco := 0.0
+var _pos_atasco := Vector3.ZERO
 
 func _cargar(nombre: String, largo: float, giro: float) -> Dictionary:
 	var ps: PackedScene = load("res://zarek/fauna/%s.glb" % nombre)
@@ -365,6 +367,16 @@ func _physics_process(delta: float) -> void:
 		rotation.y += sin(Time.get_ticks_msec() * 0.001 + _fase) * delta * 0.8
 	velocity.x = v.x
 	velocity.z = v.z
+	if v.length() > 0.05:
+		_t_atasco += delta
+		if _t_atasco > 1.5:
+			if global_position.distance_to(_pos_atasco) < 0.15:
+				if not camino.is_empty():
+					camino.remove_at(0)
+				if camino.is_empty():
+					destino = Vector3.INF
+			_pos_atasco = global_position
+			_t_atasco = 0.0
 	if not is_on_floor():
 		velocity.y -= 9.8 * delta
 	else:
@@ -375,7 +387,9 @@ func _physics_process(delta: float) -> void:
 		_ajustar_suelo(delta)
 		_actualizar_pupila(delta)
 		var rp := Vector2(velocity.x, velocity.z).length()
-		if _bufando > 0.0:
+		if _una_vez > 0.0:
+			_una_vez -= delta
+		elif _bufando > 0.0:
 			_bufando -= delta
 			_gato_anim("Agression_loop")
 		elif rp > 1.5:
@@ -426,6 +440,13 @@ func _huir(de: Vector3, vel: float) -> void:
 # ---------------- rata ----------------
 func _ia_rata(d_jug: float, pp: Vector3) -> void:
 	_t_sonido -= get_physics_process_delta_time()
+	var g: Node3D = fauna.gato if fauna and is_instance_valid(fauna.gato) else null
+	# un gato que acecha agachado y despacio casi no se nota hasta tenerlo encima
+	var alerta_gato := 0.9 if (g and g.estado == E.ACECHA and g.vel_obj < 1.0) else 1.4
+	if g and estado != E.HUYE and g.global_position.distance_to(global_position) < alerta_gato:
+		_sonar("chillido", -6.0)
+		_huir(g.global_position, 2.2)
+		return
 	if estado != E.HUYE and (d_jug < 2.8 or (_en_la_linterna() and d_jug < 6.0)):
 		if randf() < 0.6:
 			_sonar("chillido", -8.0)
@@ -460,6 +481,18 @@ func _ia_gusano(d_jug: float, pp: Vector3) -> void:
 		rotation.y = lerp_angle(rotation.y, atan2(fuera.x, fuera.z), 0.02)
 		vel_obj *= 2.0
 
+## La rata atrapada por el gato: chilla, queda tirada y desaparece al rato.
+func cazada() -> void:
+	_cambiar(E.MUERTO)
+	_sonar("chillido", -4.0)
+	if anim:
+		anim.stop()
+	if modelo:
+		modelo.rotation.z = PI * 0.5
+		modelo.position.y += 0.03
+	collision_layer = 0
+	get_tree().create_timer(25.0).timeout.connect(func(): if is_instance_valid(self): queue_free())
+
 func _aplastado() -> void:
 	_cambiar(E.MUERTO)
 	_sonar("aplastar", -6.0)
@@ -481,13 +514,70 @@ func _aplastado() -> void:
 	add_child(mancha)
 	collision_layer = 0
 
-# ---------------- gato negro ----------------
+# ---------------- gato ----------------
+## Inteligencia del gato. Tiene necesidades que cambian con el tiempo (energía, hambre) y una confianza contigo:
+##  - come y bebe en sus cuencos de la cocina cuando tiene hambre; duerme en sus sitios (junto a la chimenea,
+##    al pie de las camas) cuando está cansado y se despierta con ruidos o si corres cerca;
+##  - caza ratas: las acecha agachado, se lanza y a veces atrapa una;
+##  - se sienta a mirar por las ventanas, explora, se lava;
+##  - si te acercas despacio gana confianza: te sigue, se roza contigo y deja que lo acaricies (te calma);
+##    si corres hacia él o hay ruidos fuertes se asusta;
+##  - huye y bufa cuando Elena está cerca (te avisa) y a veces se queda mirando fijamente un rincón vacío.
+var energia := 0.8
+var hambre := 0.3
+var confianza := 0.3
+var _presa: Node3D
+var _t_mirar_nada := randf_range(90.0, 200.0)
+var _t_decidir := 0.0
+
+func _cerca_jugador_despacio(d_jug: float, jv: Vector3) -> bool:
+	return d_jug < 2.2 and Vector2(jv.x, jv.z).length() < 1.6
+
+## El jugador lo acaricia (desde juego.gd con USAR).
+func acariciar() -> bool:
+	if confianza > 0.35 and estado != E.HUYE:
+		confianza = minf(1.0, confianza + 0.15)
+		_cambiar(E.MIMOS, randf_range(4.0, 6.0))
+		vel_obj = 0.0
+		_pose_quieto = "Caress_sit"
+		if ronroneo:
+			ronroneo.play()
+		return true
+	confianza = minf(1.0, confianza + 0.05)
+	_sonar("bufido", -6.0)
+	_bufando = 0.6
+	var jug := _jugador()
+	if jug:
+		_huir(jug.global_position, 2.4)
+	return false
+
+## Un ruido fuerte en la casa (portazos, golpes…).
+func oir_ruido(pos: Vector3, fuerte: float) -> void:
+	var d := pos.distance_to(global_position)
+	if d > 14.0 * fuerte:
+		return
+	if estado == E.DUERME:
+		_cambiar(E.PARA, 1.0)
+	if d < 6.0 * fuerte and estado != E.HUYE:
+		_bufando = 0.4
+		_huir(pos, 2.6)
+
 func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 	_t_sonido -= delta
 	_avisado_elena -= delta
+	_t_mirar_nada -= delta
 	var j = fauna.juego
 	var elena: Node3D = j.elena if j and "elena" in j else null
-	# huye de Elena y bufa: el jugador lo oye y sabe que está cerca
+	var jv := Vector3.ZERO
+	if j and "player" in j and j.player and "velocity" in j.player:
+		jv = j.player.velocity
+	# necesidades
+	var activo := estado not in [E.DUERME, E.ESCONDE, E.SENTADO, E.VENTANA, E.MIMOS]
+	energia = clampf(energia + delta * (0.012 if not activo else -0.004), 0.0, 1.0)
+	hambre = clampf(hambre + delta * 0.0025, 0.0, 1.0)
+	if _cerca_jugador_despacio(d_jug, jv):
+		confianza = minf(1.0, confianza + delta * 0.02)
+	# 1) Elena cerca: bufa, te avisa y huye lejos a esconderse
 	if elena and elena.visible and elena.global_position.distance_to(global_position) < 9.0:
 		if estado != E.HUYE:
 			_sonar("bufido", -2.0)
@@ -495,19 +585,19 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 				j.message("El gato bufa hacia la oscuridad…", 2.5)
 				_avisado_elena = 20.0
 			_bufando = 0.9
-			_huir(elena.global_position, 2.8)
+			_huir(elena.global_position, 2.9)
+			t_estado = randf_range(2.5, 4.0)
 		return
-	# si corres hacia él, se asusta
-	var jv := Vector3.ZERO
-	if j and "player" in j and j.player and "velocity" in j.player:
-		jv = j.player.velocity
-	if d_jug < 1.6 and Vector2(jv.x, jv.z).length() > 3.5 and estado != E.HUYE:
+	# 2) si corres hacia él, se asusta y pierde confianza
+	if d_jug < 1.8 and Vector2(jv.x, jv.z).length() > 3.5 and estado not in [E.HUYE]:
+		confianza = maxf(0.0, confianza - 0.12)
 		_sonar("bufido", -6.0)
 		_bufando = 0.7
-		_huir(pp, 2.6)
+		_huir(pp, 2.7)
 		return
+	# ronronea cuando estás cerca y tranquilo (si te tiene confianza)
 	if ronroneo:
-		var quiere := d_jug < 1.8 and estado in [E.SENTADO, E.PARA] and Vector2(jv.x, jv.z).length() < 1.5
+		var quiere := (estado == E.MIMOS) or (confianza > 0.5 and d_jug < 1.8 and estado in [E.SENTADO, E.PARA, E.SIGUE] and Vector2(jv.x, jv.z).length() < 1.5)
 		if quiere and not ronroneo.playing:
 			ronroneo.play()
 		elif not quiere and ronroneo.playing:
@@ -515,45 +605,121 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 	match estado:
 		E.HUYE:
 			if t_estado <= 0.0 or camino.is_empty():
-				_cambiar(E.PARA, randf_range(2.0, 5.0))
+				# se queda escondido un rato antes de volver a lo suyo
+				_cambiar(E.ESCONDE, randf_range(4.0, 12.0))
+				_pose_quieto = "Crouch_idle_loop"
 				vel_obj = 0.0
+		E.ESCONDE:
+			vel_obj = 0.0
+			if t_estado <= 0.0:
+				_decidir(d_jug, pp)
+		E.DUERME:
+			vel_obj = 0.0
+			if energia > 0.98 or t_estado <= 0.0 or (d_jug < 1.5 and Vector2(jv.x, jv.z).length() > 2.0):
+				_pose_quieto = "Lie_end"
+				_cambiar(E.PARA, 1.5)
+		E.COME:
+			vel_obj = 0.0
+			if not camino.is_empty() or (destino != Vector3.INF and Vector2(destino.x - global_position.x, destino.z - global_position.z).length() > 0.5):
+				vel_obj = 0.9
+				t_estado = maxf(t_estado, 12.0)
+				if camino.is_empty():
+					_ir_a(fauna.cuenco)
+			else:
+				_mirar_a(fauna.cuenco_mira, delta)
+				_pose_quieto = "Eat_loop" if t_estado > 4.0 else "Drink_loop"
+				hambre = maxf(0.0, hambre - delta * 0.08)
+				if t_estado <= 0.0:
+					_cambiar(E.PARA, 2.0)
+		E.ACECHA:
+			if not is_instance_valid(_presa) or _presa.process_mode == Node.PROCESS_MODE_DISABLED or _presa.estado == E.MUERTO:
+				_decidir(d_jug, pp)
+			else:
+				var dp := _presa.global_position.distance_to(global_position)
+				if dp < 1.25:
+					# salto de caza: se lanza hacia la rata
+					_cambiar(E.SALTA, 0.7)
+					vel_obj = 3.4
+					_ir_a(_presa.global_position)
+					_gato_anim_una("Attack_crouch_RM" if randf() < 0.5 else "Jump_Place_IP")
+				elif dp > 7.0 or t_estado <= 0.0:
+					_decidir(d_jug, pp)
+				else:
+					# agachado, despacio; se para a ratos
+					vel_obj = (0.35 if fmod(t_estado, 2.0) > 0.5 else 0.0) if dp > 1.8 else 2.4
+					_pose_quieto = "Crouch_idle_loop"
+					if destino == Vector3.INF or destino.distance_to(_presa.global_position) > 0.5 or camino.is_empty():
+						_ir_a(_presa.global_position)
+		E.SALTA:
+			if t_estado < 0.35:
+				vel_obj = 0.0
+			elif is_instance_valid(_presa):
+				_mirar_a(_presa.global_position, delta * 4.0)
+			if t_estado <= 0.0:
+				if is_instance_valid(_presa) and _presa.global_position.distance_to(global_position) < 0.9 and randf() < 0.6:
+					_presa.cazada()
+					hambre = maxf(0.0, hambre - 0.3)
+				energia = maxf(0.0, energia - 0.1)
+				_cambiar(E.SENTADO, randf_range(3.0, 6.0))
+		E.VENTANA:
+			if not camino.is_empty():
+				vel_obj = 0.45 if not _ir_a_dormir else 0.6
+				t_estado = maxf(t_estado, 8.0)
+			elif _ir_a_dormir:
+				_ir_a_dormir = false
+				_cambiar(E.DUERME, randf_range(50.0, 110.0))
+				_pose_quieto = ["Lie_Idle_1", "Sleep_loop", "Lie_Idle_2", "Sleep_loop"][randi() % 4]
+			else:
+				vel_obj = 0.0
+				_pose_quieto = "Sit_idle_%d" % (1 + int(t_estado) % 3) if not _pose_quieto.begins_with("Sit") else _pose_quieto
+				_mirar_a(_mira_ventana, delta)
+				if t_estado <= 0.0:
+					_decidir(d_jug, pp)
+		E.MIRA_NADA:
+			# se queda mirando fijamente un rincón vacío; a veces bufa
+			vel_obj = 0.0
+			_mirar_a(_mira_ventana, delta)
+			_pose_quieto = "Crouch_idle_loop"
+			if randf() < delta * 0.25:
+				_bufando = 0.6
+				_sonar("bufido", -10.0)
+			if t_estado <= 0.0:
+				_decidir(d_jug, pp)
+		E.MIMOS:
+			vel_obj = 0.0
+			_mirar_a(pp, delta)
+			if t_estado <= 0.0:
+				_cambiar(E.SENTADO, randf_range(3.0, 6.0))
 		E.SENTADO:
 			vel_obj = 0.0
 			if not _pose_quieto.begins_with("Sit") and not _pose_quieto.begins_with("Caress"):
 				_pose_quieto = "Sit_idle_%d" % randi_range(1, 3)
 			if ronroneo and ronroneo.playing:
 				_pose_quieto = "Caress_sit"
-			# te mira
-			var hacia := pp - global_position
-			rotation.y = lerp_angle(rotation.y, atan2(hacia.x, hacia.z), 1.0 - exp(-delta * 2.0))
+			if d_jug < 10.0:
+				_mirar_a(pp, delta)
 			if t_estado <= 0.0:
-				_cambiar(E.SIGUE if d_jug < 14.0 and randf() < 0.6 else E.ANDA, randf_range(5.0, 12.0))
+				_decidir(d_jug, pp)
 		E.PARA:
 			vel_obj = 0.0
-			if not _pose_quieto.begins_with("Idle"):
+			if not _pose_quieto.begins_with("Idle") and _pose_quieto != "Lie_end":
 				_pose_quieto = "Idle_%d" % randi_range(1, 4)
 			if t_estado <= 0.0:
-				if d_jug > 12.0 and randf() < 0.4:
-					# lejos de ti, a veces se tumba o se duerme un buen rato
-					_cambiar(E.ESCONDE, randf_range(15.0, 40.0))
-					_pose_quieto = ["Lie_Idle_1", "Lie_Idle_2", "Lie_Idle_3", "Lie_Idle_1"][randi() % 4]
-				else:
-					_cambiar(E.SENTADO if d_jug < 10.0 else E.ANDA, randf_range(3.0, 9.0))
-		E.ESCONDE:
-			vel_obj = 0.0
-			# tumbado o dormido: se despierta si te acercas mucho o pasa el rato
-			if t_estado <= 0.0 or d_jug < 2.5:
-				_cambiar(E.PARA, randf_range(1.0, 3.0))
+				_decidir(d_jug, pp)
 		E.SIGUE:
-			# te sigue a unos 3-5 m, sin acercarse del todo
-			if d_jug > 5.0 and d_jug < 20.0:
-				vel_obj = 0.55 if d_jug < 9.0 else 1.1
-				if destino == Vector3.INF or destino.distance_to(pp) > 2.0 or camino.is_empty():
+			# te sigue de cerca y se roza contigo
+			if d_jug > 2.2 and d_jug < 22.0:
+				vel_obj = 0.5 if d_jug < 6.0 else (1.0 if d_jug < 12.0 else 1.8)
+				if destino == Vector3.INF or destino.distance_to(pp) > 1.5 or camino.is_empty():
 					_ir_a(pp)
-			elif d_jug <= 3.2:
-				_cambiar(E.SENTADO, randf_range(3.0, 8.0))
+			elif d_jug <= 2.2:
+				vel_obj = 0.0
+				_pose_quieto = "Caress_idle" if confianza > 0.6 else "Sit_idle_1"
+				_mirar_a(pp, delta)
+			else:
+				_decidir(d_jug, pp)
 			if t_estado <= 0.0:
-				_cambiar(E.ANDA, randf_range(4.0, 9.0))
+				_decidir(d_jug, pp)
 		E.ANDA:
 			if destino == Vector3.INF:
 				vel_obj = 0.45
@@ -562,5 +728,82 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 				_cambiar(E.PARA, randf_range(1.0, 4.0))
 	if _t_sonido <= 0.0:
 		_t_sonido = randf_range(14.0, 35.0)
-		if d_jug < 16.0:
-			_sonar("maullido", -8.0)
+		if d_jug < 16.0 and estado != E.DUERME and estado != E.ACECHA:
+			_sonar("maullido", -8.0 if confianza < 0.6 else -5.0)
+
+var _mira_ventana := Vector3.ZERO
+func _mirar_a(p: Vector3, delta: float) -> void:
+	var h := p - global_position
+	if Vector2(h.x, h.z).length() > 0.05:
+		rotation.y = lerp_angle(rotation.y, atan2(h.x, h.z), 1.0 - exp(-delta * 3.0))
+
+## Una animación que se juega una vez (salto, zarpazo); luego vuelve a la normal.
+func _gato_anim_una(nombre: String) -> void:
+	if anims_gato.has(nombre):
+		_anim_gato_actual = nombre
+		anim.play(anims_gato[nombre], 0.1)
+		_bufando = 0.0
+		_una_vez = 0.7
+
+## Elige qué hacer según sus necesidades y lo que tiene alrededor.
+func _decidir(d_jug: float, pp: Vector3) -> void:
+	# cazar una rata cercana
+	if energia > 0.3:
+		var mejor: Node3D = null
+		var md := 6.0
+		for a in fauna.animales:
+			if is_instance_valid(a) and a.tipo == "rata" and a.estado != E.MUERTO and a.visible and absf((a as Node3D).global_position.y - global_position.y) < 1.0:
+				var d := (a as Node3D).global_position.distance_to(global_position)
+				if d < md:
+					md = d
+					mejor = a
+		if mejor and randf() < 0.85:
+			_presa = mejor
+			_cambiar(E.ACECHA, 25.0)
+			return
+	# comer
+	if hambre > 0.75 and fauna.cuenco != Vector3.INF:
+		_cambiar(E.COME, 14.0)
+		vel_obj = 0.5
+		_ir_a(fauna.cuenco)
+		return
+	# dormir en uno de sus sitios
+	if energia < 0.25:
+		var sitio := fauna.sitio_dormir(global_position)
+		_cambiar(E.DUERME, randf_range(50.0, 110.0))
+		_pose_quieto = ["Lie_Idle_1", "Sleep_loop", "Lie_Idle_2", "Sleep_loop"][randi() % 4]
+		if sitio != Vector3.INF and sitio.distance_to(global_position) > 1.0 and sitio.distance_to(global_position) < 10.0:
+			# va andando y se tumba al llegar
+			_cambiar(E.VENTANA, 30.0)
+			_mira_ventana = sitio + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
+			_ir_a(sitio)
+			_ir_a_dormir = true
+		return
+	# mirar fijamente un rincón vacío (muy de vez en cuando)
+	if _t_mirar_nada <= 0.0:
+		_t_mirar_nada = randf_range(150.0, 300.0)
+		_mira_ventana = global_position + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized() * 2.5
+		_cambiar(E.MIRA_NADA, randf_range(6.0, 12.0))
+		var j = fauna.juego
+		if d_jug < 8.0 and j and j.has_method("message"):
+			j.message("El gato mira fijamente un rincón vacío…", 3.0)
+		return
+	var dado := randf()
+	if confianza > 0.55 and d_jug < 18.0 and dado < 0.45:
+		_cambiar(E.SIGUE, randf_range(10.0, 25.0))
+	elif dado < 0.6:
+		var v := fauna.ventana_cerca(global_position)
+		if v.size() == 2:
+			_cambiar(E.VENTANA, randf_range(12.0, 25.0))
+			_mira_ventana = v[1]
+			_ir_a(v[0])
+		else:
+			_cambiar(E.ANDA, randf_range(4.0, 9.0))
+	elif dado < 0.75 and d_jug < 10.0:
+		_cambiar(E.SENTADO, randf_range(4.0, 10.0))
+	elif dado < 0.85:
+		_cambiar(E.PARA, randf_range(2.0, 5.0))
+	else:
+		_cambiar(E.ANDA, randf_range(4.0, 9.0))
+var _ir_a_dormir := false
+var _una_vez := 0.0

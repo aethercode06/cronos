@@ -334,6 +334,8 @@ func _s(kind: String) -> AudioStreamWAV:
 
 ## Sonido en un punto del espacio (golpes detrás de una pared, susurros…).
 func sound_at(kind: String, pos: Vector3, db := 0.0) -> void:
+	if fauna and kind in ["portazo", "golpes", "golpe_madera", "campana", "piano"]:
+		fauna.ruido(pos, 1.0 if db > -6.0 else 0.6)
 	var p := AudioStreamPlayer3D.new()
 	p.stream = _s(kind)
 	p.unit_size = 4.0
@@ -1119,6 +1121,9 @@ func _target() -> Dictionary:
 	for s in mansion.seals:
 		if not s.taken and Vector2(pp.x - s.pos.x, pp.z - s.pos.z).length() < 1.7:
 			return {"kind": "sello", "obj": s, "text": "USAR: tomar el sello"}
+	if fauna and is_instance_valid(fauna.gato) and fauna.gato.process_mode != Node.PROCESS_MODE_DISABLED \
+			and fauna.gato.global_position.distance_to(pp + player.forward() * 0.6) < 1.1 and fauna.gato.estado != ZarekAnimal.E.HUYE:
+		return {"kind": "gato", "text": "USAR: acariciar al gato"}
 	var nota := mansion.nota_cerca(pp + player.forward() * 0.5, 1.2)
 	if not nota.is_empty():
 		return {"kind": "nota", "obj": nota, "text": "USAR: leer «" + String(nota.titulo).get_slice(" · ", 0) + "»"}
@@ -1234,6 +1239,12 @@ func _use() -> void:
 			_exit_wardrobe(true)
 		"nota":
 			_leer_nota(t.obj)
+		"gato":
+			if fauna.gato.acariciar():
+				sanity = minf(100.0, sanity + 6.0)
+				message("El gato ronronea. Te sientes un poco mejor.", 2.5)
+			else:
+				message("El gato todavía no se fía de ti.", 2.0)
 		"sello":
 			_take_seal(t.obj)
 		"pick":
