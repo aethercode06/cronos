@@ -25,7 +25,7 @@ for cat, cfg in cons.items():
         txt = (a.get("name", "") + " " + " ".join(t["name"] for t in a.get("tags", []))).lower()
         if not any(re.search(r"(?<![a-z])" + re.escape(k.strip()) + r"(?![a-z])", txt) for k in kws) or any(k in txt for k in excl):
             continue
-        if cfg.get("animado") and not (a.get("animationCount") or 0) > 0:
+        if cfg.get("animado") and not (a.get("animationCount") or 0) >= cfg.get("min_anim", 1):
             continue
         fc = a.get("faceCount") or 0
         if fc <= 0 or fc > cfg.get("max_caras", 150000):
