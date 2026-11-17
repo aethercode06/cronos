@@ -143,6 +143,11 @@ func _cam(pos: Vector3, yaw: float, pitch := 0.0) -> void:
 	await _wait(0.5)
 
 func _capturas() -> void:
+	# la carga del juego es asíncrona: esperar a que exista todo
+	for k in 600:
+		if g.black != null and g.elena != null and g.mansion != null:
+			break
+		await _wait(0.1)
 	var m := g.mansion
 	g._black_target = 0.0
 	g.black.color.a = 0.0

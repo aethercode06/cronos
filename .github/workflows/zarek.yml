@@ -144,7 +144,7 @@ jobs:
             adb logcat -c
             adb shell monkey -p com.aethercode.zarek -c android.intent.category.LAUNCHER 1
             sleep 8; adb exec-out screencap -p > emu/pantalla_carga.png
-            for i in $(seq 1 200); do adb logcat -d | grep -q "ZAREK CARGA" && break; sleep 1; done; sleep 1; adb exec-out screencap -p > emu/tras_carga.png; (adb shell pidof com.aethercode.zarek || echo MUERTO) > emu/pid_tras_carga.txt
+            for i in $(seq 1 450); do adb logcat -d | grep -q "ZAREK CARGA" && break; sleep 1; done; sleep 1; adb exec-out screencap -p > emu/tras_carga.png; (adb shell pidof com.aethercode.zarek || echo MUERTO) > emu/pid_tras_carga.txt
             sleep 20; adb exec-out screencap -p > emu/pantalla_final.png; (adb shell pidof com.aethercode.zarek || echo MUERTO) > emu/pid_final.txt
             adb logcat -d > emu/logcat.txt
             adb shell dumpsys meminfo com.aethercode.zarek > emu/memoria.txt || true
