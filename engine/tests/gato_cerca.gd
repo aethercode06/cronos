@@ -14,7 +14,7 @@ func _ready() -> void:
 	a.set_physics_process(false)
 	var cam := Camera3D.new(); cam.fov = 40.0; add_child(cam)
 	var esq: Skeleton3D = a.modelo.find_children("*", "Skeleton3D", true, false)[0]
-	var tomas := [["Idle_2", "cara"], ["Idle_2", "ojo"], ["Idle_2", "perfil"], ["Idle_2", "nuca"], ["Walk_F_IP", "lado"], ["Sit_idle_1", "lado"]]
+	var tomas := [["Idle_2", "cara"], ["Idle_2", "ojo"], ["Idle_2", "perfil"], ["Idle_2", "nuca"], ["Idle_2", "flanco"], ["Sit_idle_1", "lado"]]
 	var n := 0
 	for t in tomas:
 		a._gato_anim(t[0])
@@ -34,6 +34,9 @@ func _ready() -> void:
 		elif t[1] == "perfil":
 			cam.fov = 35.0
 			cam.global_position = cab + frente.cross(Vector3.UP) * 0.25 + frente * 0.05 + Vector3(0, 0.03, 0); cam.look_at(cab + frente * 0.05)
+		elif t[1] == "flanco":
+			cam.fov = 40.0
+			cam.global_position = cuerpo + frente.cross(Vector3.UP) * 0.35 + Vector3(0, 0.08, 0); cam.look_at(cuerpo)
 		elif t[1] == "nuca":
 			cam.fov = 40.0
 			cam.global_position = cab - frente * 0.3 + frente.cross(Vector3.UP) * 0.12 + Vector3(0, 0.12, 0); cam.look_at(cab)

@@ -46,7 +46,11 @@ void fragment() {
 	if (capa > 0.0 && (alto < capa || length(dentro) > grosor)) {
 		discard;
 	}
-	vec3 c = texture(color_piel, UV).rgb * tinte;
+	// cada pelo toma el color de un punto cercano (no exactamente el suyo): los pelos cruzan los bordes de las
+	// rayas como en un gato de verdad, y la punta es algo más clara (pelo «agutí»)
+	vec2 desv = (vec2(hash(celda + 11.0), hash(celda + 13.0)) - 0.5) * 0.006 * capa;
+	vec3 c = texture(color_piel, UV + desv).rgb * tinte;
+	c *= 1.0 + 0.12 * capa * capa;
 	// variación de color pelo a pelo y oscuridad en la raíz (oclusión)
 	c *= 0.88 + 0.24 * hash(celda + 7.0);
 	c *= mix(oscuro_raiz, 1.0, capa);
