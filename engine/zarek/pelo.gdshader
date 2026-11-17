@@ -55,7 +55,7 @@ void fragment() {
 	SPECULAR = ojo ? 0.9 : 0.25;
 	if (ojo) {
 		// el fondo del ojo devuelve la luz (brillo de ojos de gato)
-		EMISSION = c * 0.6;
+		EMISSION = c * 0.3;
 	}
 	// brillo del pelo al contraluz
 	RIM = 0.25 * capa;
