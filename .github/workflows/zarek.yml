@@ -81,8 +81,10 @@ jobs:
           i=s.index('name="Android Zarek"'); j=s.find('[preset.', i)
           seg=s[i:j if j>0 else len(s)]
           seg2=seg.replace('architectures/x86_64=false','architectures/x86_64=true').replace('architectures/arm64-v8a=true','architectures/arm64-v8a=false')
-          # el Vulkan por software del emulador no puede presentar imágenes sin ventana: allí se usa OpenGL
-          seg2=re.sub(r'command_line/extra_args=".*"', 'command_line/extra_args="--rendering-driver opengl3 --rendering-method gl_compatibility"', seg2)
+          # el Vulkan por software del emulador no puede presentar imágenes sin ventana: allí se usa OpenGL.
+          # Sin sonido: el audio del emulador x86 cierra cualquier juego de Godot (SIGSEGV en AudioTrack, también la
+          # escena vacía de control). Solo afecta a esta copia de prueba; el APK que se publica lleva sonido.
+          seg2=re.sub(r'command_line/extra_args=".*"', 'command_line/extra_args="--rendering-driver opengl3 --rendering-method gl_compatibility --audio-driver Dummy"', seg2)
           open(p,'w').write(s[:i]+seg2+(s[j:] if j>0 else ''))
           PY
           sed -i 's/^renderer\/rendering_method.mobile=.*/renderer\/rendering_method.mobile="gl_compatibility"/' engine/project.godot
