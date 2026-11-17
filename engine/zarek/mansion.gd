@@ -126,35 +126,64 @@ func inside_house(p: Vector3) -> bool:
 
 # ---------------- construcción ----------------
 func build(q := 2) -> void:
-	quality = q
-	_rng.seed = 1874
-	var f := FileAccess.open(PLAN, FileAccess.READ)
-	plan = JSON.parse_string(f.get_as_text())
+	for paso in _pasos_build(q):
+		(paso as Callable).call()
+
+## Igual que build() pero cediendo un fotograma entre paso y paso: la pantalla de carga sigue viva (Android
+## destruye la superficie si el juego se queda un minuto sin dibujar, como pasaba en el emulador).
+## `progreso` recibe un número de 0 a 1.
+func build_por_pasos(q := 2, progreso: Callable = Callable()) -> void:
+	var pasos := _pasos_build(q)
+	# la física se pausa mientras se construye: así la casa sale igual que construida de una vez (las consultas
+	# de colisión del decorado no ven aún los cuerpos recién creados) y no se gasta tiempo moviéndolos
+	PhysicsServer3D.set_active(false)
+	for k in pasos.size():
+		(pasos[k] as Callable).call()
+		if progreso.is_valid():
+			progreso.call(float(k + 1) / pasos.size())
+		await get_tree().process_frame
+	PhysicsServer3D.set_active(true)
+
+func _pasos_build(q: int) -> Array:
 	var t0 := Time.get_ticks_msec()
-	_materials()
-	_tiempo("materiales", t0)
-	nav_region = NavigationRegion3D.new()
-	add_child(nav_region)
-	_house = Node3D.new()
-	nav_region.add_child(_house)
-	_stairs_plan()
-	for key in ["sotano", "baja", "alta", "atico"]:
-		_level(key)
-	_build_stairs()
-	_roof()
-	_ornatos_fachada()
-	_abandono_exterior()
-	_tiempo("casa", t0)
-	_exterior()
-	_tiempo("exterior", t0)
-	_markers()
-	if OS.get_environment("SIN_LUCES") == "": _iluminar_salas()
-	_portals()
-	_decorate()
-	_tiempo("decorado", t0)
-	_merge_static()
-	_optimizar()
-	_tiempo("fusion", t0)
+	return [
+		func():
+			quality = q
+			_rng.seed = 1874
+			var f := FileAccess.open(PLAN, FileAccess.READ)
+			plan = JSON.parse_string(f.get_as_text())
+			_materials()
+			_tiempo("materiales", t0)
+			nav_region = NavigationRegion3D.new()
+			add_child(nav_region)
+			_house = Node3D.new()
+			nav_region.add_child(_house)
+			_stairs_plan(),
+		func(): _level("sotano"),
+		func(): _level("baja"),
+		func(): _level("alta"),
+		func(): _level("atico"),
+		func():
+			_build_stairs()
+			_roof()
+			_ornatos_fachada()
+			_abandono_exterior()
+			_tiempo("casa", t0),
+		func():
+			_exterior()
+			_tiempo("exterior", t0),
+		func():
+			_markers()
+			if OS.get_environment("SIN_LUCES") == "": _iluminar_salas()
+			_portals(),
+		func():
+			_decorate()
+			_tiempo("decorado", t0),
+		func(): _merge_static(),
+		func():
+			_optimizar()
+			_tiempo("fusion", t0),
+	]
 
 func _tiempo(paso: String, t0: int) -> void:
 	print("ZAREK paso %s hasta %d ms" % [paso, Time.get_ticks_msec() - t0])

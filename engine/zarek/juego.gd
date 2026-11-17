@@ -119,8 +119,11 @@ func _ready() -> void:
 	mansion = ZarekMansion.new()
 	add_child(mansion)
 	# en el teléfono, densidad media de bosque y objetos (la alta va a tirones)
-	mansion.build(mini(Aether.quality, 1) if OS.get_name() == "Android" else Aether.quality)
+	await mansion.build_por_pasos(mini(Aether.quality, 1) if OS.get_name() == "Android" else Aether.quality,
+		func(p: float): lc.text = "LA SOMBRA DE ZAREK\n\nCargando…  %d %%" % int(p * 90.0))
 	mansion.bake_nav()
+	lc.text = "LA SOMBRA DE ZAREK\n\nCargando…  95 %"
+	await get_tree().process_frame
 	# con la física ya en marcha, los objetos que quedaron en el aire bajan a su sitio
 	await get_tree().physics_frame
 	await get_tree().physics_frame
