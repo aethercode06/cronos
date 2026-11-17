@@ -451,8 +451,16 @@ func _bar(col: Color, w: float) -> ProgressBar:
 
 var lbl_fps: Label
 func _ui() -> void:
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	if OS.get_name() == "Android":
 		Engine.max_fps = 60
+		# resolución 3D por altura de pantalla: ~720 líneas (el S23 Ultra tiene 1440: dibujar a 965 era un 80 %
+		# más de píxeles); la interfaz sigue a resolución completa
+		var alto := float(DisplayServer.screen_get_size().y)
+		var ancho := float(DisplayServer.screen_get_size().x)
+		var lado_corto := minf(alto, ancho)
+		if lado_corto > 0.0:
+			get_viewport().scaling_3d_scale = clampf(720.0 / lado_corto, 0.45, 0.8)
 	# contador de fps (arriba a la izquierda, pequeño): para medir en el teléfono de verdad
 	var capa_fps := CanvasLayer.new()
 	capa_fps.layer = 90
@@ -878,7 +886,12 @@ func _process(delta: float) -> void:
 	# medición de rendimiento en el registro (logcat en Android): fps, llamadas de dibujo y triángulos
 	_t_fps += delta
 	if lbl_fps and Engine.get_process_frames() % 15 == 0:
-		lbl_fps.text = "%d FPS" % Engine.get_frames_per_second()
+		# fps · tiempo del procesador y de la gráfica por fotograma · llamadas de dibujo: dice qué frena
+		var vp := get_viewport().get_viewport_rid()
+		lbl_fps.text = "%d FPS · CPU %.1f · GPU %.1f ms · %d dib" % [Engine.get_frames_per_second(),
+			RenderingServer.viewport_get_measured_render_time_cpu(vp) + RenderingServer.get_frame_setup_time_cpu(),
+			RenderingServer.viewport_get_measured_render_time_gpu(vp),
+			int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))]
 	if _t_fps >= 5.0:
 		_t_fps = 0.0
 		print("ZAREK FPS %d draws %d prims %d mem %d MB estado %s pos %s" % [Engine.get_frames_per_second(),
