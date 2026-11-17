@@ -1067,17 +1067,66 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	# cortinas pesadas con pliegues, barra y galería
 	var eje: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
 	var dentro: Vector3 = c + inward * (thick * 0.5 + 0.13)
-	for s in [-1.0, 1.0]:
-		var mi := MeshInstance3D.new()
-		mi.mesh = _cortina_mesh(int(s))
-		mi.material_override = _mat.cortina
-		mi.position = dentro + eje * s * 0.82 + Vector3(0, 0.03, 0)
-		mi.rotation.y = 0.0 if horiz else PI * 0.5
-		_house.add_child(mi)
-	var barra := Vector3(2.5, 0.04, 0.04) if horiz else Vector3(0.04, 0.04, 2.5)
-	box(barra, dentro + Vector3(0, 3.16, 0), _mat.oro, false, null, false)
-	var gal := Vector3(2.4, 0.3, 0.14) if horiz else Vector3(0.14, 0.3, 2.4)
-	box(gal, dentro + Vector3(0, 3.05, 0), _mat.tela_roja, false, null, false)
+	# cortinas reales con pliegues (Objaverse, CC-BY): pesadas de terciopelo del color de la sala, o de tela
+	# floral vieja en algunos dormitorios, y a veces un visillo de tul detrás que tamiza la luz de la luna
+	var sala := room_at(dentro + Vector3(0, 0.5, 0))
+	var nombre_sala := String(rooms[sala].name) if sala >= 0 else ""
+	var t_sala := String(rooms[sala].type) if sala >= 0 else ""
+	var giro := 0.0 if horiz else PI * 0.5
+	var floral := t_sala == "dormitorio" and (sala % 3) == 0
+	var hecho := false
+	if floral:
+		for s2 in [-1.0, 1.0]:
+			var pf := _prop("cortina_floral", dentro + eje * s2 * 0.8, giro, 1.0, false)
+			if pf:
+				pf.scale = Vector3(0.3, 1.07, 0.6)
+				hecho = true
+		if hecho:
+			box(Vector3(2.5, 0.035, 0.035) if horiz else Vector3(0.035, 0.035, 2.5), dentro + Vector3(0, 3.12, 0), _mat.laton_viejo, false, null, false)
+	else:
+		var pg := _prop("cortina_gris", dentro, giro, 1.0, false)
+		if pg:
+			pg.scale = Vector3(0.78, 1.07, 0.6)
+			var tela := _tela_cortina(String(ZarekHistoria.CORTINA.get(nombre_sala, ["salvia", "botella", "marino", "mostaza", "gris", "crema"][(sala if sala >= 0 else 0) % 6])))
+			for g in pg.find_children("*", "MeshInstance3D", true, false):
+				(g as MeshInstance3D).material_override = tela
+			hecho = true
+	if (sala % 2) == 0:
+		var tul := _prop("cortina_tul", dentro - inward * 0.07, giro, 1.0, false)
+		if tul:
+			tul.scale = Vector3(1.6, 1.07, 1.0)
+			if not _mat.has("tul"):
+				var mt := _plain(Color(0.9, 0.88, 0.82, 0.38), 0.9)
+				mt.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mt.cull_mode = BaseMaterial3D.CULL_DISABLED
+				_mat["tul"] = mt
+			for g in tul.find_children("*", "MeshInstance3D", true, false):
+				(g as MeshInstance3D).material_override = _mat.tul
+				(g as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if not hecho:
+		for s3 in [-1.0, 1.0]:
+			var mi := MeshInstance3D.new()
+			mi.mesh = _cortina_mesh(int(s3))
+			mi.material_override = _mat.cortina
+			mi.position = dentro + eje * s3 * 0.82 + Vector3(0, 0.03, 0)
+			mi.rotation.y = giro
+			_house.add_child(mi)
+
+## Terciopelo de cortina de un color (tela con relieve, sin depender de las UV del modelo).
+const COLOR_CORTINA := {"salvia": Color(0.170, 0.200, 0.160), "botella": Color(0.060, 0.110, 0.080), "marino": Color(0.060, 0.075, 0.130),
+	"mostaza": Color(0.250, 0.200, 0.090), "gris": Color(0.160, 0.160, 0.165), "crema": Color(0.310, 0.285, 0.230), "granate": Color(0.160, 0.040, 0.045)}
+func _tela_cortina(nombre: String) -> StandardMaterial3D:
+	if not _mat.has("cort_" + nombre):
+		var m: StandardMaterial3D = (_mat.cortina as StandardMaterial3D).duplicate()
+		# la textura de terciopelo original es roja: se queda solo su relieve y el color lo pone la sala
+		m.albedo_texture = null
+		m.roughness = 0.85
+		m.albedo_color = COLOR_CORTINA.get(nombre, COLOR_CORTINA.gris)
+		m.uv1_triplanar = true
+		m.uv1_scale = Vector3(1.6, 1.6, 1.6)
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_mat["cort_" + nombre] = m
+	return _mat["cort_" + nombre]
 
 var _cortinas: Dictionary = {}
 ## Malla de una cortina recogida (0,7 m × 3,1 m) con pliegues; lado -1 o 1 cambia hacia dónde se recoge.
@@ -4610,6 +4659,21 @@ func _manchas(r: Dictionary) -> void:
 		_mancha(p, Vector3.UP, Vector2(sz, sz), 2)
 
 ## Alfombra persa (plano con textura) de sx × sz metros.
+func _alfombra_mat(nombre: String) -> bool:
+	if _mat.has("alf_" + nombre):
+		return true
+	var ruta := "res://zarek/texturas/alfombras/%s.jpg" % nombre
+	if not ResourceLoader.exists(ruta):
+		return false
+	var m: StandardMaterial3D = _mat.persa.duplicate()
+	m.albedo_texture = load(ruta)
+	m.albedo_color = Color(0.92, 0.9, 0.88)
+	m.uv1_scale = Vector3(3, 2, 1)
+	m.uv1_offset = Vector3.ZERO
+	m.uv1_triplanar = false
+	_mat["alf_" + nombre] = m
+	return true
+
 func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
 	var ex := sz if absf(sin(yaw)) > 0.7 else sx
 	var ez := sx if absf(sin(yaw)) > 0.7 else sz
@@ -4631,15 +4695,27 @@ func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
 			_alfombra(Vector3(mejor.get_center().x, c.y, mejor.get_center().y), mejor.size.x, mejor.size.y, 0.0)
 			return
 	var mi := MeshInstance3D.new()
-	var pm := PlaneMesh.new()
-	pm.size = Vector2(sx, sz)
-	mi.mesh = pm
 	mi.material_override = _mat.persa
 	var sala := room_at(c + Vector3(0, 0.3, 0))
+	var aspecto := 1.0
 	if sala >= 0:
-		var var_a := String(ZarekHistoria.ALFOMBRA.get(String(rooms[sala].name), ["azul", "verde", "oro", "verde"][sala % 4]))
-		if _mat.has("persa_" + var_a):
+		var var_a := String(ZarekHistoria.ALFOMBRA.get(String(rooms[sala].name), ["azul", "oro", "", "verde"][sala % 4]))
+		# alfombras reales escaneadas (Objaverse, CC-BY): azul = persa azul marino, oro = medallón beige,
+		# "" = persa descolorida y gastada; verde = la persa de siempre teñida
+		var real := {"azul": "cuatro_c", "oro": "nana", "": "gastada", "verde": "nana", "rojo": "cuatro_d", "granate": "cuatro_b"}
+		if real.has(var_a) and _alfombra_mat(real[var_a]):
+			mi.material_override = _mat["alf_" + String(real[var_a])]
+			var tx: Texture2D = (mi.material_override as StandardMaterial3D).albedo_texture
+			aspecto = float(tx.get_width()) / float(tx.get_height())
+		elif _mat.has("persa_" + var_a):
 			mi.material_override = _mat["persa_" + var_a]
+	# el lado largo de la foto va con el lado largo de la alfombra; un poco de grosor y bordes
+	var girar := (sx > sz) != (aspecto > 1.0) and absf(aspecto - 1.0) > 0.15
+	var bm := BoxMesh.new()
+	bm.size = Vector3(sz, 0.012, sx) if girar else Vector3(sx, 0.012, sz)
+	mi.mesh = bm
+	if girar:
+		yaw += PI * 0.5
 	mi.position = c + Vector3(0, 0.012, 0)
 	mi.rotation.y = yaw
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

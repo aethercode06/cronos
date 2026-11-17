@@ -95,3 +95,9 @@ const LAMPARA := {
 	"Pasillo del sótano": "aplique_retro", "Archivo": "colgante_jaula", "Baño": "aplique_cristal", "Despensa": "colgante_esmalte",
 	"Cuarto de plancha": "colgante_esmalte", "Pasillo principal": "aplique_antiguo", "Pasillo": "aplique_brazo",
 	"Galería de retratos": "aplique_antiguo", "Galería de servicio": "aplique_retro"}
+
+## Color de las cortinas de cada sala (las demás, por turno: salvia, botella, marino, mostaza, gris, crema).
+const CORTINA := {
+	"Salón de baile": "botella", "Biblioteca": "botella", "Estudio del padre": "salvia", "Comedor formal": "mostaza",
+	"Dormitorio de los padres": "marino", "Tocador de la madre": "crema", "Cuarto de niños": "crema", "Galería de retratos": "gris",
+	"Vestíbulo y gran escalera": "marino", "EPICENTRO · cuarto de Elena": "granate", "Sala de música": "salvia"}

@@ -75,6 +75,20 @@ func _ready() -> void:
 			var desde := lp + fuera * 1.3 + Vector3(0.5, -0.4, 0.3) if nd.rotation.y != 0.0 or clave.begins_with("luz_aplique") else lp + Vector3(1.0, -0.9, 0.9)
 			vistas.append([desde, lp])
 			print("LUZ ", clave, " ", l.modo)
+	elif modo == "ventanas":
+		# cortinas: delante de varias ventanas interiores, mirándolas
+		var k := 0
+		for v in m.ventanas:
+			k += 1
+			if k % 7 != 0 or vistas.size() >= 6: continue
+			var sala := m.room_at(v + Vector3(0, 0.5, 0))
+			if sala < 0: continue
+			var c: Vector2 = (m.rooms[sala].rect as Rect2).get_center()
+			var hacia := (Vector3(c.x, v.y, c.y) - v)
+			hacia.y = 0
+			hacia = hacia.normalized()
+			vistas.append([v + hacia * 2.6 + Vector3(0.5, 1.6, 0), v + Vector3(0, 1.6, 0)])
+			print("VENTANA ", m.rooms[sala].name)
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")

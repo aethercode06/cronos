@@ -3190,5 +3190,59 @@
   "licencia": "by",
   "url": "https://sketchfab.com/3d-models/ad87a1e1da604bfea9b1276aa33f7952",
   "cat": "luces"
+ },
+ {
+  "clave": "cortina_gris",
+  "uid": "a83e1baf822a4442b0f50ed70d449198",
+  "nombre": "Curtains",
+  "autor": "Heliona",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a83e1baf822a4442b0f50ed70d449198",
+  "cat": "textiles"
+ },
+ {
+  "clave": "cortina_tul",
+  "uid": "f5d7450599314a82845e97195353af00",
+  "nombre": "Tulle curtain (FREE)",
+  "autor": "DuduPav",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/f5d7450599314a82845e97195353af00",
+  "cat": "textiles"
+ },
+ {
+  "clave": "cortina_floral",
+  "uid": "8fff9859ac18436e8bf8edf6cc3f3002",
+  "nombre": "Curtain",
+  "autor": "renderman47",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/8fff9859ac18436e8bf8edf6cc3f3002",
+  "cat": "textiles"
+ },
+ {
+  "clave": "alfombra_cuatro",
+  "uid": "8001f9f214f94388840f0ce40cd13937",
+  "nombre": "Carpet",
+  "autor": "nocyde",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/8001f9f214f94388840f0ce40cd13937",
+  "cat": "textiles"
+ },
+ {
+  "clave": "alfombra_roja",
+  "uid": "43b311e5a2714126bf0134e8555d40cc",
+  "nombre": "RUG with Bottom",
+  "autor": "gibbsluke",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/43b311e5a2714126bf0134e8555d40cc",
+  "cat": "textiles"
+ },
+ {
+  "clave": "alfombra_nana",
+  "uid": "9b65e93a238b4f9c8e69b508bf0e4946",
+  "nombre": "Nana rug",
+  "autor": "besartademi8",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/9b65e93a238b4f9c8e69b508bf0e4946",
+  "cat": "textiles"
  }
 ]
