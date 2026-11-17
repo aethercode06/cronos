@@ -36,16 +36,19 @@ void fragment() {
 	if (capa > 0.0 && (liso || (en(UV, poco_pelo) && capa > 0.35))) {
 		discard;
 	}
-	vec2 celda = floor(UV * densidad);
-	float alto = hash(celda);                    // largo de este pelo (0..1)
-	vec2 dentro = fract(UV * densidad) - 0.5;
-	float grosor = (1.0 - capa) * 0.55 + 0.08;   // los pelos se afinan hacia la punta
+	// pelos en posiciones aleatorias dentro de cada celda (sin rejilla visible), peinados: la punta se desplaza
+	vec2 q = UV * densidad + vec2(0.35, 0.6) * capa * 1.2;
+	vec2 celda = floor(q);
+	vec2 centro = vec2(hash(celda + 3.1), hash(celda + 9.7)) * 0.6 + 0.2;
+	float alto = hash(celda) * 0.6 + 0.4 * hash(celda + 1.7);
+	vec2 dentro = fract(q) - centro;
+	float grosor = (1.0 - capa) * (0.32 + 0.18 * hash(celda + 5.3)) + 0.04;
 	if (capa > 0.0 && (alto < capa || length(dentro) > grosor)) {
 		discard;
 	}
 	vec3 c = texture(color_piel, UV).rgb * tinte;
 	// variación de color pelo a pelo y oscuridad en la raíz (oclusión)
-	c *= 0.85 + 0.3 * hash(celda + 7.0);
+	c *= 0.88 + 0.24 * hash(celda + 7.0);
 	c *= mix(oscuro_raiz, 1.0, capa);
 	if (liso) {
 		c = texture(color_piel, UV).rgb * tinte;
@@ -53,10 +56,7 @@ void fragment() {
 	ALBEDO = c;
 	ROUGHNESS = ojo ? 0.03 : (liso ? 0.45 : 0.85);
 	SPECULAR = ojo ? 0.9 : 0.25;
-	if (ojo) {
-		// el fondo del ojo devuelve la luz (brillo de ojos de gato)
-		EMISSION = c * 0.3;
-	}
+
 	// brillo del pelo al contraluz
 	RIM = 0.25 * capa;
 	RIM_TINT = 0.5;

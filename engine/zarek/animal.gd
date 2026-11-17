@@ -88,10 +88,20 @@ func _pelaje_negro(n: Node3D) -> void:
 	for g in n.find_children("*", "MeshInstance3D", true, false):
 		(g as MeshInstance3D).material_override = m
 
+## Malla remodelada en Blender (tools/gato) montada sobre el esqueleto y la piel originales del gato.
+func _malla_nueva(n: Node3D) -> void:
+	if not ResourceLoader.exists("res://zarek/fauna/gato_malla.res"):
+		return
+	var nueva: Mesh = load("res://zarek/fauna/gato_malla.res")
+	for g in n.find_children("*", "MeshInstance3D", true, false):
+		var mi := g as MeshInstance3D
+		if mi.skin != null:
+			mi.mesh = nueva
+
 ## Pelaje de verdad: la piel horneada del bengalí oscurecida (gato atigrado oscuro) y pelo por capas.
 func _pelaje_real(n: Node3D) -> void:
 	var sh: Shader = load("res://zarek/pelo.gdshader")
-	var capas := 6 if OS.get_name() == "Android" else 10
+	var capas := 8 if OS.get_name() == "Android" else 14
 	for g in n.find_children("*", "MeshInstance3D", true, false):
 		var mi := g as MeshInstance3D
 		var tex: Texture2D = null
@@ -111,7 +121,7 @@ func _pelaje_real(n: Node3D) -> void:
 			m.set_shader_parameter("largo", 0.005)
 			if ResourceLoader.exists("res://zarek/fauna/gato_largo.png"):
 				m.set_shader_parameter("mapa_largo", load("res://zarek/fauna/gato_largo.png"))
-			m.set_shader_parameter("densidad", 1100.0)
+			m.set_shader_parameter("densidad", 2200.0)
 			if ant:
 				ant.next_pass = m
 			else:
@@ -246,6 +256,7 @@ func montar(nombre: String, largo: float, giro: float) -> void:
 	voz.max_distance = 14.0
 	add_child(voz)
 	if tipo == "gato":
+		_malla_nueva(modelo)
 		_pelaje_real(modelo)
 		_preparar_anims_gato()
 		var cs: Array = ZarekFauna.GATO_SENTADO
