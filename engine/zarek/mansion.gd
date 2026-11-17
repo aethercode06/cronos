@@ -457,7 +457,7 @@ func _papel(img: Image, tinte: Color) -> StandardMaterial3D:
 	return m
 
 func _materials() -> void:
-	var papers := [Color(0.33, 0.15, 0.14), Color(0.17, 0.24, 0.2), Color(0.2, 0.22, 0.28), Color(0.44, 0.38, 0.28)]
+	var papers := [Color(0.27, 0.29, 0.25), Color(0.17, 0.24, 0.2), Color(0.2, 0.22, 0.28), Color(0.44, 0.38, 0.28)]
 	for i in papers.size():
 		_mat["papel%d" % i] = _papel(_rayas(papers[i], 30 + i), Color(1.15, 1.15, 1.15))
 	# papeles propios de cada sala (tools/papeles/papeles.py): la textura ya viene envejecida
@@ -469,7 +469,7 @@ func _materials() -> void:
 			pm.normal_scale = 0.6
 			pm.uv1_scale = Vector3(0.5, 0.5, 0.5)
 			_mat["p_" + nom] = pm
-	_mat["cortina"] = _pbr("Fabric085", 1.6, Color(0.42, 0.1, 0.11), 1.0, 1.4)
+	_mat["cortina"] = _pbr("Fabric085", 1.6, Color(0.16, 0.22, 0.2), 1.0, 1.4)
 	_mat["cortina"].cull_mode = BaseMaterial3D.CULL_DISABLED
 	var cristal := _plain(Color(0.2, 0.2, 0.17, 0.5), 0.35, 0.2)
 	cristal.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -486,8 +486,8 @@ func _materials() -> void:
 			var am: StandardMaterial3D = persa.duplicate()
 			am.albedo_texture = load(ruta)
 			_mat["persa_" + nom] = am
-	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.5, 0.36, 0.27), 0.7)
-	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.64, 0.58, 0.54), 0.8)
+	_mat["revestimiento"] = _pbr("Wood094", 0.6, Color(0.42, 0.4, 0.4), 0.7)
+	_mat["parquet"] = _pbr("WoodFloor070", 0.45, Color(0.6, 0.66, 0.95), 0.8)
 	_mat["baldosa"] = _pbr("Tiles140", 0.5, Color(1, 1, 1), 0.9)
 	_mat["piedra"] = _pbr("Bricks108A", 0.4, Color(0.8, 0.78, 0.75), 1.0, 1.2)
 	_mat["yeso"] = _pbr("Plaster007", 0.35, Color(0.85, 0.8, 0.72), 1.0)
@@ -516,7 +516,7 @@ func _materials() -> void:
 	_mat["agua"] = _plain(Color(0.03, 0.05, 0.07), 0.05, 0.3)
 	_mat["barro"] = _pbr("Ground085", 0.35, Color(0.35, 0.3, 0.26), 0.6)
 	_mat["madera_vieja"] = _pbr("Wood049", 0.5, Color(0.62, 0.57, 0.52), 0.9, 1.2)
-	_mat["madera"] = _pbr("Wood066", 0.55, Color(0.8, 0.68, 0.6), 0.75)
+	_mat["madera"] = _pbr("Wood066", 0.55, Color(0.66, 0.74, 1.0), 0.75)
 	_mat["madera_clara"] = _pbr("WoodFloor043", 0.4, Color(0.9, 0.85, 0.8), 0.9)
 	_mat["moldura"] = _pbr("Plaster007", 0.8, Color(0.78, 0.73, 0.64), 0.7)
 	_mat["cimiento"] = _pbr("Bricks106A", 0.4, Color(0.8, 0.78, 0.75), 1.0)
@@ -3463,7 +3463,7 @@ func _lamp(pos: Vector3) -> void:
 ## Bombillas de filamento de carbón de principios de siglo (unos 2700 K). Cada sala o tramo de pasillo tiene un
 ## modo: «fija» (luz estable), «parpadea» (la mayoría: caídas breves, ráfagas y apagones con el zumbido de la
 ## corriente) o «apagada» (bombillas fundidas: salas y tramos oscuros).
-const COLOR_BOMBILLA := Color(1.0, 0.74, 0.46)
+const COLOR_BOMBILLA := Color(1.0, 0.85, 0.66)
 var _malla_bombilla: Mesh
 var _malla_filamento: Mesh
 var _mat_vidrio_bombilla: StandardMaterial3D
@@ -4637,7 +4637,7 @@ func _alfombra(c: Vector3, sx: float, sz: float, yaw: float) -> void:
 	mi.material_override = _mat.persa
 	var sala := room_at(c + Vector3(0, 0.3, 0))
 	if sala >= 0:
-		var var_a := String(ZarekHistoria.ALFOMBRA.get(String(rooms[sala].name), ["", "verde", "azul", "oro"][sala % 4]))
+		var var_a := String(ZarekHistoria.ALFOMBRA.get(String(rooms[sala].name), ["azul", "verde", "oro", "verde"][sala % 4]))
 		if _mat.has("persa_" + var_a):
 			mi.material_override = _mat["persa_" + var_a]
 	mi.position = c + Vector3(0, 0.012, 0)

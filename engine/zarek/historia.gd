@@ -38,13 +38,13 @@ const NOTAS := [
 
 ## Color de la luz de cada sala (las lámparas de esa sala lo usan).
 const LUZ := {
-	"Cocina": Color(0.75, 0.85, 1.0), "Despensa": Color(0.7, 0.8, 0.95), "Antecocina": Color(0.78, 0.86, 1.0),
+	"Cocina": Color(0.75, 0.88, 0.90), "Despensa": Color(0.70, 0.85, 0.88), "Antecocina": Color(0.78, 0.88, 0.90),
 	"EPICENTRO · cuarto de Elena": Color(1.0, 0.35, 0.25), "Rincón de Elena": Color(1.0, 0.4, 0.3),
-	"Biblioteca": Color(1.0, 0.7, 0.38), "Estudio del padre": Color(1.0, 0.68, 0.36), "Cuarto de lectura": Color(1.0, 0.72, 0.4),
-	"Cuarto de niños": Color(1.0, 0.85, 0.65), "Baño": Color(0.85, 0.95, 0.9), "Galería de retratos": Color(1.0, 0.78, 0.55),
-	"Salón de baile": Color(1.0, 0.82, 0.6), "Sala de música": Color(0.95, 0.8, 0.7), "Cava de vinos": Color(1.0, 0.6, 0.35),
-	"Sala de calderas": Color(1.0, 0.55, 0.3), "Archivo": Color(0.9, 0.9, 0.8), "Cuarto de huéspedes azul": Color(0.7, 0.8, 1.0),
-	"Tocador de la madre": Color(1.0, 0.75, 0.75), "Sala de costura": Color(1.0, 0.86, 0.7)}
+	"Biblioteca": Color(1.00, 0.80, 0.59), "Estudio del padre": Color(1.00, 0.79, 0.58), "Cuarto de lectura": Color(1.00, 0.81, 0.60),
+	"Cuarto de niños": Color(1.00, 0.88, 0.73), "Baño": Color(0.85, 0.93, 0.85), "Galería de retratos": Color(1.00, 0.84, 0.68),
+	"Salón de baile": Color(1.00, 0.86, 0.70), "Sala de música": Color(0.95, 0.85, 0.75), "Cava de vinos": Color(1.00, 0.75, 0.57),
+	"Sala de calderas": Color(1.00, 0.73, 0.55), "Archivo": Color(0.90, 0.90, 0.80), "Cuarto de huéspedes azul": Color(0.70, 0.85, 0.90),
+	"Tocador de la madre": Color(1.00, 0.82, 0.78), "Sala de costura": Color(1.00, 0.88, 0.75)}
 
 ## Sonido de fondo de cada sala (sonido sintetizado en bucle, volumen dB).
 const SONIDO := {
@@ -66,7 +66,7 @@ const EVENTO := {
 
 ## Papel pintado de cada sala (texturas/papeles/<nombre>.jpg).
 const PAPEL := {
-	"Salón de baile": "damasco_rojo", "EPICENTRO · cuarto de Elena": "damasco_rojo", "Biblioteca": "damasco_verde",
+	"Salón de baile": "damasco_crema", "EPICENTRO · cuarto de Elena": "damasco_rojo", "Biblioteca": "damasco_verde",
 	"Galería de retratos": "damasco_crema", "Tocador de la madre": "floral_rosa", "Cuarto de huéspedes azul": "floral_azul",
 	"Comedor formal": "rombos_ocre", "Dormitorio de los padres": "lirios_azul", "Sala de música": "enredadera",
 	"Sala de costura": "enredadera", "Cuarto de niños": "estrellas_ninos", "Estudio del padre": "tartan",
@@ -75,9 +75,9 @@ const PAPEL := {
 
 ## Alfombra de cada sala ("" = la persa roja; verde, azul u oro); las demás salas la reciben por turno.
 const ALFOMBRA := {
-	"Salón de baile": "oro", "EPICENTRO · cuarto de Elena": "", "Biblioteca": "", "Estudio del padre": "verde",
-	"Comedor formal": "azul", "Cuarto de niños": "oro", "Dormitorio de los padres": "", "Tocador de la madre": "azul",
-	"Galería de retratos": "verde", "Vestíbulo y gran escalera": ""}
+	"Salón de baile": "azul", "EPICENTRO · cuarto de Elena": "", "Biblioteca": "verde", "Estudio del padre": "verde",
+	"Comedor formal": "azul", "Cuarto de niños": "oro", "Dormitorio de los padres": "azul", "Tocador de la madre": "azul",
+	"Galería de retratos": "verde", "Vestíbulo y gran escalera": "verde"}
 
 ## Cómo está la luz eléctrica de cada sala: «fija», «parpadea», «apagada» (bombillas fundidas) o «tramos» (en los
 ## pasillos largos: un tramo con luz, otro parpadeando, otro a oscuras…). Las que no salen aquí se sortean
