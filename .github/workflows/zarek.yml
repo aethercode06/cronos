@@ -4,6 +4,11 @@ on:
     branches: [ main ]
     paths: [ 'engine/zarek/**', 'engine/addons/aether/three_d/aether_player_fp.gd', 'engine/addons/aether/ui/aether_touch_fp.gd', 'engine/addons/aether/core/aether_synth.gd', 'engine/export_presets.cfg', 'engine/project.godot', '.github/workflows/zarek.yml' ]
   workflow_dispatch:
+    inputs:
+      sin_emulador:
+        description: 'Publicar sin la prueba del emulador (solo si el usuario lo pide)'
+        type: boolean
+        default: false
 permissions:
   contents: write
 env:
@@ -114,6 +119,7 @@ jobs:
     # Antes de publicar: se instala en un teléfono Android emulado, se abre y se comprueba que carga, que no se
     # cierra y que la pantalla no queda negra. Capturas, fps y registro en la rama zarek-emu.
     needs: build
+    if: ${{ !inputs.sin_emulador }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -189,6 +195,7 @@ jobs:
 
   publicar:
     needs: [build, emulador]
+    if: ${{ always() && needs.build.result == 'success' && (needs.emulador.result == 'success' || inputs.sin_emulador) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
