@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       sin_emulador:
-        description: 'Publicar sin la prueba del emulador (solo si el usuario lo pide)'
+        description: 'Publicar como versión de prueba (release zarek-prueba) sin la prueba del emulador; solo si el usuario lo pide'
         type: boolean
         default: false
 permissions:
@@ -210,13 +210,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete zarek -y --cleanup-tag -R ${{ github.repository }} || true
-          gh release create zarek build/LaSombraDeZarek.apk -R ${{ github.repository }} \
-            --title "La Sombra de Zarek · Noche I (1.0.${{ github.run_number }})" \
+          # sin la prueba del emulador se publica APARTE (zarek-prueba): la versión normal no se toca
+          TAG=${{ inputs.sin_emulador && 'zarek-prueba' || 'zarek' }}
+          EXTRA="${{ inputs.sin_emulador && ' · VERSIÓN DE PRUEBA' || '' }}"
+          gh release delete $TAG -y --cleanup-tag -R ${{ github.repository }} || true
+          gh release create $TAG build/LaSombraDeZarek.apk -R ${{ github.repository }} \
+            --title "La Sombra de Zarek · Noche I (1.0.${{ github.run_number }})$EXTRA" \
             --notes "**La Sombra de Zarek — Noche I**, hecho con Aether Engine. Toca **LaSombraDeZarek.apk** para instalarlo. Usa auriculares." \
             --latest=false
           for i in 1 2 3 4 5; do
-            gh release edit zarek --draft=false -R ${{ github.repository }} || true
+            gh release edit $TAG --draft=false -R ${{ github.repository }} || true
             sleep 4
-            if [ "$(gh release view zarek --json isDraft -q .isDraft -R ${{ github.repository }})" = "false" ]; then echo "publicada"; break; fi
+            if [ "$(gh release view $TAG --json isDraft -q .isDraft -R ${{ github.repository }})" = "false" ]; then echo "publicada"; break; fi
           done
