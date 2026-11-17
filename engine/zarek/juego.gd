@@ -173,6 +173,7 @@ func _ready() -> void:
 	carga.queue_free()
 	print("ZAREK CARGA %d ms (calidad %d, %s, %s)" % [Time.get_ticks_msec() - t_carga, Aether.quality, OS.get_name(), RenderingServer.get_current_rendering_method()])
 	set_process(true)
+	_poblar_fauna()
 	set_physics_process(true)
 	set_process_input(true)
 	set_process_unhandled_input(true)
@@ -746,6 +747,17 @@ func _physics_process(_delta: float) -> void:
 ## sombras de verdad sin el coste de decenas de luces con sombra.
 var _t_sombras := 0.0
 var _con_sombra: Array = []
+var fauna: ZarekFauna
+## Ratas, gusanos y el gato negro: se crean cuando el mapa de navegación está listo.
+func _poblar_fauna() -> void:
+	for k in 600:
+		if mansion.nav_ready:
+			break
+		await get_tree().process_frame
+	fauna = ZarekFauna.new()
+	add_child(fauna)
+	fauna.poblar(mansion, self)
+
 func _sombras_cercanas(delta: float) -> void:
 	_t_sombras -= delta
 	if _t_sombras > 0.0 or player == null:

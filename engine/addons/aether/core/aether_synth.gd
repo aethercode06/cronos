@@ -45,6 +45,11 @@ static func _build(kind: String) -> AudioStreamWAV:
 		"rana": return _frog()
 		"tictac": return _tictac()
 		"zumbido": return _hum()
+		"chillido": return _squeak()
+		"maullido": return _meow()
+		"bufido": return _hiss()
+		"aplastar": return _squish()
+		"ronroneo": return _purr()
 		"goteo": return _drip()
 		"piano": return _piano_note()
 		"chapoteo": return _splash()
@@ -565,5 +570,91 @@ static func _hum() -> AudioStreamWAV:
 		var ini := randi_range(0, b.size() - 800)
 		for j in 700:
 			b[ini + j] += (randf() * 2.0 - 1.0) * 0.5 * exp(-float(j) / 150.0)
+	_normalize(b, 0.5)
+	return _wav(b, true)
+
+## Chillido de rata: dos o tres chirridos agudos con vibrato.
+static func _squeak() -> AudioStreamWAV:
+	var b := _buf(0.45)
+	var ini := 0.0
+	for k in randi_range(2, 3):
+		var dur := randf_range(0.05, 0.1)
+		var f0 := randf_range(3200.0, 4600.0)
+		var fase := 0.0
+		for j in int(dur * RATE):
+			var t := float(j) / RATE
+			var env := sin(PI * t / dur)
+			var f := f0 * (1.0 + 0.25 * sin(t / dur * PI)) + sin(TAU * 60.0 * t) * 300.0
+			fase += TAU * f / RATE
+			b[int(ini * RATE) + j] += (sin(fase) + 0.3 * sin(fase * 2.0)) * env
+		ini += dur + randf_range(0.02, 0.06)
+	_normalize(b, 0.7)
+	return _wav(b)
+
+## Maullido: una sierra con formantes que pasan de «i» a «a» a «u» (mi-a-u), con el tono subiendo y bajando.
+static func _meow() -> AudioStreamWAV:
+	var dur := 0.85
+	var b := _buf(dur)
+	var fase := 0.0
+	var bp := PackedFloat32Array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+	for i in b.size():
+		var t := float(i) / RATE
+		var u := t / dur
+		var f0 := 520.0 + 260.0 * sin(PI * minf(u * 1.3, 1.0)) - 120.0 * u
+		fase = fmod(fase + f0 / RATE, 1.0)
+		var saw := fase * 2.0 - 1.0
+		var f1 := lerpf(300.0, 900.0, smoothstep(0.0, 0.35, u)) * (1.0 - 0.45 * smoothstep(0.55, 1.0, u))
+		var f2 := lerpf(2300.0, 1300.0, smoothstep(0.1, 0.5, u)) * (1.0 - 0.35 * smoothstep(0.6, 1.0, u))
+		var v := 0.0
+		var k := 0
+		for fc: float in [f1, f2]:
+			# resonador de dos polos
+			var r := 0.985
+			var w: float = TAU * fc / RATE
+			var y: float = saw + 2.0 * r * cos(w) * bp[k] - r * r * bp[k + 1]
+			bp[k + 1] = bp[k]
+			bp[k] = y
+			v += y * (1.0 if k == 0 else 0.6)
+			k += 2
+		var env := smoothstep(0.0, 0.06, u) * (1.0 - smoothstep(0.75, 1.0, u))
+		b[i] = v * env
+	_normalize(b, 0.6)
+	return _wav(b)
+
+## Bufido de gato: ruido filtrado agudo que sube de golpe y se apaga.
+static func _hiss() -> AudioStreamWAV:
+	var b := _buf(0.9)
+	var a := 0.0
+	var ant := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		var n := randf() * 2.0 - 1.0
+		a = n - ant * 0.6
+		ant = n
+		var env := smoothstep(0.0, 0.04, t) * exp(-t * 2.5)
+		b[i] = a * env * (0.8 + 0.2 * sin(TAU * 31.0 * t))
+	_normalize(b, 0.55)
+	return _wav(b)
+
+## Algo blando aplastado bajo la bota.
+static func _squish() -> AudioStreamWAV:
+	var b := _buf(0.35)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp += ((randf() * 2.0 - 1.0) - lp) * 0.08
+		b[i] = lp * exp(-t * 14.0) + sin(TAU * 90.0 * t) * exp(-t * 30.0) * 0.4
+	_normalize(b, 0.6)
+	return _wav(b)
+
+## Ronroneo (1,2 s en bucle): pulsos graves de 25 Hz.
+static func _purr() -> AudioStreamWAV:
+	var b := _buf(1.2)
+	var lp := 0.0
+	for i in b.size():
+		var t := float(i) / RATE
+		lp += ((randf() * 2.0 - 1.0) - lp) * 0.03
+		var pulso := pow(maxf(0.0, sin(TAU * 25.0 * t)), 3.0)
+		b[i] = lp * pulso * (0.7 + 0.3 * sin(TAU * 0.8 * t))
 	_normalize(b, 0.5)
 	return _wav(b, true)
