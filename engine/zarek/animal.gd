@@ -20,6 +20,7 @@ var _t_sonido := randf_range(4.0, 12.0)
 var voz: AudioStreamPlayer3D
 var ronroneo: AudioStreamPlayer3D
 var _avisado_elena := 0.0
+var _bufando := 0.0
 var _escala := Vector3.ONE
 
 func _cargar(nombre: String, largo: float, giro: float) -> Dictionary:
@@ -74,6 +75,97 @@ func _quitar_sobrantes(n: Node) -> void:
 		g.get_parent().remove_child(g)
 		g.free()
 
+## Pelaje negro de gato: oscuro, mate con un brillo suave en el borde (pelo) y relieve fino.
+func _pelaje_negro(n: Node3D) -> void:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.018, 0.016, 0.015)
+	m.roughness = 0.9
+	m.metallic_specular = 0.25
+	# un poco de brillo de pelo en el contorno
+	m.rim_enabled = true
+	m.rim = 0.12
+	m.rim_tint = 0.7
+	for g in n.find_children("*", "MeshInstance3D", true, false):
+		(g as MeshInstance3D).material_override = m
+
+## Pelaje de verdad: la piel horneada del bengalí oscurecida (gato atigrado oscuro) y pelo por capas.
+func _pelaje_real(n: Node3D) -> void:
+	var sh: Shader = load("res://zarek/pelo.gdshader")
+	var capas := 6 if OS.get_name() == "Android" else 10
+	for g in n.find_children("*", "MeshInstance3D", true, false):
+		var mi := g as MeshInstance3D
+		var tex: Texture2D = null
+		var m0 := mi.get_active_material(0)
+		if m0 is BaseMaterial3D:
+			tex = (m0 as BaseMaterial3D).albedo_texture
+		if tex == null:
+			tex = load("res://zarek/fauna/gato_pelo.jpg") if ResourceLoader.exists("res://zarek/fauna/gato_pelo.jpg") else null
+		var primero: ShaderMaterial = null
+		var ant: ShaderMaterial = null
+		for i in capas + 1:
+			var m := ShaderMaterial.new()
+			m.shader = sh
+			m.set_shader_parameter("color_piel", tex)
+			m.set_shader_parameter("tinte", Color(0.8, 0.76, 0.72))
+			m.set_shader_parameter("capa", float(i) / capas)
+			m.set_shader_parameter("largo", 0.005)
+			if ResourceLoader.exists("res://zarek/fauna/gato_largo.png"):
+				m.set_shader_parameter("mapa_largo", load("res://zarek/fauna/gato_largo.png"))
+			m.set_shader_parameter("densidad", 1100.0)
+			if ant:
+				ant.next_pass = m
+			else:
+				primero = m
+			ant = m
+		mi.material_override = primero
+
+## Animaciones del gato real (57): andar, trote, carrera, quieto, sentado, tumbado, dormir, bufar, comer…
+var anims_gato := {}
+func _preparar_anims_gato() -> void:
+	if anim == null:
+		return
+	for n in anim.get_animation_list():
+		var corto := String(n).get_slice("Anim_Cat_", 1).trim_suffix("_Mesh_Cat") if String(n).contains("Anim_Cat_") else String(n)
+		anims_gato[corto] = n
+		var a := anim.get_animation(n)
+		if a and (corto.ends_with("_IP") or corto.contains("idle") or corto.contains("Idle") or corto.contains("loop")):
+			a.loop_mode = Animation.LOOP_LINEAR
+var _anim_gato_actual := ""
+var _esq_gato: Skeleton3D
+var _apoyos: Array[int] = []
+var _t_suelo := 0.0
+## Cada postura deja el cuerpo a una altura distinta (sentado, tumbado…): se ajusta para que las patas (o el
+## cuerpo, si está tumbado) toquen el suelo y no flote ni se hunda.
+func _ajustar_suelo(delta: float) -> void:
+	if _esq_gato == null:
+		for g in modelo.find_children("*", "Skeleton3D", true, false):
+			_esq_gato = g
+		if _esq_gato == null:
+			return
+		for nb in ["claw_b_L_016", "claw_b_R_020", "claw_f_L_041", "claw_f_R_046", "foot_b_L_015", "foot_b_R_019", "spine_01_07", "spine_03_05", "Spine_base_04", "head_024"]:
+			var i := _esq_gato.find_bone(nb)
+			if i >= 0:
+				_apoyos.append(i)
+	_t_suelo -= delta
+	if _t_suelo > 0.0:
+		return
+	_t_suelo = 0.1
+	var minimo := INF
+	for i in _apoyos:
+		var y := to_local(_esq_gato.global_transform * _esq_gato.get_bone_global_pose(i).origin).y
+		minimo = minf(minimo, y)
+	if minimo < INF:
+		# las garras están ~1 cm por encima de la planta
+		modelo.position.y -= (minimo - 0.012) * 0.6
+func _gato_anim(nombre: String, velocidad := 1.0) -> void:
+	if not anims_gato.has(nombre):
+		return
+	if _anim_gato_actual != nombre:
+		_anim_gato_actual = nombre
+		anim.play(anims_gato[nombre], 0.25)
+	anim.speed_scale = velocidad
+var _pose_quieto := "Idle_1"
+
 ## pelo negro para el gato que anda (el modelo original es atigrado)
 func _tenir_negro(n: Node3D) -> void:
 	for g in n.find_children("*", "MeshInstance3D", true, false):
@@ -101,7 +193,8 @@ func montar(nombre: String, largo: float, giro: float) -> void:
 	var ab := _medir(modelo)
 	for g in modelo.find_children("*", "MeshInstance3D", true, false):
 		var mi := g as MeshInstance3D
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if tipo in ["gusano", "larva"] else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		# solo el gato hace sombra (las ratas y los gusanos son pequeños: no se nota y ahorra mucho)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if tipo == "gato" else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var lado := maxf(ab.size.x, ab.size.z)
 	var k := largo / maxf(lado, 0.001)
 	modelo.scale = Vector3.ONE * k
@@ -153,9 +246,10 @@ func montar(nombre: String, largo: float, giro: float) -> void:
 	voz.max_distance = 14.0
 	add_child(voz)
 	if tipo == "gato":
-		_tenir_negro(modelo)
+		_pelaje_real(modelo)
+		_preparar_anims_gato()
 		var cs: Array = ZarekFauna.GATO_SENTADO
-		if ResourceLoader.exists("res://zarek/fauna/%s.glb" % cs[0]):
+		if String(cs[0]) != "" and ResourceLoader.exists("res://zarek/fauna/%s.glb" % cs[0]):
 			sentado = _cargar(cs[0], cs[1], cs[2]).nodo
 			_tenir_negro(sentado)
 			sentado.visible = false
@@ -256,7 +350,21 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -0.2
 	move_and_slide()
 	# animación al ritmo del paso
-	if anim and anim_nombre != "":
+	if tipo == "gato" and not anims_gato.is_empty():
+		_ajustar_suelo(delta)
+		var rp := Vector2(velocity.x, velocity.z).length()
+		if _bufando > 0.0:
+			_bufando -= delta
+			_gato_anim("Agression_loop")
+		elif rp > 1.5:
+			_gato_anim("Run_F_IP", clampf(rp / 2.6, 0.7, 1.5))
+		elif rp > 0.7:
+			_gato_anim("Trot_F_IP", clampf(rp / 1.1, 0.7, 1.4))
+		elif rp > 0.03:
+			_gato_anim("Walk_F_IP", clampf(rp / 0.45, 0.6, 1.5))
+		else:
+			_gato_anim(_pose_quieto)
+	elif anim and anim_nombre != "":
 		var rapidez := Vector2(velocity.x, velocity.z).length()
 		if rapidez < 0.02:
 			if anim_quieto != "":
@@ -364,6 +472,7 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 			if _avisado_elena <= 0.0 and d_jug < 15.0 and j.has_method("message"):
 				j.message("El gato bufa hacia la oscuridad…", 2.5)
 				_avisado_elena = 20.0
+			_bufando = 0.9
 			_huir(elena.global_position, 2.8)
 		return
 	# si corres hacia él, se asusta
@@ -372,6 +481,7 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 		jv = j.player.velocity
 	if d_jug < 1.6 and Vector2(jv.x, jv.z).length() > 3.5 and estado != E.HUYE:
 		_sonar("bufido", -6.0)
+		_bufando = 0.7
 		_huir(pp, 2.6)
 		return
 	if ronroneo:
@@ -387,6 +497,10 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 				vel_obj = 0.0
 		E.SENTADO:
 			vel_obj = 0.0
+			if not _pose_quieto.begins_with("Sit") and not _pose_quieto.begins_with("Caress"):
+				_pose_quieto = "Sit_idle_%d" % randi_range(1, 3)
+			if ronroneo and ronroneo.playing:
+				_pose_quieto = "Caress_sit"
 			# te mira
 			var hacia := pp - global_position
 			rotation.y = lerp_angle(rotation.y, atan2(hacia.x, hacia.z), 1.0 - exp(-delta * 2.0))
@@ -394,8 +508,20 @@ func _ia_gato(d_jug: float, pp: Vector3, delta: float) -> void:
 				_cambiar(E.SIGUE if d_jug < 14.0 and randf() < 0.6 else E.ANDA, randf_range(5.0, 12.0))
 		E.PARA:
 			vel_obj = 0.0
+			if not _pose_quieto.begins_with("Idle"):
+				_pose_quieto = "Idle_%d" % randi_range(1, 4)
 			if t_estado <= 0.0:
-				_cambiar(E.SENTADO if d_jug < 10.0 else E.ANDA, randf_range(3.0, 9.0))
+				if d_jug > 12.0 and randf() < 0.4:
+					# lejos de ti, a veces se tumba o se duerme un buen rato
+					_cambiar(E.ESCONDE, randf_range(15.0, 40.0))
+					_pose_quieto = ["Lie_Idle_1", "Lie_Idle_2", "Lie_Idle_3", "Lie_Idle_1"][randi() % 4]
+				else:
+					_cambiar(E.SENTADO if d_jug < 10.0 else E.ANDA, randf_range(3.0, 9.0))
+		E.ESCONDE:
+			vel_obj = 0.0
+			# tumbado o dormido: se despierta si te acercas mucho o pasa el rato
+			if t_estado <= 0.0 or d_jug < 2.5:
+				_cambiar(E.PARA, randf_range(1.0, 3.0))
 		E.SIGUE:
 			# te sigue a unos 3-5 m, sin acercarse del todo
 			if d_jug > 5.0 and d_jug < 20.0:

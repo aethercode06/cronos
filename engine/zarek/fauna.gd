@@ -7,12 +7,12 @@ extends Node3D
 
 ## modelo, largo real (m), giro para que mire a +Z, nombre de la animación al andar (vacío = la primera)
 const MODELOS := {
-	"rata": [["an_rata_4", 0.26, PI], ["an_rata_4", 0.24, PI], ["an_rata_negra", 0.26, PI], ["an_rata_d", 0.27, PI]],
-	"gato": [["an_gato_anda", 0.6, PI]],
+	"rata": [["an_rata_4", 0.26, 0.0], ["an_rata_4", 0.24, 0.0], ["an_rata_4", 0.25, 0.0], ["an_rata_negra", 0.26, 0.0]],
+	"gato": [["gato_real", 0.62, 0.0]],
 	"gusano": [["an_gusano2", 0.12, PI]],
 	"larva": [["an_larva2", 0.02, 0.0]]}
 ## el gato tiene un segundo cuerpo para cuando está sentado (se lava y mira): se cambia según se mueva o no
-const GATO_SENTADO := ["an_gato_negro", 0.42, PI * 0.5]
+const GATO_SENTADO := ["", 0.0, 0.0]
 const SALAS_RATAS := ["Cocina", "Despensa", "Antecocina", "Pasillo del sótano", "Cava de vinos", "Sala de calderas", "Archivo",
 	"Galería de servicio", "Ático (vigas, baúles, muñecos tapados)", "Pasillo", "Comedor formal", "Cuarto de huéspedes"]
 const SALAS_GUSANOS := ["Cava de vinos", "Despensa", "Sala de calderas", "Pozo", "Cocina", "Pasillo del sótano", "Comedor formal"]
@@ -20,6 +20,14 @@ const SALAS_GUSANOS := ["Cava de vinos", "Despensa", "Sala de calderas", "Pozo",
 var mansion: ZarekMansion
 var juego: Node
 var animales: Array = []
+const MAX_RATAS := 14
+
+func _cuantos(tipo: String) -> int:
+	var n := 0
+	for a in animales:
+		if a.tipo == tipo:
+			n += 1
+	return n
 
 func poblar(m: ZarekMansion, j: Node) -> void:
 	mansion = m
@@ -30,8 +38,9 @@ func poblar(m: ZarekMansion, j: Node) -> void:
 		var r := m._sala_por_nombre(nombre)
 		if r.is_empty():
 			continue
-		for k in rng.randi_range(1, 2 if nombre.begins_with("Pasillo") else 3):
-			_crear("rata", _punto(r, rng), rng)
+		for k in rng.randi_range(1, 2):
+			if _cuantos("rata") < MAX_RATAS:
+				_crear("rata", _punto(r, rng), rng)
 	for nombre in SALAS_GUSANOS:
 		var r := m._sala_por_nombre(nombre)
 		if r.is_empty():
@@ -39,7 +48,7 @@ func poblar(m: ZarekMansion, j: Node) -> void:
 		# un grupito alrededor de algo podrido (una mancha oscura en el suelo)
 		var c := _punto(r, rng)
 		_podrido(c, rng)
-		for k in rng.randi_range(4, 8):
+		for k in rng.randi_range(3, 5):
 			_crear("gusano" if rng.randf() < 0.6 else "larva", c + Vector3(rng.randf_range(-0.35, 0.35), 0, rng.randf_range(-0.35, 0.35)), rng)
 	var inicio := m._sala_por_nombre("Biblioteca")
 	if inicio.is_empty():
@@ -90,15 +99,30 @@ func _crear(tipo: String, p: Vector3, rng: RandomNumberGenerator) -> void:
 	a.montar(cfg[0], float(cfg[1]), float(cfg[2]))
 	animales.append(a)
 
-## Lo que pasa cada fotograma lo lleva cada animal; aquí solo se apagan los que están lejos del jugador.
-func _physics_process(_delta: float) -> void:
+## Niveles de detalle para que vaya fluido aunque haya muchos bichos (cada 0,2 s):
+##  cerca y a la vista -> vivo (física, inteligencia y animación);
+##  a media distancia o fuera de la pantalla -> congelado (se ve, pero no gasta: ni huesos ni física);
+##  lejos -> ni se dibuja.
+var _t_lod := 0.0
+func _physics_process(delta: float) -> void:
+	_t_lod -= delta
+	if _t_lod > 0.0:
+		return
+	_t_lod = 0.2
 	var jug: Node3D = juego.player if juego and "player" in juego else null
 	if jug == null:
 		return
+	var cam := get_viewport().get_camera_3d()
 	var pp := jug.global_position
 	for a in animales:
 		if not is_instance_valid(a):
 			continue
-		var lejos := (a as Node3D).global_position.distance_to(pp) > (30.0 if a.tipo == "gato" else 18.0)
-		(a as Node3D).process_mode = Node.PROCESS_MODE_DISABLED if lejos else Node.PROCESS_MODE_INHERIT
-		(a as Node3D).visible = not lejos
+		var n := a as Node3D
+		var d := n.global_position.distance_to(pp)
+		var tipo: String = a.tipo
+		var vivo_hasta := 14.0 if tipo == "gato" else (9.0 if tipo == "rata" else 5.0)
+		var ver_hasta := 30.0 if tipo == "gato" else (16.0 if tipo == "rata" else 9.0)
+		var en_pantalla := cam == null or cam.is_position_in_frustum(n.global_position + Vector3(0, 0.1, 0)) or d < 2.5
+		var vivo := d < vivo_hasta and (en_pantalla or tipo == "gato" or d < 4.0)
+		n.process_mode = Node.PROCESS_MODE_INHERIT if vivo else Node.PROCESS_MODE_DISABLED
+		n.visible = d < ver_hasta

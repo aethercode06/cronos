@@ -487,12 +487,12 @@ const OBJETOS_1974 := {
 	"Salón con chimenea": ["suelo:d_tele_patas", "d_tocadiscos", "d_fotos_familia"],
 	"Sala de música": ["d_tocadiscos_maleta", "d_radio_capilla"],
 	"Cocina": ["d_radio_1937"],
-	"Cuarto del hermano": ["d_tele_madera", "suelo:d_foto_rota"],
+	"Cuarto del hermano": ["d_tele_madera", "d_fotos_familia"],
 	"Dormitorio de los padres": ["d_telefono_negro", "d_fotos_familia"],
 	"Tocador de la madre": ["d_fotos_familia"],
 	"Estudio del padre": ["d_telefono_negro", "d_radio_1937"],
 	"Cuarto de la institutriz": ["d_radio_capilla"],
-	"Sala de fumar y billar": ["d_tele_retro"]}
+	"Sala de fumar y billar": ["d_tele_madera"]}
 const GIRO_1974 := {"d_tele_madera": PI}
 const ESCALA_1974 := {"d_tocadiscos_maleta": 1.7}
 

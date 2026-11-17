@@ -49,5 +49,26 @@ func _ready() -> void:
 		f.set_physics_process(true)
 		flash.visible = false
 		n += 1
+	# el gato en varias posturas
+	for a in f.animales:
+		if a.tipo != "gato": continue
+		a.process_mode = Node.PROCESS_MODE_DISABLED
+		a.visible = true
+		for pose in ["Walk_F_IP", "Sit_idle_1", "Sleep_loop", "Agression_loop", "Run_F_IP", "Lie_Idle_1"]:
+			a.process_mode = Node.PROCESS_MODE_INHERIT
+			a.set_physics_process(false)
+			a._gato_anim(pose)
+			for k in 30: await get_tree().process_frame
+			a.process_mode = Node.PROCESS_MODE_DISABLED
+			var p: Vector3 = a.global_position
+			var lado: Vector3 = a.global_transform.basis.x
+			var cerca := 0.55 if pose == "Sit_idle_1" else 0.9
+			cam.global_position = p + lado * cerca * 0.6 + a.global_transform.basis.z * cerca + Vector3(0, 0.3, 0)
+			cam.look_at(p + Vector3(0, 0.18, 0))
+			flash.visible = true
+			for k in 4: await get_tree().process_frame
+			get_viewport().get_texture().get_image().save_jpg(out + "/g_%s.jpg" % pose, 0.85)
+			print("GATO ", pose)
+		break
 	print("FAUNA OK ", n)
 	get_tree().quit()

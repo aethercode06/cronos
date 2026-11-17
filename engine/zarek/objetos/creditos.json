@@ -3291,15 +3291,6 @@
   "cat": "1974"
  },
  {
-  "clave": "d_tele_retro",
-  "uid": "e938241a182a4229ad48a1fc589e676e",
-  "nombre": "Retro Television",
-  "autor": "bloodmeat08",
-  "licencia": "by",
-  "url": "https://sketchfab.com/3d-models/e938241a182a4229ad48a1fc589e676e",
-  "cat": "1974"
- },
- {
   "clave": "d_tele_patas",
   "uid": "ef8cd1ed88024c0fae9e61d4d85cb524",
   "nombre": "Retro Television",
@@ -3336,15 +3327,6 @@
   "cat": "1974"
  },
  {
-  "clave": "d_foto_rota",
-  "uid": "29fa46bae1924c4bba0e28bdcb74d841",
-  "nombre": "Picture Frame Broken",
-  "autor": "s4101141",
-  "licencia": "by",
-  "url": "https://sketchfab.com/3d-models/29fa46bae1924c4bba0e28bdcb74d841",
-  "cat": "1974"
- },
- {
   "clave": "an_rata_negra",
   "uid": "fc76a8d1bafb4047bcc6aa16869445b8",
   "nombre": "RAT Animation2",
@@ -3372,24 +3354,6 @@
   "cat": "fauna"
  },
  {
-  "clave": "an_gato_negro",
-  "uid": "836312def1b84e588866500a2bf79f0f",
-  "nombre": "Cat [Murdered: Soul Suspect]",
-  "autor": "mark2580",
-  "licencia": "by",
-  "url": "https://sketchfab.com/3d-models/836312def1b84e588866500a2bf79f0f",
-  "cat": "fauna"
- },
- {
-  "clave": "an_gato_anda",
-  "uid": "fc6e597a81ce4dc291dcca6a9e6888ba",
-  "nombre": "cat Walk",
-  "autor": "erinaekasyaharani",
-  "licencia": "by",
-  "url": "https://sketchfab.com/3d-models/fc6e597a81ce4dc291dcca6a9e6888ba",
-  "cat": "fauna"
- },
- {
   "clave": "an_gusano2",
   "uid": "394a659ba0b44ffbb0ceb89e731a7593",
   "nombre": "All tomorrows - Worm",
@@ -3405,6 +3369,15 @@
   "autor": "DrHanz",
   "licencia": "by",
   "url": "https://sketchfab.com/3d-models/d88c772abc13455082531ed116788f14",
+  "cat": "fauna"
+ },
+ {
+  "clave": "gato_real",
+  "uid": "d38b08702779403c8b8d8ed3672c934c",
+  "nombre": "Cat1",
+  "autor": "basreng",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/d38b08702779403c8b8d8ed3672c934c",
   "cat": "fauna"
  }
 ]

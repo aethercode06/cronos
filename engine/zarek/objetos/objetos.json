@@ -2807,15 +2807,6 @@
   "tris": 1200,
   "escala": 0.0009
  },
- "d_foto_rota": {
-  "tam": [
-   0.286,
-   0.22,
-   0.29
-  ],
-  "tris": 786,
-  "escala": 0.2489
- },
  "d_fotos_familia": {
   "tam": [
    0.529,
@@ -2860,15 +2851,6 @@
   ],
   "tris": 5000,
   "escala": 0.0535
- },
- "d_tele_retro": {
-  "tam": [
-   0.74,
-   0.55,
-   0.532
-  ],
-  "tris": 4704,
-  "escala": 0.0941
  },
  "d_telefono_negro": {
   "tam": [
