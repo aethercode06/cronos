@@ -32,7 +32,9 @@ func _ready() -> void:
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color(0, 0, 0)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.03, 0.035, 0.05)
+	e.ambient_light_color = Color(0.42, 0.38, 0.34)
+	e.ambient_light_energy = 0.55 if not vieja else 0.32
+	e.tonemap_exposure = 1.65 if not vieja else 1.35
 	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.environment = e
 	add_child(env)
@@ -83,7 +85,8 @@ func _ready() -> void:
 		for c in [juego._rebote, juego._polvo]:
 			c.reparent(self, false)
 		juego._rebote.light_energy = 0.0
-		juego.flash.light_energy = 6.0 * 0.32
+		juego.flash.light_energy = 7.0 * 0.55
+		juego.flash_foco.light_energy = 7.0
 		juego._polvo.position = Vector3(0.3, 1.5, -2.0)
 	var vistas := [[Vector3(0, 1.4, -9), "pared"], [Vector3(-0.8, 0.6, -5.5), "silla"], [Vector3(1.6, 0.6, -8.4), "comoda"]]
 	for v in vistas:

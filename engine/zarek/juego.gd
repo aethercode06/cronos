@@ -208,10 +208,10 @@ func _environment() -> void:
 	env.background_color = Color(0, 0, 0)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.42, 0.38, 0.34)
-	env.ambient_light_energy = 0.32
+	env.ambient_light_energy = 0.55
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.35
-	env.tonemap_white = 6.0
+	env.tonemap_exposure = 1.65
+	env.tonemap_white = 10.0
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.07, 0.065, 0.07)
 	env.fog_density = 0.016
@@ -239,7 +239,7 @@ func _environment() -> void:
 	var fplus := RenderingServer.get_current_rendering_method() == "forward_plus"
 	if fplus:
 		env.tonemap_mode = Environment.TONE_MAPPER_AGX
-		env.tonemap_exposure = 1.25
+		env.tonemap_exposure = 1.7
 		env.ssao_enabled = true
 		env.ssao_radius = 1.4
 		env.ssao_intensity = 2.2
@@ -292,8 +292,8 @@ func _flashlight() -> void:
 	flash.light_energy = 6.0
 	flash.spot_range = 32.0
 	flash.spot_angle = 40.0
-	flash.spot_angle_attenuation = 1.8
-	flash.spot_attenuation = 0.8
+	flash.spot_angle_attenuation = 1.4
+	flash.spot_attenuation = 0.55
 	flash.shadow_enabled = false
 	flash.light_specular = 0.35
 	flash_node.add_child(flash)
@@ -302,9 +302,9 @@ func _flashlight() -> void:
 	flash_foco.light_color = flash.light_color
 	flash_foco.light_energy = 6.0
 	flash_foco.spot_range = 32.0
-	flash_foco.spot_angle = 17.0
+	flash_foco.spot_angle = 22.0
 	flash_foco.spot_angle_attenuation = 1.1
-	flash_foco.spot_attenuation = 0.8
+	flash_foco.spot_attenuation = 0.55
 	flash_foco.shadow_enabled = true
 	flash_foco.shadow_bias = 0.04
 	flash_foco.shadow_blur = 1.6
@@ -312,8 +312,8 @@ func _flashlight() -> void:
 	# halo cercano muy suave (la mano y lo que tienes delante)
 	var near := OmniLight3D.new()
 	near.light_color = Color(1.0, 0.88, 0.7)
-	near.omni_range = 2.5
-	near.light_energy = 0.25
+	near.omni_range = 3.0
+	near.light_energy = 0.45
 	near.name = "cerca"
 	flash_node.add_child(near)
 	# luz que rebota: un poco de luz cálida sale de donde da el haz y alumbra lo de alrededor
@@ -1038,7 +1038,7 @@ func _update_flash(delta: float) -> void:
 	# como una linterna de bombilla con pilas de carbón: con la pila llena da luz blanca; por debajo del 40 % se
 	# va apagando poco a poco y amarilleando, y al final tiembla
 	var carga := clampf(battery / 40.0, 0.0, 1.0)
-	var e := 6.0 * lerpf(0.3, 1.0, carga)
+	var e := 7.0 * lerpf(0.3, 1.0, carga)
 	flash.light_color = Color(1.0, 0.62, 0.32).lerp(_color_linterna, carga)
 	flash.spot_range = lerpf(9.0, _alcance_linterna, carga)
 	if battery < 8.0:
@@ -1052,9 +1052,9 @@ func _update_flash(delta: float) -> void:
 		if flash.get_meta("off", false):
 			e *= 0.08
 	flash.visible = on
-	flash.light_energy = e * 0.32
+	flash.light_energy = e * 0.55
 	flash_foco.visible = on
-	flash_foco.light_energy = e
+	flash_foco.light_energy = e * 0.85
 	flash_foco.light_color = flash.light_color
 	flash_foco.spot_range = flash.spot_range
 	flash_node.get_node("cerca").visible = on
@@ -1070,7 +1070,7 @@ func _update_flash(delta: float) -> void:
 		else:
 			var d: float = desde.distance_to(hit.position)
 			_rebote.global_position = (hit.position as Vector3) + (hit.normal as Vector3) * 0.45
-			var objetivo := e / 6.0 * 0.55 * clampf(1.0 - d / 14.0, 0.0, 1.0)
+			var objetivo := e / 7.0 * 0.8 * clampf(1.0 - d / 16.0, 0.0, 1.0)
 			_rebote.light_energy = lerpf(_rebote.light_energy, objetivo, minf(1.0, delta * 8.0))
 			_rebote.light_color = flash.light_color
 	elena.flashlight_on = on
