@@ -103,6 +103,19 @@ func _ready() -> void:
 					al_centro = Vector3(cc.x - q.x, 0, cc.y - q.z).normalized()
 				vistas.append([q + al_centro * 1.3 + Vector3(0.3, 0.5, 0.2), q])
 				print("OBJ ", n.scene_file_path.get_file())
+	elif modo == "sabanas":
+		# primer plano de muebles tapados
+		for c in m.find_children("*", "Node3D", true, false):
+			var n := c as Node3D
+			if n.scene_file_path.contains("/sabanas/") and vistas.size() < 8:
+				var q := n.global_position + Vector3(0, 0.5, 0)
+				var sala := m.room_at(q)
+				var al_centro := Vector3(1, 0, 0)
+				if sala >= 0:
+					var cc: Vector2 = (m.rooms[sala].rect as Rect2).get_center()
+					al_centro = Vector3(cc.x - q.x, 0, cc.y - q.z).normalized()
+				vistas.append([q + al_centro * 2.2 + Vector3(0.6, 0.8, 0.4), q])
+				print("SAB ", n.get_parent().scene_file_path.get_file(), " ", m.rooms[sala].name if sala >= 0 else "")
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")

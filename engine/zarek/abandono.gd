@@ -37,16 +37,22 @@ static func aplicar(m: ZarekMansion) -> void:
 		var cosas: Array = por_sala.get(int(r.id), [])
 		# 1) sábanas
 		if not nombre in SIN_SABANAS:
-			var prob := 0.75 if nombre in MUY_TAPADAS else 0.22
+			# solo algunas cosas tapadas: las salas cerradas desde 1974 tienen más, pero nunca todo
+			var prob := 0.4 if nombre in MUY_TAPADAS else 0.12
+			var max_tapados := 3 if nombre in MUY_TAPADAS else 1
+			var tapados := 0
 			for n in cosas:
+				if tapados >= max_tapados:
+					break
 				var archivo := String((n as Node3D).scene_file_path.get_file()).to_lower()
 				var vale := false
 				for k in TAPABLES:
 					if archivo.contains(k):
 						vale = true
 						break
-				if vale and rng.randf() < prob:
+				if vale and rng.randf() < prob and _tiene_sabana(n):
 					_sabana(m, n, rng)
+					tapados += 1
 		# 2) papel despegado
 		if String(r.paper).begins_with("p_") or String(r.paper).begins_with("papel"):
 			for k in rng.randi_range(1, 3):
@@ -84,6 +90,14 @@ static func _materiales(m: ZarekMansion) -> void:
 	_mat_sabana = (m._mat.cortina as StandardMaterial3D).duplicate()
 	_mat_sabana.albedo_texture = null
 	_mat_sabana.albedo_color = Color(0.5, 0.48, 0.44)
+	# lino de verdad (ambientCG, CC0) con polvo: más oscuro arriba no, la tela vieja es gris amarillenta
+	if ResourceLoader.exists("res://zarek/texturas/lino/color.jpg"):
+		_mat_sabana.albedo_texture = load("res://zarek/texturas/lino/color.jpg")
+		_mat_sabana.albedo_color = Color(0.62, 0.59, 0.53)
+		if ResourceLoader.exists("res://zarek/texturas/lino/normal.jpg"):
+			_mat_sabana.normal_enabled = true
+			_mat_sabana.normal_texture = load("res://zarek/texturas/lino/normal.jpg")
+			_mat_sabana.normal_scale = 1.0
 	_mat_sabana.roughness = 0.95
 	_mat_sabana.uv1_triplanar = true
 	_mat_sabana.uv1_scale = Vector3(2.5, 2.5, 2.5)
@@ -110,8 +124,35 @@ static func _materiales(m: ZarekMansion) -> void:
 	_mat_escombro = (m._mat.yeso as StandardMaterial3D).duplicate()
 	_mat_escombro.albedo_color = Color(0.8, 0.76, 0.68)
 
-## Sábana caída sobre un mueble: una tela que cubre la caja del mueble y cae hasta el suelo con pliegues.
+## Sábana sobre un mueble. Si hay una simulada en Blender para ese modelo (sabanas/<modelo>.glb, tools/sabanas),
+## se pone esa, en el espacio del propio modelo; si no, se aproxima con la tela por código.
 static func _sabana(m: ZarekMansion, n: Node3D, rng: RandomNumberGenerator) -> void:
+	var interior := n
+	if n.scene_file_path == "":
+		for h in n.get_children():
+			if h is Node3D and (h as Node3D).scene_file_path != "":
+				interior = h
+	var modelo := interior.scene_file_path.get_file().get_basename()
+	var ruta := "res://zarek/sabanas/%s.glb" % modelo
+	if ResourceLoader.exists(ruta):
+		var ps: PackedScene = load(ruta)
+		if ps:
+			var tela := ps.instantiate() as Node3D
+			interior.add_child(tela)
+			for g in tela.find_children("*", "MeshInstance3D", true, false):
+				(g as MeshInstance3D).material_override = _mat_sabana
+			return
+	# sin simulación para ese modelo: se queda sin tapar (mejor que una tela falsa)
+
+static func _tiene_sabana(n: Node3D) -> bool:
+	var interior := n
+	if n.scene_file_path == "":
+		for h in n.get_children():
+			if h is Node3D and (h as Node3D).scene_file_path != "":
+				interior = h
+	return ResourceLoader.exists("res://zarek/sabanas/%s.glb" % interior.scene_file_path.get_file().get_basename())
+
+static func _sabana_codigo(m: ZarekMansion, n: Node3D, rng: RandomNumberGenerator) -> void:
 	var ab := AABB()
 	var primero := true
 	for g in n.find_children("*", "MeshInstance3D", true, false):
