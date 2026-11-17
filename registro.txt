@@ -1,0 +1,4 @@
+OK damian_g black-forest-labs/FLUX.1-schnell 8s 91946
+OK damian_h black-forest-labs/FLUX.1-schnell 9s 87810
+ERROR damian_i black-forest-labs/FLUX.1-schnell 0 AppError You have exceeded your ZeroGPU runs limit. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+ERROR damian_i black-forest-labs/FLUX.1-schnell 1 AppError You have exceeded your ZeroGPU runs limit. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
