@@ -148,6 +148,9 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none
           disable-animations: true
           script: |
+            # el emulador recién encendido sigue configurándose (servicios, teclado, roles) durante un minuto largo y
+            # eso relanza la ventana del juego a mitad de carga: se espera a que se calme y se fija la orientación
+            adb shell settings put system accelerometer_rotation 0; adb shell settings put system user_rotation 1; sleep 90
             mkdir -p emu && adb install -r build/Zarek_x86_64.apk > emu/install.txt 2>&1; cat emu/install.txt
             adb logcat -c
             adb shell monkey -p com.aethercode.zarek -c android.intent.category.LAUNCHER 1
