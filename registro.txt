@@ -1,0 +1,4 @@
+OK tela_blanca Carpet016
+OK tela_blanca Fabric081C
+OK tela_blanca Fabric019
+OK tela_blanca Fabric045
