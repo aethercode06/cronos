@@ -342,6 +342,28 @@ def agua(nombre, sem=37, w=512, h=512):
     rgb = np.dstack([40 + 30 * n, 36 + 22 * n, 18 + 10 * n])
     guardar(nombre, rgb, np.ones((h, w)))
 
+# ---------- nombre grabado en una lápida ----------
+def lapida(nombre_archivo, nombre, fechas, w=512, h=340):
+    m = Image.new("L", (w, h), 0); d = ImageDraw.Draw(m)
+    lineas = [("+", 64, FUENTE2), (nombre, 40, FUENTE2), (fechas, 36, FUENTE2), ("R. I. P.", 30, FUENTE2)]
+    y = 16
+    for txt, t, fu in lineas:
+        f = ImageFont.truetype(fu, t)
+        while f.getlength(txt) > w * 0.92 and t > 16:
+            t -= 2; f = ImageFont.truetype(fu, t)
+        d.text(((w - f.getlength(txt)) / 2, y), txt, 255, font=f)
+        y += int(t * 1.4)
+    a = np.asarray(m, np.float32) / 255
+    luz = np.roll(a, 2, axis=0) * (1 - a)  # borde claro abajo: la luz roza el grabado
+    rgb = np.zeros((h, w, 3), np.float32)
+    rgb[:] = (18, 17, 15)
+    rgb = np.where((luz > a)[..., None], np.array([190, 188, 180], np.float32), rgb)
+    alfa = np.clip(a * 1.0 + luz * 0.5, 0, 1) * (0.7 + 0.3 * ruido(w, h, 16, len(nombre)))
+    guardar(nombre_archivo, rgb, alfa)
+
+TUMBAS = [("lap_aurelio", "AURELIO VARELA", "1821 - 1889"), ("lap_esteban", "ESTEBAN VARELA", "1928 - 1974"), ("lap_isabel", "ISABEL ROJAS DE VARELA", "1931 - 1974"),
+          ("lap_tomas", "TOMÁS VARELA", "1960 - 1974"), ("lap_clara", "CLARA VARELA", "1967 - 1974"), ("lap_marta", "MARTA ESCOBAR", "INSTITUTRIZ · 1974"), ("lap_elena", "ELENA VARELA", "1957 -")]
+
 if __name__ == "__main__":
     import os
     os.makedirs(OUT, exist_ok=True)
@@ -365,4 +387,6 @@ if __name__ == "__main__":
     grietas("grietas_espejo")
     humedad("humedad_1", sem=31); humedad("humedad_2", sem=32)
     agua("agua_sucia")
+    for t in TUMBAS:
+        lapida(*t)
     print("ok")

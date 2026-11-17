@@ -756,6 +756,12 @@ func _poblar_fauna() -> void:
 		if mansion.nav_ready:
 			break
 		await get_tree().process_frame
+	# el mapa de navegación tiene que haberse sincronizado al menos una vez antes de consultarlo
+	var mapa := mansion.get_world_3d().navigation_map
+	for k in 300:
+		if NavigationServer3D.map_get_iteration_id(mapa) > 0:
+			break
+		await get_tree().physics_frame
 	fauna = ZarekFauna.new()
 	add_child(fauna)
 	fauna.poblar(mansion, self)
@@ -1101,10 +1107,21 @@ func _in_view(p: Vector3) -> bool:
 	var q := PhysicsRayQueryParameters3D.create(cam.global_position, p, 1)
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
+var _t_crujido := 0
 func _on_step(noise: float) -> void:
 	if state != "juego" and state != "ritual":
 		return
 	elena.hear(player.global_position, noise)
+	# tablones rotos: crujen fuerte al pisarlos (y Elena lo oye)
+	var pp := player.global_position
+	for c in mansion.crujidos:
+		var q := c as Vector3
+		if absf(q.y - pp.y) < 1.2 and Vector2(q.x - pp.x, q.z - pp.z).length() < 0.75:
+			if Time.get_ticks_msec() - _t_crujido > 900:
+				_t_crujido = Time.get_ticks_msec()
+				sound_at("crujido", q + Vector3(0, 0.2, 0), 2.0)
+				elena.hear(q, maxf(noise, 0.7))
+			break
 
 func _click() -> void:
 	snd_ui.stream = _s("paso")

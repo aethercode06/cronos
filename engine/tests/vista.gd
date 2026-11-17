@@ -94,7 +94,7 @@ func _ready() -> void:
 		var pre := OS.get_environment("PREFIJO")
 		for c in m.find_children("*", "Node3D", true, false):
 			var n := c as Node3D
-			if n.scene_file_path.get_file().begins_with(pre) and vistas.size() < 8:
+			if n.scene_file_path.get_file().begins_with(pre) and vistas.size() < int(OS.get_environment("LIMITE") if OS.get_environment("LIMITE") != "" else "8"):
 				var q := n.global_position + Vector3(0, 0.25, 0)
 				var al_centro := Vector3.ZERO
 				var sala := m.room_at(q)
@@ -116,6 +116,33 @@ func _ready() -> void:
 					al_centro = Vector3(cc.x - q.x, 0, cc.y - q.z).normalized()
 				vistas.append([q + al_centro * 2.2 + Vector3(0.6, 0.8, 0.4), q])
 				print("SAB ", n.get_parent().scene_file_path.get_file(), " ", m.rooms[sala].name if sala >= 0 else "")
+	elif modo == "calcos":
+		# calcomanías de terror (escritos, manos, sal…): de frente a 1,8 m
+		var vistos := {}
+		for c in m.find_children("*", "MeshInstance3D", true, false):
+			var mi := c as MeshInstance3D
+			var mt := mi.material_override as StandardMaterial3D
+			if mt == null or mt.albedo_texture == null or not mt.albedo_texture.resource_path.contains("/terror/"):
+				continue
+			var nombre := mt.albedo_texture.resource_path.get_file()
+			if vistos.has(nombre) or vistas.size() >= 30:
+				continue
+			vistos[nombre] = true
+			var ab: AABB = mi.global_transform * mi.get_aabb()
+			var q := ab.get_center()
+			var nrm := Vector3.UP
+			if ab.size.x < ab.size.y and ab.size.x < ab.size.z:
+				nrm = Vector3(1, 0, 0)
+			elif ab.size.z < ab.size.y and ab.size.z < ab.size.x:
+				nrm = Vector3(0, 0, 1)
+			var sala := m.room_at(q)
+			if sala >= 0 and nrm.y < 0.5:
+				var cc: Vector2 = (m.rooms[sala].rect as Rect2).get_center()
+				if nrm.dot(Vector3(cc.x - q.x, 0, cc.y - q.z)) < 0:
+					nrm = -nrm
+			var desde := q + nrm * 1.8 + (Vector3(0, 0.2, 0) if absf(nrm.y) < 0.5 else Vector3(0.6, 0, 0.6))
+			vistas.append([desde, q])
+			print("CAL ", nombre, " ", m.room_name(q))
 	elif modo == "pos":
 		for t in OS.get_environment("POS").split(";"):
 			var v := t.split(",")

@@ -32,6 +32,8 @@ const NOTAS := [
 		"AQVÍ DVERME EL HIJO DE LA ROCA. CVATRO SELLOS LO ATAN. QVIEN LOS ROMPA LE DARÁ VNA CASA.\n— Aurelio Varela, fundador"],
 	["Comedor formal", "Nota en una servilleta",
 		"«La cena de la última noche sigue servida. Nadie llegó al postre.»\nAlguien ha escrito con el dedo en el polvo de la mesa: ELLA SIGUE AQUÍ."],
+	["Capilla del ritual", "Libro de rezos de Isabel · 1974",
+		"Bajé a la capilla del abuelo Aurelio a rezar por mi hija. Esteban había pintado el suelo con un círculo y cuatro huecos, los mismos de la roca. Dice que es para protegerla. Las velas no se apagan nunca, aunque nadie las enciende."],
 	["Sala de música", "Partitura con anotaciones",
 		"«Nana para Clara», compuesta por Elena. Las últimas líneas están escritas con otra letra, apretada y torcida, y las notas forman la misma palabra una y otra vez."],
 ]
@@ -51,7 +53,7 @@ const SONIDO := {
 	"Estudio del padre": ["tictac", -14.0], "Cuarto de niños": ["caja_musica", -20.0], "Baño": ["goteo", -12.0],
 	"Ático (vigas, baúles, muñecos tapados)": ["crujido", -18.0], "Sala de calderas": ["drone", -10.0], "Cava de vinos": ["goteo", -14.0],
 	"Biblioteca": ["tictac", -20.0], "Cocina": ["goteo", -18.0], "EPICENTRO · cuarto de Elena": ["susurro", -18.0],
-	"Galería de retratos": ["viento", -22.0], "Cámara de la roca madre": ["latido", -10.0]}
+	"Galería de retratos": ["viento", -22.0], "Cámara de la roca madre": ["latido", -10.0], "Capilla del ritual": ["susurro", -16.0]}
 
 ## Lo que pasa la primera vez que entras en algunas salas: [sonido, texto en pantalla].
 const EVENTO := {
@@ -62,7 +64,8 @@ const EVENTO := {
 	"Sala de costura": ["golpes", "La máquina de coser da tres puntadas sola."],
 	"Galería de retratos": ["susurro", "Los ojos de un retrato te siguen."],
 	"Comedor formal": ["tintineo", "Las copas de la mesa vibran."],
-	"Biblioteca": ["golpe_madera", "Un libro cae de la estantería."]}
+	"Biblioteca": ["golpe_madera", "Un libro cae de la estantería."],
+	"Capilla del ritual": ["susurro", "Las velas están encendidas. Nadie baja aquí desde 1974."]}
 
 ## Papel pintado de cada sala (texturas/papeles/<nombre>.jpg).
 const PAPEL := {
@@ -87,7 +90,7 @@ const LUZ_MODO := {
 	"Galería de retratos": "parpadea", "Vestíbulo y gran escalera": "fija", "Cocina": "parpadea", "Salón de baile": "fija",
 	"Biblioteca": "fija", "EPICENTRO · cuarto de Elena": "parpadea", "Cuarto de niños": "apagada", "Baño": "parpadea",
 	"Escalera de servicio": "apagada", "Sala de calderas": "parpadea", "Ático (vigas, baúles, muñecos tapados)": "parpadea",
-	"Estudio del padre": "fija", "Sala de música": "parpadea", "Comedor formal": "parpadea"}
+	"Estudio del padre": "fija", "Sala de música": "parpadea", "Comedor formal": "parpadea", "Capilla del ritual": "apagada"}
 
 ## Lámpara eléctrica concreta de algunas salas (modelos objetos/luz_*.glb); las demás se eligen por tipo de sala.
 const LAMPARA := {

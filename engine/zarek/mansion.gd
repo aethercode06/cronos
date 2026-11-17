@@ -88,7 +88,7 @@ const METALICOS := ["brass_pot_01", "brass_pot_02", "brass_pan_01", "pot_enamel_
 const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile",
 	"Sala de fumar y billar", "Sala de las mañanas", "Tocador de la madre", "Cuarto del hermano", "Baño", "Cuarto de huéspedes azul", "Sala de costura", "Cuarto de la institutriz", "Galería de retratos", "Cuarto de huéspedes", "Cuarto de lectura", "Pasillo principal", "Pasillo",
 	"Despensa", "Antecocina", "Guardarropa", "Cuarto de servicio", "Cuarto de plancha",
-	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos",
+	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos", "Capilla del ritual",
 	"Ático (vigas, baúles, muñecos tapados)", "Rincón de Elena", "Torre", "Mirador de la torre"]
 var _house: Node3D
 var _mat := {}
@@ -991,8 +991,13 @@ func ventana_cerca(p: Vector3, radio: float) -> bool:
 			return true
 	return false
 
+var crujidos: Array = []      # tablones rotos que crujen al pisarlos (ZarekTerror)
+var montaplatos: Array = []
+var velas_capilla: Array = []
+var ventanas_info: Array = []  # {c, horiz, inward}: para tapiar algunas con tablas
 func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	ventanas.append(c)
+	ventanas_info.append({"c": c, "horiz": horiz, "inward": inward})
 	if level_of(c.y + 0.3) >= 0 and Vector3(LUNA_H.x, 0, LUNA_H.z).dot(inward) > 0.25:
 		_haz_luna(c, horiz, inward)
 	var lit := _rng.randf() < 0.04
@@ -2498,6 +2503,10 @@ func _sonidos_agua(r: Rect2, tipo: String, cada: float, db: float) -> void:
 
 func _well(r: Rect2) -> void:
 	var c := Vector3(r.get_center().x, 0, r.get_center().y)
+	# el pozo de piedra de verdad (Objaverse, CC-BY); si no está, el de siempre hecho con cajas
+	if _prop("t_pozo_piedra", c, 0.6, 1.0, false, self) != null:
+		_static_cyl(1.5, 1.0, c + Vector3(0, 0.5, 0))
+		return
 	cyl(1.6, 1.7, 1.0, c + Vector3(0, 0.5, 0), _mat.piedra, self, 14)
 	cyl(1.3, 1.3, 0.05, c + Vector3(0, 0.98, 0), _mat.oscuro, self, 14)
 	for s in [-1.0, 1.0]:
@@ -2612,11 +2621,6 @@ func _shed(name: String, r: Rect2) -> void:
 	roof.position = c + Vector3(0, hh + 1.1, 0)
 	add_child(roof)
 	box(Vector3(r.size.x, 0.1, r.size.y), c + Vector3(0, 0.05, 0), _mat.madera if not glass else _mat.piedra, false, self, false)
-	if glass:
-		for k in 10:
-			var pp := c + Vector3(_rng.randf_range(-r.size.x * 0.35, r.size.x * 0.35), 0, _rng.randf_range(-r.size.y * 0.35, r.size.y * 0.35))
-			cyl(0.25, 0.3, 0.5, pp + Vector3(0, 0.25, 0), _mat.tierra, self, 8)
-			cyl(0.0, 0.35, 0.9, pp + Vector3(0, 0.95, 0), _mat.tela_verde, self, 6)
 	if name == "Cochera":
 		box(Vector3(2.0, 1.2, 4.6), c + Vector3(0, 0.6, 0), _mat.sabana, true, self)
 	var l := OmniLight3D.new()
@@ -4160,6 +4164,7 @@ func _decorate() -> void:
 	_pinturas_distintas()
 	_identidad_salas()
 	ZarekAbandono.aplicar(self)
+	ZarekTerror.aplicar(self)
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect

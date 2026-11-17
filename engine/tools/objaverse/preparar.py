@@ -23,6 +23,13 @@ EXACTO.update({'ave_common_barn_owl': ('h', 0.55), 'ave_snowy_owl': ('h', 0.6), 
 EXACTO.update({'fuente_huntington': ('m', 7.0), 'fuente_vieja': ('m', 7.0), 'fuente_festoneada': ('m', 6.5)})
 EXACTO.update({'veg_3d_fern_01': ('h', 0.7), 'veg_boletus_edulis_mushroom': ('h', 0.14), 'veg_cattail': ('h', 1.6), 'veg_cattail_plant': ('h', 1.5), 'veg_chanterelle': ('h', 0.08), 'veg_ivy_patch': ('m', 0.8), 'veg_mushroom': ('m', 0.5), 'veg_mushroom_on_tree_baked_l': ('m', 0.8), 'veg_mushroom_scan': ('m', 0.35), 'veg_oyster_mushrooms': ('m', 0.35), 'veg_shaggy_parasol_mushroom_': ('m', 0.5), 'veg_tricholoma_murrillianum_': ('h', 0.1), 'veg_weeds_and_grass': ('m', 1.5)})
 EXACTO.update({'pomo_simple': ('m', 0.075), 'pomo_laton': ('m', 0.075), 'picaporte_laton': ('m', 0.13), 'bocallave_hierro': ('m', 0.1), 'bocallave_laton': ('m', 0.085), 'candado_viejo': ('m', 0.1), 'llave_antigua': ('m', 0.11)})
+EXACTO.update({'t_altar_triptico': ('h', 0.75), 't_angel_pedestal': ('h', 2.3), 't_angel_reza': ('h', 1.2), 't_banco_iglesia': ('m', 2.0), 't_cripta': ('h', 4.2),
+    't_cuna_madera': ('h', 1.05), 't_espejo_roto': ('h', 0.9), 't_jug_caja_payaso': ('h', 0.38), 't_jug_musico': ('h', 0.22), 't_jug_peonza': ('h', 0.12),
+    't_jug_soldado': ('h', 0.22), 't_lap_coleccion': ('h', 1.0), 't_lap_cruces': ('m', 3.2), 't_lap_set': ('h', 1.3), 't_lap_tumbas': ('h', 1.0),
+    't_macetas': ('m', 0.45), 't_maniqui_1900': ('h', 1.6), 't_mu_figura': ('h', 0.35), 't_mu_polly': ('h', 0.55), 't_pozo_piedra': ('h', 3.2),
+    't_pozo_viejo': ('h', 3.4), 't_sarcofago': ('m', 2.2), 't_silla_ruedas_antigua': ('h', 1.15), 't_silla_ruedas_rota': ('h', 0.95),
+    't_tablas_6': ('m', 1.8), 't_tablas_podridas': ('m', 1.8), 't_velas_4': ('m', 0.5), 't_velas_cuenco': ('h', 0.18), 't_velas_dos': ('h', 0.3),
+    't_verja_gotica': ('h', 1.7), 't_verja_hierro': ('h', 1.5)})
 GRANDE = ("piano", "wardrobe", "bookcase", "bookshel", "fireplace", "fire_place", "sofa", "lounge", "bathtub", "tree", "pine", "spruce", "fir", "stove", "cabinet", "clock", "desk", "table", "safe", "armchair", "chair", "mirror")
 os.makedirs(OUT, exist_ok=True)
 info = {}
@@ -35,6 +42,7 @@ for f in sorted(glob.glob(os.path.join(SRC, "*.glb"))):
         print("FALLO", name, e); continue
     for o in list(bpy.data.objects):
         if o.type in ('CAMERA', 'LIGHT', 'EMPTY') and not o.children: bpy.data.objects.remove(o)
+        elif o.type == 'MESH' and o.name.lower().startswith('icosphere'): bpy.data.objects.remove(o)  # esfera de entorno de Sketchfab
     meshes = [o for o in bpy.data.objects if o.type == 'MESH']
     if not meshes: print("VACIO", name); continue
     # aplicar transformaciones y unir

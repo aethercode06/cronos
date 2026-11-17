@@ -259,6 +259,14 @@
     20,
     6,
     2
+   ],
+   [
+    "Cementerio familiar",
+    "cementerio",
+    21,
+    29,
+    7,
+    5
    ]
   ],
   "marcas": [
@@ -1258,6 +1266,14 @@
     17,
     10,
     5
+   ],
+   [
+    "Capilla del ritual",
+    "sotano",
+    21,
+    14,
+    6,
+    5
    ]
   ],
   "puertas": [
@@ -1305,6 +1321,11 @@
     "v",
     3,
     6
+   ],
+   [
+    "h",
+    22,
+    14
    ]
   ],
   "marcas": [

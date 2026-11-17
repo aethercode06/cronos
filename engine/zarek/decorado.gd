@@ -193,6 +193,8 @@ func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala :
 	if t.y > 1.3 and alto < 0.5:
 		p = _esquivar_ventana(r, p, ext)
 	var n := m._prop(_real(nombre), p, yaw, escala, choca)
+	if n and nombre == "t_mu_polly":
+		_ensuciar(n, Color(0.78, 0.72, 0.62))
 	if n and choca:
 		_ocupar(p, ext)
 		var real := _real(nombre)
@@ -689,6 +691,18 @@ func _cuarto_ninos(r: Dictionary) -> void:
 	_en(r, "obj_craft_teddy_bear_photogramme", 1.2, 1.5, 0.3, 0.6, 0.62, false)
 	_en(r, "obj_pecking_chicken_wooden_toy", 4.2, 4.4, 2.0, 1.0, 0.0, false)
 	_cuadro(r, "fancy_picture_frame_01", 3.6, 0.09, 0.0, 1.2, 1.9)
+	# la cuna de Clara, vacía; las muñecas sentadas a la merienda y otra en la cama, mirando a la puerta
+	_en(r, "t_cuna_madera", W - 1.0, 7.6, -PI * 0.5)
+	_en(r, "t_mu_polly", 0.9, 8.5, PI * 0.6, 1.0, 0.45, false)
+	_en(r, "t_mu_polly", 2.3, 8.6, -PI * 0.6, 0.85, 0.45, false)
+	_en(r, "t_mu_polly", 6.0, 1.6, 0.1, 1.0, 0.62, false)
+	_en(r, "t_mu_polly", W - 1.0, 7.6, -PI * 0.4, 0.8, 0.42, false)
+	# juguetes de hojalata por el suelo y la caja sorpresa abierta
+	_en(r, "t_jug_caja_payaso", 5.6, 6.2, PI + 0.4, 1.0, 0.0, false)
+	_en(r, "t_jug_soldado", 2.7, 6.9, 0.7, 1.0, 0.0, false)
+	_en(r, "t_jug_soldado", 2.9, 7.1, 1.4, 1.0, 0.0, false)
+	_en(r, "t_jug_peonza", 4.4, 7.4, 0.0, 1.0, 0.0, false)
+	_en(r, "t_jug_musico", 3.85, 0.4, 0.3, 1.0, 0.62, false)
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
@@ -940,6 +954,7 @@ func _galeria(r: Dictionary) -> void:
 		_en(r, "marble_bust_01", x, 0.6, 0.0, 0.8, 0.76, false)
 	_en(r, "painted_wooden_bench", 0.4, 11.0, PI * 0.5)
 	_en(r, "painted_wooden_bench", W - 0.4, 11.0, -PI * 0.5)
+	_en(r, "t_mu_polly", W - 0.4, 11.3, -PI * 0.5, 1.0, 0.45, false)
 	_telas(r)
 
 ## Cuarto de huéspedes (9,6 × 9,6): puertas norte y sur (x 4,8-7,2); armario en (8,4; 8,4).
@@ -999,6 +1014,14 @@ func _pasillo(r: Dictionary) -> void:
 			x += 3.6
 		else:
 			x += 0.6
+	if String(r.name) == "Pasillo":
+		# una silla de ruedas vieja en mitad del pasillo, mirando hacia la escalera
+		_en(r, "t_silla_ruedas_rota", W * 0.62, D - 0.75, -PI * 0.5)
+		_en(r, "t_mu_polly", W - 0.6, D * 0.5, -PI * 0.5, 1.0, 0.0, false)
+	else:
+		# una muñeca sentada al fondo del pasillo, de cara a quien entra
+		_en(r, "t_mu_polly", W - 0.5, D * 0.5, -PI * 0.5, 1.0, 0.0, false)
+		_cuadro(r, "t_espejo_roto", W * 0.35, D - 0.09, PI, 1.0, 1.7)
 
 ## Cama de hierro con colchón mullido de bordes redondos, manta que cae por los lados con arrugas y almohada
 ## hinchada (antes eran cajas: parecían de Minecraft).
@@ -1337,6 +1360,84 @@ func _calderas(r: Dictionary) -> void:
 	_en(r, "Lantern_01", W - 0.4, 3.8, 0.0, 1.0, 0.83, false)
 	_en(r, "pian_old_stove", 8.0, 0.4, 0.0, 1.2)
 	_telas(r)
+	# la jaula oxidada y la cuna de hierro: aquí abajo encerraron a Elena las últimas semanas
+	_jaula(r, W - 1.7, D - 1.7)
+	_ensuciar(_en(r, "t_cuna_madera", W - 4.4, D - 0.8, PI, 1.0), Color(0.45, 0.3, 0.22))
+
+## Jaula de barrotes oxidados (1,6 × 1,6 × 1,9 m) con la puerta abierta.
+func _jaula(r: Dictionary, x: float, z: float) -> void:
+	var c := Vector3(r.rect.position.x + x, float(r.y), r.rect.position.y + z)
+	var oxido: StandardMaterial3D = m._mat.get("oxido", null)
+	if oxido == null:
+		oxido = StandardMaterial3D.new()
+		oxido.albedo_color = Color(0.32, 0.17, 0.09)
+		oxido.roughness = 0.85
+		oxido.metallic = 0.6
+		m._mat["oxido"] = oxido
+	var L := 1.6
+	var H := 1.9
+	for lado in 4:
+		for k in 9:
+			var u := -L * 0.5 + k * L / 8.0
+			if lado == 3 and k > 2 and k < 6:
+				continue  # la puerta, abierta
+			var p := Vector3(u, H * 0.5, -L * 0.5) if lado == 0 else (Vector3(u, H * 0.5, L * 0.5) if lado == 1 else (Vector3(-L * 0.5, H * 0.5, u) if lado == 2 else Vector3(L * 0.5, H * 0.5, u)))
+			m.box(Vector3(0.025, H, 0.025), c + p, oxido, false, m._house, true)
+	for hy in [0.05, H * 0.5, H]:
+		for s in [-1.0, 1.0]:
+			m.box(Vector3(L, 0.04, 0.04), c + Vector3(0, hy, s * L * 0.5), oxido, false, m._house, false)
+			m.box(Vector3(0.04, 0.04, L), c + Vector3(s * L * 0.5, hy, 0), oxido, false, m._house, false)
+	m.box(Vector3(L, 0.03, L), c + Vector3(0, H, 0), oxido, false, m._house, false)
+	# la puerta de la jaula, abierta hacia fuera
+	var puerta := Node3D.new()
+	m._house.add_child(puerta)
+	puerta.position = c + Vector3(L * 0.5, 0, -L * 0.2)
+	puerta.rotation.y = 1.9
+	for k in 4:
+		m.box(Vector3(0.025, H * 0.95, 0.025), Vector3(0, H * 0.48, k * 0.2), oxido, false, puerta, false)
+	# colisión de la jaula entera (tres paredes)
+	var cuerpo := StaticBody3D.new()
+	m._house.add_child(cuerpo)
+	cuerpo.position = c + Vector3(0, H * 0.5, 0)
+	for q in [[Vector3(L, H, 0.06), Vector3(0, 0, -L * 0.5)], [Vector3(L, H, 0.06), Vector3(0, 0, L * 0.5)], [Vector3(0.06, H, L), Vector3(-L * 0.5, 0, 0)]]:
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = q[0]
+		cs.shape = bs
+		cs.position = q[1]
+		cuerpo.add_child(cs)
+	_ocupar(c, Vector3(L + 0.3, H, L + 0.3))
+	# una manta sucia y un cuenco dentro
+	_en(r, "wooden_bowl_01", x - 0.3, z + 0.2, 0.0, 1.0, 0.0, false)
+
+## Capilla del ritual (sótano, 14,4 × 12 m): puerta al norte (x 2,4-4,8, desde la cava). Bancos de iglesia a los
+## lados, el altar con el tríptico al sur bajo un crucifijo, el sarcófago del fundador y, en el centro, el círculo
+## del ritual pintado en el suelo (lo pone ZarekTerror).
+func _capilla(r: Dictionary) -> void:
+	var W: float = r.rect.size.x
+	var D: float = r.rect.size.y
+	_en(r, "WoodenTable_02", W * 0.5, D - 0.75, 0.0)
+	_en(r, "t_altar_triptico", W * 0.5, D - 0.65, PI, 1.0, 0.78, false)
+	_en(r, "t_velas_4", W * 0.5 - 0.9, D - 0.95, 0.0, 1.0, 0.78, false)
+	_en(r, "t_velas_cuenco", W * 0.5 + 0.9, D - 0.9, 0.0, 1.0, 0.78, false)
+	_cuadro(r, "obj_withered_wooden_crucifix", W * 0.5, D - 0.09, PI, 1.6, 2.7)
+	_en(r, "obj_bible_on_stand", W * 0.5 - 2.2, D - 1.3, PI + 0.3)
+	_en(r, "t_angel_reza", W - 1.0, D - 0.9, PI + 0.5)
+	_en(r, "t_sarcofago", 1.2, D - 2.0, 0.0)
+	_en(r, "coti_occult_books", W * 0.5 + 2.6, D - 3.2, 0.7, 1.0, 0.0, false)
+	_en(r, "obj_scroll", W * 0.5 - 2.5, 4.2, 1.2, 1.0, 0.0, false)
+	# bancos: dos filas a cada lado del pasillo central; alguno volcado
+	var filas := [3.4, 5.0, 6.6, 8.2]
+	for i in filas.size():
+		for lado in [0, 1]:
+			var bx: float = 2.3 if lado == 0 else W - 2.3
+			var b := _en(r, "t_banco_iglesia", bx, filas[i], PI)
+			if b and i == 2 and lado == 1:
+				b.rotation.y += 0.5
+			if b and i == 3 and lado == 0:
+				_tumbar(b)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
 ## Botellero de roble oscuro (1,6 m a lo largo de la pared, 2 m de alto) con botellas en cada balda.
 func _botellero(r: Dictionary, x: float, z: float, en_pared_x: bool) -> void:
@@ -1433,6 +1534,10 @@ func _atico(r: Dictionary) -> void:
 		_en(r, "terr_old_and_dusty_multi_crate_st", q[0], q[1], q[2], 0.8)
 	# juguetes de los niños, olvidados
 	_en(r, "ropa_mannequin_1900s_m_size", 13.0, 16.0, 2.6)
+	_en(r, "t_maniqui_1900", 14.2, 16.6, 2.2)
+	_en(r, "t_maniqui_1900", 30.0, 12.0, -2.0)
+	_en(r, "t_mu_polly", 2.0, 9.5, PI * 0.5, 1.0, 0.62, false)
+	_en(r, "t_cuna_madera", 22.0, 20.5, 0.4, 0.95)
 	_en(r, "obj_birdcage_2", 10.4, 18.4, 0.8)
 	_en(r, "Ottoman_01", 19.0, 15.0, 0.4)
 	# cuadros apoyados contra las paredes, de cara a la pared alguno
@@ -1503,6 +1608,8 @@ func _grupo(r: Dictionary) -> String:
 ## de trabajo en escritorios, de noche en mesillas…), cada tramo libre de pared un cuadro centrado con apliques
 ## a los lados, y el suelo solo lo que tiene sentido (leña junto a la chimenea, libros junto a las estanterías).
 func _relleno(r: Dictionary) -> void:
+	if String(r.name) == "Capilla del ritual":
+		return
 	var g := _grupo(r)
 	if g != "tunel":
 		_paredes(r, g)
@@ -2417,7 +2524,7 @@ func _vestir_base(r: Dictionary) -> void:
 		"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
 		"Baño": _bano, "Cuarto de huéspedes azul": _huespedes_azul, "Sala de costura": _costura, "Cuarto de la institutriz": _institutriz,
 		"Galería de retratos": _galeria, "Cuarto de huéspedes": _huespedes, "Cuarto de lectura": _lectura, "Pasillo principal": _pasillo, "Pasillo": _pasillo,
-		"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile}
+		"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile, "Capilla del ritual": _capilla}
 	if a_mano.has(String(r.name)):
 		_reservar_pasos(r)
 		(a_mano[String(r.name)] as Callable).call(r)
