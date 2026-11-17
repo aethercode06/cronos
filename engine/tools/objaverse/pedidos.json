@@ -1,1 +1,93 @@
-[]
+[
+ {
+  "clave": "an_rata_gris",
+  "uid": "f47fd7f41b0943359a9c7683d9bd600f",
+  "nombre": "Rat 🐀 (Test )Free",
+  "autor": "Nyilonelycompany",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_rata_negra",
+  "uid": "fc76a8d1bafb4047bcc6aa16869445b8",
+  "nombre": "RAT Animation2",
+  "autor": "Tanya_Ekberg",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_rata_4",
+  "uid": "5deb007a05a946d28ce6403616f9629b",
+  "nombre": "Rat",
+  "autor": "Artise1",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_rata_c",
+  "uid": "350f57f9651f4a8e9746cef3d7b7dfe1",
+  "nombre": "Rat",
+  "autor": "tdvance",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_rata_d",
+  "uid": "5a6977aed137461daa3b70e316ce672d",
+  "nombre": "Animation Rat Boss2",
+  "autor": "Tanya_Ekberg",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_rata_blanca",
+  "uid": "847629266c0f442da74fb132f46f3baf",
+  "nombre": "Rat",
+  "autor": "rhcreations",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_gato_negro",
+  "uid": "836312def1b84e588866500a2bf79f0f",
+  "nombre": "Cat [Murdered: Soul Suspect]",
+  "autor": "mark2580",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_gato_negro2",
+  "uid": "aec25699660043a29595f9572149d1e8",
+  "nombre": "An Animated Cat",
+  "autor": "Evil_Katz",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_gato_anda",
+  "uid": "fc6e597a81ce4dc291dcca6a9e6888ba",
+  "nombre": "cat Walk",
+  "autor": "erinaekasyaharani",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_gusano",
+  "uid": "f9ab501593594f71a9c1371090ea9a14",
+  "nombre": "Worm L",
+  "autor": "thimbrovsky",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_larva",
+  "uid": "d949a6b6ba2547bb930f347d7f9b8948",
+  "nombre": "Maggot",
+  "autor": "shedmon",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_gusano2",
+  "uid": "394a659ba0b44ffbb0ceb89e731a7593",
+  "nombre": "All tomorrows - Worm",
+  "autor": "skache",
+  "licencia": "by"
+ },
+ {
+  "clave": "an_larva2",
+  "uid": "d88c772abc13455082531ed116788f14",
+  "nombre": "Maggot Full",
+  "autor": "DrHanz",
+  "licencia": "by"
+ }
+]
