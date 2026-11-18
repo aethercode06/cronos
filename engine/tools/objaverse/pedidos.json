@@ -1,226 +1,58 @@
 [
  {
-  "clave": "t_mu_polly",
-  "uid": "9ef34eb03f0a42978b3a9d20f0f8f389",
-  "nombre": "Porcelain Polly",
-  "autor": "archmage40",
+  "clave": "w_machete_oxidado",
+  "uid": "86b7a92208e14cf291bc0da1dd02b24f",
+  "nombre": "Simple Machete (Rusted)",
+  "autor": "Planetrix23",
   "licencia": "by"
  },
  {
-  "clave": "t_mu_figura",
-  "uid": "a0a494a8c3db4cc4ad10cb433125fe78",
-  "nombre": "3D Antique Doll",
-  "autor": "nektar.green",
+  "clave": "w_machete",
+  "uid": "df244a4553f7420cb898ed86cab188e7",
+  "nombre": "Machete",
+  "autor": "alexsolo093",
   "licencia": "by"
  },
  {
-  "clave": "t_cuna_madera",
-  "uid": "c05d9d2c510d4ddfa98bd25f08358211",
-  "nombre": "Wooden Baby Crib",
-  "autor": "LincolnLabs",
+  "clave": "w_machete_rayado",
+  "uid": "548b073b4d924edfb9503509eb8b7c0d",
+  "nombre": "Scuffed Machete",
+  "autor": "Luka.Fox",
   "licencia": "by"
  },
  {
-  "clave": "t_silla_ruedas_rota",
-  "uid": "97bd7574406d4df38d54ec4ac1f18c40",
-  "nombre": "RE: wheelchair (horror game hospital)",
-  "autor": "japan3d",
+  "clave": "w_hacha_vieja",
+  "uid": "b04ab495c8c143bcaad5171878d3eeb9",
+  "nombre": "Old axe",
+  "autor": "habibshiddick3",
   "licencia": "by"
  },
  {
-  "clave": "t_silla_ruedas_antigua",
-  "uid": "f0e327c8b90c4c66a4cc5326e848b743",
-  "nombre": "Combat Wheelchair Base Model - Spiral Metal",
-  "autor": "chaitanyak",
+  "clave": "w_hacha_mango",
+  "uid": "d0800a9ea4ce48bca8bd1d977989113b",
+  "nombre": "Old Axe",
+  "autor": "adjective.george",
   "licencia": "by"
  },
  {
-  "clave": "t_lap_set",
-  "uid": "743bddbaca8e4a2caabd08c727be51ed",
-  "nombre": "Grave Stones",
-  "autor": "aointeractive",
+  "clave": "w_motosierra_vintage",
+  "uid": "350a49e39bb947c99148a21f7a0b6573",
+  "nombre": "Vintage ChainSaw",
+  "autor": "MuratAkdan",
   "licencia": "by"
  },
  {
-  "clave": "t_lap_coleccion",
-  "uid": "216711532d5a4078b9c0d5020af01eb1",
-  "nombre": "Grave Stone Collection",
-  "autor": "Kigha",
+  "clave": "w_motosierra",
+  "uid": "fcc62e26b8bf483e93f2fa7d7c75f453",
+  "nombre": "Chainsaw",
+  "autor": "helioshp",
   "licencia": "by"
  },
  {
-  "clave": "t_lap_tumbas",
-  "uid": "c9cbabdbf1d548c49309b0c6cc2f255c",
-  "nombre": "Graves",
-  "autor": "DivyeSh.PanchAl",
-  "licencia": "by"
- },
- {
-  "clave": "t_lap_cruces",
-  "uid": "aa984f81b56d4361a1379f46eea61b8e",
-  "nombre": "headstone_v6_v10",
-  "autor": "Isengrim",
-  "licencia": "by"
- },
- {
-  "clave": "t_angel_pedestal",
-  "uid": "ad7d6f9a90754c78b09c86dfade50975",
-  "nombre": "Angel statue",
-  "autor": "inven2000",
-  "licencia": "by"
- },
- {
-  "clave": "t_angel_reza",
-  "uid": "eda0a067c6a94181921c279b37a61db6",
-  "nombre": "Stone angel",
-  "autor": "alban",
-  "licencia": "by"
- },
- {
-  "clave": "t_cripta",
-  "uid": "c5e8d9ef05ae4bfd9f2defbad7264b4c",
-  "nombre": "Night cemetery. Crypt",
-  "autor": "Ayouloo",
-  "licencia": "by"
- },
- {
-  "clave": "t_sarcofago",
-  "uid": "72e6ec7290f24ceaa034f4bb79a0bf90",
-  "nombre": "sarcophagus",
-  "autor": "persnetto",
-  "licencia": "by"
- },
- {
-  "clave": "t_banco_iglesia",
-  "uid": "9b8ceb6bc94745b69b822cdeccb3a6d2",
-  "nombre": "Church Pew Bench",
-  "autor": "torricane",
-  "licencia": "by"
- },
- {
-  "clave": "t_iglesia_pack",
-  "uid": "e460517379e44313bf4a81817881cf11",
-  "nombre": "Church Asset Pack",
-  "autor": "caboose3d",
-  "licencia": "by"
- },
- {
-  "clave": "t_altar_triptico",
-  "uid": "931b869d79854e0cb8b8a227e79ae150",
-  "nombre": "Portable small altar",
-  "autor": "WirtualneMuzeaMalopolski",
-  "licencia": "cc0"
- },
- {
-  "clave": "t_velas_4",
-  "uid": "4058a3ed739e4f9f89f49323c7db4b4c",
-  "nombre": "Candles",
-  "autor": "rhcreations",
-  "licencia": "by"
- },
- {
-  "clave": "t_velas_cuenco",
-  "uid": "658ecf9f837246509b0b1c4aa81e9e5b",
-  "nombre": "Bowl of Candles",
-  "autor": "Rexotec",
-  "licencia": "by"
- },
- {
-  "clave": "t_velas_dos",
-  "uid": "50f5028f64b34fd39bfe2ded0ac21464",
-  "nombre": "Candles - Household Props Challenge - Day 27",
-  "autor": "Pixel-bit",
-  "licencia": "by"
- },
- {
-  "clave": "t_verja_hierro",
-  "uid": "81600205bb594ed1b2c322ad559fe0c2",
-  "nombre": "Iron Fence",
-  "autor": "Ryoce",
-  "licencia": "by"
- },
- {
-  "clave": "t_verja_gotica",
-  "uid": "4afaf4c5612846edb04ccee219f0afc6",
-  "nombre": "Gothic iron Fence",
-  "autor": "tiiatuulia",
-  "licencia": "by"
- },
- {
-  "clave": "t_espejo_roto",
-  "uid": "b5de0c9e3d4d49e684bc26db39b12f07",
-  "nombre": "Old Broken Mirror",
-  "autor": "CHooverShrimp",
-  "licencia": "by"
- },
- {
-  "clave": "t_tablas_podridas",
-  "uid": "f20d249e4fb8415fbbc1f96a9b1ac4b6",
-  "nombre": "Wooden planks (rotten)",
-  "autor": "shadowdraak",
-  "licencia": "by"
- },
- {
-  "clave": "t_tablas_6",
-  "uid": "3299d83456eb44e0b07da3f31428330e",
-  "nombre": "Wooden Planks",
-  "autor": "shtran",
-  "licencia": "by"
- },
- {
-  "clave": "t_maniqui_1900",
-  "uid": "6353b94707ae4e799509364efb4480c1",
-  "nombre": "1900 dress form",
-  "autor": "alekseimoskvin1",
-  "licencia": "by"
- },
- {
-  "clave": "t_jug_caja_payaso",
-  "uid": "7430eda5a6be48da852743ea8ff75beb",
-  "nombre": "The Steadfast Tin Soldier",
-  "autor": "macadaneo",
-  "licencia": "by"
- },
- {
-  "clave": "t_jug_soldado",
-  "uid": "6b13d0466f5f4220806ea28d0a15f701",
-  "nombre": "Toy soldier 10k photoscan.",
-  "autor": "chepakusha",
-  "licencia": "by"
- },
- {
-  "clave": "t_jug_peonza",
-  "uid": "e91f8742370a420e9102dc13e9eb29c9",
-  "nombre": "Spinning Top",
-  "autor": "cleisonctga",
-  "licencia": "by"
- },
- {
-  "clave": "t_jug_musico",
-  "uid": "95c45a7ffefa4470b5528d497219925a",
-  "nombre": "Tin Toy Musician",
-  "autor": "charlotteshj",
-  "licencia": "by"
- },
- {
-  "clave": "t_macetas",
-  "uid": "936c438fc2ab4631ab81cb05af343a9e",
-  "nombre": "Plant pots",
-  "autor": "Patricia.Schad",
-  "licencia": "by"
- },
- {
-  "clave": "t_pozo_viejo",
-  "uid": "7fa29793eff14a7587ee0af15446a675",
-  "nombre": "Old Well",
-  "autor": "ra3id",
-  "licencia": "by"
- },
- {
-  "clave": "t_pozo_piedra",
-  "uid": "2a62fa5f86b74a9b8279c0809df1335f",
-  "nombre": "Water Well",
-  "autor": "Memorie",
+  "clave": "w_motosierra_mano",
+  "uid": "dbb5316b206245afbcdf24a8c8797f0d",
+  "nombre": "Chainsaw | Made by hand | Crafted - Game Ready.",
+  "autor": "mezuna",
   "licencia": "by"
  }
 ]
