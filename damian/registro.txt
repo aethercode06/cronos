@@ -1,0 +1,70 @@
+target stomach-pregnant-incr 0.7
+target stomach-navel-down 0.5
+target torso-scale-depth-incr 0.8
+target torso-scale-horiz-incr 0.7
+target measure-waist-circ-incr 1.0
+target measure-bust-circ-incr 0.7
+target measure-shoulder-dist-incr 1.0
+target measure-neck-circ-incr 1.0
+target measure-neck-height-decr 0.6
+target measure-upperarm-circ-incr 1.0
+target measure-knee-circ-incr 0.5
+target measure-calf-circ-incr 0.6
+target l-upperarm-fat-incr 0.8
+target r-upperarm-fat-incr 0.8
+target l-lowerarm-fat-incr 0.5
+target r-lowerarm-fat-incr 0.5
+target l-hand-scale-incr 0.8
+target r-hand-scale-incr 0.8
+target l-foot-scale-incr 0.5
+target r-foot-scale-incr 0.5
+target head-fat-incr 1.0
+target head-age-incr 0.6
+target head-scale-horiz-incr 0.3
+target l-cheek-volume-incr 0.9
+target r-cheek-volume-incr 0.9
+target l-cheek-inner-incr 0.6
+target r-cheek-inner-incr 0.6
+target chin-width-incr 0.8
+target chin-height-incr 0.3
+target chin-prominent-decr 0.5
+target l-eye-bag-incr 1.0
+target r-eye-bag-incr 1.0
+target eyebrows-trans-down 0.6
+target eyebrows-angle-down 0.5
+target nose-scale-horiz-incr 0.6
+target nose-flaring-incr 0.7
+target nose-hump-incr 0.5
+target nose-scale-depth-incr 0.4
+target mouth-scale-horiz-incr 0.4
+target mouth-lowerlip-volume-incr 0.7
+target mouth-upperlip-volume-incr 0.4
+target l-ear-scale-incr 0.3
+target r-ear-scale-incr 0.3
+piel /home/runner/.config/blender/5.3/extensions/.user/user_default/mpfb/data/skins/middleage_caucasian_male/middleage_caucasian_male.mhmat
+rig Human.rig
+recurso high-poly.mhclo
+recurso eyebrow001.mhclo
+recurso eyelashes01.mhclo
+recurso teeth_base.mhclo
+recurso tongue01.mhclo
+recurso male_worksuit01.mhclo
+gestos ARKit cargados
+GLB exportado
+obj Human MESH 19158 122
+obj Human.eyebrow001 MESH 124 37
+obj Human.eyebrow001_export MESH 124 37
+obj Human.eyelashes01 MESH 250 26
+obj Human.eyelashes01_export MESH 250 26
+obj Human.high-poly MESH 1064 9
+obj Human.high-poly_export MESH 1064 9
+obj Human.male_worksuit01 MESH 3763 1
+obj Human.male_worksuit01_export MESH 3763 1
+obj Human.rig ARMATURE  0
+obj Human.rig_export ARMATURE  0
+obj Human.teeth_base MESH 3868 5
+obj Human.teeth_base_export MESH 3868 5
+obj Human.tongue01 MESH 226 6
+obj Human.tongue01_export MESH 226 6
+obj Human_export MESH 13380 122
+FORMAS ['Basis', '$md-$ca-$ma-$yn', '$md-universal-$ma-$yn-$av$mu-$av$wg', '$md-$ca-$ma-old', '$md-universal-$ma-$yn-$av$mu-max$wg', '$md-universal-$ma-$yn-max$mu-$av$wg', '$md-universal-$ma-$yn-max$mu-max$wg', '$md-universal-$ma-old-$av$mu-$av$wg', '$md-universal-$ma-old-$av$mu-max$wg', '$md-universal-$ma-old-max$mu-$av$wg', '$md-universal-$ma-old-max$mu-max$wg', '$md-$ma-$yn-$av$mu-$av$wg-max$hg', '$md-$ma-$yn-$av$mu-max$wg-max$hg', '$md-$ma-$yn-max$mu-$av$wg-max$hg', '$md-$ma-$yn-max$mu-max$wg-max$hg', '$md-$ma-old-$av$mu-$av$wg-max$hg', '$md-$ma-old-$av$mu-max$wg-max$hg', '$md-$ma-old-max$mu-$av$wg-max$hg', '$md-$ma-old-max$mu-max$wg-max$hg', '$md-$ma-$yn-$av$mu-$av$wg-$un$pr', '$md-$ma-$yn-$av$mu-max$wg-$un$pr', '$md-$ma-$yn-max$mu-$av$wg-$un$pr', '$md-$ma-$yn-max$mu-max$wg-$un$pr', '$md-$ma-old-$av$mu-$av$wg-$un$pr', '$md-$ma-old-$av$mu-max$wg-$un$pr', '$md-$ma-old-max$mu-$av$wg-$un$pr', '$md-$ma-old-max$mu-max$wg-$un$pr', 'stomach-pregnant-incr', 'stomach-navel-down', 'torso-scale-depth-incr', 'torso-scale-horiz-incr', 'measure-waist-circ-incr', 'measure-bust-circ-incr', 'measure-shoulder-dist-incr', 'measure-neck-circ-incr', 'measure-neck-height-decr', 'measure-upperarm-circ-incr', 'measure-knee-circ-incr', 'measure-calf-circ-incr', 'l-upperarm-fat-incr', 'r-upperarm-fat-incr', 'l-lowerarm-fat-incr', 'r-lowerarm-fat-incr', 'l-hand-scale-incr', 'r-hand-scale-incr', 'l-foot-scale-incr', 'r-foot-scale-incr', 'head-fat-incr', 'head-age-incr', 'head-scale-horiz-incr', 'l-cheek-volume-incr', 'r-cheek-volume-incr', 'l-cheek-inner-incr', 'r-cheek-inner-incr', 'chin-width-incr', 'chin-height-incr', 'chin-prominent-decr', 'l-eye-bag-incr', 'r-eye-bag-incr', 'eyebrows-trans-down', 'eyebrows-angle-down', 'nose-scale-horiz-incr', 'nose-flaring-incr', 'nose-hump-incr', 'nose-scale-depth-incr', 'mouth-scale-horiz-incr', 'mouth-lowerlip-volume-incr', 'mouth-upperlip-volume-incr', 'l-ear-scale-incr', 'r-ear-scale-incr', 'browDownLeft', 'browDownRight', 'browInnerUp', 'browOuterUpLeft', 'browOuterUpRight', 'cheekPuff', 'cheekSquintLeft', 'cheekSquintRight', 'eyeBlinkLeft', 'eyeBlinkRight', 'eyeLookDownLeft', 'eyeLookDownRight', 'eyeLookInLeft', 'eyeLookInRight', 'eyeLookOutLeft', 'eyeLookOutRight', 'eyeLookUpLeft', 'eyeLookUpRight', 'eyeSquintLeft', 'eyeSquintRight', 'eyeWideLeft', 'eyeWideRight', 'jawForward', 'jawLeft', 'jawOpen', 'jawRight', 'mouthClose', 'mouthDimpleLeft', 'mouthDimpleRight', 'mouthFrownLeft', 'mouthFrownRight', 'mouthFunnel', 'mouthLeft', 'mouthLowerDownLeft', 'mouthLowerDownRight', 'mouthPressLeft', 'mouthPressRight', 'mouthPucker', 'mouthRight', 'mouthRollLower', 'mouthRollUpper', 'mouthShrugLower', 'mouthShrugUpper', 'mouthSmileLeft', 'mouthSmileRight', 'mouthStretchLeft', 'mouthStretchRight', 'mouthUpperUpLeft', 'mouthUpperUpRight', 'noseSneerLeft', 'noseSneerRight', 'tongueOut']
