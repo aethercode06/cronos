@@ -59,7 +59,7 @@ bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "damian_mh.blend"))
 try:
     root = ExportService.create_character_copy(h, name_suffix="_export")
     eb = ObjectService.find_object_of_type_amongst_nearest_relatives(root, "Basemesh")
-    ExportService.bake_modifiers_remove_helpers(eb, bake_masks=True, bake_subdiv=False, remove_helpers=True, also_proxy=True)
+    ExportService.bake_modifiers_remove_helpers(eb, bake_masks=False, bake_subdiv=False, remove_helpers=True, also_proxy=True)
     bpy.ops.object.select_all(action="DESELECT")
     root.select_set(True)
     for c in ObjectService.get_list_of_children(root): c.select_set(True)
