@@ -1,0 +1,30 @@
+name: Animaciones CC0 (Quaternius UAL)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/anim.yml"]
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar Universal Animation Library 1 y 2 (CC0)
+        run: |
+          set +e
+          mkdir -p out && cd out
+          for u in https://opengameart.org/sites/default/files/universal_animation_librarystandard.zip https://opengameart.org/sites/default/files/universal_animation_library_2standard.zip; do
+            curl -sSfL --retry 3 -A "Mozilla/5.0" -o "$(basename $u)" "$u"; echo "$u -> $?"; ls -la "$(basename $u)"
+          done
+          for z in *.zip; do mkdir -p "${z%.zip}" && unzip -qo "$z" -d "${z%.zip}"; done
+          rm -f *.zip
+          find . -type f | sed 's/^/  /' > lista.txt; cat lista.txt | head -200
+          # solo los glb y la licencia
+          find . -type f ! -iname "*.glb" ! -iname "*.txt" ! -iname "*.md" -delete
+      - name: Guardar en la rama aether-anim
+        run: |
+          cd out && git init -q && git checkout -q -b aether-anim
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "UAL ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-anim
