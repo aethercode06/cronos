@@ -23,4 +23,5 @@ sc.render.resolution_x, sc.render.resolution_y = 540, 810
 sc.render.image_settings.file_format = 'PNG'
 os.makedirs(OUT, exist_ok=True)
 sc.render.filepath = os.path.join(OUT, "f_")
+sc.frame_step = int(os.environ.get("PASO", "1"))
 bpy.ops.render.render(animation=True)
