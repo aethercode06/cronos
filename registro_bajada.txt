@@ -1,0 +1,17 @@
+starting download of 8 objects with 4 processes
+Downloaded 3 / 8 objects
+Downloaded 5 / 8 objects
+Downloaded 1 / 8 objects
+Downloaded 6 / 8 objects
+Downloaded 2 / 8 objects
+Downloaded 8 / 8 objects
+Downloaded 4 / 8 objects
+Downloaded 7 / 8 objects
+OK w_machete_oxidado 2817444
+OK w_machete 3728588
+OK w_machete_rayado 1277908
+OK w_hacha_vieja 2001624
+OK w_hacha_mango 2494040
+OK w_motosierra_vintage 10104504
+OK w_motosierra 2998420
+OK w_motosierra_mano 4617976

@@ -1,0 +1,728 @@
+{
+ "a_machete": [
+  {
+   "uid": "489e7231712a4c008bdc7a6cc4da06cc",
+   "nombre": "Kukri + Skins",
+   "caras": 9952,
+   "licencia": "by",
+   "autor": "ELIZION",
+   "url": "https://sketchfab.com/3d-models/489e7231712a4c008bdc7a6cc4da06cc",
+   "mini": "https://media.sketchfab.com/models/489e7231712a4c008bdc7a6cc4da06cc/thumbnails/efdc178ac2354ab1912fc1b1d6366d92/847a52c15c4f4d7bb08db55dcd8b1000.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "1964c05fd5b9462791219c90fa2d24a0",
+   "nombre": "Kukri knife",
+   "caras": 3654,
+   "licencia": "by",
+   "autor": "maxij174",
+   "url": "https://sketchfab.com/3d-models/1964c05fd5b9462791219c90fa2d24a0",
+   "mini": "https://media.sketchfab.com/models/1964c05fd5b9462791219c90fa2d24a0/thumbnails/7dfe9e2a52cb43fcb6ff8eaee2fc3d0d/88d5f32336b345e1b21ee49b33175ce5.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "e3e3efb43edd4257afca9ee227c5299e",
+   "nombre": "Barcode Machete",
+   "caras": 22230,
+   "licencia": "by",
+   "autor": "milacetious",
+   "url": "https://sketchfab.com/3d-models/e3e3efb43edd4257afca9ee227c5299e",
+   "mini": "https://media.sketchfab.com/models/e3e3efb43edd4257afca9ee227c5299e/thumbnails/8bf95e96a1ec40639ae21560cf3e3510/7611a878fbf540afb2770a7dbbe2a10f.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "4418bc44d53b46ef8094937faf6126e7",
+   "nombre": "Orc Machete",
+   "caras": 1176,
+   "licencia": "by",
+   "autor": "iceboxX708",
+   "url": "https://sketchfab.com/3d-models/4418bc44d53b46ef8094937faf6126e7",
+   "mini": "https://media.sketchfab.com/models/4418bc44d53b46ef8094937faf6126e7/thumbnails/8688f6727d6a434f874ec81f4924beaa/a8b3c82789034978a07d287d5c521938.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "6b2c6c7a2ba1492aa19508d61d5c8d97",
+   "nombre": "Machete",
+   "caras": 1458,
+   "licencia": "by",
+   "autor": "thunderpwn",
+   "url": "https://sketchfab.com/3d-models/6b2c6c7a2ba1492aa19508d61d5c8d97",
+   "mini": "https://media.sketchfab.com/models/6b2c6c7a2ba1492aa19508d61d5c8d97/thumbnails/38a6273133964f3388f2025f0b07e013/378f593bad164f0096d8021de120607f.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "9f66951ad3f743d787749b645da89b18",
+   "nombre": "Machete - Kukri",
+   "caras": 3052,
+   "licencia": "by",
+   "autor": "frobin",
+   "url": "https://sketchfab.com/3d-models/9f66951ad3f743d787749b645da89b18",
+   "mini": "https://media.sketchfab.com/models/9f66951ad3f743d787749b645da89b18/thumbnails/4e8ac36351764934966a9fc2280e10f1/9463f9024e3e42cf8f16831e4ee0fc56.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "f07ffca8d9524e6c8c4b6d24692529c5",
+   "nombre": "Shoelace Machete",
+   "caras": 12122,
+   "licencia": "by",
+   "autor": "milacetious",
+   "url": "https://sketchfab.com/3d-models/f07ffca8d9524e6c8c4b6d24692529c5",
+   "mini": "https://media.sketchfab.com/models/f07ffca8d9524e6c8c4b6d24692529c5/thumbnails/cda322c8e81f4a87b000d4abe46eac59/71a1d168a8ed47a4a0bf96b4cf6e8041.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "c791ec5168ed4f5ab712e871dbc7a5d2",
+   "nombre": "Machete",
+   "caras": 944,
+   "licencia": "by",
+   "autor": "shedmon",
+   "url": "https://sketchfab.com/3d-models/c791ec5168ed4f5ab712e871dbc7a5d2",
+   "mini": "https://media.sketchfab.com/models/c791ec5168ed4f5ab712e871dbc7a5d2/thumbnails/ebbd78ed528e411c831e84d242d7bfc8/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "5717ea55e34341b79efa692517e8598b",
+   "nombre": "Goblin Sword",
+   "caras": 726,
+   "licencia": "by",
+   "autor": "Taboo16",
+   "url": "https://sketchfab.com/3d-models/5717ea55e34341b79efa692517e8598b",
+   "mini": "https://media.sketchfab.com/models/5717ea55e34341b79efa692517e8598b/thumbnails/2470d29718d140a982d8aafd1278f339/1b9b90c5a0e2487d82ac827814e3827c.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "df244a4553f7420cb898ed86cab188e7",
+   "nombre": "Machete",
+   "caras": 1432,
+   "licencia": "by",
+   "autor": "alexsolo093",
+   "url": "https://sketchfab.com/3d-models/df244a4553f7420cb898ed86cab188e7",
+   "mini": "https://media.sketchfab.com/models/df244a4553f7420cb898ed86cab188e7/thumbnails/f04b6649532a4bb5b253c13ab7e0be9b/aaf44565199944609accb8fbc47af9ce.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "6c92ee0cb2214bebabc294bf1af4e00a",
+   "nombre": "Machete",
+   "caras": 6470,
+   "licencia": "by",
+   "autor": "pxdrosilva",
+   "url": "https://sketchfab.com/3d-models/6c92ee0cb2214bebabc294bf1af4e00a",
+   "mini": "https://media.sketchfab.com/models/6c92ee0cb2214bebabc294bf1af4e00a/thumbnails/d36ca95b2fc9410d903648bb2b57ef07/4cd46b224be04d2fab91b164cce0ecaf.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "b32294d9719444ccad6a7e4b16b9437c",
+   "nombre": "Kukri Machete",
+   "caras": 6329,
+   "licencia": "by",
+   "autor": "isaackgamma",
+   "url": "https://sketchfab.com/3d-models/b32294d9719444ccad6a7e4b16b9437c",
+   "mini": "https://media.sketchfab.com/models/b32294d9719444ccad6a7e4b16b9437c/thumbnails/a2cc72fecdd14928a8df93b9968218dc/9b2aa5b37ceb4fc3a69ed484f57b29fb.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "c4e4bdd872774604980e6269c5f56667",
+   "nombre": "Halo UNSC Machete",
+   "caras": 3520,
+   "licencia": "by",
+   "autor": "Aegis_Wolf",
+   "url": "https://sketchfab.com/3d-models/c4e4bdd872774604980e6269c5f56667",
+   "mini": "https://media.sketchfab.com/models/c4e4bdd872774604980e6269c5f56667/thumbnails/575a2e7c6d554e9a8a108757e82cd027/b3faa75a66df4ddc8e1539b751420191.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "a1e52d025879464a811ffb6c8840d24c",
+   "nombre": "Shabby Machete",
+   "caras": 286,
+   "licencia": "by",
+   "autor": "r.m.kowalewski",
+   "url": "https://sketchfab.com/3d-models/a1e52d025879464a811ffb6c8840d24c",
+   "mini": "https://media.sketchfab.com/models/a1e52d025879464a811ffb6c8840d24c/thumbnails/060782ebb1de431d94dc036b27adc186/e9e7d9b6a88c44e5bd0ae3e59a0471a0.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "1e54b63d61b94b13a73fc9c3ce688e37",
+   "nombre": "Machete Worn",
+   "caras": 822,
+   "licencia": "by",
+   "autor": "shedmon",
+   "url": "https://sketchfab.com/3d-models/1e54b63d61b94b13a73fc9c3ce688e37",
+   "mini": "https://media.sketchfab.com/models/1e54b63d61b94b13a73fc9c3ce688e37/thumbnails/6e437e09b4944129a0fe45bcd2d6b5cc/d7f73637eab94141bda177a9495c06f0.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "7a5ee1f408314d8199bb43c44c5bd163",
+   "nombre": "Machete Aliexpress",
+   "caras": 5358,
+   "licencia": "by",
+   "autor": "Medji",
+   "url": "https://sketchfab.com/3d-models/7a5ee1f408314d8199bb43c44c5bd163",
+   "mini": "https://media.sketchfab.com/models/7a5ee1f408314d8199bb43c44c5bd163/thumbnails/2358ecc18adf49938ff681a4de55d79c/3eff7a7375e74a12910c6d5920e6d206.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "548b073b4d924edfb9503509eb8b7c0d",
+   "nombre": "Scuffed Machete",
+   "caras": 2370,
+   "licencia": "by",
+   "autor": "Luka.Fox",
+   "url": "https://sketchfab.com/3d-models/548b073b4d924edfb9503509eb8b7c0d",
+   "mini": "https://media.sketchfab.com/models/548b073b4d924edfb9503509eb8b7c0d/thumbnails/c9208ef38b1b4aef9b92cb7e9bafe06b/dfacba94bf5a445cb51cfbf3387292e3.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "175bb0580dee4890800ce56a6c83b831",
+   "nombre": "Classic Machete",
+   "caras": 904,
+   "licencia": "by",
+   "autor": "junglebird",
+   "url": "https://sketchfab.com/3d-models/175bb0580dee4890800ce56a6c83b831",
+   "mini": "https://media.sketchfab.com/models/175bb0580dee4890800ce56a6c83b831/thumbnails/50708210f8e9449d8d6bf98158f8c828/ef0ce1b591c44f089677b6633d6b22e6.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "a24cc3d644d849e18ecd28d44f698d7c",
+   "nombre": "Brute Cleaver",
+   "caras": 5810,
+   "licencia": "by",
+   "autor": "shor.riot",
+   "url": "https://sketchfab.com/3d-models/a24cc3d644d849e18ecd28d44f698d7c",
+   "mini": "https://media.sketchfab.com/models/a24cc3d644d849e18ecd28d44f698d7c/thumbnails/312cc7b8b62748faa033d4d903906734/ac114cf9a4a6424181f03f100bd174d0.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "bec7ee80bac24cc19b1e79cf8b57c50a",
+   "nombre": "PS1 Style Machete",
+   "caras": 102,
+   "licencia": "by",
+   "autor": "Falxxx",
+   "url": "https://sketchfab.com/3d-models/bec7ee80bac24cc19b1e79cf8b57c50a",
+   "mini": "https://media.sketchfab.com/models/bec7ee80bac24cc19b1e79cf8b57c50a/thumbnails/348b8860dfa74ce9bff7f0f3db6ff202/6a8e7be0b36141578f195aadbdd7012c.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "2d8d63e73e024c8cbfa00a6b2d4847ac",
+   "nombre": "machete",
+   "caras": 592,
+   "licencia": "by",
+   "autor": "filthycent",
+   "url": "https://sketchfab.com/3d-models/2d8d63e73e024c8cbfa00a6b2d4847ac",
+   "mini": "https://media.sketchfab.com/models/2d8d63e73e024c8cbfa00a6b2d4847ac/thumbnails/7a121665609144a4b4cde4a2585b9d1a/9360325454f145d3855cc080ba48b5b2.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "86b7a92208e14cf291bc0da1dd02b24f",
+   "nombre": "Simple Machete (Rusted)",
+   "caras": 6708,
+   "licencia": "by",
+   "autor": "Planetrix23",
+   "url": "https://sketchfab.com/3d-models/86b7a92208e14cf291bc0da1dd02b24f",
+   "mini": "https://media.sketchfab.com/models/86b7a92208e14cf291bc0da1dd02b24f/thumbnails/3713e45968964b77ac5aeae315e70236/ca61b93e65e64afa8dd924f8de27a606.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "3a742810c67846c6b424f52befd0a6ef",
+   "nombre": "Fan Blade",
+   "caras": 914,
+   "licencia": "by",
+   "autor": "samdutter",
+   "url": "https://sketchfab.com/3d-models/3a742810c67846c6b424f52befd0a6ef",
+   "mini": "https://media.sketchfab.com/models/3a742810c67846c6b424f52befd0a6ef/thumbnails/db28e743e1304f3bb31259c93e6572ae/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "cd23d35d9130486685a7417efccb52d0",
+   "nombre": "Machete Kukri",
+   "caras": 3412,
+   "licencia": "by",
+   "autor": "Alex_Z",
+   "url": "https://sketchfab.com/3d-models/cd23d35d9130486685a7417efccb52d0",
+   "mini": "https://media.sketchfab.com/models/cd23d35d9130486685a7417efccb52d0/thumbnails/ad2971964b1443b8b7a75b72867d21a8/a0434b5a83da4d879dcf316cb8d6a97c.jpeg",
+   "anim": 0
+  }
+ ],
+ "a_hacha": [
+  {
+   "uid": "65473708254e42409fb54ac1e18d0ec5",
+   "nombre": "Traveler's Wagon - SGD 114",
+   "caras": 36142,
+   "licencia": "by",
+   "autor": "LThomas762",
+   "url": "https://sketchfab.com/3d-models/65473708254e42409fb54ac1e18d0ec5",
+   "mini": "https://media.sketchfab.com/models/65473708254e42409fb54ac1e18d0ec5/thumbnails/82c3486c19d0454198ff133dc8254fc4/5142a2ff229b441cba7cd7e119ecd45f.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "b9d83055bb3b467c88496299c27ceae0",
+   "nombre": "Fire Axe",
+   "caras": 912,
+   "licencia": "by",
+   "autor": "denis_cliofas",
+   "url": "https://sketchfab.com/3d-models/b9d83055bb3b467c88496299c27ceae0",
+   "mini": "https://media.sketchfab.com/models/b9d83055bb3b467c88496299c27ceae0/thumbnails/ba7435d7befc4bc8978ecbc25128816b/fc48814a91244932a229cc260195e612.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "d0800a9ea4ce48bca8bd1d977989113b",
+   "nombre": "Old Axe",
+   "caras": 3048,
+   "licencia": "by",
+   "autor": "adjective.george",
+   "url": "https://sketchfab.com/3d-models/d0800a9ea4ce48bca8bd1d977989113b",
+   "mini": "https://media.sketchfab.com/models/d0800a9ea4ce48bca8bd1d977989113b/thumbnails/8ba07f928b314c87b478417aaed7ba0a/ac085bdf6c1344bbb7d0e5866e86404a.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "735fe0bd1966452380e1808b173a65a7",
+   "nombre": "Fire Axe",
+   "caras": 1952,
+   "licencia": "by",
+   "autor": "thunderpwn",
+   "url": "https://sketchfab.com/3d-models/735fe0bd1966452380e1808b173a65a7",
+   "mini": "https://media.sketchfab.com/models/735fe0bd1966452380e1808b173a65a7/thumbnails/4281790d9677426696871048fcdc82d9/bdee5c9c73b24de4856580758e1832de.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "81952c47d9484aa09adb5bebc327f3d5",
+   "nombre": "Old Fire Axe",
+   "caras": 1374,
+   "licencia": "by",
+   "autor": "Slayer4Demons",
+   "url": "https://sketchfab.com/3d-models/81952c47d9484aa09adb5bebc327f3d5",
+   "mini": "https://media.sketchfab.com/models/81952c47d9484aa09adb5bebc327f3d5/thumbnails/14108d86e1564ac4844c64cca4f332bc/58becd199028448d8fd4e947b75015ec.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "0df28a89a0bd49df9a146cfd36ce3a73",
+   "nombre": "Axe",
+   "caras": 464,
+   "licencia": "by",
+   "autor": "Seregajohn",
+   "url": "https://sketchfab.com/3d-models/0df28a89a0bd49df9a146cfd36ce3a73",
+   "mini": "https://media.sketchfab.com/models/0df28a89a0bd49df9a146cfd36ce3a73/thumbnails/de4daf74bb4247d892360f151ad03eba/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "4e41ee098eee47369e64aae760c8ec75",
+   "nombre": "Fire Axe",
+   "caras": 2120,
+   "licencia": "by",
+   "autor": "BOHNEN",
+   "url": "https://sketchfab.com/3d-models/4e41ee098eee47369e64aae760c8ec75",
+   "mini": "https://media.sketchfab.com/models/4e41ee098eee47369e64aae760c8ec75/thumbnails/6bdc589f86434f678e42ea8ab1e0a3b3/ee5fc3b77f0d4f71891701783ca4187e.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "050805cea4b54e10bfd5dfd6d519435b",
+   "nombre": "Fire axe FREE",
+   "caras": 11548,
+   "licencia": "by",
+   "autor": "AZ-DOJO",
+   "url": "https://sketchfab.com/3d-models/050805cea4b54e10bfd5dfd6d519435b",
+   "mini": "https://media.sketchfab.com/models/050805cea4b54e10bfd5dfd6d519435b/thumbnails/593f04919483412fa80dbbb18d8aaea8/c50f02e8a81d490ea00749337971a56e.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "28a6c8cc7c5247d68cccc24b5168d20c",
+   "nombre": "Fireman Axe 2",
+   "caras": 188,
+   "licencia": "by",
+   "autor": "Seregajohn",
+   "url": "https://sketchfab.com/3d-models/28a6c8cc7c5247d68cccc24b5168d20c",
+   "mini": "https://media.sketchfab.com/models/28a6c8cc7c5247d68cccc24b5168d20c/thumbnails/c3f4355c4ae54439b907181e175970d6/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "59eb1cd05808488890bc10bf0ba8939c",
+   "nombre": "Rusty Axe",
+   "caras": 528,
+   "licencia": "by",
+   "autor": "PriceMore",
+   "url": "https://sketchfab.com/3d-models/59eb1cd05808488890bc10bf0ba8939c",
+   "mini": "https://media.sketchfab.com/models/59eb1cd05808488890bc10bf0ba8939c/thumbnails/b98e793d937b4ddf94cf3d41db88e70d/5a2eef1ed9774265a02de4c6ad39b969.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "500baffb0fa1406dae777e64b72a5072",
+   "nombre": "Fire axe",
+   "caras": 298,
+   "licencia": "by",
+   "autor": "simonpasi96",
+   "url": "https://sketchfab.com/3d-models/500baffb0fa1406dae777e64b72a5072",
+   "mini": "https://media.sketchfab.com/models/500baffb0fa1406dae777e64b72a5072/thumbnails/68be7e8bbfb34c6da68cf835913d5d24/d802ce97d3ad4789bde23c463441e21e.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "c0552f425c454be1b58c38afbd07efd6",
+   "nombre": "Axe Sport Blend@",
+   "caras": 860,
+   "licencia": "by",
+   "autor": "Seregajohn",
+   "url": "https://sketchfab.com/3d-models/c0552f425c454be1b58c38afbd07efd6",
+   "mini": "https://media.sketchfab.com/models/c0552f425c454be1b58c38afbd07efd6/thumbnails/3fe9ecce409844189f9bf9905a0d3186/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "23e801f96ce24d46804b493af9edf7be",
+   "nombre": "Axe Mud",
+   "caras": 1488,
+   "licencia": "by",
+   "autor": "Seregajohn",
+   "url": "https://sketchfab.com/3d-models/23e801f96ce24d46804b493af9edf7be",
+   "mini": "https://media.sketchfab.com/models/23e801f96ce24d46804b493af9edf7be/thumbnails/33ac20cce5ce4502966129b8aa5f9e92/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "d1fc9213f66c4440ad16b2e2862e2b09",
+   "nombre": "Fire Axe",
+   "caras": 3406,
+   "licencia": "by",
+   "autor": "kegor",
+   "url": "https://sketchfab.com/3d-models/d1fc9213f66c4440ad16b2e2862e2b09",
+   "mini": "https://media.sketchfab.com/models/d1fc9213f66c4440ad16b2e2862e2b09/thumbnails/99be0e9e7670489ab2016c2307e065aa/f2c8a8bc668845d288094c8912089f4c.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "c310f0aa82aa4ed9a9261724cecea643",
+   "nombre": "Superfuntimes Rusty Old Axe!",
+   "caras": 8810,
+   "licencia": "by",
+   "autor": "videshi",
+   "url": "https://sketchfab.com/3d-models/c310f0aa82aa4ed9a9261724cecea643",
+   "mini": "https://media.sketchfab.com/models/c310f0aa82aa4ed9a9261724cecea643/thumbnails/8282960577da4cf182525f8e63bcbaee/5b6fde6afb6a4fd9b8fd3625c8918b77.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "42521f3adcec47e29d7ac2589cbd47ed",
+   "nombre": "Worn Fire Axe",
+   "caras": 1182,
+   "licencia": "by",
+   "autor": "wewillywilkie",
+   "url": "https://sketchfab.com/3d-models/42521f3adcec47e29d7ac2589cbd47ed",
+   "mini": "https://media.sketchfab.com/models/42521f3adcec47e29d7ac2589cbd47ed/thumbnails/7e44917ed3f248bfab32866dbf0380a9/bbaaf57761d34474849f518658c0151f.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "8b583ea7161044639b50baa70e6a659a",
+   "nombre": "Wood Axe",
+   "caras": 2180,
+   "licencia": "by",
+   "autor": "JimCarlos",
+   "url": "https://sketchfab.com/3d-models/8b583ea7161044639b50baa70e6a659a",
+   "mini": "https://media.sketchfab.com/models/8b583ea7161044639b50baa70e6a659a/thumbnails/726a29d81a87433780b1b360cd033ae9/1cbc34fdeb424935a102989654d7b195.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "189b97836c27448a8b4700071face560",
+   "nombre": "Old Axe",
+   "caras": 810,
+   "licencia": "by",
+   "autor": "Speeedd",
+   "url": "https://sketchfab.com/3d-models/189b97836c27448a8b4700071face560",
+   "mini": "https://media.sketchfab.com/models/189b97836c27448a8b4700071face560/thumbnails/8cbff96ee5e44df7b0528ad26812f3d6/051175c790534983a85e9e53e384279f.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "414188f8d8f140e0b20d4a98f1fd4deb",
+   "nombre": "Old fire axe --School assignment",
+   "caras": 242,
+   "licencia": "by",
+   "autor": "tomyvlogs",
+   "url": "https://sketchfab.com/3d-models/414188f8d8f140e0b20d4a98f1fd4deb",
+   "mini": "https://media.sketchfab.com/models/414188f8d8f140e0b20d4a98f1fd4deb/thumbnails/261066f68c1142c3ad67eebce79b24e6/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "fa267a5a93ee48f5b1db153b431901a9",
+   "nombre": "Fire Axe",
+   "caras": 1288,
+   "licencia": "by",
+   "autor": "JelloJordan",
+   "url": "https://sketchfab.com/3d-models/fa267a5a93ee48f5b1db153b431901a9",
+   "mini": "https://media.sketchfab.com/models/fa267a5a93ee48f5b1db153b431901a9/thumbnails/b110f451a05041be9b25271755689fec/0ffc276aa41b43bc8674d73c48e1c8b5.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "e228eec1973049bc8fc9e9393e087073",
+   "nombre": "Zombie Apocolypse Fire Axe",
+   "caras": 686,
+   "licencia": "by",
+   "autor": "ismeteavee",
+   "url": "https://sketchfab.com/3d-models/e228eec1973049bc8fc9e9393e087073",
+   "mini": "https://media.sketchfab.com/models/e228eec1973049bc8fc9e9393e087073/thumbnails/ac0f21dd5ab44085b7cbbd8847567b41/4ec992c416c84529a30dc645fab45838.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "b04ab495c8c143bcaad5171878d3eeb9",
+   "nombre": "Old axe",
+   "caras": 7040,
+   "licencia": "by",
+   "autor": "habibshiddick3",
+   "url": "https://sketchfab.com/3d-models/b04ab495c8c143bcaad5171878d3eeb9",
+   "mini": "https://media.sketchfab.com/models/b04ab495c8c143bcaad5171878d3eeb9/thumbnails/dcd0dc06e27b4c6ca1d13e622c944366/2f736ba8486a424fba678c9b121fb040.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "c1c994c9d14d47a2957668ae08aeaf58",
+   "nombre": "Fire Axe Model",
+   "caras": 1892,
+   "licencia": "by",
+   "autor": "Peanutbutter666",
+   "url": "https://sketchfab.com/3d-models/c1c994c9d14d47a2957668ae08aeaf58",
+   "mini": "https://media.sketchfab.com/models/c1c994c9d14d47a2957668ae08aeaf58/thumbnails/c8a8b3d805494263a096ce317779c4cf/6d146fef5bbd4d00a9b8d2ea09e704f6.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "6dccb5e143f640e49d3cd32d3331e1f7",
+   "nombre": "Muddy Fire Axe",
+   "caras": 686,
+   "licencia": "by",
+   "autor": "HuntedGaming",
+   "url": "https://sketchfab.com/3d-models/6dccb5e143f640e49d3cd32d3331e1f7",
+   "mini": "https://media.sketchfab.com/models/6dccb5e143f640e49d3cd32d3331e1f7/thumbnails/9b6856b17d8c4964a41b4e3f9c5e6679/f756d2f0e23a4debaa3d8c9aee8a7b8c.jpeg",
+   "anim": 0
+  }
+ ],
+ "a_motosierra": [
+  {
+   "uid": "0a193088fbe1494d9b3010ed19762b36",
+   "nombre": "Juliet Starling pink top Lolipop Chainsaw",
+   "caras": 20498,
+   "licencia": "by",
+   "autor": "Blackdragon27",
+   "url": "https://sketchfab.com/3d-models/0a193088fbe1494d9b3010ed19762b36",
+   "mini": "https://media.sketchfab.com/models/0a193088fbe1494d9b3010ed19762b36/thumbnails/7de24051e21c48e8852f8b2802c9c4e6/4adf4d72cfa34193a9561d8ad07428fe.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "1ca74a176d764078b72a1a936ea3e9c9",
+   "nombre": "Chainsaw",
+   "caras": 53558,
+   "licencia": "by",
+   "autor": "badmacpanda",
+   "url": "https://sketchfab.com/3d-models/1ca74a176d764078b72a1a936ea3e9c9",
+   "mini": "https://media.sketchfab.com/models/1ca74a176d764078b72a1a936ea3e9c9/thumbnails/62b56310d32e4a1eaaaaf7e6acb34a24/6e59573f3bac4cf2a68ab43b2a13f2bd.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "8d1c55a879b046ba940414f5ee57f401",
+   "nombre": "Chainsaw",
+   "caras": 2647,
+   "licencia": "by",
+   "autor": "rescue3d",
+   "url": "https://sketchfab.com/3d-models/8d1c55a879b046ba940414f5ee57f401",
+   "mini": "https://media.sketchfab.com/models/8d1c55a879b046ba940414f5ee57f401/thumbnails/2a0acd80c8df42ad8a4c8427ed6911a3/10668ee1be3244f196b8335cd0089a26.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "e538299308a04b13887713cd5a589cca",
+   "nombre": "Headles Dipsy with chainsaw",
+   "caras": 47571,
+   "licencia": "by",
+   "autor": "Chocolate_studio228",
+   "url": "https://sketchfab.com/3d-models/e538299308a04b13887713cd5a589cca",
+   "mini": "https://media.sketchfab.com/models/e538299308a04b13887713cd5a589cca/thumbnails/24454914070f4ec59876cf0f65e5e69c/3e856a937b684107a77b3bec21c19c2d.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "fcc62e26b8bf483e93f2fa7d7c75f453",
+   "nombre": "Chainsaw",
+   "caras": 5696,
+   "licencia": "by",
+   "autor": "helioshp",
+   "url": "https://sketchfab.com/3d-models/fcc62e26b8bf483e93f2fa7d7c75f453",
+   "mini": "https://media.sketchfab.com/models/fcc62e26b8bf483e93f2fa7d7c75f453/thumbnails/ebe2680ddfc6447a81fa8fb4295b9ddb/ba8df0844c4f4ee5adaa0edd307154bf.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "dbb5316b206245afbcdf24a8c8797f0d",
+   "nombre": "Chainsaw | Made by hand | Crafted - Game Ready.",
+   "caras": 18561,
+   "licencia": "by",
+   "autor": "mezuna",
+   "url": "https://sketchfab.com/3d-models/dbb5316b206245afbcdf24a8c8797f0d",
+   "mini": "https://media.sketchfab.com/models/dbb5316b206245afbcdf24a8c8797f0d/thumbnails/02a75f364f344d7fb91e6e34e4eae07f/14d26adc70044439a1ef8603aaa201ab.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "350a49e39bb947c99148a21f7a0b6573",
+   "nombre": "Vintage ChainSaw",
+   "caras": 37112,
+   "licencia": "by",
+   "autor": "MuratAkdan",
+   "url": "https://sketchfab.com/3d-models/350a49e39bb947c99148a21f7a0b6573",
+   "mini": "https://media.sketchfab.com/models/350a49e39bb947c99148a21f7a0b6573/thumbnails/5f9c0024b4f84131bf7be19eb4f9ec4b/fe35fe8804f64dfe8bd5441c4a400338.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "540aabf3688542a1a151169b786d4696",
+   "nombre": "Ashy Slashy",
+   "caras": 15411,
+   "licencia": "by",
+   "autor": "theauditor",
+   "url": "https://sketchfab.com/3d-models/540aabf3688542a1a151169b786d4696",
+   "mini": "https://media.sketchfab.com/models/540aabf3688542a1a151169b786d4696/thumbnails/83edeaf312294ad39fe65a75b4d16763/aa36fde1def14d9c8f0d036ea00404e8.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "51072da706e647f492ab71536fd3f72d",
+   "nombre": "Chainsaw - Version 2",
+   "caras": 31759,
+   "licencia": "by",
+   "autor": "sirrandom",
+   "url": "https://sketchfab.com/3d-models/51072da706e647f492ab71536fd3f72d",
+   "mini": "https://media.sketchfab.com/models/51072da706e647f492ab71536fd3f72d/thumbnails/8dc80ece9a4340908f466186bf0d5265/232cd0c96f064b8fb902c68b0ff4e00b.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "1303efb1bf3849408130abdaf180c870",
+   "nombre": "Chain Saw",
+   "caras": 29536,
+   "licencia": "by",
+   "autor": "chaitanyak",
+   "url": "https://sketchfab.com/3d-models/1303efb1bf3849408130abdaf180c870",
+   "mini": "https://media.sketchfab.com/models/1303efb1bf3849408130abdaf180c870/thumbnails/062d9468cb0c49dca7d8bd0a85568cb9/c517284d347b441fa422d8eb36b3d930.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "bce5eb0b79f74850ba1d0889dddb253d",
+   "nombre": "Bucky the Chicken Devil Chainsaw Man Part 2",
+   "caras": 21452,
+   "licencia": "by",
+   "autor": "27mth",
+   "url": "https://sketchfab.com/3d-models/bce5eb0b79f74850ba1d0889dddb253d",
+   "mini": "https://media.sketchfab.com/models/bce5eb0b79f74850ba1d0889dddb253d/thumbnails/dc850d129a5043c8afd8abee762b3953/98ae481c08ba4fac9b6b232489e5a3b8.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "871c68a01c39411ebdd659c4c4474b75",
+   "nombre": "Yellow Chainsaw",
+   "caras": 31548,
+   "licencia": "by",
+   "autor": "sirrandom",
+   "url": "https://sketchfab.com/3d-models/871c68a01c39411ebdd659c4c4474b75",
+   "mini": "https://media.sketchfab.com/models/871c68a01c39411ebdd659c4c4474b75/thumbnails/9c0f77c4be35426c8ed6a25604be2aa4/55c13d856fc844589f0e9fc173777264.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "7d9461dc903b42a6931c6d9d6057e7a0",
+   "nombre": "Subtractor Chainsaw",
+   "caras": 10046,
+   "licencia": "by",
+   "autor": "hekillzalot",
+   "url": "https://sketchfab.com/3d-models/7d9461dc903b42a6931c6d9d6057e7a0",
+   "mini": "https://media.sketchfab.com/models/7d9461dc903b42a6931c6d9d6057e7a0/thumbnails/f5c227c8895b4e1daaa3482c323f0feb/706e78a3c26f42f1b974b80ea24935b0.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "12d23d25bc1848e3a490c36d8c51e6da",
+   "nombre": "blocky chainsaw",
+   "caras": 156,
+   "licencia": "by",
+   "autor": "orenji12341",
+   "url": "https://sketchfab.com/3d-models/12d23d25bc1848e3a490c36d8c51e6da",
+   "mini": "https://media.sketchfab.com/models/12d23d25bc1848e3a490c36d8c51e6da/thumbnails/65bf53e214ee4ce584a79910e447da15/69d0a2cd7b0b4e62b07f20f42cacaabf.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "c2e67b26ff904a1cb8d90e2b0e56cd1b",
+   "nombre": "Chainsaw",
+   "caras": 13932,
+   "licencia": "by",
+   "autor": "Okdude",
+   "url": "https://sketchfab.com/3d-models/c2e67b26ff904a1cb8d90e2b0e56cd1b",
+   "mini": "https://media.sketchfab.com/models/c2e67b26ff904a1cb8d90e2b0e56cd1b/thumbnails/e2913da1a962496c9edb549873117ef1/3c0bcfbb234649c0ae0dda13f1b99f4a.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "76c69108ab894ea3a344b209c8f95db6",
+   "nombre": "5 Props Assignment",
+   "caras": 3248,
+   "licencia": "by",
+   "autor": "Minte_Elseviers",
+   "url": "https://sketchfab.com/3d-models/76c69108ab894ea3a344b209c8f95db6",
+   "mini": "https://media.sketchfab.com/models/76c69108ab894ea3a344b209c8f95db6/thumbnails/084db61e6549454da449ae8e29f0f225/93058196bb914c6cb11c5993f842466c.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "e008447406774a2884fe355baf2c356b",
+   "nombre": "Chainsaw",
+   "caras": 278,
+   "licencia": "by",
+   "autor": "peterlennon",
+   "url": "https://sketchfab.com/3d-models/e008447406774a2884fe355baf2c356b",
+   "mini": "https://media.sketchfab.com/models/e008447406774a2884fe355baf2c356b/thumbnails/b61afce4c30a4404a35538db9c423219/e5c015e4dd09488e8fdf4954ce7c5846.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "e9d90f47495d41e08db54f083c2c99e4",
+   "nombre": "Power Tool",
+   "caras": 2192,
+   "licencia": "by",
+   "autor": "aloupe",
+   "url": "https://sketchfab.com/3d-models/e9d90f47495d41e08db54f083c2c99e4",
+   "mini": "https://media.sketchfab.com/models/e9d90f47495d41e08db54f083c2c99e4/thumbnails/e8134360fa0c40dbaec86ee8b0e5f7a4/9faa15b713814d108b5502907d5f2656.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "8e73f9d8c9834edfb29051a12f81804e",
+   "nombre": "Alisopirono",
+   "caras": 779,
+   "licencia": "by",
+   "autor": "watercat",
+   "url": "https://sketchfab.com/3d-models/8e73f9d8c9834edfb29051a12f81804e",
+   "mini": "https://media.sketchfab.com/models/8e73f9d8c9834edfb29051a12f81804e/thumbnails/1f0542fab5fe426e8d0bd6c423889428/e754be6a364148b1a41929ef9bad97f7.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "ae8a12bd1df1481e991dfafeee062789",
+   "nombre": "Chainsaw",
+   "caras": 1606,
+   "licencia": "by",
+   "autor": "hillnadya",
+   "url": "https://sketchfab.com/3d-models/ae8a12bd1df1481e991dfafeee062789",
+   "mini": "https://media.sketchfab.com/models/ae8a12bd1df1481e991dfafeee062789/thumbnails/87373c8b944745cd87d069463d75059d/de31aae129334f858c15826fb8ba4897.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "0c25ff61adce4d69b8745635b4e54b80",
+   "nombre": "Teapot Chainsaw Warrior",
+   "caras": 7290,
+   "licencia": "by",
+   "autor": "Headquarters",
+   "url": "https://sketchfab.com/3d-models/0c25ff61adce4d69b8745635b4e54b80",
+   "mini": "https://media.sketchfab.com/models/0c25ff61adce4d69b8745635b4e54b80/thumbnails/158820df3fbd431684f2eac0d6e91122/256x144.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "f0861701a1ba4c3aa9a0b6a2827f7dab",
+   "nombre": "Zombies with the chainsaw",
+   "caras": 15278,
+   "licencia": "by",
+   "autor": "mitchellgarcia1009",
+   "url": "https://sketchfab.com/3d-models/f0861701a1ba4c3aa9a0b6a2827f7dab",
+   "mini": "https://media.sketchfab.com/models/f0861701a1ba4c3aa9a0b6a2827f7dab/thumbnails/4de2bf274eba4f0baa0ad11e9735e91c/4a2d577bbbdd4e3bb7529afd636c514a.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "e1f230d5a3f94a32b6f58d47f79b9d4d",
+   "nombre": "Chainsaw",
+   "caras": 812,
+   "licencia": "by",
+   "autor": "ryzhkxv",
+   "url": "https://sketchfab.com/3d-models/e1f230d5a3f94a32b6f58d47f79b9d4d",
+   "mini": "https://media.sketchfab.com/models/e1f230d5a3f94a32b6f58d47f79b9d4d/thumbnails/648fc025237c41108408ff3ca295e274/fc0ce5ca8c274b64be43bb284ede3e4d.jpeg",
+   "anim": 0
+  },
+  {
+   "uid": "99e4f0b35f7647bb9f33691715b32cc7",
+   "nombre": "chainsaw sword",
+   "caras": 1182,
+   "licencia": "by",
+   "autor": "Linkkit",
+   "url": "https://sketchfab.com/3d-models/99e4f0b35f7647bb9f33691715b32cc7",
+   "mini": "https://media.sketchfab.com/models/99e4f0b35f7647bb9f33691715b32cc7/thumbnails/c8896c92ca0f4922a4e813905a01d845/8b104fc0061642e38b4f6ae5580ec45e.jpeg",
+   "anim": 0
+  }
+ ]
+}
