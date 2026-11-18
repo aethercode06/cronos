@@ -1,0 +1,67 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+ZAREK paso materiales hasta 327 ms
+ZAREK paso casa hasta 575 ms
+ZAREK     mallas de arboles 53 ms
+ZAREK     arboles+setas+helechos listos
+ZAREK     sotobosque 47 ms
+ZAREK     jardin 27 ms
+ZAREK   bosque 253 ms
+ZAREK paso exterior hasta 1869 ms
+ZAREK pinturas: 60 lienzos con 56 pinturas
+ZAREK   cortinas tapadas por muebles: 16 de 69
+ZAREK   retratos rayados: 12
+ZAREK   bañera: (124.8, 4.56741, 72.62698)
+ZAREK   ventana tapiada: (97.2, 0.0, 72.0) dentro (0.0, 0.0, 1.0)
+ZAREK   ventanas tapiadas: 13
+ZAREK   puerta tapiada: Pasillo del sótano (118.6, -4.2, 86.7) fuera (0.0, 0.0, -1.0)
+ZAREK   puerta tapiada: Galería de servicio (98.7, -4.2, 75.8) fuera (-1.0, 0.0, 0.0)
+ZAREK   tablón roto: (93.7, 0.0, 83.0)
+ZAREK   mirilla: (98.2, 2.0, 79.3) frente (-1.0, 0.0, 0.0)
+ZAREK terror: 44 calcomanías, 17 tablones que crujen (203 ms)
+ZAREK paso decorado hasta 3033 ms
+ZAREK oclusores: 689
+ZAREK paso fusion hasta 3428 ms
+WARNING: Property agent_height is ceiled to cell_height voxel units and loses precision.
+     at: generator_bake_from_source_geometry_data (modules/navigation_3d/3d/nav_mesh_generator_3d.cpp:367)
+WARNING: Property agent_radius is ceiled to cell_size voxel units and loses precision.
+     at: generator_bake_from_source_geometry_data (modules/navigation_3d/3d/nav_mesh_generator_3d.cpp:373)
+ZAREK asentar: bajados 127, cuadros pegados 64, quitados 3
+ZAREK CARGA 3600 ms (calidad 2, Linux, forward_plus)
+ZAREK: navmesh polígonos 1161
+ZAREK fauna 39
+ZAREK: navegación lista en 0.3 s
+ZAREK: habitaciones 49, sellos 4, armarios 18, lámparas 65, puertas 52, pasos 12
+  ok   navegación de Elena horneada
+  ok   4 sellos
+  ok   armarios
+  ok   lámparas
+  ok   Elena llega al sello en los jardines
+  ok   Elena llega al sello en cava de vinos
+  ok   Elena llega al sello en salón de baile
+  ok   Elena llega al sello en dormitorio de los padres
+  ok   Elena llega al Epicentro (primer piso)
+  ok   Elena baja al sótano
+  ok   empiezas en el bosque
+  ok   al entrar se cierra la puerta (evento)
+  ok   Elena despierta (SEARCH)
+  ok   lámpara ilumina su habitación
+  ok   la sal la ahuyenta
+  ok   tras huir desaparece
+ZAREK FPS 240 draws 0 prims 0 mem 869 MB estado juego pos (106.0, 0.0, 99.0)
+  ok   Elena te atrapa (vidas 2)
+  ok   despiertas en el vestíbulo
+  ok   escondido en el armario no te ve
+  ok   sales del armario
+  ok   4 sellos recogidos
+  ok   la puerta del Epicentro se abre
+ZAREK FPS 240 draws 0 prims 0 mem 870 MB estado ritual pos (103.0, 4.0, 77.0)
+ZAREK FPS 240 draws 0 prims 0 mem 869 MB estado ritual pos (103.0, 4.0, 77.0)
+  ok   ritual completado: Zarek expulsado
+ZAREK FPS 670 draws 0 prims 0 mem 869 MB estado final pos (103.0, 4.0, 77.0)
+ZAREK FPS 670 draws 0 prims 0 mem 869 MB estado final pos (103.0, 4.0, 77.0)
+  ok   pantalla final
+ZAREK: tiempo de juego simulado 16.1 s
+ZAREK OK
+WARNING: 82 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
