@@ -16,8 +16,21 @@ puno = {n: puno_src.pose.bones[n].rotation_quaternion.copy() for n in DEDOS_D}
 bpy.data.objects.remove(puno_src)
 src = cargar_anim(ANIM); acc_src = src.animation_data.action
 f0, f1 = [int(round(x)) for x in acc_src.frame_range]
+def limitar_muneca(maxg=float(os.environ.get("MUNECA_LIM", "40"))):
+    """la muñeca de Damián (piel de MakeHuman) se pliega si se dobla mucho: se limita el doblez respecto al antebrazo"""
+    h = pb["mixamorig:RightHand"]; fa = pb["mixamorig:RightForeArm"]
+    Mh = W @ h.matrix; yf = (W @ fa.matrix).to_3x3().col[1].normalized(); yh = Mh.to_3x3().col[1].normalized()
+    ang = yh.angle(yf)
+    if ang <= math.radians(maxg): return
+    q = yh.rotation_difference(yf)
+    from mathutils import Quaternion
+    q = Quaternion(q.axis, ang - math.radians(maxg))
+    t = Mh.translation.copy()
+    h.matrix = W.inverted() @ (Matrix.Translation(t) @ q.to_matrix().to_4x4() @ Matrix.Translation(-t) @ Mh)
+    bpy.context.view_layer.update()
 def pose(f):
     aplicar(src, tgt, f, BRAZOS)
+    limitar_muneca()
     for n, q in puno.items():
         if n in pb: pb[n].rotation_quaternion = q
     h = pb["mixamorig:Hips"]; h.location.x = 0; h.location.z = 0     # en el sitio (el juego lo mueve)
@@ -53,13 +66,20 @@ def muñeca():
     t = M.translation.copy()
     h.matrix = W.inverted() @ (Matrix.Translation(t) @ q.to_matrix().to_4x4() @ Matrix.Translation(-t) @ M)
     bpy.context.view_layer.update()
-muñeca()
+ESPADA = os.environ.get("MODO") == "espada"   # golpe: el arma sale por el lado del pulgar, como una espada, sin tocar la muñeca
+if not ESPADA: muñeca()
 hr, cr, er = hueco(tgt, body, "r")
 Hm = W @ pb["mixamorig:RightHand"].matrix
 # el arma cuelga hacia el meñique: su eje va hacia el lado del meñique
 meñique = (W @ pb["mixamorig:RightHandPinky1"].head) - (W @ pb["mixamorig:RightHandIndex1"].head)
-z = er if er.dot(Vector((0, 0.5, -1))) > 0 else -er          # el arma cuelga hacia atrás y abajo
-fuera = Vector((0, -1, 0)); x = (fuera - z * fuera.dot(z)).normalized(); y = z.cross(x)
+if ESPADA:
+    z = er if er.dot(meñique) < 0 else -er                     # hacia el pulgar
+else:
+    z = er if er.dot(Vector((0, 0.5, -1))) > 0 else -er          # el arma cuelga hacia atrás y abajo
+fuera = Vector((0, -1, 0))
+if ESPADA:   # el filo mira hacia donde apuntan los nudillos (hacia donde corta el golpe)
+    fuera = ((W @ pb["mixamorig:RightHandMiddle1"].head) - (W @ pb["mixamorig:RightHand"].head)) * float(os.environ.get("FILO", "1"))
+x = (fuera - z * fuera.dot(z)).normalized(); y = z.cross(x)
 bpy.ops.import_scene.gltf(filepath=ARMA)
 arma = [o for o in bpy.context.selected_objects if o.type == 'MESH'][0]
 M = Matrix((x, y, z)).transposed().to_4x4(); M.translation = cr - z * AGARRE
@@ -68,7 +88,8 @@ mw = arma.matrix_world.copy(); arma.parent = tgt; arma.parent_type = 'BONE'; arm
 accion = bpy.data.actions.new(NOMBRE); tgt.animation_data_create(); tgt.animation_data.action = accion
 huesos = [b for b in pb if b.name in src.pose.bones]
 for f in range(f0, f1 + 1):
-    pose(f); muñeca()
+    pose(f)
+    if not ESPADA: muñeca()
     for b in huesos:
         b.keyframe_insert("rotation_quaternion", frame=f)
         if b.name == "mixamorig:Hips": b.keyframe_insert("location", frame=f)
