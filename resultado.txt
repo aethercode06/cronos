@@ -1,0 +1,1 @@
+FALLO: no terminó de cargar | avisos: se cerró justo al cargar (como la escena de control), la pantalla de carga no se ve, cierre en el emulador (también le pasa a la escena de control)
