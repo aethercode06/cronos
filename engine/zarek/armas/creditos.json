@@ -1,0 +1,23 @@
+{
+ "w_machete": {
+  "clave": "w_machete",
+  "uid": "df244a4553f7420cb898ed86cab188e7",
+  "nombre": "Machete",
+  "autor": "alexsolo093",
+  "licencia": "by"
+ },
+ "w_hacha_vieja": {
+  "clave": "w_hacha_vieja",
+  "uid": "b04ab495c8c143bcaad5171878d3eeb9",
+  "nombre": "Old axe",
+  "autor": "habibshiddick3",
+  "licencia": "by"
+ },
+ "w_motosierra_vintage": {
+  "clave": "w_motosierra_vintage",
+  "uid": "350a49e39bb947c99148a21f7a0b6573",
+  "nombre": "Vintage ChainSaw",
+  "autor": "MuratAkdan",
+  "licencia": "by"
+ }
+}
