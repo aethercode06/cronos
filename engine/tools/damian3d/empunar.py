@@ -11,11 +11,18 @@ def bvh_cuerpo(body):
     dg = bpy.context.evaluated_depsgraph_get(); be = body.evaluated_get(dg); me = be.to_mesh()
     bm = bmesh.new(); bm.from_mesh(me); bm.transform(body.matrix_world); t = BVHTree.FromBMesh(bm); be.to_mesh_clear(); return t
 
+MX = {"index": "Index", "middle": "Middle", "ring": "Ring", "pinky": "Pinky"}
 def hueco(rig, body, lado="r"):
     pb = rig.pose.bones; Wm = rig.matrix_world
     P = lambda n: Wm @ pb[n].head
-    i1, p1, w = P(f"index_01_{lado}"), P(f"pinky_01_{lado}"), P(f"hand_{lado}")
-    medios = sum((P(f"{d}_02_{lado}") for d in ("index", "middle", "ring", "pinky")), Vector()) / 4
+    if "mixamorig:Hips" in pb:
+        L = "Right" if lado == "r" else "Left"
+        nom = lambda d, k: f"mixamorig:{L}Hand{MX[d]}{k}"
+        i1, p1, w = P(nom("index", 1)), P(nom("pinky", 1)), P(f"mixamorig:{L}Hand")
+        medios = sum((P(nom(d, 2)) for d in MX), Vector()) / 4
+    else:
+        i1, p1, w = P(f"index_01_{lado}"), P(f"pinky_01_{lado}"), P(f"hand_{lado}")
+        medios = sum((P(f"{d}_02_{lado}") for d in ("index", "middle", "ring", "pinky")), Vector()) / 4
     eje0 = (i1 - p1).normalized()
     c0 = ((i1 + p1) / 2 + medios) / 2
     bvh = bvh_cuerpo(body)
