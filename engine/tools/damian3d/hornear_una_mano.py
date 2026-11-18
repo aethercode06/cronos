@@ -72,8 +72,8 @@ hr, cr, er = hueco(tgt, body, "r")
 Hm = W @ pb["mixamorig:RightHand"].matrix
 # el arma cuelga hacia el meñique: su eje va hacia el lado del meñique
 meñique = (W @ pb["mixamorig:RightHandPinky1"].head) - (W @ pb["mixamorig:RightHandIndex1"].head)
-if ESPADA:
-    z = er if er.dot(meñique) < 0 else -er                     # hacia el pulgar
+if ESPADA or os.environ.get("CABEZA") == "arriba":
+    z = er if er.dot(meñique) < 0 else -er                     # hacia el pulgar: la cabeza del hacha queda arriba
 else:
     z = er if er.dot(Vector((0, 0.5, -1))) > 0 else -er          # el arma cuelga hacia atrás y abajo
 fuera = Vector((0, -1, 0))
