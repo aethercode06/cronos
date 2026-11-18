@@ -74,9 +74,16 @@ Hm = W @ pb["mixamorig:RightHand"].matrix
 meñique = (W @ pb["mixamorig:RightHandPinky1"].head) - (W @ pb["mixamorig:RightHandIndex1"].head)
 if ESPADA or os.environ.get("CABEZA") == "arriba":
     z = er if er.dot(meñique) < 0 else -er                     # hacia el pulgar: la cabeza del hacha queda arriba
+    if not ESPADA:
+        # como un martillo en un puño real: el extremo del pulgar se inclina hacia los nudillos, no hacia la muñeca
+        k = ((W @ pb["mixamorig:RightHandMiddle1"].head) - (W @ pb["mixamorig:RightHand"].head)).normalized()
+        zp = (z - k * z.dot(k)).normalized(); th = math.radians(float(os.environ.get("INCL", "15")))
+        print("INCL antes", round(math.degrees(math.asin(max(-1, min(1, z.dot(k))))), 1))
+        z = (zp * math.cos(th) + k * math.sin(th)).normalized()
 else:
     z = er if er.dot(Vector((0, 0.5, -1))) > 0 else -er          # el arma cuelga hacia atrás y abajo
 fuera = Vector((0, -1, 0))
+if os.environ.get("CABEZA") == "arriba": fuera = Vector((0, 1, 0))   # el filo (lado -x del modelo) mira hacia delante (-Y)
 if ESPADA:   # el filo mira hacia donde apuntan los nudillos (hacia donde corta el golpe)
     fuera = ((W @ pb["mixamorig:RightHandMiddle1"].head) - (W @ pb["mixamorig:RightHand"].head)) * float(os.environ.get("FILO", "1"))
 x = (fuera - z * fuera.dot(z)).normalized(); y = z.cross(x)
