@@ -1,0 +1,18 @@
+  ./universal_animation_librarystandard/Animation Library[Standard]/Unreal Engine/AL_Standard.fbx
+  ./universal_animation_librarystandard/Animation Library[Standard]/Unity_Setup.png
+  ./universal_animation_librarystandard/Animation Library[Standard]/Preview.png
+  ./universal_animation_librarystandard/Animation Library[Standard]/Unity/AnimationLibrary_Unity_Standard.fbx
+  ./universal_animation_librarystandard/Animation Library[Standard]/Godot/AnimationLibrary_Godot_Standard.glb
+  ./universal_animation_librarystandard/Animation Library[Standard]/License.txt
+  ./universal_animation_librarystandard/Animation Library[Standard]/UnrealEngine_Setup.png
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Unity_Setup.png
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Unity/UAL2_Standard.fbx
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Unreal_Setup.png
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Unreal-Godot/UAL2_Standard.glb
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Female Mannequin/README.txt
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Female Mannequin/Unity/Mannequin_F.fbx
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Female Mannequin/Unreal-Godot/Mannequin_F.glb
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Female Mannequin/Mannequin_F.blend
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/License.txt
+  ./universal_animation_library_2standard/Universal Animation Library 2 [Standard]/Godot_Setup.png
+  ./lista.txt
