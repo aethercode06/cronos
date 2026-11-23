@@ -119,6 +119,29 @@ func _ready() -> void:
 	_check(m.pickups.any(func(k): return k.kind == "llaves") and m.car_pos != Vector3.ZERO, "las llaves del coche están en la casa (final de huida)")
 	_check(m.pickups.filter(func(k): return k.kind == "tablon").size() >= 1, "tablones para atrancar puertas")
 	_check(g.sustos != null and ZarekSonido.hay("damian_rugido") and ZarekSonido.hay("persecucion"), "sonidos reales y sustos de la historia cargados")
+	# electricidad: el interruptor apaga y enciende la sala; sin corriente no se enciende nada; el cuadro la devuelve
+	var el: ZarekElectricidad = m.electricidad
+	var sw: Dictionary = {}
+	for it in el.interruptores:
+		var hay_buena := false
+		for lm in m.rooms[int(it.room)].get("lamps", []):
+			if not lm.broken:
+				hay_buena = true
+		if hay_buena and it.on:
+			sw = it
+			break
+	var lamparas_sala: Array = m.rooms[int(sw.room)].lamps
+	el.pulsar(sw)
+	var apagada := lamparas_sala.all(func(lz): return not lz.on)
+	el.pulsar(sw)
+	var encendida := lamparas_sala.any(func(lz): return lz.on)
+	el.cortar()
+	var todo_negro := m.lamps.all(func(lz): return not lz.on)
+	el.pulsar(sw)
+	el.pulsar(sw)
+	var sigue_negro := lamparas_sala.all(func(lz): return not lz.on)
+	el.devolver()
+	_check(el.interruptores.size() >= 20 and not el.cuadro.is_empty() and apagada and encendida and todo_negro and sigue_negro and lamparas_sala.any(func(lz): return lz.on), "electricidad: interruptores, corte de luz y cuadro eléctrico")
 	# puerta atrancada: la aporrea y la rompe
 	var pd: Dictionary = {}
 	for d in m.doors:

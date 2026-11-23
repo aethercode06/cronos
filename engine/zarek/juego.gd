@@ -1258,6 +1258,7 @@ func _play(delta: float) -> void:
 	if Input.is_action_just_pressed("sal"):
 		_throw_salt()
 	_puerta_tick(delta)
+	_electricidad(delta)
 	# ritual
 	if seals >= SEALS_NEEDED and _in_circle(pp):
 		if Input.is_action_pressed("usar") or (autotest and state == "ritual"):
@@ -1471,6 +1472,15 @@ func _target() -> Dictionary:
 		if not d.open and tablones > 0:
 			return {"kind": "puerta", "obj": d, "text": "USAR: abrir · MANTÉN USAR: atrancar (tablones: %d)" % tablones}
 		return {"kind": "puerta", "obj": d, "text": "USAR: " + ("cerrar" if d.open else "abrir") + " la puerta"}
+	var el: ZarekElectricidad = mansion.electricidad
+	if el and el.cuadro_cerca(pp):
+		if not el.corriente:
+			return {"kind": "cuadro", "text": "MANTÉN USAR: subir la palanca general del cuadro eléctrico"}
+		return {"kind": "nada", "text": "El cuadro eléctrico de la casa. Zumba y huele a quemado."}
+	if el:
+		var it := el.interruptor_cerca(pp)
+		if not it.is_empty():
+			return {"kind": "interruptor", "obj": it, "text": "USAR: " + ("apagar" if it.on else "encender") + " la luz de la sala"}
 	var l := mansion.lamp_near(pp, 1.8)
 	if not l.is_empty() and not l.broken:
 		return {"kind": "lampara", "obj": l, "text": "USAR: " + ("apagar" if l.on else "encender") + " la lámpara"}
@@ -1620,8 +1630,20 @@ func _use() -> void:
 		"portal":
 			_use_portal(t.obj)
 		"lampara":
-			mansion.set_lamp(t.obj, not t.obj.on)
+			if mansion.electricidad and not mansion.electricidad.corriente:
+				message("No hay corriente en toda la casa.\nEl cuadro eléctrico está en el sótano.", 2.5)
+			else:
+				mansion.set_lamp(t.obj, not t.obj.on)
 			_click()
+		"interruptor":
+			var hay: bool = mansion.electricidad.pulsar(t.obj)
+			_click()
+			sound_at("interruptor", (t.obj.pos as Vector3), -6.0)
+			if not hay and t.obj.on:
+				message("Clic… nada. No hay corriente.\nAlguien ha bajado la palanca del cuadro del sótano.", 3.0)
+		"cuadro":
+			_cuadro_hold = true
+			_t_cuadro = 0.0
 		"coger":
 			llevado = t.obj
 			llevado.sleeping = false
@@ -1675,13 +1697,9 @@ func _take_seal(s: Dictionary) -> void:
 				mansion.flicker_lamp(l, 1.5)
 			sound_behind("susurro", 2.0, 2.0)
 		3:
-			message(_obj_msg(s) + "\nEstá apagando las luces de la casa, una a una.", 4.0)
-			for l in mansion.lamps:
-				if l.on:
-					mansion.break_lamp(l)
-					sound_at("portazo", l.pos + Vector3(0, 2.0, 0), -2.0)
-					break
+			message(_obj_msg(s) + "\nSabe lo que estoy haciendo.", 3.0)
 			sound_behind("risa", 4.0, 0.0)
+			_corte_luz(3.5)
 		4:
 			_blackout()
 
@@ -1733,6 +1751,94 @@ func _puerta_tick(delta: float) -> void:
 		d.snd.stream = _s("crujido")
 		d.snd.play()
 		elena.hear(player.global_position, 5.0)
+
+## ---------------- electricidad: cortes de luz, el cuadro del sótano y Damián apagando salas ----------------
+var _cuadro_hold := false
+var _t_cuadro := 0.0
+var _t_corte_azar := randf_range(420.0, 720.0)
+var _t_apagar := 1.0
+func _corte_luz(espera := 0.0) -> void:
+	if mansion.electricidad == null or not mansion.electricidad.corriente:
+		return
+	if espera > 0.0:
+		await get_tree().create_timer(espera).timeout
+	if not mansion.electricidad.corriente:
+		return
+	for l in mansion.lamps:
+		if l.on:
+			mansion.flicker_lamp(l, 0.6)
+	await get_tree().create_timer(0.6).timeout
+	mansion.electricidad.cortar()
+	var c: Dictionary = mansion.electricidad.cuadro
+	if not c.is_empty():
+		sound_at("golpe_madera", (c.pos as Vector3), 2.0)
+	sound_behind("zumbido", 1.0, -6.0)
+	message("Se fue la luz en toda la casa.\nHan bajado la palanca del cuadro eléctrico… está en el sótano.", 4.0)
+	sanity = maxf(0.0, sanity - 8.0)
+
+func _electricidad(delta: float) -> void:
+	var el: ZarekElectricidad = mansion.electricidad
+	if el == null:
+		return
+	# subir la palanca general: 2 s manteniendo USAR, chispas y ruido (te puede oír)
+	if _cuadro_hold:
+		if Input.is_action_pressed("usar") and el.cuadro_cerca(player.global_position, 2.2):
+			_t_cuadro += delta
+			bar_rit.visible = true
+			bar_rit.value = _t_cuadro / 2.0 * 100.0
+			if _t_cuadro >= 2.0:
+				_cuadro_hold = false
+				bar_rit.visible = false
+				el.devolver()
+				var cp: Vector3 = el.cuadro.pos
+				sound_at("golpe_madera", cp, 0.0)
+				sound_at("zumbido", cp, 0.0)
+				fx_chispas(cp + Vector3(0, -0.2, 0.15))
+				elena.hear(player.global_position, 9.0)
+				message("La luz volvió… pero el golpe de la palanca se oyó en toda la casa.", 3.0)
+		else:
+			_cuadro_hold = false
+			bar_rit.visible = false
+	# a veces, él vuelve a cortar la luz (una vez por partida, además del corte del tercer objeto)
+	if el.corriente and state == "juego" and entered:
+		_t_corte_azar -= delta
+		if _t_corte_azar <= 0.0:
+			_t_corte_azar = 1e9
+			_corte_luz()
+	# Damián apaga la luz de las salas por las que pasa (le gusta la oscuridad)
+	_t_apagar -= delta
+	if _t_apagar <= 0.0:
+		_t_apagar = 1.5
+		if elena.visible and elena.state in [ZarekElena.S.WANDER, ZarekElena.S.SEARCH] and el.corriente:
+			var er := mansion.room_at(elena.global_position)
+			if er >= 0 and el.sala_encendida(er) and not (mansion.rooms[er].get("lamps", []) as Array).is_empty() and randf() < 0.12:
+				el.apagar_sala(er)
+				sound_at("interruptor", elena.global_position + Vector3(0, 1.3, 0), 0.0)
+
+## Chispas pequeñas (cuadro eléctrico).
+func fx_chispas(p: Vector3) -> void:
+	var c := CPUParticles3D.new()
+	c.one_shot = true
+	c.emitting = true
+	c.amount = 24
+	c.lifetime = 0.5
+	c.explosiveness = 0.95
+	c.direction = Vector3(0, 0.3, 1)
+	c.spread = 70.0
+	c.initial_velocity_min = 1.5
+	c.initial_velocity_max = 3.5
+	c.gravity = Vector3(0, -9.8, 0)
+	var q := QuadMesh.new()
+	q.size = Vector2(0.02, 0.02)
+	var mt := StandardMaterial3D.new()
+	mt.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mt.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mt.albedo_color = Color(1.0, 0.8, 0.4)
+	q.material = mt
+	c.mesh = q
+	add_child(c)
+	c.global_position = p
+	get_tree().create_timer(1.5).timeout.connect(c.queue_free)
 
 func _aliento_visible() -> bool:
 	return not hidden_in.is_empty() and elena.visible and elena.state != ZarekElena.S.DORMANT \

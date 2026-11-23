@@ -1383,7 +1383,7 @@ func _door(c: Vector3, horiz: bool, level: int, ids: Array) -> void:
 	pivot.add_child(snd)
 	var start_open := (not locked) and _rng.randf() < 0.65
 	var d := {"pivot": pivot, "shape": cs, "pos": c, "open": start_open, "locked": locked, "ang": 0.0, "target": 0.0,
-		"base": pivot.rotation.y, "snd": snd, "level": level}
+		"base": pivot.rotation.y, "snd": snd, "level": level, "horiz": horiz, "ids": ids, "gap": gap}
 	if start_open:
 		d.ang = 1.6
 		d.target = 1.6
@@ -4729,6 +4729,7 @@ func _markers() -> void:
 		_pickup(cell_to_world(s[0], s[1], s[2]), s[3])
 
 var car_pos := Vector3.ZERO
+var electricidad: ZarekElectricidad
 func _car(p: Vector3) -> void:
 	car_pos = p
 	var n := Node3D.new()
@@ -5230,7 +5231,7 @@ func _luz_electrica(pos: Vector3, tipo: String, dir := Vector3.ZERO, alcance := 
 	var halo := _halo(n, centro_luz, 0.55 if tipo == "aplique" else 0.75)
 	light.visible = false
 	n.add_child(light)
-	var l := {"node": n, "light": light, "bulb": fil, "pos": pos, "room": id, "on": false, "broken": false, "halo": halo,
+	var l := {"node": n, "light": light, "bulb": fil, "pos": pos, "room": id, "on": false, "broken": false, "halo": halo, "tipo": tipo,
 		"base": light.light_energy, "flicker": 0.0, "modo": "fija", "e": 1.0, "obj": 1.0, "t": _rng.randf() * 4.0, "rafaga": 0}
 	lamps.append(l)
 	if id >= 0:
@@ -5747,6 +5748,8 @@ func _decorate() -> void:
 	_repartir_objetos()
 	if OS.get_environment("SIN_RUINA") == "":
 		ZarekRuina.aplicar(self)
+	electricidad = ZarekElectricidad.new()
+	electricidad.instalar(self)
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect
