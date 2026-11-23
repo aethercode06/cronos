@@ -13,6 +13,7 @@ var mansion: ZarekMansion
 var player: AetherPlayerFP
 var elena: ZarekElena
 var ghost: ZarekElena
+var sustos: ZarekSustos
 var touch: AetherTouchFP
 var flash_node: Node3D
 var flash: SpotLight3D
@@ -182,6 +183,9 @@ func _ready() -> void:
 	ghost.only_visual = true
 	add_child(ghost)
 	ghost.visible = false
+	sustos = ZarekSustos.new()
+	add_child(sustos)
+	sustos.setup(self)
 	_audio()
 	_ui()
 	touch = AetherTouchFP.new()

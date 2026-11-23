@@ -118,6 +118,7 @@ func _ready() -> void:
 	await _wait(0.1)
 	_check(m.pickups.any(func(k): return k.kind == "llaves") and m.car_pos != Vector3.ZERO, "las llaves del coche están en la casa (final de huida)")
 	_check(m.pickups.filter(func(k): return k.kind == "tablon").size() >= 1, "tablones para atrancar puertas")
+	_check(g.sustos != null and ZarekSonido.hay("damian_rugido") and ZarekSonido.hay("persecucion"), "sonidos reales y sustos de la historia cargados")
 	# puerta atrancada: la aporrea y la rompe
 	var pd: Dictionary = {}
 	for d in m.doors:
