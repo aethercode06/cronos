@@ -1748,7 +1748,8 @@ func _leer_nota(n: Dictionary) -> void:
 	if not n.leida:
 		n.leida = true
 		notas_leidas += 1
-		message("Nota %d de %d" % [notas_leidas, mansion.notas.size()], 2.0)
+		var pista_nota := huida.pista_de_nota()
+		message("Nota %d de %d" % [notas_leidas, mansion.notas.size()] + ("\n" + pista_nota if pista_nota != "" else ""), 4.5 if pista_nota != "" else 2.0)
 	snd_ui.stream = _s("crujido")
 	snd_ui.volume_db = -14.0
 	snd_ui.play()

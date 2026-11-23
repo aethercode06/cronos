@@ -32,6 +32,7 @@ const CORTAR := 3.0
 const ROCIAR := 2.0
 const RUEDA := 5.0
 const TREPAR := 6.0
+const ARRANCAR := 4.0
 
 var j: Node  # ZarekJuego
 var m: ZarekMansion
@@ -81,6 +82,8 @@ var clavo_pos := Vector3.INF
 var celda_puertas: Array = []
 var _clavo: Node3D
 var _cadena_vis: Node3D
+var _t_celda := 0.0
+var _susto_puerta := false
 
 ## La salida bloqueada de la noche (con semilla 0, la de las pruebas, siempre el coche).
 static func salida_bloqueada(seed: int) -> String:
@@ -214,6 +217,37 @@ func _preparar_celda() -> void:
 		if int(r.id) in (d.get("ids", []) as Array):
 			celda_puertas.append(d)
 
+## El primer susto, con guion: mientras sigues encerrada, Damián sube, se para delante de la puerta, prueba el
+## pomo, respira… y se va. Así sabes desde el primer minuto quién hay en la casa y que no debe oírte.
+func _pasa_por_la_puerta() -> void:
+	if celda_puertas.is_empty():
+		return
+	var d: Dictionary = celda_puertas[0]
+	var dp: Vector3 = d.pos
+	var fuera := dp + (dp - ancla).normalized() * 2.5
+	fuera.y = dp.y
+	var desde := fuera + (dp - ancla).normalized().cross(Vector3.UP) * 9.0
+	j.message("Pasos. Pesados. Suben por la escalera…", 3.0)
+	for k in 7:
+		if not en_celda:
+			return
+		j.sound_at("damian_paso", desde.lerp(fuera, k / 6.0) + Vector3(0, 0.1, 0), -2.0 + k)
+		await get_tree().create_timer(0.75).timeout
+	j.sound_at("damian_resp", fuera + Vector3(0, 1.7, 0), 2.0)
+	await get_tree().create_timer(1.6).timeout
+	j.sound_at("pomo_cerrado", dp + Vector3(0, 1.0, 0), 4.0)
+	j.player.shake(2.0)
+	j.message("Se ha parado delante de la puerta. Ha probado el pomo.\nNo respires.", 3.5)
+	j.sanity = maxf(0.0, j.sanity - 10.0)
+	await get_tree().create_timer(3.0).timeout
+	j.sound_at("damian_olfatea", fuera + Vector3(0, 1.6, 0), 0.0)
+	await get_tree().create_timer(2.5).timeout
+	for k in 6:
+		j.sound_at("damian_paso", fuera.lerp(desde, k / 5.0) + Vector3(0, 0.1, 0), 2.0 - k)
+		await get_tree().create_timer(0.8).timeout
+	if en_celda:
+		j.message("Se aleja. Ahora. Tengo que soltarme ahora.", 2.5)
+
 ## Empieza la partida aquí: encadenada y con las puertas del cuarto cerradas por fuera.
 func empezar_celda() -> void:
 	if ancla == Vector3.INF:
@@ -267,6 +301,11 @@ func tick(delta: float) -> void:
 		_verificar_objetos()
 	var pp: Vector3 = j.player.global_position
 	_silencio_ruido = maxf(0.0, _silencio_ruido - delta)
+	if en_celda:
+		_t_celda += delta
+		if not _susto_puerta and _t_celda > 16.0 and j.state == "juego":
+			_susto_puerta = true
+			_pasa_por_la_puerta()
 	if encadenada:
 		var off := Vector2(pp.x - ancla.x, pp.z - ancla.z)
 		if off.length() > CADENA:
@@ -286,6 +325,8 @@ func tick(delta: float) -> void:
 				poltergeist()
 	elif madre_suelta and not madre_muerta and is_instance_valid(madre):
 		_madre_tick(delta, pp)
+	if _carrera and not (j.elena.state in [ZarekElena.S.CHASE, ZarekElena.S.INVESTIGATE, ZarekElena.S.SEARCH]):
+		_carrera = false
 		# suelta sigue moviendo cosas, más a menudo
 		_t_poltergeist -= delta
 		if _t_poltergeist <= 0.0:
@@ -598,6 +639,21 @@ func _quemar(cap: Dictionary) -> void:
 	j.elena.wake_far()
 	j.elena.hear(j.player.global_position, 999.0)
 
+## Al leer una nota, a veces aparece un papelito de Damián que dice dónde guarda algo que necesitas (leer sirve).
+func pista_de_nota() -> String:
+	if randf() > 0.6:
+		return ""
+	var cand: Array = []
+	for s in m.seals:
+		if not s.taken and not s.get("visto", false) and not s.get("revelado", false):
+			cand.append(s)
+	if cand.is_empty():
+		return ""
+	var s: Dictionary = cand[randi() % cand.size()]
+	s["revelado"] = true
+	return "Entre las hojas hay un papelito con la letra de Damián: «%s → %s». (Apuntado en el DIARIO)" % [
+		String(ZarekMansion.NOMBRE_OBJETO.get(String(s.tipo), "eso")).get_slice(" ", 1), m.room_name(s.pos)]
+
 # ---------------- objetivos al alcance ----------------
 ## Lo que se puede hacer aquí (para la indicación en pantalla y USAR).
 func objetivo(pp: Vector3) -> Dictionary:
@@ -635,7 +691,7 @@ func objetivo(pp: Vector3) -> Dictionary:
 				return {"kind": "hold", "que": "rueda", "text": "MANTÉN USAR: cambiar la rueda y huir (tarda y hace ruido)"}
 			"muro":
 				return {"kind": "hold", "que": "trepar", "text": "MANTÉN USAR: atar el garfio, lanzarlo y trepar el muro (tarda y hace ruido)"}
-		return {"kind": "salida", "que": s, "text": "USAR: arrancar la camioneta y reventar el portón (final)"}
+		return {"kind": "hold", "que": "arrancar", "text": "MANTÉN USAR: arrancar la camioneta (el motor tose… y se oye en toda la finca)"}
 	return {}
 
 func _pos_salida(s: String) -> Vector3:
@@ -676,6 +732,33 @@ func faltan(s: String) -> Array[String]:
 func empezar_hold(que: String) -> void:
 	hold_kind = que
 	hold_t = 0.0
+	if que in ["arrancar", "rueda", "trepar"] and not _carrera:
+		_carrera_final(que)
+
+## El último paso de cualquier salida se oye en toda la finca: Damián sale corriendo de la casa a por ti (y la madre,
+## si está suelta). Una carrera: o terminas antes de que llegue, o te atrapa (y vuelves a empezar ese paso).
+var _carrera := false
+func _carrera_final(que: String) -> void:
+	_carrera = true
+	var pp: Vector3 = j.player.global_position
+	var e: ZarekElena = j.elena
+	e.aturdido = 0.0
+	e.can_catch = true
+	var salida_casa: Vector3 = m.front_door + Vector3(0, 0, 2.0)
+	if pp.distance_to(salida_casa) < 14.0 or m.inside_house(pp):
+		salida_casa = m.random_floor(pp, 16.0)
+	e.global_position = salida_casa
+	e.visible = true
+	e.aggro = maxi(e.aggro, 4)
+	e.last_seen = pp
+	e.set_state(ZarekElena.S.CHASE)
+	ZarekSonido.en(m, "damian_rugido", salida_casa + Vector3(0, 1.7, 0), 8.0, 80.0)
+	j.player.shake(6.0)
+	j.message({"arrancar": "¡El motor tose! Un rugido en la casa: viene corriendo.\n¡NO SUELTES! ¡ARRANCA!", "rueda": "Cada golpe de la llave de cruz retumba en el bosque. Le oigo correr hacia aquí.\n¡NO SUELTES!",
+		"trepar": "El garfio choca contra la piedra. Le oigo venir a la carrera.\n¡SUBE!"}.get(que, ""), 3.0)
+	if madre_suelta and is_instance_valid(madre):
+		madre.last_seen = pp
+		madre.set_state(ZarekElena.S.CHASE)
 
 func _hold_tick(delta: float, pp: Vector3) -> void:
 	if hold_kind == "":
@@ -686,12 +769,12 @@ func _hold_tick(delta: float, pp: Vector3) -> void:
 		j.bar_rit.visible = false
 		return
 	hold_t += delta
-	var dur := {"rociar": ROCIAR, "porton": CORTAR, "rueda": RUEDA, "trepar": TREPAR, "argolla": ARGOLLA, "cerradura": CERRADURA}.get(hold_kind, 2.0) as float
+	var dur := {"rociar": ROCIAR, "porton": CORTAR, "rueda": RUEDA, "trepar": TREPAR, "argolla": ARGOLLA, "cerradura": CERRADURA, "arrancar": ARRANCAR}.get(hold_kind, 2.0) as float
 	j.bar_rit.visible = true
 	j.bar_rit.value = hold_t / dur * 100.0
 	if fmod(hold_t, 0.7) < delta:
-		j.oir_ruido(pp, {"rociar": 3.0, "porton": 14.0, "rueda": 10.0, "trepar": 8.0, "argolla": 2.0, "cerradura": 5.0}.get(hold_kind, 6.0))
-		j.sound_at({"rociar": "chapoteo", "porton": "cadenas", "rueda": "impacto_metal", "trepar": "crujido", "argolla": "cadenas", "cerradura": "pomo_cerrado"}.get(hold_kind, "golpe_madera"), pp + j.player.forward() * 0.8, -6.0)
+		j.oir_ruido(pp, {"rociar": 3.0, "porton": 14.0, "rueda": 10.0, "trepar": 8.0, "argolla": 2.0, "cerradura": 5.0, "arrancar": 14.0}.get(hold_kind, 6.0))
+		j.sound_at({"rociar": "chapoteo", "porton": "cadenas", "rueda": "impacto_metal", "trepar": "crujido", "argolla": "cadenas", "cerradura": "pomo_cerrado", "arrancar": "coche_puerta"}.get(hold_kind, "golpe_madera"), pp + j.player.forward() * 0.8, -6.0)
 	if hold_t >= dur:
 		var k := hold_kind
 		hold_kind = ""
@@ -740,5 +823,7 @@ func completar(que: String) -> void:
 			j.elena.hear(j.player.global_position, 999.0)
 		"rueda":
 			j._escapar("coche")
+		"arrancar":
+			j._escapar("camioneta")
 		"trepar":
 			j._escapar("muro")

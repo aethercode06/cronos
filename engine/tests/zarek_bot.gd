@@ -249,16 +249,17 @@ func _salir(s: String, hu: ZarekHuida, m: ZarekMansion) -> void:
 		hu.completar("porton")
 	var dest: Vector3 = hu._pos_salida(s)
 	await _ir(dest, false, 2.5)
+	var que: String = {"camioneta": "arrancar", "coche": "rueda", "muro": "trepar"}[s]
+	var dur: float = {"camioneta": hu.ARRANCAR, "coche": hu.RUEDA, "muro": hu.TREPAR}[s]
+	r["carreras"] = int(r.get("carreras", 0)) + 1
+	hu._carrera_final(que)
+	var capt0 := g.deaths
+	await _mantener(dur, 12.0)
+	if g.state != "juego" or g.deaths != capt0:
+		r["carreras_perdidas"] = int(r.get("carreras_perdidas", 0)) + 1
+		return
 	r.salida = s
-	match s:
-		"camioneta":
-			g._escapar("camioneta")
-		"coche":
-			await _mantener(hu.RUEDA, 10.0)
-			hu.completar("rueda")
-		"muro":
-			await _mantener(hu.TREPAR, 8.0)
-			hu.completar("trepar")
+	hu.completar(que)
 	while g.state == "final" and not g.end_box.visible:
 		await get_tree().physics_frame
 
