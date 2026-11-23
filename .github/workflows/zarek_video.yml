@@ -1,0 +1,58 @@
+name: Vídeo de juego de La Sombra de Zarek
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: [ 'engine/tests/zarek_gameplay.gd', '.github/workflows/zarek_video.yml' ]
+permissions:
+  contents: write
+env:
+  GODOT_VERSION: 4.7.2
+jobs:
+  parte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Godot
+        run: |
+          cd $RUNNER_TEMP
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri ffmpeg > /dev/null
+      - name: Importar
+        run: godot --headless --path engine --import > import.log 2>&1 || true
+      - name: Grabar la parte ${{ matrix.parte }}
+        run: |
+          mkdir -p out
+          timeout 8000 xvfb-run -a -s "-screen 0 1280x720x24" godot --path engine --rendering-method gl_compatibility --rendering-driver opengl3 --resolution 1280x720 --fixed-fps 30 --write-movie $PWD/out/parte.avi res://tests/zarek_gameplay.tscn -- --parte ${{ matrix.parte }} > out/registro_${{ matrix.parte }}.txt 2>&1 || true
+          tail -20 out/registro_${{ matrix.parte }}.txt
+          ffmpeg -v error -y -i out/parte.avi -vf "scale=1280:720,format=yuv420p" -c:v libx264 -crf 21 -preset veryfast -r 30 -c:a aac -b:a 160k -ar 44100 -ac 2 out/parte_${{ matrix.parte }}.mp4
+          rm -f out/parte.avi; ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parte-${{ matrix.parte }}
+          path: out/
+  unir:
+    needs: parte
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: partes }
+      - name: Unir y guardar en la rama zarek-video
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          mkdir -p out && find partes -type f -exec cp {} out/ \;
+          cd out && ls -la
+          for p in 1 2 3; do [ -f parte_$p.mp4 ] && echo "file 'parte_$p.mp4'" >> lista.txt; done
+          ffmpeg -v error -y -f concat -safe 0 -i lista.txt -c copy zarek_gameplay.mp4 || true
+          git init -q && git checkout -q -b zarek-video
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Vídeo ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" zarek-video
