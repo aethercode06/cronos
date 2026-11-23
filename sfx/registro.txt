@@ -1,0 +1,52 @@
+API artificialguybr/Stable-Audio-Open-Zero {"named_endpoints": {"/predict": {"parameters": [{"label": "Prompt", "parameter_name": "prompt", "parameter_has_default": false, "parameter_default": null, "type": {"type": "string"}, "python_type": {"type": "str", "description": ""}, "component": "Textbox", "example_input": "Hello!!"}, {"label": "Duration in Seconds", "parameter_name": "seconds_total", "parameter_has_default": true, "parameter_default": 30, "type": {"type": "number", "description": "numeric value between 0 and 47"}, "python_type": {"type": "float", "description": ""}, "component": "Slider", "example_input": 0}, {"label": "Num
+forma 0 artificialguybr/Stable-Audio-Open-Zero AppError You have exceeded your free ZeroGPU quota (180s requested vs. 67s left). Try again in 23:28:32. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pr
+ERROR golpe_tension_1 artificialguybr/Stable-Audio-Open-Zero AppError You have exceeded your free ZeroGPU quota (180s requested vs. 67s left). Try again in 23:28:32. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+API innoai/Stable-Audio-Open-Zero {"named_endpoints": {"/generate_audio": {"parameters": [{"label": "Prompt", "parameter_name": "prompt", "parameter_has_default": false, "parameter_default": null, "type": {"type": "string"}, "python_type": {"type": "str", "description": ""}, "component": "Textbox", "example_input": "Hello!!"}, {"label": "Duration in Seconds", "parameter_name": "seconds_total", "parameter_has_default": true, "parameter_default": 30, "type": {"type": "number", "description": "numeric value between 0 and 47"}, "python_type": {"type": "float", "description": ""}, "component": "Slider", "example_input": 0}, {"label
+forma 0 innoai/Stable-Audio-Open-Zero ValueError Cannot find a function with `api_name`: /predict.
+forma 1 innoai/Stable-Audio-Open-Zero AppError You have exceeded your free ZeroGPU quota (180s requested vs. 67s left). Try again in 23:28:26. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pr
+ERROR golpe_tension_1 innoai/Stable-Audio-Open-Zero AppError You have exceeded your free ZeroGPU quota (180s requested vs. 67s left). Try again in 23:28:26. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+API 1inkusFace/Stable-Audio-Open-Zero {"named_endpoints": {"/predict": {"parameters": [{"label": "Prompt", "parameter_name": "prompt", "parameter_has_default": false, "parameter_default": null, "type": {"type": "string"}, "python_type": {"type": "str", "description": ""}, "component": "Textbox", "example_input": "Hello!!"}, {"label": "Duration in Seconds", "parameter_name": "seconds_total", "parameter_has_default": true, "parameter_default": 30, "type": {"type": "number", "description": "numeric value between 0 and 420"}, "python_type": {"type": "float", "description": ""}, "component": "Slider", "example_input": 0}, {"label": "Nu
+forma 0 1inkusFace/Stable-Audio-Open-Zero AppError You have exceeded your free ZeroGPU quota (90s requested vs. 67s left). Try again in 23:28:20. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro
+ERROR golpe_tension_1 1inkusFace/Stable-Audio-Open-Zero AppError You have exceeded your free ZeroGPU quota (90s requested vs. 67s left). Try again in 23:28:20. Subscribe to Hugging Face PRO to get 40 min of ZeroGPU quota a day - https://huggingface.co/subscribe/pro?from=ZeroGPU
+ERROR golpe_tension_1 MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR golpe_tension_1 Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO golpe_tension_1
+ERROR golpe_tension_2 MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR golpe_tension_2 Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO golpe_tension_2
+ERROR golpe_tension_3 MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR golpe_tension_3 Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO golpe_tension_3
+ERROR nana_elena MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR nana_elena Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO nana_elena
+ERROR cadenas MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR cadenas Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO cadenas
+ERROR latido_roca MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR latido_roca Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO latido_roca
+ERROR susurros MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR susurros Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO susurros
+ERROR amb_casa_2 MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR amb_casa_2 Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO amb_casa_2
+ERROR persecucion_2 MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR persecucion_2 Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO persecucion_2
+ERROR titulo_2 MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR titulo_2 Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO titulo_2
+ERROR tension_cerca MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR tension_cerca Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO tension_cerca
+ERROR respiracion_pesada MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR respiracion_pesada Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO respiracion_pesada
+ERROR golpes_pared MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR golpes_pared Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO golpes_pared
+ERROR madre_lamento MakiAi/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+ERROR madre_lamento Serhii1024/Stable-Audio-Open-Zero ValueError The current space is in the invalid state: RUNTIME_ERROR. Please contact the owner to fix this.
+FALLO madre_lamento
