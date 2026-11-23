@@ -1035,6 +1035,10 @@ func _update_niebla(delta: float) -> void:
 		var d := minf(minf(p2.x - F.position.x, F.end.x - p2.x), minf(p2.y - F.position.y, F.end.y - p2.y))
 		borde = 1.0 + (1.0 - clampf(d / 40.0, 0.0, 1.0)) * 1.4
 	env.fog_density = lerpf(0.016, 0.05 * borde, _fuera)
+	# dentro de la casa la luz de ambiente baja mucho: lo que alumbra son las lámparas (charcos de luz cálida)
+	# y la linterna; los rincones quedan en penumbra. Fuera manda la luna.
+	env.ambient_light_energy = lerpf(0.32, 0.85, _fuera)
+	env.ambient_light_color = Color(0.3, 0.29, 0.33).lerp(Color(0.42, 0.38, 0.34), _fuera)
 	env.fog_light_color = Color(0.07, 0.065, 0.07).lerp(Color(0.12, 0.135, 0.18), _fuera)
 	env.fog_height = 1.4
 	env.fog_height_density = lerpf(0.0, 0.32, _fuera)

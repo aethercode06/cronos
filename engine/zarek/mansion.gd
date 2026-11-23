@@ -5044,7 +5044,40 @@ func _lamp(pos: Vector3) -> void:
 ## Bombillas de filamento de carbón de principios de siglo (unos 2700 K). Cada sala o tramo de pasillo tiene un
 ## modo: «fija» (luz estable), «parpadea» (la mayoría: caídas breves, ráfagas y apagones con el zumbido de la
 ## corriente) o «apagada» (bombillas fundidas: salas y tramos oscuros).
-const COLOR_BOMBILLA := Color(1.0, 0.85, 0.66)
+## Bombilla incandescente vieja (~2400 K): luz naranja cálida, no blanca.
+const COLOR_BOMBILLA := Color(1.0, 0.72, 0.44)
+static var _tex_halo: ImageTexture
+## Halo alrededor de una bombilla encendida (se ve brillar aunque el móvil no tenga resplandor).
+func _halo(padre: Node3D, pos: Vector3, tam: float) -> MeshInstance3D:
+	if _tex_halo == null:
+		var s := 64
+		var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
+		for y in s:
+			for x in s:
+				var d := Vector2(x - s * 0.5 + 0.5, y - s * 0.5 + 0.5).length() / (s * 0.5)
+				var a := clampf(1.0 - d, 0.0, 1.0)
+				a = a * a * (0.35 + 0.65 * a * a)
+				img.set_pixel(x, y, Color(1, 1, 1, a))
+		_tex_halo = ImageTexture.create_from_image(img)
+	var mi := MeshInstance3D.new()
+	var q := QuadMesh.new()
+	q.size = Vector2(tam, tam)
+	mi.mesh = q
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.albedo_texture = _tex_halo
+	m.albedo_color = Color(1.0, 0.68, 0.38, 0.75)
+	m.no_depth_test = false
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = pos
+	mi.visible = false
+	mi.set_meta("dyn", true)
+	padre.add_child(mi)
+	return mi
 var _malla_bombilla: Mesh
 var _malla_filamento: Mesh
 var _mat_vidrio_bombilla: StandardMaterial3D
@@ -5188,14 +5221,16 @@ func _luz_electrica(pos: Vector3, tipo: String, dir := Vector3.ZERO, alcance := 
 	var light := OmniLight3D.new()
 	light.position = centro_luz
 	light.light_color = COLOR_BOMBILLA
-	light.omni_range = alcance
-	light.omni_attenuation = 1.3
-	light.light_energy = 1.6 if tipo == "aplique" else 2.0
-	light.light_size = 0.04
-	light.light_specular = 0.6
+	# caída física (casi cuadrática): charco de luz cerca de la lámpara y penumbra en los rincones
+	light.omni_range = alcance * 1.3
+	light.omni_attenuation = 1.9
+	light.light_energy = 2.6 if tipo == "aplique" else (3.4 if tipo == "colgante" else 2.8)
+	light.light_size = 0.05
+	light.light_specular = 0.45
+	var halo := _halo(n, centro_luz, 0.55 if tipo == "aplique" else 0.75)
 	light.visible = false
 	n.add_child(light)
-	var l := {"node": n, "light": light, "bulb": fil, "pos": pos, "room": id, "on": false, "broken": false,
+	var l := {"node": n, "light": light, "bulb": fil, "pos": pos, "room": id, "on": false, "broken": false, "halo": halo,
 		"base": light.light_energy, "flicker": 0.0, "modo": "fija", "e": 1.0, "obj": 1.0, "t": _rng.randf() * 4.0, "rafaga": 0}
 	lamps.append(l)
 	if id >= 0:
@@ -5329,6 +5364,9 @@ func _parpadeo(l: Dictionary, delta: float) -> void:
 	var e: float = l.e
 	(l.light as OmniLight3D).light_energy = float(l.base) * e
 	(l.bulb as StandardMaterial3D).emission_energy_multiplier = 4.0 * e * e
+	if l.has("halo") and is_instance_valid(l.halo):
+		(l.halo as MeshInstance3D).visible = e > 0.08
+		((l.halo as MeshInstance3D).material_override as StandardMaterial3D).albedo_color.a = 0.75 * e
 	if l.has("zumbido"):
 		(l.zumbido as AudioStreamPlayer3D).volume_db = -26.0 + 10.0 * (1.0 - e) * float(e > 0.05)
 
@@ -5344,6 +5382,8 @@ func set_lamp(l: Dictionary, on: bool) -> void:
 	l.on = on
 	l.light.visible = on
 	l.bulb.emission_energy_multiplier = 3.5 if on else 0.0
+	if l.has("halo") and is_instance_valid(l.halo):
+		(l.halo as MeshInstance3D).visible = on
 	if l.has("zumbido"):
 		(l.zumbido as AudioStreamPlayer3D).playing = on
 
@@ -6889,7 +6929,10 @@ func _process(delta: float) -> void:
 			continue
 		if l.on and not l.broken and l.flicker > 0.0:
 			l.flicker -= delta
-			l.light.light_energy = l.base * (0.15 if randf() < 0.5 else 1.0)
+			var k := 0.15 if randf() < 0.5 else 1.0
+			l.light.light_energy = l.base * k
+			if l.has("halo") and is_instance_valid(l.halo):
+				(l.halo as MeshInstance3D).visible = k > 0.5
 			if l.flicker <= 0.0:
 				l.light.light_energy = l.base
 	if swing:
