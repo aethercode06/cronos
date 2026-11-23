@@ -20,17 +20,18 @@ extends Node
 
 const SALIDAS := ["camioneta", "coche", "muro"]
 const NOMBRE_SALIDA := {"camioneta": "la camioneta de Damián (en la cochera)", "coche": "tu coche (al otro lado del portón)",
-	"muro": "el muro de piedra (con una cuerda con garfio)"}
+	"muro": "el muro de piedra (cuerda y garfio)"}
 const BLOQUEO := {
-	"camioneta": "Le ha arrancado los cables del motor. Esta camioneta no arrancará esta noche.",
+	"camioneta": "Le ha arrancado los cables del motor a hachazos. Esta camioneta no arrancará esta noche.",
 	"coche": "Ha rajado las cuatro ruedas de mi coche. Por aquí no saldré.",
 	"muro": "Ha clavado alambre de espino en todo lo alto del muro. Imposible trepar."}
 ## Objetos de la casa que pide cada salida (las llaves de la camioneta se recogen en el cuarto de Damián).
-const PIDE := {"camioneta": ["llave", "gasolina"], "coche": ["cizalla", "rueda", "gato"], "muro": ["cuerda"]}
+## Las tres cuestan lo mismo (3 pasos), cada una a su manera; el bot vio que con una sola cuerda se escapaba en 1 minuto.
+const PIDE := {"camioneta": ["llave", "gasolina", "bateria"], "coche": ["cizalla", "rueda", "gato"], "muro": ["cuerda", "garfio"]}
 const CORTAR := 3.0
 const ROCIAR := 2.0
 const RUEDA := 5.0
-const TREPAR := 3.5
+const TREPAR := 6.0
 
 var j: Node  # ZarekJuego
 var m: ZarekMansion
@@ -85,9 +86,8 @@ var _cadena_vis: Node3D
 static func salida_bloqueada(seed: int) -> String:
 	if seed == 0:
 		return "coche"
-	var r := RandomNumberGenerator.new()
-	r.seed = seed * 31 + 7
-	return SALIDAS[r.randi_range(0, 2)]
+	# hash de la semilla: reparto parejo entre las tres (con el generador sembrado salía casi siempre la misma)
+	return SALIDAS[absi(hash(str(seed) + "salida")) % 3]
 
 ## Objetos de la casa que hacen falta esta noche.
 static func objetos(seed: int) -> Array:
@@ -138,6 +138,41 @@ func _marca_muro() -> void:
 			var e := m.cyl(0.006, 0.006, 1.3, Vector3(-0.9, 2.5, -6.0 + k), m._mat.metal, n, 4)
 			e.rotation.x = PI * 0.5
 			e.rotation.z = 0.3 * (k % 2 * 2 - 1)
+
+## Que todo objeto de la noche se pueda alcanzar andando (el bot encontró objetos encerrados entre los trasteros
+## del ático): si el camino no llega, se mueve al punto alcanzable más cercano de la misma sala.
+var _verificados := false
+func _verificar_objetos() -> void:
+	_verificados = true
+	var desde: Vector3 = j.respawn_pos
+	var movidos_v := 0
+	for s in m.seals:
+		var sp: Vector3 = s.pos
+		var p := m.path(desde, sp)
+		var fin: Vector3 = p[p.size() - 1] if p.size() > 0 else desde
+		if fin.distance_to(sp) <= 1.4:
+			continue
+		# primero, el punto alcanzable más cercano si es de la misma sala; si no, otro punto de esa sala que sí se
+		# alcance; si tampoco, se queda donde está (nunca a una sala donde no tiene sentido)
+		var nuevo := Vector3.INF
+		var rid := m.room_at(sp)
+		if m.room_at(fin) == rid:
+			nuevo = fin
+		elif rid >= 0:
+			var rc: Rect2 = m.rooms[rid].rect
+			for k in 30:
+				var q := Vector3(randf_range(rc.position.x + 0.6, rc.end.x - 0.6), sp.y, randf_range(rc.position.y + 0.6, rc.end.y - 0.6))
+				var p2 := m.path(desde, q)
+				if p2.size() > 0 and p2[p2.size() - 1].distance_to(q) < 1.0:
+					nuevo = p2[p2.size() - 1]
+					break
+		if nuevo == Vector3.INF:
+			continue
+		s.pos = nuevo
+		(s.node as Node3D).global_position = nuevo + Vector3(0, 0.02, 0)
+		movidos_v += 1
+	if movidos_v > 0:
+		print("ZAREK objetos inalcanzables recolocados: %d" % movidos_v)
 
 # ---------------- la celda del principio ----------------
 ## Colchón en el suelo, una argolla en la pared con la cadena al tobillo y un clavo suelto al alcance de la mano.
@@ -228,6 +263,8 @@ func abrir_porton() -> void:
 func tick(delta: float) -> void:
 	if j == null or m == null:
 		return
+	if not _verificados and m.nav_ready:
+		_verificar_objetos()
 	var pp: Vector3 = j.player.global_position
 	_silencio_ruido = maxf(0.0, _silencio_ruido - delta)
 	if encadenada:
@@ -295,7 +332,8 @@ func subir_furia(cuanto: float, motivo: String) -> void:
 
 ## Ruido de Sofía: en el sótano la enfurece (y si es fuerte, grita y Damián acude); fuera, un poco.
 func ruido(pos: Vector3, fuerza: float) -> void:
-	if m == null:
+	# antes de empezar (al cargar, los objetos caen a su sitio y algunos se rompen) no cuenta nada
+	if m == null or j == null or not (j.state in ["juego", "escondido"]):
 		return
 	if madre_suelta and is_instance_valid(madre) and not madre_muerta:
 		madre.hear(pos, fuerza * 1.3)
@@ -339,6 +377,7 @@ func poltergeist() -> void:
 	opciones.shuffle()
 	for o in opciones:
 		if call("_p_" + o, pp, f):
+			set_meta("polt", int(get_meta("polt", 0)) + 1)
 			return
 
 func _p_lanzar(pp: Vector3, f: float) -> bool:
@@ -445,8 +484,22 @@ func _p_mover(pp: Vector3, _f: float) -> bool:
 	for s in m.seals:
 		if s.taken or String(s.tipo) == "rueda" or (s.pos as Vector3).distance_to(pp) < 14.0:
 			continue
-		var nueva := m.random_floor(pp, 10.0, m.room_at(s.pos))
-		if nueva == Vector3.INF or m.room_at(nueva) < 0:
+		# a otra sala donde también tenga sentido (de su lista), lejos de ti y alcanzable andando
+		var nueva := Vector3.INF
+		var salas: Array = (ZarekMansion.SITIOS_POR_OBJETO.get(String(s.tipo), []) as Array).duplicate()
+		salas.shuffle()
+		for nombre in salas:
+			var r := m._sala_por_nombre(nombre)
+			if r.is_empty() or int(r.id) == m.room_at(s.pos):
+				continue
+			var q := ZarekTerror._sitio_libre(m, r, 0.6)
+			if q == Vector3.INF or q.distance_to(pp) < 10.0:
+				continue
+			var cam := m.path(j.respawn_pos, q)
+			if cam.size() > 0 and cam[cam.size() - 1].distance_to(q) < 1.4:
+				nueva = q
+				break
+		if nueva == Vector3.INF:
 			continue
 		var visto: bool = s.get("visto", false) or s.get("revelado", false)
 		s.pos = nueva
@@ -581,7 +634,7 @@ func objetivo(pp: Vector3) -> Dictionary:
 			"coche":
 				return {"kind": "hold", "que": "rueda", "text": "MANTÉN USAR: cambiar la rueda y huir (tarda y hace ruido)"}
 			"muro":
-				return {"kind": "hold", "que": "trepar", "text": "MANTÉN USAR: lanzar el garfio y trepar el muro"}
+				return {"kind": "hold", "que": "trepar", "text": "MANTÉN USAR: atar el garfio, lanzarlo y trepar el muro (tarda y hace ruido)"}
 		return {"kind": "salida", "que": s, "text": "USAR: arrancar la camioneta y reventar el portón (final)"}
 	return {}
 
@@ -604,6 +657,8 @@ func faltan(s: String) -> Array[String]:
 				f.append("sus llaves (en el cuarto de Damián)")
 			if not tiene.get("gasolina", false) or gasolina_usada:
 				f.append("gasolina")
+			if not tiene.get("bateria", false):
+				f.append("la batería (se la ha quitado)")
 		"coche":
 			if not porton_abierto:
 				f.append("abrir el portón (cizalla)" if not tiene.get("cizalla", false) else "cortar la cadena del portón")
@@ -613,7 +668,9 @@ func faltan(s: String) -> Array[String]:
 				f.append("un gato")
 		"muro":
 			if not tiene.get("cuerda", false):
-				f.append("una cuerda con garfio")
+				f.append("una cuerda")
+			if not tiene.get("garfio", false):
+				f.append("un garfio")
 	return f
 
 func empezar_hold(que: String) -> void:
@@ -668,7 +725,10 @@ func completar(que: String) -> void:
 						mejor = dist
 						dd = d
 				m.entreabrir(dd)
-			j.message("La cerradura cede. Estoy fuera de ese cuarto.\nTengo que salir de esta casa. En silencio.", 4.0)
+			j.message("La cerradura cede… con un chasquido que se oye en toda la casa.\nAbajo, alguien se ha levantado. Tengo que salir de aquí. En silencio.", 4.5)
+			# el ruido le despierta: ya no duerme los 75 s (el bot escapaba antes de que se levantara)
+			if j.elena.state == ZarekElena.S.DORMANT:
+				j.elena.timer = minf(j.elena.timer, 8.0)
 			j._consejo("salir", "Busca una forma de salir de la finca: mira el DIARIO (arriba a la derecha). Cada noche hay una salida bloqueada.")
 		"rociar":
 			capilla_rociada = true

@@ -2021,7 +2021,9 @@ func _take_seal(s: Dictionary) -> void:
 		"gasolina": "Gasolina. Para su camioneta… o para otra cosa.",
 		"rueda": "Una rueda de repuesto. Puede valer para mi coche.",
 		"gato": "Un gato. Con la rueda, puedo cambiar la que me rajó.",
-		"cuerda": "Una cuerda con un garfio. Podría trepar el muro de la finca."}.get(tipo, _obj_msg(s))
+		"cuerda": "Una cuerda gruesa. Con algo que se agarre arriba, podría trepar el muro.",
+		"garfio": "Un garfio de hierro. Atado a una cuerda, me subiría al muro.",
+		"bateria": "La batería de su camioneta. Por eso no la dejaba aparcada sin más."}.get(tipo, _obj_msg(s))
 	message(txt, 3.5)
 	# la casa reacciona: cuanto más tienes, más inquieta está
 	match seals:
@@ -2448,7 +2450,7 @@ func _morir_atrapada(quien: ZarekElena = null) -> void:
 	if es_madre:
 		quien.can_catch = false
 	else:
-		huida.subir_furia(25.0, "")
+		huida.subir_furia(15.0, "")
 	var _real := elena
 	elena = quien
 	elena.set_state(ZarekElena.S.GHOST)

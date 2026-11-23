@@ -99,6 +99,9 @@ func setup(m: ZarekMansion, p: AetherPlayerFP) -> void:
 	player = p
 	_ray = PhysicsRayQueryParameters3D.new()
 	_ray.collision_mask = 3
+	# el rayo de la vista no puede chocar con la propia Sofía (su cápsula está en la capa 2, la de las puertas):
+	# antes siempre la tocaba y Damián nunca llegaba a verte, solo a oírte (lo descubrió el bot)
+	_ray.exclude = [p.get_rid()]
 	_snd_loop = AudioStreamPlayer3D.new()
 	if es_damian:
 		_snd_loop.stream = ZarekSonido.uno("damian_resp" if ZarekSonido.hay("damian_resp") else "aliento")
@@ -612,7 +615,13 @@ func _physics_process(delta: float) -> void:
 	if can_catch and state in [S.CHASE, S.INVESTIGATE, S.WANDER, S.SEARCH] and not player_hidden:
 		var dd := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z).length()
 		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2:
-			caught.emit()
+			if state == S.WANDER and not sees_player:
+				# paseando, si se tropieza contigo primero se da cuenta (rugido y persecución): te deja un instante
+				# para huir en vez de atraparte sin aviso (el bot lo sufría a menudo)
+				_start_chase()
+				_vel = Vector3.ZERO
+			else:
+				caught.emit()
 	# puertas: las abre de golpe al pasar
 	var d := mansion.door_near(global_position, 1.3)
 	# (las salas cerradas con llave también: es su casa y tiene todas las llaves)

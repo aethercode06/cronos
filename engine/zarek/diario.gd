@@ -14,7 +14,7 @@ const NOMBRE_PLANTA := {-1: "el sótano", 0: "la planta baja", 1: "la planta alt
 const TIPO_SALA := {"sala": "uno de los salones", "servicio": "una zona del servicio", "dormitorio": "un dormitorio",
 	"sotano": "una de sus salas", "pasillo": "un pasillo", "tunel": "los túneles", "epicentro": "un cuarto de Damián",
 	"roca": "la cueva", "agua": "el pozo"}
-const REVELAR := 300.0  # segundos sin encontrar nada hasta que el diario apunta la sala exacta
+const REVELAR := 180.0  # segundos sin encontrar nada hasta que el diario apunta la sala exacta
 
 var j: Node  # ZarekJuego
 var _texto: RichTextLabel

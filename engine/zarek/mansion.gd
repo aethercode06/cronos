@@ -4796,7 +4796,8 @@ func _car(p: Vector3) -> void:
 ## Los objetos de la noche (ZarekHuida.objetos): lo que piden las salidas abiertas (llave del cuarto de Damián y
 ## gasolina para su camioneta; cizalla para el portón, rueda y gato para tu coche; cuerda con garfio para el muro).
 const NOMBRE_OBJETO := {"cizalla": "la cizalla", "gasolina": "la lata de gasolina", "llave": "la llave del cuarto de Damián",
-	"rueda": "la rueda de repuesto", "gato": "el gato del coche", "cuerda": "la cuerda con garfio"}
+	"rueda": "la rueda de repuesto", "gato": "el gato del coche", "cuerda": "la cuerda", "garfio": "el garfio de hierro",
+	"bateria": "la batería de la camioneta"}
 var objetos_noche: Array = []
 
 ## Dónde tiene sentido cada objeto: la gasolina y la cizalla con las herramientas; la llave de repuesto de su
@@ -4808,7 +4809,9 @@ const SITIOS_POR_OBJETO := {
 	"llave": ["Dormitorio de los padres", "Estudio del padre", "Tocador de la madre", "Cuarto de servicio", "Guardarropa"],
 	"rueda": ["Salida a la cochera", "Galería de servicio", "Ático (vigas, baúles, muñecos tapados)", "Guardarropa"],
 	"gato": ["Salida a la cochera", "Galería de servicio", "Ático (vigas, baúles, muñecos tapados)", "Cuarto de servicio", "Despensa"],
-	"cuerda": ["Ático (vigas, baúles, muñecos tapados)", "Escondite de Damián niño", "Sala de calderas", "Cuarto de plancha", "Galería de servicio"]}
+	"cuerda": ["Ático (vigas, baúles, muñecos tapados)", "Escondite de Damián niño", "Cuarto de plancha", "Galería de servicio"],
+	"garfio": ["Sala de calderas", "Cava de vinos", "Salida a la cochera", "Cuarto de servicio"],
+	"bateria": ["Salida a la cochera", "Sala de calderas", "Galería de servicio"]}
 ## Salas de reserva (y para los tablones).
 const SITIOS_OBJETOS := ["Cocina", "Biblioteca", "Estudio del padre", "Sala de calderas", "Cuarto del hermano", "Despensa",
 	"Cuarto de huéspedes", "Sala de música", "Comedor formal", "Cava de vinos", "Dormitorio de los padres", "Salón con chimenea"]
@@ -4855,6 +4858,17 @@ func _repartir_objetos() -> void:
 			_seal(p, tipo)
 			puesto = true
 			break
+		if not puesto:
+			# todas sus salas ya tienen otro objeto: se repite sala antes que ponerlo donde no tiene sentido
+			for nombre in salas:
+				var r2 := _sala_por_nombre(nombre)
+				if r2.is_empty():
+					continue
+				var p2 := ZarekTerror._sitio_libre(self, r2, 0.7)
+				if p2 != Vector3.INF:
+					_seal(p2, tipo)
+					puesto = true
+					break
 		if not puesto:
 			for p in sitios:
 				if not room_at(p) in usados:
@@ -4932,12 +4946,21 @@ func _seal(pos: Vector3, tipo: String) -> void:
 				anillo.material_override = cuerda_m
 				anillo.position = Vector3(0, 0.02 + k * 0.02, 0)
 				n.add_child(anillo)
-			var vara := cyl(0.012, 0.012, 0.22, Vector3(0.22, 0.03, 0), _mat.hierro, n, 6)
-			vara.rotation.z = PI * 0.5
+		"garfio":
+			# garfio de hierro forjado de tres puntas, oxidado
+			var vara2 := cyl(0.014, 0.014, 0.3, Vector3(0, 0.03, 0), _mat.hierro, n, 6)
+			vara2.rotation.z = PI * 0.5
 			for k in 3:
-				var una := box(Vector3(0.09, 0.015, 0.015), Vector3(0.34, 0.03, 0), _mat.hierro, false, n, false)
-				una.rotation.y = (k - 1) * 0.9
-				una.rotation.z = 0.5
+				var una2 := box(Vector3(0.12, 0.018, 0.018), Vector3(0.17, 0.03, 0), _mat.hierro, false, n, false)
+				una2.rotation.y = (k - 1) * 0.9
+				una2.rotation.z = 0.6
+			cyl(0.025, 0.025, 0.01, Vector3(-0.16, 0.03, 0), _mat.hierro, n, 8).rotation.z = PI * 0.5
+		"bateria":
+			# batería de coche: caja negra, tapa gris, dos bornes
+			box(Vector3(0.26, 0.19, 0.17), Vector3(0, 0.095, 0), _plain(Color(0.06, 0.06, 0.06), 0.5), false, n, false)
+			box(Vector3(0.27, 0.025, 0.18), Vector3(0, 0.2, 0), _plain(Color(0.3, 0.3, 0.28), 0.6), false, n, false)
+			cyl(0.015, 0.015, 0.03, Vector3(-0.08, 0.225, 0.04), _plain(Color(0.6, 0.1, 0.05), 0.4), n, 8)
+			cyl(0.015, 0.015, 0.03, Vector3(0.08, 0.225, 0.04), _mat.oscuro, n, 8)
 		"gato":
 			# gato de tijera: base, brazos en rombo y el husillo
 			box(Vector3(0.3, 0.02, 0.09), Vector3(0, 0.01, 0), _mat.hierro, false, n, false)
@@ -7012,6 +7035,13 @@ func bake_nav() -> void:
 	nm.filter_baking_aabb = AABB(Vector3(house_rect.position.x - 32, lvl_y(-1) - 1.0, house_rect.position.y - 6),
 		Vector3(house_rect.size.x + 64, lvl_y(3), house_rect.size.y + 34))
 	nav_region.navigation_mesh = nm
+	# escaleras de mano, trampillas y pasadizos son «pasos» para Sofía: Damián también los usa (enlaces de navegación)
+	for pt in portals:
+		var lk := NavigationLink3D.new()
+		lk.bidirectional = false
+		lk.start_position = pt.pos
+		lk.end_position = pt.to
+		add_child(lk)
 	nav_region.bake_finished.connect(func():
 		nav_ready = true
 		print("ZAREK: navmesh polígonos ", nav_region.navigation_mesh.get_polygon_count()))

@@ -344,7 +344,7 @@ func _ready() -> void:
 		g.player.velocity = Vector3.ZERO
 		g._use()
 		await _wait(0.1)
-	_check(g.seals == m.seals.size() and rs.tiene.get("llave", false) and rs.tiene.get("cuerda", false), "objetos recogidos (%d)" % g.seals)
+	_check(g.seals == m.seals.size() and rs.tiene.get("llave", false) and rs.tiene.get("cuerda", false) and rs.tiene.get("garfio", false), "objetos recogidos (%d)" % g.seals)
 	# el cuarto de Damián se abre con su llave
 	var dc: Dictionary = {}
 	for d in m.doors:

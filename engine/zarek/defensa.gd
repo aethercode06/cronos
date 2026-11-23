@@ -267,7 +267,7 @@ func tick(delta: float) -> void:
 	# forcejeo
 	if _forcejeo > 0.0:
 		_forcejeo -= delta
-		if Input.is_action_just_pressed("usar") or (j.autotest and Engine.get_process_frames() % 6 == 0):
+		if Input.is_action_just_pressed("usar") or ((j.autotest or j.has_meta("bot")) and Engine.get_process_frames() % 6 == 0):
 			_toques += 1
 			j.player.shake(3.0)
 			if _mano:
