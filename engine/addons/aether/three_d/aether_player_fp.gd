@@ -151,13 +151,18 @@ func _physics_process(delta: float) -> void:
 	var target := dir * spd
 	velocity.x = lerpf(velocity.x, target.x, minf(1.0, delta * 12.0))
 	velocity.z = lerpf(velocity.z, target.z, minf(1.0, delta * 12.0))
-	if not is_on_floor():
-		velocity.y -= gravity * delta
+	if altura_fija:
+		# escondida (armario, bajo la cama) o en el suelo tras el hachazo: el cuerpo no se mueve ni cae
+		# (en el escondite la cápsula está desactivada; sin esto caería atravesando el suelo)
+		velocity = Vector3.ZERO
 	else:
-		velocity.y = -0.5
-	var antes := global_position
-	move_and_slide()
-	_subir_escalon(antes, target, delta)
+		if not is_on_floor():
+			velocity.y -= gravity * delta
+		else:
+			velocity.y = -0.5
+		var antes := global_position
+		move_and_slide()
+		_subir_escalon(antes, target, delta)
 	var hv := Vector2(velocity.x, velocity.z).length()
 	moving = clampf(hv / walk_speed, 0.0, 1.6)
 	# Balanceo de cabeza y pasos.

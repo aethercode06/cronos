@@ -96,6 +96,8 @@ func _ready() -> void:
 	g.elena.set_state(ZarekElena.S.WANDER)
 	await _wait(0.3)
 	_check(g.state == "escondido" and not g.elena._can_see_player(), "escondido en el armario no te ve")
+	await _wait(1.5)
+	_check(absf(g.player.global_position.y - (wd.inside as Vector3).y) < 0.2, "escondida no se cae atravesando el suelo")
 	g._exit_wardrobe(true)
 	_check(g.state == "juego", "sales del armario")
 	# debajo de la cama: la vista baja a ras de suelo y vuelve al salir
@@ -108,7 +110,8 @@ func _ready() -> void:
 		var bajo: bool = g.player.head.position.y < 0.5 and g.slit_cama.visible
 		g._exit_wardrobe(true)
 		_check(bajo and g.player.head.position.y > 1.0, "esconderse debajo de la cama")
-	# el fonógrafo lo atrae
+	# el fonógrafo lo atrae (sin hábitos guardados de otras partidas: si no, Damián ya conoce el truco)
+	Aether.save.set_value("zarek_habitos", {"esc": {}, "fono": 0})
 	g.elena.global_position = m.radio_pos + Vector3(6, -1.0, 0)
 	g.elena.set_state(ZarekElena.S.WANDER)
 	g._poner_fonografo()
