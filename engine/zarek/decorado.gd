@@ -632,39 +632,35 @@ func _dormitorio_padres(r: Dictionary) -> void:
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
 
-## Cuarto de Elena (EPICENTRO, 9,6 × 9,6): una sola puerta al sur (x 4,8-7,2). El círculo de sal del ritual
-## va en el centro y debe quedar libre (radio 1,9). Habitación de una joven de 1908, ahora corrompida.
+## Cuarto de Damián (9,6 × 9,6): una sola puerta al sur (x 4,8-7,2). En el centro, su colchón (lo pone la mansión:
+## ahí se prepara la trampa, radio 1,9 libre). Su ropa de niño, los trofeos de sus víctimas, la pared de fotos.
 func _cuarto_elena(r: Dictionary) -> void:
 	var W: float = r.rect.size.x
 	var D: float = r.rect.size.y
-	_cama_hierro(r, 1.6, 1.15, 0.0)
-	_en(r, "painted_wooden_nightstand", 2.55, 0.35, 0.0)
-	_en(r, "jugu_music_box_prop", 2.55, 0.35, 0.3, 1.2, 0.62, false)
-	_en(r, "wooden_candlestick", 2.7, 0.45, 0.0, 1.0, 0.62, false)
-	_en(r, "obj_birdcage", W - 0.6, 0.6, -PI * 0.75)
-	# tocador con el espejo donde se mira lo que no es ella
-	_en(r, "GothicCommode_01", W - 0.36, 4.4, -PI * 0.5)
-	_en(r, "vict_ornate_mirror", W - 0.1, 4.4, -PI * 0.5, 0.6, 1.25, false)
-	_en(r, "coti_small_bottle", W - 0.4, 4.1, 0.0, 0.35, 1.21, false)
-	_en(r, "terr_creepy_lady_bust_statue_scan", W - 0.42, 4.85, -PI * 0.5, 0.6, 1.21, false)
-	_en(r, "GothicCabinet_01", 0.6, 5.4, PI * 0.5)
-	_en(r, "Rockingchair_01", 7.9, 7.6, -2.4)
-	_en(r, "ropa_wedding_dress", 7.4, 2.4, -0.6)
-	# velas alrededor del círculo, alguna caída; páginas arrancadas por el suelo
-	for k in 6:
-		var a := TAU * k / 6.0 + 0.3
-		var v := _en(r, "coti_three_candles_and_a_golden_c", 4.8 + cos(a) * 2.25, 4.8 + sin(a) * 2.25, a, 0.9, 0.0, false)
-		if v and k == 4:
-			v.rotation.z = PI * 0.5
-			v.position.y += 0.1
-	_en(r, "vict_old_books___free_download", 2.2, 3.6, 1.0, 0.6, 0.0, false)
-	_en(r, "coti_occult_books", 7.0, 5.6, 0.4, 0.8, 0.0, false)
-	_en(r, "coti_shabby_books", 3.0, 7.6, 2.2, 1.0, 0.0, false)
-	var silla := _en(r, "vict_antique_chair", 6.8, 8.6, 0.8)
-	if silla:
-		silla.rotation.x = PI * 0.5
-		silla.position.y += 0.22
-	_cuadro(r, "fancy_picture_frame_01", 1.6, 0.09, 0.0, 1.4, 2.2)
+	# trofeos: mochilas, maletas, chaquetas, botas y zapatos apilados contra la pared oeste
+	for q in [[0.5, 1.2, "vintage_suitcase", 0.0], [0.45, 2.1, "obj_sack_v1", 0.4], [0.5, 2.9, "obj_sack_v2", 1.2], [0.9, 1.6, "ropa_leather_bag", 0.7],
+			[0.5, 3.8, "ropa_heavy_worn_jacket", 1.4], [1.2, 3.4, "ropa_boots", 0.3], [1.0, 4.4, "ropa_old_shoes", 2.0], [1.4, 2.4, "ropa_old_dirty_boots", 4.0],
+			[0.6, 5.2, "ropa_purse", 0.6], [1.0, 5.8, "ropa_umbrella", 1.5], [0.5, 6.4, "ropa_kirza_boots", 0.2]]:
+		_en(r, q[2], q[0], q[1], q[3], 1.0, 0.0, false)
+	# la pared de fotos de las víctimas, con chinchetas; las tachadas ya se las comió su madre
+	if not ZarekTerror._en_pared(m, r, "fotos_victimas", Vector2(3.0, 2.25), 1.7):
+		ZarekTerror._en_pared(m, r, "fotos_victimas", Vector2(2.0, 1.5), 1.7)
+	# mesa de trabajo con cuchillos, la cuchilla y una calavera; el hacha colgada encima
+	_en(r, "WoodenTable_03", W - 1.0, 2.2, -PI * 0.5)
+	ZarekGore._x(m, "carnicero_knife_collection", Vector3(r.rect.position.x + W - 1.0, float(r.y) + 0.83, r.rect.position.y + 1.8), PI * 0.5, 0.8)
+	ZarekGore._x(m, "carnicero_cleaver___butcher_s_best", Vector3(r.rect.position.x + W - 0.9, float(r.y) + 0.83, r.rect.position.y + 2.7), 1.2)
+	ZarekGore._x(m, "huesos_human_skull", Vector3(r.rect.position.x + W - 1.1, float(r.y) + 0.83, r.rect.position.y + 3.1), -PI * 0.5)
+	ZarekGore._x(m, "restos_bloody_axe", Vector3(r.rect.position.x + W - 0.12, float(r.y) + 1.1, r.rect.position.y + 2.2), -PI * 0.5)
+	# su infancia: el oso de peluche, el caballito y una foto de su madre en la mesilla
+	_en(r, "painted_wooden_nightstand", 2.4, D - 0.4, PI)
+	_en(r, "obj_craft_teddy_bear_photogramme", 2.4, D - 0.4, PI + 0.3, 0.9, 0.62, false)
+	_en(r, "d_fotos_familia", 2.7, D - 0.38, PI, 1.0, 0.62, false)
+	_en(r, "jugu_rocking_horse", W - 1.4, D - 1.4, -2.4, 0.9)
+	# delantal de carnicero colgado, cadenas y un cubo
+	_en(r, "ropa_apron", W - 0.15, 5.4, -PI * 0.5, 1.0, 0.9, false)
+	ZarekGore._x(m, "tortura_rusty_chains", Vector3(r.rect.position.x + W - 1.6, float(r.y), r.rect.position.y + 6.4), 0.4)
+	ZarekGore._cubo_sangre(m, Vector3(r.rect.position.x + 1.4, float(r.y), r.rect.position.y + D - 1.2))
+	_en(r, "GothicCabinet_01", 0.6, D - 1.6, PI * 0.5)
 	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
 		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 1.0, ZarekMansion.WALL_H - 0.9, false)
 
@@ -1392,34 +1388,26 @@ func _jaula(r: Dictionary, x: float, z: float) -> void:
 	# una manta sucia y un cuenco dentro
 	_en(r, "wooden_bowl_01", x - 0.3, z + 0.2, 0.0, 1.0, 0.0, false)
 
-## Capilla del ritual (sótano, 14,4 × 12 m): puerta al norte (x 2,4-4,8, desde la cava). Bancos de iglesia a los
+## Capilla de la madre (sótano, 14,4 × 12 m): puerta al norte (x 2,4-4,8, desde la cava). Bancos de iglesia a los
 ## lados, el altar con el tríptico al sur bajo un crucifijo, el sarcófago del fundador y, en el centro, el círculo
 ## del ritual pintado en el suelo (lo pone ZarekTerror).
 func _capilla(r: Dictionary) -> void:
+	# la capilla de la familia, con el fondo convertido en la celda donde Damián tiene encadenada a su madre
 	var W: float = r.rect.size.x
-	var D: float = r.rect.size.y
-	_en(r, "WoodenTable_02", W * 0.5, D - 0.75, 0.0)
-	_en(r, "t_altar_triptico", W * 0.5, D - 0.65, PI, 1.0, 0.78, false)
-	_en(r, "t_velas_4", W * 0.5 - 0.9, D - 0.95, 0.0, 1.0, 0.78, false)
-	_en(r, "t_velas_cuenco", W * 0.5 + 0.9, D - 0.9, 0.0, 1.0, 0.78, false)
-	_cuadro(r, "obj_withered_wooden_crucifix", W * 0.5, D - 0.09, PI, 1.6, 2.7)
-	_en(r, "obj_bible_on_stand", W * 0.5 - 2.2, D - 1.3, PI + 0.3)
-	_en(r, "t_angel_reza", W - 1.0, D - 0.9, PI + 0.5)
-	_en(r, "t_sarcofago", 1.2, D - 2.0, 0.0)
-	_en(r, "coti_occult_books", W * 0.5 + 2.6, D - 3.2, 0.7, 1.0, 0.0, false)
-	_en(r, "obj_scroll", W * 0.5 - 2.5, 4.2, 1.2, 1.0, 0.0, false)
-	# bancos: dos filas a cada lado del pasillo central; alguno volcado
-	var filas := [3.4, 5.0, 6.6, 8.2]
+	_cuadro(r, "obj_withered_wooden_crucifix", W * 0.5, 0.09, 0.0, 1.6, 2.7)
+	_en(r, "obj_bible_on_stand", 1.4, 1.4, 0.4)
+	var filas := [2.4, 4.0, 5.6]
 	for i in filas.size():
 		for lado in [0, 1]:
 			var bx: float = 2.3 if lado == 0 else W - 2.3
 			var b := _en(r, "t_banco_iglesia", bx, filas[i], PI)
-			if b and i == 2 and lado == 1:
+			if b and i == 1 and lado == 1:
 				b.rotation.y += 0.5
-			if b and i == 3 and lado == 0:
+			if b and i == 2 and lado == 0:
 				_tumbar(b)
-	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4), Vector2(0.4, D - 0.4), Vector2(W - 0.4, D - 0.4)]:
-		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, D * 0.5 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+	for esq in [Vector2(0.4, 0.4), Vector2(W - 0.4, 0.4)]:
+		_en(r, "terr_cobwebs", esq.x, esq.y, atan2(W * 0.5 - esq.x, 6.0 - esq.y), 0.9, ZarekMansion.WALL_H - 0.9, false)
+	ZarekGore.celda_madre(m, r)
 
 ## Botellero de roble oscuro (1,6 m a lo largo de la pared, 2 m de alto) con botellas en cada balda.
 func _botellero(r: Dictionary, x: float, z: float, en_pared_x: bool) -> void:
@@ -1535,7 +1523,7 @@ func _atico(r: Dictionary) -> void:
 		for z in [0.5, D - 0.5]:
 			_en(r, "terr_cobwebs", x, z, 0.0 if z < 1.0 else PI, 1.2, 2.4, false)
 
-## Rincón de Elena (en el ático, 7,2 × 4,8): donde se escondía a escribir. El diario va en el centro.
+## Escondite de Damián niño (en el ático, 7,2 × 4,8): donde se escondía a escribir. El diario va en el centro.
 func _rincon_elena(r: Dictionary) -> void:
 	_cama_hierro(r, 1.2, 2.4, PI * 0.5, 0.8)
 	_en(r, "small_wooden_table_01", 5.0, 1.0, 0.0, 0.8)
@@ -1590,7 +1578,7 @@ func _grupo(r: Dictionary) -> String:
 ## de trabajo en escritorios, de noche en mesillas…), cada tramo libre de pared un cuadro centrado con apliques
 ## a los lados, y el suelo solo lo que tiene sentido (leña junto a la chimenea, libros junto a las estanterías).
 func _relleno(r: Dictionary) -> void:
-	if String(r.name) == "Capilla del ritual":
+	if String(r.name) == "Capilla de la madre":
 		return
 	var g := _grupo(r)
 	if g != "tunel":
@@ -2504,13 +2492,13 @@ func _vestir_base(r: Dictionary) -> void:
 		_reservar_pasos(r)
 		_salon_chimenea(r)
 		return
-	var a_mano := {"Ático (vigas, baúles, muñecos tapados)": _atico, "Rincón de Elena": _rincon_elena, "Torre": _torre, "Mirador de la torre": _mirador,
+	var a_mano := {"Ático (vigas, baúles, muñecos tapados)": _atico, "Escondite de Damián niño": _rincon_elena, "Torre": _torre, "Mirador de la torre": _mirador,
 		"Pasillo del sótano": _pasillo_sotano, "Galería de servicio": _galeria_servicio, "Archivo": _archivo, "Sala de calderas": _calderas, "Cava de vinos": _cava,
 		"Despensa": _despensa, "Antecocina": _antecocina, "Guardarropa": _guardarropa, "Cuarto de servicio": _servicio, "Cuarto de plancha": _plancha,
 		"Sala de fumar y billar": _billar, "Sala de las mañanas": _mananas, "Tocador de la madre": _tocador, "Cuarto del hermano": _hermano,
 		"Baño": _bano, "Cuarto de huéspedes azul": _huespedes_azul, "Sala de costura": _costura, "Cuarto de la institutriz": _institutriz,
 		"Galería de retratos": _galeria, "Cuarto de huéspedes": _huespedes, "Cuarto de lectura": _lectura, "Pasillo principal": _pasillo, "Pasillo": _pasillo,
-		"Dormitorio de los padres": _dormitorio_padres, "EPICENTRO · cuarto de Elena": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile, "Capilla del ritual": _capilla}
+		"Dormitorio de los padres": _dormitorio_padres, "Cuarto de Damián": _cuarto_elena, "Cuarto de niños": _cuarto_ninos, "Sala de música": _sala_musica, "Salón de baile": _salon_baile, "Capilla de la madre": _capilla}
 	if a_mano.has(String(r.name)):
 		_reservar_pasos(r)
 		(a_mano[String(r.name)] as Callable).call(r)

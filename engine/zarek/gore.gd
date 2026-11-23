@@ -169,14 +169,98 @@ static func aplicar(m: ZarekMansion) -> void:
 	_cuerpos(m)
 	_despensa(m)
 	_capilla(m)
+	_senuelos(m)
 	print("ZAREK gore: %d ms" % (Time.get_ticks_msec() - t0))
+
+## Cepo para osos en el suelo (abierto, o cerrado sobre una bota con sangre).
+static func cepo(m: ZarekMansion, p: Vector3, cerrado := false, yaw := 0.0) -> void:
+	var n := Node3D.new()
+	n.position = p
+	n.rotation.y = yaw
+	m._house.add_child(n)
+	m.cyl(0.05, 0.05, 0.02, Vector3(0, 0.01, 0), m._mat.hierro, n, 10)
+	for s2 in [-1.0, 1.0]:
+		var mand := MeshInstance3D.new()
+		var tm := TorusMesh.new()
+		tm.inner_radius = 0.17
+		tm.outer_radius = 0.19
+		tm.rings = 16
+		tm.ring_segments = 4
+		mand.mesh = tm
+		mand.material_override = m._mat.hierro
+		var giro := (PI * 0.5 - 0.15) if cerrado else 0.25
+		mand.transform = Transform3D(Basis(Vector3(1, 0, 0), s2 * giro).scaled(Vector3(1, 1, 0.55)), Vector3(0, 0.03 + (0.09 if cerrado else 0.0), s2 * (0.01 if cerrado else 0.08)))
+		n.add_child(mand)
+	for s2 in [-1.0, 1.0]:
+		m.box(Vector3(0.12, 0.025, 0.03), Vector3(s2 * 0.22, 0.015, 0), m._mat.hierro, false, n, false)
+	for k in 6:
+		var e := m.cyl(0.012, 0.012, 0.05, Vector3(0.28 + k * 0.045, 0.01, 0.02 * (k % 2)), m._mat.hierro, n, 5)
+		e.rotation.z = PI * 0.5
+	if cerrado:
+		m._prop("ropa_kirza_boots", p + Vector3(0, 0.0, 0), yaw + 1.2, 1.0, false)
+		_charco(m, p, 1.0)
+
+## Los señuelos de Damián en el camino del bosque: el letrero falso del refugio, linternas colgadas de los
+## árboles que llevan a la casa, mochilas abandonadas con sangre y cepos para osos (uno con una bota dentro).
+static func _senuelos(m: ZarekMansion) -> void:
+	var cam := []
+	for z in m.plan.exterior.zonas:
+		if String(z[0]) == "Camino del bosque":
+			cam.append(Rect2(float(z[2]) * ZarekMansion.CELL, float(z[3]) * ZarekMansion.CELL, float(z[4]) * ZarekMansion.CELL, float(z[5]) * ZarekMansion.CELL))
+	if cam.is_empty():
+		return
+	# letrero en el primer cruce, clavado en un poste
+	var c0: Rect2 = cam[cam.size() - 1]
+	var lp := Vector3(c0.position.x - 0.9, 0, c0.position.y + 6.0)
+	m.box(Vector3(0.12, 2.2, 0.12), lp + Vector3(0, 1.1, 0), m._mat.madera_vieja, true, m._house)
+	var cartel := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(1.4, 0.52, 0.04)
+	cartel.mesh = bm
+	var mt := StandardMaterial3D.new()
+	mt.albedo_texture = load("res://zarek/terror/letrero_refugio.png")
+	mt.roughness = 0.9
+	cartel.material_override = mt
+	cartel.position = lp + Vector3(0.0, 1.85, 0.08)
+	cartel.rotation = Vector3(0, PI * 0.5, 0.04)
+	m._house.add_child(cartel)
+	# linternas colgadas a lo largo de los caminos, cada vez más cerca de la casa (dos encendidas de verdad)
+	var encendidas := 0
+	for i in cam.size():
+		var rc: Rect2 = cam[i]
+		var largo := maxf(rc.size.x, rc.size.y)
+		var vertical := rc.size.y > rc.size.x
+		var k := 0.0
+		while k < largo:
+			var p := Vector3(rc.position.x + (rc.size.x + 0.8 if vertical else k), 0, rc.position.y + (k if vertical else -0.8))
+			m.box(Vector3(0.1, 2.6, 0.1), p + Vector3(0, 1.3, 0), m._mat.madera_vieja, false, m._house)
+			m.box(Vector3(0.5, 0.06, 0.06), p + Vector3(-0.2 if vertical else 0, 2.55, 0 if vertical else 0.2), m._mat.madera_vieja, false, m._house)
+			var lpos := p + Vector3(-0.4 if vertical else 0, 2.2, 0 if vertical else 0.4)
+			m._prop("Lantern_01", lpos, 0.0, 0.6, false)
+			m.cyl(0.05, 0.05, 0.12, lpos + Vector3(0, 0.12, 0), m._mat.ventana_luz, m._house, 6)
+			if encendidas < 2 and _rng.randf() < 0.35:
+				var l := OmniLight3D.new()
+				l.light_color = Color(1.0, 0.65, 0.3)
+				l.light_energy = 0.8
+				l.omni_range = 6.0
+				l.position = lpos + Vector3(0, 0.1, 0)
+				m._house.add_child(l)
+				encendidas += 1
+			k += 14.0
+	# mochilas tiradas con sangre y cepos junto a los caminos
+	for i in 4:
+		var rc: Rect2 = cam[_rng.randi_range(0, cam.size() - 1)]
+		var p := Vector3(_rng.randf_range(rc.position.x, rc.end.x), 0, _rng.randf_range(rc.position.y, rc.end.y))
+		m._prop("obj_sack_v1" if i % 2 == 0 else "ropa_leather_bag", p + Vector3(1.8, 0, 0), _rng.randf() * TAU, 1.0, false)
+		_charco(m, p + Vector3(1.8, 0, 0.3), 1.2)
+		cepo(m, p + Vector3(-1.4 + _rng.randf_range(-0.3, 0.3), 0.02, _rng.randf_range(-1.0, 1.0)), i == 1, _rng.randf() * TAU)
 
 ## Charcos y salpicaduras en el suelo y chorretones y salpicaduras en las paredes de las salas por donde caza.
 const SALAS := {
 	"Pasillo principal": [2, 2, 1], "Vestíbulo y gran escalera": [2, 2, 1], "Comedor formal": [2, 1, 1], "Cocina": [3, 2, 2],
 	"Antecocina": [1, 1, 1], "Despensa": [2, 1, 1], "Pasillo del sótano": [3, 2, 2], "Sala de calderas": [2, 1, 1],
-	"Cuarto de huéspedes": [1, 1, 1], "Baño": [1, 1, 1], "Pasillo": [1, 1, 1], "Capilla del ritual": [3, 2, 1],
-	"Cava de vinos": [1, 1, 0], "Galería de retratos": [1, 0, 1], "Salón de baile": [1, 1, 0], "Cuarto del hermano": [1, 0, 1],
+	"Cuarto de huéspedes": [1, 1, 1], "Baño": [1, 1, 1], "Pasillo": [1, 1, 1], "Capilla de la madre": [3, 2, 1],
+	"Cava de vinos": [1, 1, 0], "Cuarto de Damián": [2, 2, 1], "Galería de retratos": [1, 0, 1], "Salón de baile": [1, 1, 0], "Cuarto del hermano": [1, 0, 1],
 }
 
 static func _sangre_por_salas(m: ZarekMansion) -> void:
@@ -310,7 +394,7 @@ static func _despensa(m: ZarekMansion) -> void:
 
 ## Capilla: huesos roídos alrededor de donde comía la madre.
 static func _capilla(m: ZarekMansion) -> void:
-	var r := m._sala_por_nombre("Capilla del ritual")
+	var r := m._sala_por_nombre("Capilla de la madre")
 	if r.is_empty():
 		return
 	for k in 14:
@@ -321,6 +405,88 @@ static func _capilla(m: ZarekMansion) -> void:
 		var p := ZarekTerror._sitio_libre(m, r, 0.3)
 		if p != Vector3.INF:
 			_x(m, "huesos_human_skull" if k < 3 else "huesos_skeleton_hand", p, _rng.randf() * TAU)
+
+## La celda de la madre al fondo de la capilla: una reja de hierro de pared a pared, del suelo al techo, con
+## una puerta cerrada con cuatro candados. Detrás, a oscuras: argollas y cadenas en la pared, un colchón
+## podrido, platos con restos, huesos roídos y sangre. Delante, las velas y la comida que le baja Damián.
+static func celda_madre(m: ZarekMansion, r: Dictionary) -> void:
+	_preparar()
+	var rc: Rect2 = r.rect
+	var y := float(r.y)
+	var D := rc.size.y
+	var W := rc.size.x
+	var L := func(x: float, z: float, alto := 0.0) -> Vector3: return Vector3(rc.position.x + x, y + alto, rc.position.y + z)
+	var zr := D - 4.2
+	var hierro: Material = m._mat.hierro
+	var alto := ZarekMansion.WALL_H
+	# barrotes, travesaños y pared invisible que no deja pasar
+	var n := int(W / 0.16)
+	for k in n + 1:
+		var x := W * float(k) / n
+		var puerta := absf(x - W * 0.5) < 0.6
+		var bar := m.cyl(0.022, 0.022, alto, L.call(x, zr, alto * 0.5), hierro, m._house, 6)
+		bar.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if k % 3 == 0 else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if puerta:
+			bar.position.z += 0.06
+	for hy in [0.12, 1.1, 2.2, alto - 0.1]:
+		m.box(Vector3(W, 0.06, 0.05), L.call(W * 0.5, zr, hy), hierro, false)
+	m._choque(Vector3(W, alto, 0.25), L.call(W * 0.5, zr, alto * 0.5))
+	# puerta: marco, bisagras y cuatro candados en la cadena que la cierra
+	for s2 in [-1.0, 1.0]:
+		m.box(Vector3(0.08, 2.2, 0.08), L.call(W * 0.5 + s2 * 0.62, zr + 0.06, 1.1), hierro, false)
+	for k in 4:
+		var cp: Vector3 = L.call(W * 0.5 + 0.55, zr + 0.14, 0.75 + k * 0.22)
+		var cand := m._prop("candado_viejo", cp, 0.0, 1.6, false)
+		if cand == null:
+			m.box(Vector3(0.07, 0.08, 0.03), cp, m._mat.laton_viejo, false)
+		var e := m.cyl(0.01, 0.01, 0.18, cp + Vector3(-0.05, 0.08, 0), hierro, m._house, 5)
+		e.rotation.z = 0.6
+	# detrás: argollas y cadenas que salen de la pared y se pierden en la oscuridad del suelo
+	for k in 4:
+		var ax := W * 0.5 + (k - 1.5) * 1.1
+		m.cyl(0.07, 0.07, 0.04, L.call(ax, D - 0.08, 1.4), hierro, m._house, 10).rotation.x = PI * 0.5
+		var cad := _x(m, "tortura_rusty_chains", L.call(ax, D - 1.6), PI * 0.5 + (k - 1.5) * 0.3)
+		if cad:
+			cad.rotation.z = 0.0
+	_x(m, "tortura_hanging_wall_chains", L.call(W * 0.5 - 2.4, D - 0.1, 0.9), PI)
+	_x(m, "tortura_iron_shackles", L.call(W * 0.5 + 1.6, D - 0.1, 1.2), PI)
+	var tela := _mat("tela_sangre", 0.95)
+	var col := m.box(Vector3(1.0, 0.14, 1.9), L.call(W * 0.5 - 0.4, D - 1.4, 0.07), tela, false)
+	col.rotation.y = 0.2
+	for k in 18:
+		_hueso(m, L.call(_rng.randf_range(1.0, W - 1.0), _rng.randf_range(zr + 0.4, D - 0.4)), _rng.randf_range(0.2, 0.55), _rng.randf() * TAU)
+	for q in [[2.0, D - 1.0], [W - 2.2, D - 1.6], [W * 0.5 + 1.8, D - 2.6]]:
+		_x(m, "huesos_human_skull", L.call(q[0], q[1]), _rng.randf() * TAU)
+	_x(m, "restos_severed_hand", L.call(W * 0.5 + 0.9, D - 2.2), 1.0)
+	_x(m, "huesos_skeleton_hand", L.call(W * 0.5 - 1.6, D - 2.8), 2.3)
+	for k in 5:
+		_charco(m, L.call(_rng.randf_range(1.5, W - 1.5), _rng.randf_range(zr + 0.6, D - 0.6)), _rng.randf_range(1.2, 2.2))
+	for k in 3:
+		var pp: Vector3 = L.call(W * 0.5 + (k - 1) * 1.4, zr + 0.8)
+		m.cyl(0.2, 0.18, 0.025, pp + Vector3(0, 0.012, 0), m._mat.metal, m._house, 16)
+		if k != 1:
+			_x(m, "carne_cote_de_boeuf" if k == 0 else "organos_human_liver", pp + Vector3(0, 0.025, 0), _rng.randf() * TAU, 0.8)
+	for k in 6:
+		ZarekTerror._calco(m, "aranazos_%d" % (k % 2 + 1), L.call(1.0 + k * (W - 2.0) / 5.0, D - 0.005, 0.6 + (k % 3) * 0.35), Vector3(0, 0, -1), Vector2(0.4, 0.8))
+	ZarekTerror._calco(m, "manos_sangre", L.call(W * 0.5 - 0.3, zr - 0.03, 1.2), Vector3(0, 0, -1), Vector2(1.0, 1.0))
+	# delante de la reja: lo que le baja Damián (un cubo, una bandeja con carne) y velas: la única luz
+	_cubo_sangre(m, L.call(W * 0.5 - 1.2, zr - 0.6))
+	var bandeja: Vector3 = L.call(W * 0.5 + 1.3, zr - 0.55)
+	m.box(Vector3(0.5, 0.03, 0.35), bandeja + Vector3(0, 0.015, 0), m._mat.metal, false)
+	_x(m, "carne_meat", bandeja + Vector3(0, 0.03, 0), 0.6, 0.9)
+	_rastro(m, L.call(W * 0.5, 0.6), L.call(W * 0.5 + 0.3, zr - 0.8), 0.6)
+	for k in 5:
+		var vp: Vector3 = L.call(W * 0.5 + (k - 2) * 1.1, zr - 1.2 - (k % 2) * 0.3)
+		m._prop(["t_velas_4", "t_velas_dos", "t_velas_cuenco"][k % 3], vp, k * 1.3, 1.0, false)
+	var l := OmniLight3D.new()
+	l.light_color = Color(1.0, 0.6, 0.3)
+	l.light_energy = 1.3
+	l.omni_range = 7.5
+	l.position = L.call(W * 0.5, zr - 1.4, 0.6)
+	l.set_meta("vela", true)
+	l.set_meta("e", 1.3)
+	m._house.add_child(l)
+	m.fires.append(l)
 
 ## El matadero (antes la galería de servicio): lo llama ZarekDecorado en lugar del taller.
 static func matadero(m: ZarekMansion, r: Dictionary) -> void:

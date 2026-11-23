@@ -1,7 +1,7 @@
 class_name ZarekJuego
 extends Node3D
 ## La Sombra de Zarek — Noche I (Aether Engine).
-## Una noche corta (10-15 min): encontrar los 4 sellos de la dinastía en la
+## Una noche corta (10-15 min): reunir los 4 objetos de la trampa en la
 ## mansión, sobrevivir a Elena y expulsar a Zarek con el ritual del Epicentro.
 
 const SEALS_NEEDED := 4
@@ -170,7 +170,7 @@ func _ready() -> void:
 	touch.buttons = [
 		["usar", "USAR", Vector2(-150, -175), 86.0],
 		["linterna", "LUZ", Vector2(-330, -115), 62.0],
-		["sal", "SAL", Vector2(-300, -290), 58.0],
+		["sal", "BENGALA", Vector2(-300, -290), 58.0],
 	]
 	add_child(touch)
 	carga.queue_free()
@@ -677,7 +677,7 @@ func _update_hud() -> void:
 	lbl_lives.text = "♥ ".repeat(lives).strip_edges()
 	bar_san.value = sanity
 	bar_bat.value = battery
-	lbl_salt.text = "Sal: %d   Sellos: %d/%d" % [salt, seals, SEALS_NEEDED]
+	lbl_salt.text = "Bengalas: %d   Trampa: %d/%d" % [salt, seals, SEALS_NEEDED]
 	if not entered:
 		var dist := int(player.global_position.distance_to(mansion.front_door))
 		lbl_obj.text = "Llega a la mansión Varela (%d m)" % dist
@@ -686,11 +686,11 @@ func _update_hud() -> void:
 		var where := ""
 		if not near.is_empty():
 			where = " · El más cercano está en " + mansion.room_name(near.pos)
-		lbl_obj.text = "Encuentra los sellos de la dinastía (%d/%d)%s" % [seals, SEALS_NEEDED, where]
+		lbl_obj.text = "Reúne lo necesario para la trampa (%d/%d)%s" % [seals, SEALS_NEEDED, where]
 	elif state == "ritual" or ritual > 0.0:
-		lbl_obj.text = "Recita la oración dentro del círculo de sal"
+		lbl_obj.text = "Prepara la trampa junto a su colchón"
 	else:
-		lbl_obj.text = "Ve al Epicentro y haz el ritual dentro del círculo de sal"
+		lbl_obj.text = "Ve al cuarto de Damián y prepara la trampa junto a su colchón"
 
 func _nearest_seal() -> Dictionary:
 	var best := {}
@@ -722,9 +722,9 @@ func start_game(quick := false) -> void:
 	_black_target = 1.0
 	await get_tree().create_timer(0.6).timeout
 	var lines := [
-		"3:00 de la madrugada. El coche se apagó en medio del bosque.",
-		"Al final del camino está la mansión Varela.\nAquí, en 1974, Elena mató a su familia en una sola noche.",
-		"Algo vivía dentro de ella. Algo llamado Zarek.\nCuatro sellos de la dinastía pueden expulsarlo.",
+		"Me llamo Sofía. Hace una semana me llegó una carta:\nsoy la última heredera de los Varela.",
+		"Tenía que firmar el inventario de la finca, en el bosque de Valdeoscuro.\nA las 3:00 el coche se apagó en medio del camino.",
+		"Desde 1988 han desaparecido 43 personas en este bosque.\nNunca encontraron ningún cuerpo.",
 	]
 	for l in lines:
 		message(l, 3.6)
@@ -1253,7 +1253,7 @@ func _target() -> Dictionary:
 		return {"kind": "lanzar", "text": "USAR: lanzar"}
 	for s in mansion.seals:
 		if not s.taken and Vector2(pp.x - s.pos.x, pp.z - s.pos.z).length() < 1.7:
-			return {"kind": "sello", "obj": s, "text": "USAR: tomar el sello"}
+			return {"kind": "sello", "obj": s, "text": "USAR: tomar " + String(ZarekMansion.NOMBRE_OBJETO.get(s.get("tipo", ""), "el objeto"))}
 	if fauna and is_instance_valid(fauna.gato) and fauna.gato.process_mode != Node.PROCESS_MODE_DISABLED \
 			and fauna.gato.global_position.distance_to(pp + player.forward() * 0.6) < 1.1 and fauna.gato.estado != ZarekAnimal.E.HUYE:
 		return {"kind": "gato", "text": "USAR: acariciar al gato"}
@@ -1262,9 +1262,9 @@ func _target() -> Dictionary:
 		return {"kind": "nota", "obj": nota, "text": "USAR: leer «" + String(nota.titulo).get_slice(" · ", 0) + "»"}
 	for k in mansion.pickups:
 		if not k.taken and Vector2(pp.x - k.pos.x, pp.z - k.pos.z).length() < 1.6:
-			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + ("las pilas" if k.kind == "pila" else "la sal")}
+			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + ("las pilas" if k.kind == "pila" else "las bengalas")}
 	if seals >= SEALS_NEEDED and _in_circle(pp):
-		return {"kind": "ritual", "text": "MANTÉN USAR: recitar la oración"}
+		return {"kind": "ritual", "text": "MANTÉN USAR: preparar la trampa"}
 	var pt := mansion.portal_near(pp, 1.7)
 	if not pt.is_empty():
 		return {"kind": "portal", "obj": pt, "text": "USAR: " + str(pt.text)}
@@ -1389,7 +1389,7 @@ func _use() -> void:
 				message("Pilas nuevas para la linterna.", 2.0)
 			else:
 				salt += 1
-				message("Sal. Un puñado más contra ella.", 2.0)
+				message("Una bengala. Su luz lo ciega.", 2.0)
 			snd_ui.stream = _s("recoger")
 			snd_ui.volume_db = -8.0
 			snd_ui.play()
@@ -1449,18 +1449,18 @@ func _take_seal(s: Dictionary) -> void:
 	player.shake(4.0)
 	match seals:
 		1:
-			message("Primer sello.\nEn algún lugar empezó a sonar una caja de música.", 4.0)
+			message(_obj_msg(s) + "\nEn algún lugar empezó a sonar una radio: «…ayuda… por favor…»", 4.0)
 			snd_box.play()
 			if elena.state == ZarekElena.S.DORMANT:
 				elena.timer = minf(elena.timer, 4.0)
 		2:
-			message("Segundo sello.\nEl fonógrafo se encendió solo. Elena ya no le teme a la luz.", 4.5)
+			message(_obj_msg(s) + "\nHa notado que falta algo. Ya no espera en la oscuridad.", 4.5)
 			snd_radio.play()
 			for l in mansion.lamps:
 				mansion.flicker_lamp(l, 1.5)
 			sound_behind("susurro", 2.0, 2.0)
 		3:
-			message("Tercer sello.\nLas luces de la casa empiezan a morir.", 4.0)
+			message(_obj_msg(s) + "\nEstá apagando las luces de la casa, una a una.", 4.0)
 			for l in mansion.lamps:
 				if l.on:
 					mansion.break_lamp(l)
@@ -1470,8 +1470,12 @@ func _take_seal(s: Dictionary) -> void:
 		4:
 			_blackout()
 
+func _obj_msg(s: Dictionary) -> String:
+	var n := String(ZarekMansion.NOMBRE_OBJETO.get(s.get("tipo", ""), "otro objeto"))
+	return "Tengo " + n + "."
+
 func _blackout() -> void:
-	message("El cuarto sello.\nLa casa entera se quedó a oscuras.", 4.5)
+	message("Ya lo tengo todo.\nHa cortado la luz de la casa. Sabe que estoy aquí.", 4.5)
 	for l in mansion.lamps:
 		mansion.break_lamp(l)
 	snd_box.stop()
@@ -1521,7 +1525,7 @@ func _exit_wardrobe(normal: bool) -> void:
 
 func _throw_salt() -> void:
 	if salt <= 0:
-		message("No me queda sal.", 1.5)
+		message("No me quedan bengalas.", 1.5)
 		return
 	salt -= 1
 	Aether.flash(Color(0.9, 0.9, 0.85), 0.25)
@@ -1533,9 +1537,9 @@ func _throw_salt() -> void:
 	if elena.visible and ed < 7.0 and facing.normalized().dot(to.normalized()) > 0.4:
 		elena.repel(player.global_position)
 		sound_at("grito", elena.global_position + Vector3(0, 1.6, 0), 2.0)
-		message("La sal la quemó. Huyó.", 2.2)
+		message("La bengala lo cegó. Ha huido.", 2.2)
 	else:
-		message("La sal cayó al suelo. No había nada ahí.", 2.0)
+		message("La bengala se apaga en el suelo. No había nadie.", 2.0)
 
 # ---------------- atrapado / muerte ----------------
 func _on_caught() -> void:
@@ -1588,13 +1592,13 @@ func _lose() -> void:
 	state = "muerte"
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_hud_visible(false)
-	lbl_end_t.text = "ZAREK TE RECLAMÓ"
-	lbl_end_s.text = "Sellos encontrados: %d/%d · Tiempo: %s" % [seals, SEALS_NEEDED, _fmt(play_time)]
+	lbl_end_t.text = "AHORA ERES LA CENA"
+	lbl_end_s.text = "Objetos de la trampa: %d/%d · Tiempo: %s" % [seals, SEALS_NEEDED, _fmt(play_time)]
 	end_box.visible = true
 	snd_heart.volume_db = -60.0
 
 func _ritual_start() -> void:
-	message("«Zarek, hijo de la roca madre, sal de esta casa…»", 3.5)
+	message("Coloco el cepo junto al colchón, la gasolina en la puerta, el sedante en su agua…", 3.5)
 	if elena.state == ZarekElena.S.DORMANT:
 		elena.wake_far()
 	elena.hear(player.global_position, 999.0)
@@ -1620,12 +1624,12 @@ func _win() -> void:
 	elena.visible = false
 	_black_target = 1.0
 	await get_tree().create_timer(1.6).timeout
-	message("Zarek ha sido expulsado.\nPor ahora.", 4.0)
-	await get_tree().create_timer(4.2).timeout
+	message("La trampa se cerró. Lo he encerrado.\nY desde el sótano, una voz de mujer: «Sofía… sácame de aquí…»", 5.0)
+	await get_tree().create_timer(5.2).timeout
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_hud_visible(false)
 	lbl_end_t.text = "NOCHE I SUPERADA"
-	lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d\nLa casa Varela todavía guarda secretos… Continuará." % [_fmt(play_time), deaths]
+	lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d\nLa carta no la escribió ningún abogado. Te estaban esperando… Continuará." % [_fmt(play_time), deaths]
 	end_box.visible = true
 	Aether.save.set_value("zarek_noche1", true)
 

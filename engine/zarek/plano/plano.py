@@ -97,7 +97,7 @@ PLANTAS = {
         ("Pasillo", "pasillo", 0, 4, 18, 1),
         ("Dormitorio de los padres", "dormitorio", 0, 0, 4, 4),
         ("Tocador de la madre", "dormitorio", 4, 0, 2, 4),
-        ("EPICENTRO · cuarto de Elena", "epicentro", 6, 0, 4, 4),
+        ("Cuarto de Damián", "epicentro", 6, 0, 4, 4),
         ("Cuarto del hermano", "dormitorio", 10, 0, 3, 4),
         ("Cuarto de niños", "dormitorio", 13, 0, 3, 4),
         ("Baño", "servicio", 16, 0, 2, 4),
@@ -126,7 +126,7 @@ PLANTAS = {
     "titulo": "ÁTICO Y MIRADOR DE LA TORRE", "w": 18, "h": 12,
     "zonas": [
         ("Ático (vigas, baúles, muñecos tapados)", "servicio", 3, 1, 15, 10),
-        ("Rincón de Elena", "epicentro", 4, 2, 3, 2),
+        ("Escondite de Damián niño", "epicentro", 4, 2, 3, 2),
         ("Mirador de la torre", "sala", 0, 9, 3, 3),
     ],
     "puertas": [("v", 3, 10)],

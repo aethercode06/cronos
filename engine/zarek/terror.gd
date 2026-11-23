@@ -142,23 +142,23 @@ const ESCRITOS := {
 	"Pasillo": [["esc_no_mires", 1.8, 0.9, 2.3], ["aranazos_1", 0.5, 1.0, 1.1], ["manos_sucias", 1.0, 1.0, 1.0]],
 	"Pasillo principal": [["esc_ya_viene", 2.0, 0.5, 2.5], ["manos_sucias", 1.0, 1.0, 1.2], ["aranazos_2", 0.5, 1.0, 0.9]],
 	"Cuarto de niños": [["esc_clara", 1.6, 0.8, 1.5], ["mano_nina", 0.6, 0.6, 0.7], ["dibujo_familia", 0.42, 0.52, 1.25], ["dibujo_casa", 0.42, 0.52, 1.2], ["dibujo_ojos", 0.42, 0.52, 1.3]],
-	"EPICENTRO · cuarto de Elena": [["esc_zarek", 2.2, 1.1, 2.4], ["aranazos_1", 0.5, 1.0, 1.4], ["aranazos_2", 0.5, 1.0, 1.0], ["esc_palotes", 1.6, 0.8, 1.2]],
+	"Cuarto de Damián": [["esc_sigue_aqui", 2.2, 1.1, 2.4], ["esc_perdonanos", 1.8, 0.45, 1.4], ["manos_sangre", 1.0, 1.0, 1.3], ["aranazos_1", 0.5, 1.0, 1.4], ["aranazos_2", 0.5, 1.0, 1.0], ["esc_palotes", 1.6, 0.8, 1.2]],
 	"Cuarto de la institutriz": [["esc_perdonanos", 1.8, 0.45, 2.5]],
 	"Cuarto del hermano": [["esc_la_sal", 1.5, 0.75, 2.3]],
-	"Pasillo del sótano": [["esc_no_abras", 2.0, 1.0, 2.2], ["humedad_1", 1.8, 1.8, 2.3], ["manos_sucias", 1.0, 1.0, 1.1]],
+	"Pasillo del sótano": [["esc_ya_viene", 2.0, 0.5, 2.3], ["humedad_1", 1.8, 1.8, 2.3], ["manos_sucias", 1.0, 1.0, 1.1]],
 	"Sala de calderas": [["humedad_2", 1.8, 1.8, 2.2], ["aranazos_2", 0.5, 1.0, 1.0]],
 	"Archivo": [["dibujo_pozo", 0.42, 0.52, 1.4], ["humedad_1", 1.6, 1.6, 2.4]],
 	"Cava de vinos": [["humedad_2", 1.8, 1.8, 2.0]],
 	"Salón de baile": [["esc_1974", 1.8, 0.45, 2.7]],
 	"Ático (vigas, baúles, muñecos tapados)": [["esc_palotes", 1.6, 0.8, 1.3], ["dibujo_pozo", 0.42, 0.52, 1.2], ["aranazos_1", 0.5, 1.0, 1.0]],
-	"Rincón de Elena": [["dibujo_familia", 0.42, 0.52, 1.2], ["mano_nina", 0.6, 0.6, 0.9]],
+	"Escondite de Damián niño": [["dibujo_familia", 0.42, 0.52, 1.2], ["mano_nina", 0.6, 0.6, 0.9]],
 	"Baño": [["manos_sangre", 1.0, 1.0, 1.3], ["humedad_2", 1.4, 1.4, 2.6]],
 	"Galería de servicio": [["humedad_1", 1.8, 1.8, 2.0], ["esc_palotes", 1.4, 0.7, 1.4]],
 	"Cuarto de servicio": [["humedad_2", 1.4, 1.4, 2.4]],
 	"Comedor formal": [["aranazos_2", 0.5, 1.0, 1.0]],
 	"Dormitorio de los padres": [["humedad_1", 1.4, 1.4, 2.8]],
 	"Biblioteca": [["humedad_2", 1.4, 1.4, 2.9]],
-	"Capilla del ritual": [["simbolo_ritual", 2.0, 2.0, 2.2], ["esc_perdonanos", 1.8, 0.45, 1.6], ["humedad_1", 1.8, 1.8, 2.2]],
+	"Capilla de la madre": [["esc_no_abras", 2.0, 1.0, 2.2], ["esc_perdonanos", 1.8, 0.45, 1.6], ["humedad_1", 1.8, 1.8, 2.2]],
 }
 
 static func _escritos(m: ZarekMansion) -> void:
@@ -168,18 +168,6 @@ static func _escritos(m: ZarekMansion) -> void:
 				continue
 			for e in ESCRITOS[nombre]:
 				_en_pared(m, r, e[0], Vector2(e[1], e[2]), e[3], _rng.randf_range(-0.05, 0.05))
-	# círculos de sal viejos, con velas derretidas: alguien intentó lo mismo antes que tú
-	for q in [["Cuarto del hermano", 0.5], ["Archivo", 0.5], ["Rincón de Elena", 0.5], ["Galería de servicio", 0.5]]:
-		var r := _sala(m, q[0])
-		if r.is_empty():
-			continue
-		var c := _sitio_libre(m, r, 1.3)
-		if c == Vector3.INF:
-			continue
-		_en_suelo(m, "sal_vieja_1" if _rng.randf() < 0.5 else "sal_vieja_2", c, 2.0, _rng.randf() * TAU)
-		for k in 3:
-			var a := _rng.randf() * TAU
-			m._prop(["t_velas_dos", "t_velas_cuenco", "obj_candlestick"][k % 3], c + Vector3(cos(a), 0, sin(a)) * 0.85, _rng.randf() * TAU, 1.0, false)
 
 ## Un punto del suelo de la sala sin muebles cerca (se comprueba con los cuerpos de colisión ya creados).
 static func _sitio_libre(m: ZarekMansion, r: Dictionary, radio: float) -> Vector3:
@@ -458,7 +446,7 @@ static func _puerta_tapiada(m: ZarekMansion) -> void:
 # ---------------- tablones rotos que crujen ----------------
 static func _suelo_roto(m: ZarekMansion) -> void:
 	var salas := ["Pasillo", "Pasillo principal", "Ático (vigas, baúles, muñecos tapados)", "Galería de retratos", "Cuarto de la institutriz",
-		"Salón de baile", "Dormitorio de los padres", "Cuarto de huéspedes", "Biblioteca", "Rincón de Elena", "Cuarto de niños"]
+		"Salón de baile", "Dormitorio de los padres", "Cuarto de huéspedes", "Biblioteca", "Escondite de Damián niño", "Cuarto de niños"]
 	for r in m.rooms:
 		if not String(r.name) in salas:
 			continue
@@ -495,7 +483,7 @@ static func _goteras(m: ZarekMansion) -> void:
 	mt.albedo_color = Color(0.6, 0.65, 0.7, 0.7)
 	mt.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mt.roughness = 0.05
-	for nombre in ["Pasillo del sótano", "Sala de calderas", "Cava de vinos", "Capilla del ritual", "Baño"]:
+	for nombre in ["Pasillo del sótano", "Sala de calderas", "Cava de vinos", "Capilla de la madre", "Baño"]:
 		var r := _sala(m, nombre)
 		if r.is_empty():
 			continue
@@ -632,29 +620,7 @@ static func _montaplatos(m: ZarekMansion) -> void:
 
 # ---------------- capilla del ritual (sótano) ----------------
 static func _capilla(m: ZarekMansion) -> void:
-	var r := _sala(m, "Capilla del ritual")
-	if r.is_empty():
-		return
-	var rc: Rect2 = r.rect
-	var c := Vector3(rc.get_center().x, float(r.y), rc.get_center().y + 0.6)
-	_en_suelo(m, "simbolo_ritual", c, 3.4)
-	_en_suelo(m, "sal_vieja_1", c, 4.4, 0.7)
-	# velas encendidas alrededor: la única luz de la capilla
-	for k in 7:
-		var a := k * TAU / 7.0
-		var vp := c + Vector3(cos(a), 0, sin(a)) * 1.95
-		m._prop(["t_velas_4", "t_velas_dos", "t_velas_cuenco"][k % 3], vp, a, 1.0, false)
-	for k in 2:
-		var l := OmniLight3D.new()
-		l.light_color = Color(1.0, 0.6, 0.3)
-		l.light_energy = 1.7
-		l.omni_range = 9.5
-		l.shadow_enabled = false
-		l.position = c + Vector3(-1.4 + k * 2.8, 0.6, 0)
-		l.set_meta("vela", true)
-		m._house.add_child(l)
-		l.set_meta("e", 1.7)
-		m.fires.append(l)
+	pass  # la capilla ahora es la celda de la madre (ZarekGore.celda_madre)
 
 # ---------------- cementerio familiar ----------------
 const TUMBAS := ["lap_aurelio", "lap_esteban", "lap_isabel", "lap_tomas", "lap_clara", "lap_marta"]

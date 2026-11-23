@@ -85,11 +85,11 @@ const METALICOS := ["brass_pot_01", "brass_pot_02", "brass_pan_01", "pot_enamel_
 	"coci_samovar", "watering_can_metal_01", "brass_candleholders", "coti_typewriter", "Lantern_01"]
 
 ## Salas montadas a mano en ZarekDecorado: el decorado genérico no les añade nada al azar.
-const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "EPICENTRO · cuarto de Elena", "Cuarto de niños", "Sala de música", "Salón de baile",
+const SALAS_A_MANO := ["Salón con chimenea", "Comedor formal", "Cocina", "Vestíbulo y gran escalera", "Biblioteca", "Estudio del padre", "Dormitorio de los padres", "Cuarto de Damián", "Cuarto de niños", "Sala de música", "Salón de baile",
 	"Sala de fumar y billar", "Sala de las mañanas", "Tocador de la madre", "Cuarto del hermano", "Baño", "Cuarto de huéspedes azul", "Sala de costura", "Cuarto de la institutriz", "Galería de retratos", "Cuarto de huéspedes", "Cuarto de lectura", "Pasillo principal", "Pasillo",
 	"Despensa", "Antecocina", "Guardarropa", "Cuarto de servicio", "Cuarto de plancha",
-	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos", "Capilla del ritual",
-	"Ático (vigas, baúles, muñecos tapados)", "Rincón de Elena", "Torre", "Mirador de la torre"]
+	"Pasillo del sótano", "Galería de servicio", "Archivo", "Sala de calderas", "Cava de vinos", "Capilla de la madre",
+	"Ático (vigas, baúles, muñecos tapados)", "Escondite de Damián niño", "Torre", "Mirador de la torre"]
 var _house: Node3D
 var _mat := {}
 var _hole := {}
@@ -119,7 +119,7 @@ func room_name(p: Vector3) -> String:
 		if grounds_rect.has_point(Vector2(p.x, p.z)):
 			return "los jardines"
 		return "el bosque"
-	return str(rooms[id].name).to_lower() if not str(rooms[id].name).begins_with("EPICENTRO") else "el Epicentro"
+	return str(rooms[id].name).to_lower()
 
 func inside_house(p: Vector3) -> bool:
 	return room_at(p) >= 0
@@ -4723,27 +4723,80 @@ func _car(p: Vector3) -> void:
 	n.add_child(head)
 	set_meta("car", n)
 
+## Los cuatro objetos para la trampa de Damián (antes los sellos): cada uno sobre un velador, con una luz tenue.
+const OBJETOS_TRAMPA := ["cepo", "gasolina", "llave", "sedante"]
+const NOMBRE_OBJETO := {"cepo": "el cepo para osos", "gasolina": "la lata de gasolina", "llave": "la llave del cuarto de Damián", "sedante": "el sedante"}
+
 func _seal(pos: Vector3) -> void:
-	# el sello descansa sobre un velador de época, junto a una vela
+	var tipo: String = OBJETOS_TRAMPA[seals.size() % OBJETOS_TRAMPA.size()]
 	var alto := 0.9
 	var mesa := _prop("side_table_tall_01", pos, 0.4, 1.15)
 	if mesa:
 		alto = 0.761 * 1.15
-		_prop("wooden_candlestick", pos + Vector3(0.12, alto, 0.08), 0.0, 0.8, false)
 	else:
 		box(Vector3(0.8, 0.9, 0.6), pos + Vector3(0, 0.45, 0), _mat.madera)
 	var n := Node3D.new()
 	n.set_meta("dyn", true)
-	n.position = pos + Vector3(-0.05, alto + 0.2, 0)
+	n.position = pos + Vector3(-0.05, alto, 0)
 	add_child(n)
-	var disc := cyl(0.17, 0.17, 0.035, Vector3.ZERO, _mat.sello, n, 20)
-	disc.rotation.x = PI * 0.5
+	match tipo:
+		"cepo":
+			# cepo para osos: placa, dos mandíbulas dentadas abiertas, muelles y cadena
+			cyl(0.05, 0.05, 0.02, Vector3(0, 0.01, 0), _mat.hierro, n, 10)
+			for s2 in [-1.0, 1.0]:
+				var mand := MeshInstance3D.new()
+				var tm := TorusMesh.new()
+				tm.inner_radius = 0.17
+				tm.outer_radius = 0.19
+				tm.rings = 16
+				tm.ring_segments = 4
+				mand.mesh = tm
+				mand.material_override = _mat.hierro
+				mand.transform = Transform3D(Basis(Vector3(1, 0, 0), s2 * 0.25).scaled(Vector3(1, 1, 0.55)), Vector3(0, 0.03, s2 * 0.08))
+				n.add_child(mand)
+				for k in 7:
+					var a2 := PI * (k + 0.5) / 7.0
+					box(Vector3(0.012, 0.035, 0.012), Vector3(cos(a2) * 0.18, 0.05, s2 * (0.08 + sin(a2) * 0.1)), _mat.hierro, false, n, false)
+			for s2 in [-1.0, 1.0]:
+				box(Vector3(0.12, 0.025, 0.03), Vector3(s2 * 0.22, 0.015, 0), _mat.hierro, false, n, false)
+			for k in 5:
+				var e := cyl(0.012, 0.012, 0.05, Vector3(0.28 + k * 0.045, 0.01, 0.02 * (k % 2)), _mat.hierro, n, 5)
+				e.rotation.z = PI * 0.5
+			cyl(0.06, 0.06, 0.004, Vector3(0, 0.003, 0.05), _mat.oscuro, n, 10)
+		"gasolina":
+			# lata de gasolina roja, abollada y oxidada, con asa y boquilla
+			var roja := _plain(Color(0.45, 0.06, 0.04), 0.5, 0.6)
+			box(Vector3(0.3, 0.38, 0.16), Vector3(0, 0.19, 0), roja, false, n, false)
+			for s2 in [-1.0, 1.0]:
+				box(Vector3(0.03, 0.03, 0.12), Vector3(s2 * 0.07, 0.4, 0), roja, false, n, false)
+			box(Vector3(0.17, 0.03, 0.03), Vector3(0, 0.42, 0), roja, false, n, false)
+			var boq := cyl(0.02, 0.025, 0.08, Vector3(0.12, 0.42, 0), _mat.metal, n, 8)
+			boq.rotation.z = -0.5
+		"llave":
+			var ll := _prop("llave_antigua", Vector3.ZERO, 0.3, 1.6, false, n)
+			if ll == null:
+				box(Vector3(0.14, 0.01, 0.03), Vector3(0, 0.01, 0), _mat.oro, false, n, false)
+			# etiqueta de cartón atada con cordel: «CUARTO D.»
+			box(Vector3(0.06, 0.003, 0.04), Vector3(0.1, 0.005, 0.03), _mat.sabana, false, n, false)
+		"sedante":
+			# frasco de sedante, jeringuilla y un trapo
+			var vidrio := _plain(Color(0.55, 0.6, 0.62, 0.7), 0.1, 0.2)
+			vidrio.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			cyl(0.035, 0.035, 0.1, Vector3(0, 0.05, 0), vidrio, n, 12)
+			cyl(0.02, 0.02, 0.02, Vector3(0, 0.11, 0), _mat.oscuro, n, 10)
+			cyl(0.03, 0.03, 0.04, Vector3(0, 0.035, 0), _plain(Color(0.5, 0.42, 0.1), 0.3), n, 12)
+			var j := cyl(0.008, 0.008, 0.11, Vector3(0.09, 0.008, 0.02), vidrio, n, 8)
+			j.rotation.z = PI * 0.5
+			var ag := cyl(0.001, 0.002, 0.05, Vector3(0.17, 0.008, 0.02), _mat.metal, n, 4)
+			ag.rotation.z = PI * 0.5
+			box(Vector3(0.18, 0.01, 0.14), Vector3(-0.08, 0.005, 0.04), _mat.sabana, false, n, false)
 	var l := OmniLight3D.new()
-	l.light_color = Color(1.0, 0.7, 0.3)
-	l.omni_range = 3.5
-	l.light_energy = 0.8
+	l.light_color = Color(1.0, 0.75, 0.45)
+	l.omni_range = 2.5
+	l.light_energy = 0.45
+	l.position = Vector3(0, 0.4, 0)
 	n.add_child(l)
-	seals.append({"node": n, "pos": pos, "taken": false})
+	seals.append({"node": n, "pos": pos, "taken": false, "tipo": tipo})
 
 func _wall_dir(pos: Vector3) -> Vector3:
 	var best := Vector3(0, 0, -1)
@@ -5293,34 +5346,36 @@ func _llamas() -> CPUParticles3D:
 	ps.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return ps
 
+## Donde duerme Damián (antes el círculo de sal): un colchón asqueroso en el suelo, una manta, un cubo y
+## velas. Aquí se prepara la trampa; el centro (radio 1,9) queda libre para moverse.
 func _salt_circle(pos: Vector3) -> void:
-	var ring := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = 1.9
-	tm.outer_radius = 2.05
-	ring.mesh = tm
-	ring.material_override = _mat.sal
-	ring.scale = Vector3(1, 0.08, 1)
-	ring.position = pos + Vector3(0, 0.02, 0)
-	add_child(ring)
-	for i in 5:
-		var line := box(Vector3(0.05, 0.01, 3.6), pos + Vector3(0, 0.02, 0), _mat.sal, false, self, false)
-		line.rotation.y = TAU * i / 5.0
+	var tela := StandardMaterial3D.new()
+	tela.albedo_texture = load("res://zarek/terror/tela_sangre.png")
+	tela.roughness = 0.95
+	var lado := _plain(Color(0.2, 0.15, 0.11), 0.95)
+	var base := box(Vector3(1.04, 0.15, 2.04), pos + Vector3(0, 0.075, 0), lado, false, self, false)
+	base.rotation.y = 0.15
+	var colchon := box(Vector3(0.98, 0.04, 1.98), pos + Vector3(0, 0.165, 0), _pbr("Fabric028", 1.0, Color(0.62, 0.56, 0.46), 1.0), false, self, false)
+	colchon.rotation.y = 0.15
+	var mancha := ZarekTerror._calco(self, "sangre_charco_2", pos + Vector3(0.1, 0.186, -0.3), Vector3.UP, Vector2(0.9, 0.9), 0.7)
+	mancha.set_meta("dyn", true)
+	ZarekTerror._calco(self, "sangre_salpicadura_1", pos + Vector3(-0.2, 0.186, 0.5), Vector3.UP, Vector2(0.6, 0.6), 2.0).set_meta("dyn", true)
+	var manta := box(Vector3(0.9, 0.05, 1.0), pos + Vector3(0.05, 0.2, 0.4), _pbr("Fabric028", 1.0, Color(0.25, 0.22, 0.18), 1.0), false, self, false)
+	manta.rotation = Vector3(0.0, 0.4, 0.05)
+	box(Vector3(0.45, 0.14, 0.3), pos + Vector3(-0.05, 0.25, -0.75), _mat.sabana, false, self, false)  # almohada
 	for i in 6:
-		var a := TAU * i / 6.0
+		var a := TAU * i / 6.0 + 0.4
 		var cp := pos + Vector3(cos(a) * 2.4, 0, sin(a) * 2.4)
-		cyl(0.04, 0.05, 0.3, cp + Vector3(0, 0.15, 0), _mat.moldura, self, 6)
-		cyl(0.0, 0.025, 0.07, cp + Vector3(0, 0.34, 0), _mat.fuego, self, 6)
+		cyl(0.04, 0.05, 0.22, cp + Vector3(0, 0.11, 0), _mat.moldura, self, 6)
+		cyl(0.0, 0.025, 0.07, cp + Vector3(0, 0.26, 0), _mat.fuego, self, 6)
 	var l := OmniLight3D.new()
 	l.position = pos + Vector3(0, 0.6, 0)
 	l.light_color = Color(1, 0.5, 0.25)
-	l.omni_range = 7.0
-	l.light_energy = 1.0
-	l.set_meta("e", 1.0)
+	l.omni_range = 6.0
+	l.light_energy = 0.6
+	l.set_meta("e", 0.6)
 	add_child(l)
 	fires.append(l)
-	box(Vector3(1.2, 0.5, 2.2), pos + Vector3(0, 0.25, -6.0), _mat.metal)
-	box(Vector3(1.1, 0.12, 2.0), pos + Vector3(0, 0.56, -6.0), _mat.sabana, false)
 
 ## Fonógrafo de bocina sobre un aparador (hacia 1900): es la «radio» que se enciende sola.
 func _fonografo(pos: Vector3) -> void:
@@ -5381,10 +5436,13 @@ func _pickup(pos: Vector3, kind: String) -> void:
 			var otra := cyl(0.017, 0.017, 0.06, Vector3(0.05 + k * 0.04, alto + 0.03, 0.06), m, n, 12)
 			otra.rotation.x = PI * 0.5 * float(k == 0)
 	else:
-		# sal gorda en un tarro de cristal con tapa de corcho
-		mi = cyl(0.06, 0.06, 0.15, Vector3(0, alto + 0.075, 0), _mat.sal, n, 14)
-		cyl(0.065, 0.065, 0.17, Vector3(0, alto + 0.085, 0), _mat.cristal, n, 14)
-		cyl(0.045, 0.05, 0.03, Vector3(0, alto + 0.185, 0), _mat.madera_clara, n, 10)
+		# bengalas de carretera (las que llevaban las víctimas): dos tubos rojos con capuchón
+		var rojo := _plain(Color(0.6, 0.05, 0.03), 0.5)
+		mi = cyl(0.018, 0.018, 0.24, Vector3(0, alto + 0.018, 0), rojo, n, 10)
+		mi.rotation.z = PI * 0.5
+		cyl(0.02, 0.02, 0.04, Vector3(0.13, alto + 0.018, 0), _mat.oscuro, mi if false else n, 10).rotation.z = PI * 0.5
+		var otra := cyl(0.018, 0.018, 0.24, Vector3(0.02, alto + 0.018, 0.05), rojo, n, 10)
+		otra.rotation = Vector3(0, 0.3, PI * 0.5)
 	pickups.append({"node": n, "pos": pos, "kind": kind, "taken": false, "item": mi})
 
 # ---------------- pasos especiales ----------------

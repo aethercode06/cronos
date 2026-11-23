@@ -7,7 +7,7 @@ extends RefCounted
 const TAPABLES := ["sofa", "armchair", "lounge", "piano", "chair", "table", "desk", "cabinet", "chest", "dresser",
 	"commode", "sideboard", "console", "bureau", "wardrobe", "harp", "globe", "bed"]
 const SIN_SABANAS := ["Cocina", "Despensa", "Antecocina", "Baño", "Sala de calderas", "Cava de vinos", "Archivo",
-	"EPICENTRO · cuarto de Elena", "Pasillo principal", "Pasillo", "Pasillo del sótano"]
+	"Cuarto de Damián", "Pasillo principal", "Pasillo", "Pasillo del sótano"]
 ## salas cerradas desde 1974: casi todo tapado
 const MUY_TAPADAS := ["Cuarto de huéspedes", "Cuarto de huéspedes azul", "Salón con chimenea", "Sala de fumar y billar",
 	"Ático (vigas, baúles, muñecos tapados)", "Cuarto de la institutriz", "Sala de costura"]

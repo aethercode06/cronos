@@ -361,21 +361,21 @@ def lapida(nombre_archivo, nombre, fechas, w=512, h=340):
     alfa = np.clip(a * 1.0 + luz * 0.5, 0, 1) * (0.7 + 0.3 * ruido(w, h, 16, len(nombre)))
     guardar(nombre_archivo, rgb, alfa)
 
-TUMBAS = [("lap_aurelio", "AURELIO VARELA", "1821 - 1889"), ("lap_esteban", "ESTEBAN VARELA", "1928 - 1974"), ("lap_isabel", "ISABEL ROJAS DE VARELA", "1931 - 1974"),
-          ("lap_tomas", "TOMÁS VARELA", "1960 - 1974"), ("lap_clara", "CLARA VARELA", "1967 - 1974"), ("lap_marta", "MARTA ESCOBAR", "INSTITUTRIZ · 1974"), ("lap_elena", "ELENA VARELA", "1957 -")]
+TUMBAS = [("lap_aurelio", "AURELIO VARELA", "1821 - 1889"), ("lap_esteban", "JULIÁN VARELA", "1950 - 1987"), ("lap_isabel", "DAMIÁN VARELA", "1978 - 1987"),
+          ("lap_tomas", "INÉS VARELA", "1962 - ?"), ("lap_clara", "ROSA VARELA", "1931 - 1980"), ("lap_marta", "MARTA ESCOBAR", "INSTITUTRIZ · 1987"), ("lap_elena", "ELENA VARELA", "1957 - 1987")]
 
 if __name__ == "__main__":
     import os
     os.makedirs(OUT, exist_ok=True)
-    escrito("esc_sigue_aqui", "ELLA SIGUE\nAQUÍ", sem=1)
+    escrito("esc_sigue_aqui", "MAMÁ TIENE\nHAMBRE", sem=1)
     escrito("esc_no_mires", "NO MIRES\nATRÁS", sem=2)
-    escrito("esc_perdonanos", "PERDÓNANOS", c=(35, 30, 28), sem=3, w=1024, h=256, goteo=False)
-    escrito("esc_no_abras", "NO LE ABRAS\nCUANDO TE LLAME", sem=4)
-    escrito("esc_zarek", "ZAREK ZAREK ZAREK\nZAREK ZAREK\nZAREK ZAREK ZAREK", c=(30, 26, 24), sem=8, goteo=False)
-    escrito("esc_1974", "23·XI·1974", c=(60, 10, 8), sem=9, w=1024, h=256)
-    escrito("esc_clara", "CLARA\nESCÓNDETE", c=(45, 50, 120), sem=10, goteo=False, fuente=FUENTE2)
+    escrito("esc_perdonanos", "PERDÓNAME MAMÁ", c=(35, 30, 28), sem=3, w=1024, h=256, goteo=False)
+    escrito("esc_no_abras", "NO LA\nSUELTES", sem=4)
+    escrito("esc_zarek", "BIENVENIDA\nA CASA SOFÍA", c=(70, 10, 8), sem=8)
+    escrito("esc_1974", "13·XI·1987", c=(60, 10, 8), sem=9, w=1024, h=256)
+    escrito("esc_clara", "NO ME\nCOMAS", c=(45, 50, 120), sem=10, goteo=False, fuente=FUENTE2)
     escrito("esc_ya_viene", "YA VIENE", sem=12, w=1024, h=256)
-    escrito("esc_la_sal", "LA SAL\nLA FRENA", c=(35, 30, 28), sem=14, goteo=False)
+    escrito("esc_la_sal", "LA LUZ\nLO CIEGA", c=(35, 30, 28), sem=14, goteo=False)
     palotes("esc_palotes")
     aranazos("aranazos_1", sem=7); aranazos("aranazos_2", sem=8, grupos=2); aranazos("aranazos_puerta", sem=9, grupos=5, w=512, h=1024)
     manos("manos_sangre", n=3, sem=11); manos("manos_sucias", n=4, c=(40, 34, 26), sem=12); manos("mano_nina", n=2, c=(50, 12, 10), sem=15, arrastre=False)
