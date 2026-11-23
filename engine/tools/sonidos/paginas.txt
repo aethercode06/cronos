@@ -1,0 +1,16 @@
+# página de OpenGameArt | licencia | autor (se bajan todos los archivos que enlaza la página)
+https://opengameart.org/content/horror-sound-effects-library|CC-BY 3.0|Little Robot Sound Factory
+https://opengameart.org/content/monster-sound-effects-pack|CC0|Ogrebane
+https://opengameart.org/content/dark-ambience-loop|CC-BY 3.0|qubodup
+https://opengameart.org/content/ambient-horror-track-01|CC0|Cleyton Kauffman
+https://opengameart.org/content/abandoned-passages-horror-ambience-loop|CC0|congusbongus
+https://opengameart.org/content/horror-loop|CC0|TinyWorlds
+https://opengameart.org/node/79273|CC0|SubspaceAudio
+https://opengameart.org/node/131394|CC0|Paul Wortmann
+https://opengameart.org/node/83765|CC0|mikeask
+https://opengameart.org/content/footsteps-on-different-surfaces|CC-BY 3.0|varios (ver txt del paquete)
+https://opengameart.org/content/ghost-monster-voice-moaning-growling|CC0|?
+https://opengameart.org/content/35-wooden-crackshitsdestructions|CC0|?
+https://opengameart.org/content/horror-hit-soundpack-1|CC0|?
+https://opengameart.org/content/last-life|CC-BY 4.0|umplix
+https://opengameart.org/content/insistent-background-loop|CC0|yd

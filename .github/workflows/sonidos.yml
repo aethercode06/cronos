@@ -1,0 +1,41 @@
+name: Bajar sonidos (OpenGameArt y Google)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/sonidos/*.txt", ".github/workflows/sonidos.yml"]
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: engine/tools/sonidos }
+      - name: Bajar
+        run: |
+          set +e
+          mkdir -p out/oga out/google
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+          grep -v '^#' engine/tools/sonidos/paginas.txt | while IFS='|' read url lic autor; do
+            [ -z "$url" ] && continue
+            slug=$(basename "$url"); d="out/oga/$slug"; mkdir -p "$d"
+            curl -sL -A "$UA" "$url" -o "$d/pagina.html"
+            echo "$url | $lic | $autor" > "$d/licencia.txt"
+            grep -oE 'https://opengameart.org/sites/default/files/[^"]+\.(zip|ogg|wav|mp3|flac|rar|7z)' "$d/pagina.html" | sort -u | while read f; do
+              echo "bajando $f"; curl -sL -A "$UA" "$f" -o "$d/$(basename "$f" | sed 's/%20/ /g')"
+            done
+            rm -f "$d/pagina.html"
+            ( cd "$d" && for z in *.zip; do [ -f "$z" ] && unzip -q -o "$z" -d "${z%.zip}" && rm "$z"; done )
+          done
+          grep -v '^#' engine/tools/sonidos/google.txt | while read s; do
+            [ -z "$s" ] && continue; curl -sL "https://actions.google.com/sounds/v1/$s.ogg" -o "out/google/$(basename $s).ogg"
+          done
+          find out -type f | sed 's/^/  /' > out/lista.txt; du -sh out
+      - name: Guardar en la rama aether-sonidos
+        run: |
+          cd out && git init -q && git checkout -q -b aether-sonidos
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Sonidos ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-sonidos
