@@ -5797,6 +5797,8 @@ func _decorate() -> void:
 	_repartir_objetos()
 	if OS.get_environment("SIN_RUINA") == "":
 		ZarekRuina.aplicar(self)
+	if OS.get_environment("SIN_DIVISIONES") == "":
+		ZarekDivisiones.aplicar(self)
 	electricidad = ZarekElectricidad.new()
 	electricidad.instalar(self)
 	for r in rooms:
