@@ -282,7 +282,7 @@ func montar(nombre: String, largo: float, giro: float) -> void:
 				anim_sentado.get_animation(an).loop_mode = Animation.LOOP_LINEAR
 				anim_sentado.play(an)
 		ronroneo = AudioStreamPlayer3D.new()
-		ronroneo.stream = AetherSynth.make("ronroneo")
+		ronroneo.stream = ZarekSonido.uno("ronroneo")
 		ronroneo.volume_db = -14.0
 		ronroneo.unit_size = 0.8
 		ronroneo.max_distance = 4.0
@@ -296,7 +296,7 @@ func _cambiar(e: E, t := 1.0) -> void:
 	destino = Vector3.INF
 
 func _sonar(nombre: String, db := -6.0) -> void:
-	voz.stream = AetherSynth.make(nombre)
+	voz.stream = ZarekSonido.uno(nombre)
 	voz.volume_db = db
 	voz.pitch_scale = randf_range(0.9, 1.15)
 	voz.play()

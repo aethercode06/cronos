@@ -398,7 +398,9 @@ func _audio() -> void:
 	snd_drone = _player_snd(_s("drone"), -13.0, true)
 	snd_wind = _player_snd(_s("viento"), -20.0, true)
 	snd_heart = _player_snd(_s("latido"), -60.0, true)
-	snd_breath = _player_snd(_s("aliento"), -60.0, true)
+	snd_breath = _player_snd(AetherSynth.make("aliento"), -60.0, true)
+	_musica_a = _player_snd(null, -60.0)
+	_musica_b = _player_snd(null, -60.0)
 	snd_ui = _player_snd(_s("recoger"), -4.0)
 	snd_3d = AudioStreamPlayer3D.new()
 	snd_3d.unit_size = 4.0
@@ -418,7 +420,10 @@ func _audio() -> void:
 	add_child(snd_radio)
 	snd_radio.global_position = mansion.radio_pos
 
-func _s(kind: String) -> AudioStreamWAV:
+func _s(kind: String) -> AudioStream:
+	# sonidos reales con variantes al azar (zarek/sonidos); si no hay, los hechos por código
+	if ZarekSonido.hay(kind):
+		return ZarekSonido.uno(kind)
 	if not _cache.has(kind):
 		_cache[kind] = AetherSynth.make(kind)
 	return _cache[kind]
@@ -1233,6 +1238,7 @@ func _play(delta: float) -> void:
 		if _intro_glimpse <= 0.0:
 			_glimpse(true)
 	_director(delta)
+	_casa_viva(delta)
 	_hallucinations(delta)
 	_ghost_update(delta)
 	_interact_prompt()
@@ -1311,6 +1317,7 @@ func _on_step(noise: float) -> void:
 	if state != "juego" and state != "ritual":
 		return
 	var pp0 := player.global_position
+	_paso_sofia(pp0, noise)
 	for q in mansion.cristales:
 		if absf((q as Vector3).y - pp0.y) < 1.2 and Vector2(q.x - pp0.x, q.z - pp0.z).length() < 0.75:
 			sound_at("vidrio", q + Vector3(0, 0.1, 0), -6.0 + noise * 6.0)
@@ -1332,6 +1339,76 @@ func _on_step(noise: float) -> void:
 				sound_at("crujido", q + Vector3(0, 0.2, 0), 2.0)
 				elena.hear(q, maxf(noise, 0.7))
 			break
+
+## Pasos de Sofía según el suelo: madera, baldosa o piedra dentro; hierba o grava fuera; agua en los charcos.
+var _snd_paso: AudioStreamPlayer
+func _paso_sofia(pp: Vector3, noise: float) -> void:
+	if _snd_paso == null:
+		_snd_paso = _player_snd(null, -12.0)
+	var sup := "madera"
+	var tono := 1.0
+	var r := mansion.room_at(pp)
+	if r < 0 or not mansion.inside_house(pp) and pp.y > -0.5:
+		sup = "grava" if _en_camino(pp) else "hierba"
+	else:
+		var t := String(mansion.rooms[r].type)
+		var n := String(mansion.rooms[r].name)
+		if pp.y < -0.5 or t in ["tunel", "roca", "sotano"]:
+			sup = "baldosa"
+			tono = 0.85
+		elif t in ["cocina", "bano", "servicio"] or n.begins_with("Vestíbulo") or n.begins_with("Baño") or n.begins_with("Cocina") or n.begins_with("Antecocina") or n.begins_with("Despensa"):
+			sup = "baldosa"
+	for q in mansion.charcos:
+		if absf((q as Vector3).y - pp.y) < 1.2 and Vector2(q.x - pp.x, q.z - pp.z).length() < 0.8:
+			sup = "agua"
+	if not ZarekSonido.hay("paso_" + sup):
+		return
+	_snd_paso.stream = ZarekSonido.uno("paso_" + sup)
+	_snd_paso.pitch_scale = tono * randf_range(0.93, 1.07)
+	_snd_paso.volume_db = -16.0 + clampf(noise, 0.0, 8.0) * 1.2
+	_snd_paso.play()
+
+var _caminos: Array[Rect2] = []
+func _en_camino(pp: Vector3) -> bool:
+	if _caminos.is_empty():
+		for z in mansion.plan.exterior.zonas:
+			if String(z[1]) == "camino":
+				_caminos.append(Rect2(float(z[2]) * ZarekMansion.CELL, float(z[3]) * ZarekMansion.CELL, float(z[4]) * ZarekMansion.CELL, float(z[5]) * ZarekMansion.CELL))
+		if _caminos.is_empty():
+			_caminos.append(Rect2(-1e6, -1e6, 0, 0))
+	for c in _caminos:
+		if c.has_point(Vector2(pp.x, pp.z)):
+			return true
+	return false
+
+## La casa suena viva: la madre gime y arrastra las cadenas en la capilla del sótano, alguien corta carne en el
+## matadero, la sangre gotea. Se oyen de lejos (a través de los suelos) y ponen nervioso aunque no pase nada.
+var _t_madre := 20.0
+var _t_carne := 35.0
+var _sala_capilla := {}
+var _sala_matadero := {}
+func _casa_viva(delta: float) -> void:
+	if _sala_capilla.is_empty():
+		_sala_capilla = mansion._sala_por_nombre("Capilla de la madre")
+		_sala_matadero = mansion._sala_por_nombre("Galería de servicio")
+	var pp := player.global_position
+	_t_madre -= delta
+	if _t_madre <= 0.0 and not _sala_capilla.is_empty():
+		_t_madre = randf_range(25.0, 55.0)
+		var rc: Rect2 = _sala_capilla.rect
+		var c := Vector3(rc.get_center().x, float(_sala_capilla.y) + 1.2, rc.end.y - 2.0)
+		var d := c.distance_to(pp)
+		if d < 45.0:
+			ZarekSonido.en(self, "madre_gime", c, 4.0 if d < 15.0 else 8.0, 50.0, randf_range(0.9, 1.05))
+			if randf() < 0.6:
+				sound_at("tintineo", c + Vector3(0.5, -0.8, 0), 2.0)
+	_t_carne -= delta
+	if _t_carne <= 0.0 and not _sala_matadero.is_empty():
+		_t_carne = randf_range(40.0, 80.0)
+		var rc2: Rect2 = _sala_matadero.rect
+		var c2 := Vector3(rc2.get_center().x, float(_sala_matadero.y) + 1.0, rc2.get_center().y)
+		if c2.distance_to(pp) < 35.0 and ZarekSonido.hay("carne"):
+			ZarekSonido.en(self, "carne", c2, 0.0, 30.0)
 
 func _click() -> void:
 	snd_ui.stream = _s("paso")
@@ -2024,7 +2101,57 @@ func _hallucinations(delta: float) -> void:
 		sound_behind("susurro", 0.8, 3.0)
 
 # ---------------- sonido dinámico ----------------
+## Música y ambientes que cambian según dónde estás (casa, sótano, túneles, título) y la persecución por encima.
+var _musica_a: AudioStreamPlayer
+var _musica_b: AudioStreamPlayer
+var _musica_tema := ""
+const MUSICA_DB := {"titulo": -8.0, "amb_casa": -14.0, "amb_sotano": -12.0, "amb_tunel": -12.0, "persecucion": -5.0, "": -60.0}
+func _tema_musica() -> String:
+	if state == "titulo":
+		return "titulo"
+	if state in ["muerte", "final"] or player == null:
+		return ""
+	if elena and elena.state == ZarekElena.S.CHASE and elena.visible:
+		return "persecucion"
+	var pp := player.global_position
+	if not mansion.inside_house(pp) and pp.y > -0.5:
+		return ""
+	var r := mansion.room_at(pp)
+	var tipo := String(mansion.rooms[r].type) if r >= 0 else ""
+	if tipo in ["tunel", "roca", "agua"]:
+		return "amb_tunel"
+	if pp.y < -0.5:
+		return "amb_sotano"
+	return "amb_casa"
+
+func _update_musica(delta: float) -> void:
+	if _musica_a == null:
+		return
+	var t := _tema_musica()
+	if t != _musica_tema and (t == "" or ZarekSonido.hay(t)):
+		# el que suena pasa a B (se apaga) y el nuevo entra por A
+		var tmp := _musica_b
+		_musica_b = _musica_a
+		_musica_a = tmp
+		_musica_tema = t
+		if t != "":
+			var st: AudioStream = ZarekSonido.uno(t)
+			if st is AudioStreamOggVorbis:
+				(st as AudioStreamOggVorbis).loop = true
+			_musica_a.stream = st
+			_musica_a.volume_db = -40.0
+			_musica_a.play()
+	var objetivo: float = MUSICA_DB.get(_musica_tema, -60.0)
+	var vel := 12.0 if _musica_tema == "persecucion" else 5.0
+	if _musica_a.playing:
+		_musica_a.volume_db = move_toward(_musica_a.volume_db, objetivo, delta * vel * 3.0)
+	if _musica_b.playing:
+		_musica_b.volume_db = move_toward(_musica_b.volume_db, -60.0, delta * vel * 2.0)
+		if _musica_b.volume_db <= -59.0:
+			_musica_b.stop()
+
 func _update_audio(delta: float) -> void:
+	_update_musica(delta)
 	var low := 1.0 - sanity / 100.0
 	var hv := maxf(_danger, low * 0.6)
 	snd_heart.volume_db = lerpf(snd_heart.volume_db, -60.0 if hv < 0.15 else linear_to_db(hv) + 1.0, delta * 3.0)

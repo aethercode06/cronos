@@ -32,6 +32,8 @@ var _burst := 0.0
 var _vel := Vector3.ZERO
 var _ray: PhysicsRayQueryParameters3D
 var _snd_loop: AudioStreamPlayer3D
+var _snd_paso: AudioStreamPlayer3D
+var _dist_paso := 0.0
 var _snd_one: AudioStreamPlayer3D
 var _creak_t := 4.0
 
@@ -79,11 +81,18 @@ func setup(m: ZarekMansion, p: AetherPlayerFP) -> void:
 	_ray = PhysicsRayQueryParameters3D.new()
 	_ray.collision_mask = 3
 	_snd_loop = AudioStreamPlayer3D.new()
-	_snd_loop.stream = AetherSynth.make("aliento")
+	_snd_loop.stream = ZarekSonido.uno("damian_resp" if ZarekSonido.hay("damian_resp") else "aliento")
+	if _snd_loop.stream is AudioStreamOggVorbis:
+		(_snd_loop.stream as AudioStreamOggVorbis).loop = true
 	_snd_loop.unit_size = 3.0
 	_snd_loop.max_distance = 22.0
 	_snd_loop.position.y = 1.6
 	add_child(_snd_loop)
+	_snd_paso = AudioStreamPlayer3D.new()
+	_snd_paso.unit_size = 2.6
+	_snd_paso.max_distance = 26.0
+	_snd_paso.position.y = 0.1
+	add_child(_snd_paso)
 	_snd_one = AudioStreamPlayer3D.new()
 	_snd_one.unit_size = 5.0
 	_snd_one.max_distance = 35.0
@@ -553,7 +562,7 @@ func _physics_process(delta: float) -> void:
 		_golpe_t -= delta
 		if _golpe_t <= 0.0:
 			_golpe_t = 0.75
-			db.snd.stream = AetherSynth.make("golpe_madera")
+			db.snd.stream = ZarekSonido.uno("golpe_madera")
 			db.snd.play()
 			if player.global_position.distance_to(global_position) < 12.0:
 				player.shake(4.0)
@@ -563,7 +572,7 @@ func _physics_process(delta: float) -> void:
 		if float(db.barricada) <= 0.0:
 			mansion.desatrancar(db)
 			mansion.set_door(db, true, true)
-			db.snd.stream = AetherSynth.make("portazo")
+			db.snd.stream = ZarekSonido.uno("madera_rota" if ZarekSonido.hay("madera_rota") else "portazo")
 			db.snd.play()
 			player.shake(10.0)
 		if not es_damian:
@@ -579,14 +588,19 @@ func _physics_process(delta: float) -> void:
 	var d := mansion.door_near(global_position, 1.3)
 	if not d.is_empty() and not d.open and not d.locked:
 		mansion.set_door(d, true, true)
-		d.snd.stream = AetherSynth.make("portazo")
+		d.snd.stream = ZarekSonido.uno("portazo")
 		d.snd.play()
 		if player.global_position.distance_to(global_position) < 14.0:
 			player.shake(6.0)
 	_creak_t -= delta
 	if _creak_t <= 0.0:
 		_creak_t = randf_range(5.0, 11.0)
-		_snd_one.stream = AetherSynth.make("crujido")
+		if es_damian and state != S.DORMANT:
+			_creak_t = randf_range(4.0, 9.0) if state in [S.SEARCH, S.INVESTIGATE] else randf_range(7.0, 14.0)
+			_snd_one.stream = ZarekSonido.uno("risa" if (state == S.SEARCH and randf() < 0.25) else "damian_gruñe")
+			_snd_one.volume_db = -2.0
+		else:
+			_snd_one.stream = ZarekSonido.uno("crujido")
 		_snd_one.play()
 
 var _golpe_t := 0.0
@@ -595,8 +609,8 @@ func _start_chase() -> void:
 	last_seen = player.global_position
 	lost_t = 0.0
 	set_state(S.CHASE)
-	_snd_one.stream = AetherSynth.make("grito")
-	_snd_one.volume_db = -6.0
+	_snd_one.stream = ZarekSonido.uno("damian_rugido" if es_damian else "grito")
+	_snd_one.volume_db = 2.0 if es_damian else -6.0
 	_snd_one.play()
 
 ## Camino que evita habitaciones iluminadas (le temen a la luz).
@@ -628,6 +642,15 @@ func _move(delta: float) -> void:
 			if step.length() > to.length():
 				step = to
 			global_position += step
+			_dist_paso += step.length()
+			if _snd_paso and _dist_paso > (1.05 if state == S.CHASE else 0.85):
+				_dist_paso = 0.0
+				_snd_paso.stream = ZarekSonido.uno("damian_paso")
+				_snd_paso.volume_db = 2.0 if state == S.CHASE else -2.0
+				_snd_paso.pitch_scale = randf_range(0.92, 1.05)
+				_snd_paso.play()
+				if state == S.CHASE and randf() < 0.18 and es_damian:
+					ZarekSonido.en(self, "damian_hacha", global_position + Vector3(0, 0.3, 0), -14.0, 18.0, 0.7)
 			var yaw := atan2(-flat.x, -flat.z)
 			rotation.y = lerp_angle(rotation.y, yaw, minf(1.0, delta * (9.0 if state == S.CHASE else 4.0)))
 			moving = _speed * k

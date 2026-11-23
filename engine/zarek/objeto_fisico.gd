@@ -29,7 +29,7 @@ func _al_chocar(_otro: Node) -> void:
 	if v > 1.1 and _sonar_t <= 0.0:
 		_sonar_t = 0.3
 		var a := AudioStreamPlayer3D.new()
-		a.stream = AetherSynth.make(sonido)
+		a.stream = ZarekSonido.uno(sonido)
 		a.volume_db = -16.0 + minf(v, 5.0) * 3.5 + clampf(mass * 0.15, 0.0, 6.0)
 		a.pitch_scale = clampf(1.6 - mass * 0.03, 0.6, 1.6) * randf_range(0.92, 1.08)
 		a.unit_size = 3.0
@@ -63,7 +63,7 @@ func _romper(v: float) -> void:
 		f.linear_velocity = _v_antes * 0.3 + Vector3(randf_range(-1.6, 1.6), randf_range(0.6, 2.4), randf_range(-1.6, 1.6))
 		f.angular_velocity = Vector3(randf_range(-12, 12), randf_range(-12, 12), randf_range(-12, 12))
 	var a := AudioStreamPlayer3D.new()
-	a.stream = AetherSynth.make("ceramica")
+	a.stream = ZarekSonido.uno("ceramica")
 	a.volume_db = 2.0
 	a.unit_size = 4.0
 	a.max_distance = 35.0

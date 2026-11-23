@@ -157,7 +157,7 @@ static func _textura_charco() -> Texture2D:
 
 func _sonido(tipo: String, db: float, padre: Node = null, pos := Vector3.ZERO) -> void:
 	var a := AudioStreamPlayer3D.new()
-	a.stream = AetherSynth.make(tipo)
+	a.stream = ZarekSonido.uno(tipo)
 	a.volume_db = db
 	a.unit_size = 3.0
 	a.max_distance = 30.0
