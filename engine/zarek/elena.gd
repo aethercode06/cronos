@@ -48,6 +48,12 @@ var dress_mat: StandardMaterial3D
 var eye_mat: StandardMaterial3D
 var only_visual := false
 const MODEL := "res://zarek/modelos/elena.glb"
+## Damián (Blender + Mixamo, rama damian-3d): el cazador. Si existe se usa en lugar de Elena.
+const DAMIAN := "res://zarek/modelos/damian.glb"
+## Nombres de animación del juego → animaciones de Damián con el hacha.
+const ANIM_DAMIAN := {"idle": "hacha_guardia", "walk": "hacha_caminar", "run": "hacha_correr", "attack": "hacha_golpe_2manos",
+	"golpe": "hacha_golpe_1mano", "buscar": "hacha_buscar", "dolor": "hacha_golpeado1"}
+var es_damian := false
 const USAR_NORMAL := 0.0
 const PIEL := preload("res://zarek/elena_piel.gdshader")
 ## Expresiones faciales: si falta alguna se usa la de reserva.
@@ -133,6 +139,9 @@ func _stain_tex() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 func build_body() -> void:
+	if ResourceLoader.exists(DAMIAN) and OS.get_environment("ELENA") == "":
+		_build_damian()
+		return
 	if ResourceLoader.exists(MODEL):
 		_build_model()
 		return
@@ -227,6 +236,28 @@ func build_body() -> void:
 	fore_r = arm_r.get_child(1)
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+## Damián: modelo de Blender con el hacha en la mano y sus animaciones (guardia, caminar, correr, buscar, golpes).
+func _build_damian() -> void:
+	es_damian = true
+	var ps: PackedScene = load(DAMIAN)
+	model = ps.instantiate()
+	model.rotation.y = PI  # mira a +Z en el archivo; el cazador mira a -Z
+	model.scale = Vector3.ONE * 1.08  # casi 2 metros
+	add_child(model)
+	eye_height = 1.86
+	var found := model.find_children("*", "AnimationPlayer", true, false)
+	if found.size() > 0:
+		anim = found[0]
+		for n in ["hacha_guardia", "hacha_caminar", "hacha_correr", "hacha_buscar"]:
+			if anim.has_animation(n):
+				anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
+		play_anim("idle")
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	var sk := model.find_children("*", "Skeleton3D", true, false)
+	if sk.size() > 0:
+		skel = sk[0]
 
 ## Modelo 3D real (TRELLIS + Blender) con animaciones idle/walk/run/attack.
 func _build_model() -> void:
@@ -340,12 +371,13 @@ func _cara_process(delta: float) -> void:
 		skel.set_bone_pose_rotation(jaw_bone, jaw_rest * Quaternion(Vector3.RIGHT, jaw_open))
 
 func play_anim(n: String, speed := 1.0) -> void:
-	if anim == null or not anim.has_animation(n):
+	var real := String(ANIM_DAMIAN.get(n, n)) if es_damian else n
+	if anim == null or not anim.has_animation(real):
 		return
 	anim.speed_scale = speed
 	if _cur_anim != n:
 		_cur_anim = n
-		anim.play(n, 0.25)
+		anim.play(real, 0.25)
 
 func _arm(side: float, skin: Material) -> Node3D:
 	var sh := Node3D.new()
@@ -525,13 +557,17 @@ func _physics_process(delta: float) -> void:
 			db.snd.play()
 			if player.global_position.distance_to(global_position) < 12.0:
 				player.shake(4.0)
+			if es_damian:
+				_cur_anim = ""
+				play_anim("golpe", 1.3)
 		if float(db.barricada) <= 0.0:
 			mansion.desatrancar(db)
 			mansion.set_door(db, true, true)
 			db.snd.stream = AetherSynth.make("portazo")
 			db.snd.play()
 			player.shake(10.0)
-		_animate(delta, 0.0)
+		if not es_damian:
+			_animate(delta, 0.0)
 		return
 	_move(delta)
 	# atrapar
@@ -610,8 +646,12 @@ func _animate(delta: float, spd: float) -> void:
 	if model != null:
 		if state == S.GHOST and not only_visual and _cur_anim == "attack":
 			return
-		if state == S.CHASE or state == S.FLEE:
-			play_anim("run", 1.15)
+		if es_damian and state == S.FLEE and timer > 1.0:
+			play_anim("dolor")  # la bengala lo ciega: se tapa y retrocede
+		elif state == S.CHASE or state == S.FLEE:
+			play_anim("run", 1.0 if es_damian else 1.15)
+		elif es_damian and state == S.SEARCH and spd < 0.6:
+			play_anim("buscar")
 		elif spd > 0.2:
 			play_anim("walk", clampf(spd / 1.6, 0.7, 1.6))
 		else:
