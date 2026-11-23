@@ -1,51 +1,16 @@
 {
- "e_interruptor": {
+ "m_mano": {
   "k": [
-   "light switch",
-   "vintage light switch",
-   "toggle switch wall",
-   "old light switch",
-   "rotary light switch",
-   "wall switch",
-   "switch plate",
-   "porcelain switch"
-  ],
-  "n": 24,
-  "max_caras": 20000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox",
-   "sci-fi",
-   "scifi",
-   "futuristic"
-  ]
- },
- "e_cuadro": {
-  "k": [
-   "fuse box",
-   "electrical panel",
-   "breaker box",
-   "old fuse box",
-   "electric box",
-   "circuit breaker panel",
-   "electrical cabinet",
-   "knife switch",
-   "power switch lever"
+   "first person arms",
+   "fps arms",
+   "hand holding flashlight",
+   "first person hand",
+   "fps hands",
+   "arms rig",
+   "female hand",
+   "realistic hand",
+   "hand rigged",
+   "flashlight hand"
   ],
   "n": 30,
   "max_caras": 60000,
@@ -69,52 +34,23 @@
    "roblox",
    "sci-fi",
    "scifi",
-   "futuristic"
+   "futuristic",
+   "robot",
+   "gun",
+   "rifle",
+   "pistol",
+   "weapon"
   ]
  },
- "e_generador": {
+ "m_linterna": {
   "k": [
-   "generator",
-   "diesel generator",
-   "old generator",
-   "power generator",
-   "electric generator"
+   "flashlight",
+   "torch flashlight",
+   "old flashlight",
+   "vintage flashlight",
+   "maglite"
   ],
   "n": 18,
-  "max_caras": 90000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox",
-   "sci-fi",
-   "scifi",
-   "futuristic"
-  ]
- },
- "e_bombilla": {
-  "k": [
-   "light bulb",
-   "incandescent bulb",
-   "edison bulb",
-   "vintage bulb",
-   "filament bulb",
-   "bulb socket"
-  ],
-  "n": 24,
   "max_caras": 20000,
   "no": [
    "cartoon",
@@ -136,19 +72,26 @@
    "roblox",
    "sci-fi",
    "scifi",
-   "futuristic"
+   "futuristic",
+   "robot",
+   "gun",
+   "rifle",
+   "pistol",
+   "weapon"
   ]
  },
- "e_cable": {
+ "m_cajon": {
   "k": [
-   "electrical wire",
-   "cable reel",
-   "power cable",
-   "extension cord",
-   "wire spool",
-   "electric meter"
+   "dresser",
+   "chest of drawers",
+   "nightstand",
+   "bedside table",
+   "drawer",
+   "vintage dresser",
+   "antique dresser",
+   "commode"
   ],
-  "n": 18,
+  "n": 30,
   "max_caras": 40000,
   "no": [
    "cartoon",
@@ -170,7 +113,53 @@
    "roblox",
    "sci-fi",
    "scifi",
-   "futuristic"
+   "futuristic",
+   "robot",
+   "gun",
+   "rifle",
+   "pistol",
+   "weapon"
+  ]
+ },
+ "m_grifo": {
+  "k": [
+   "old faucet",
+   "vintage tap",
+   "bathroom sink vintage",
+   "toilet old",
+   "old toilet",
+   "clawfoot bathtub",
+   "rotary phone",
+   "old telephone"
+  ],
+  "n": 30,
+  "max_caras": 40000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "anime",
+   "minecraft",
+   "toy",
+   "sex",
+   "nsfw",
+   "nude",
+   "naked",
+   "porn",
+   "pokemon",
+   "fortnite",
+   "roblox",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "robot",
+   "gun",
+   "rifle",
+   "pistol",
+   "weapon"
   ]
  }
 }
