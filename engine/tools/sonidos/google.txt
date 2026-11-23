@@ -1,17 +1,1 @@
-# Google Sound Library (CC-BY 4.0): https://developers.google.com/assistant/tools/sound-library
-horror/aggressive_zombie_snarls
-horror/monster_alien_growl_calm
-horror/monster_alien_growl_tense
-horror/monster_alien_growl_pained
-horror/monster_alien_grunt
-horror/monster_alien_grunt_hiss
-horror/monster_alien_grunt_sleepy
-horror/hallow_wind
-horror/ambient_hum_pitched
-horror/cutting_flesh
-horror/cut_and_handle_meat
-horror/wet_tearing_meat
-horror/drop_meat
-horror/leg_bone_break
-horror/meat_punch
-horror/swoosh
+# (vacío esta vez)
