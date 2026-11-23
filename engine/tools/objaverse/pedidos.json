@@ -1,58 +1,30 @@
 [
  {
-  "clave": "m_brazos_fp",
-  "uid": "e3c42c05b22944e5839deb8e003f0987",
-  "nombre": "First Person arms",
-  "autor": "bumstrum",
+  "clave": "w_escopeta",
+  "uid": "04741a40f2224cffafc343b0236d5bbe",
+  "nombre": "Double Barrel Shotgun",
+  "autor": "Pepego",
   "licencia": "by"
  },
  {
-  "clave": "m_mano_rig",
-  "uid": "eae97cc2a742413cb5338ab942b12c1e",
-  "nombre": "Hand rigged",
-  "autor": "elenaferfor",
+  "clave": "w_cuchillo",
+  "uid": "a27d59fa297249ecb99220e75eb67eb1",
+  "nombre": "Kitchen knife",
+  "autor": "sergeilihandristov",
   "licencia": "by"
  },
  {
-  "clave": "m_mano_mujer",
-  "uid": "a374d0680fc047afac0e10ef9fea4c52",
-  "nombre": "Female Hand",
-  "autor": "ZombroDee",
+  "clave": "w_martillo",
+  "uid": "5d0d56d67e8a42c59a0867542b66a3a7",
+  "nombre": "Old Hammer PBR",
+  "autor": "smessierobjects",
   "licencia": "by"
  },
  {
-  "clave": "m_brazos_guante",
-  "uid": "453e0248925c4c3e807d3d36fe1b916a",
-  "nombre": "FREE FPS Arms with glove",
-  "autor": "Alexander_Ovelar",
-  "licencia": "by"
- },
- {
-  "clave": "m_mano_agarre",
-  "uid": "19253d6836f84e579234029f6776363b",
-  "nombre": "Hand Rigged Grab",
-  "autor": "Camburridge",
-  "licencia": "by"
- },
- {
-  "clave": "m_linterna_vintage",
-  "uid": "c72a51c719d64bc591ac9a4e169cc321",
-  "nombre": "Vintage flashlight",
-  "autor": "Tuuttipingu",
-  "licencia": "by"
- },
- {
-  "clave": "m_linterna_vieja",
-  "uid": "576daeaa281840cfb3ece4850cc42469",
-  "nombre": "Old Flashlight",
-  "autor": "Blender3D",
-  "licencia": "by"
- },
- {
-  "clave": "m_linterna_retro",
-  "uid": "1bca09efb5154e75b6f6f17d8f71deeb",
-  "nombre": "Retro Style Flashlight",
-  "autor": "mattyu",
+  "clave": "w_atizador",
+  "uid": "62c2a500aec647f8a7255651da259bf2",
+  "nombre": "Poker",
+  "autor": "milacetious",
   "licencia": "by"
  }
 ]
