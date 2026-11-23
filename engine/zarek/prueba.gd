@@ -134,6 +134,8 @@ func _ready() -> void:
 	await _wait(1.5)
 	_check(sigue_cerrada and pd.open and float(pd.get("barricada", 0.0)) <= 0.0, "puerta atrancada: aguanta y la rompe a golpes")
 	g.elena.vanish(60.0)
+	await _wait(0.2)
+	g.elena.vanish(60.0)
 	# recoger los 4 sellos
 	for s in m.seals:
 		g.player.global_position = s.pos + Vector3(0.8, 0.05, 0)

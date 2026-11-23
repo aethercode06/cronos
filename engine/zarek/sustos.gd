@@ -184,6 +184,8 @@ func _cuarto(m: ZarekMansion, r: int) -> void:
 			return
 	j.sound_at("damian_gruñe", pp + Vector3(3.0, 1.2, 3.0), 4.0)
 	var e: ZarekElena = j.elena
+	if j.autotest:
+		return  # en la prueba automática no se despierta a Damián por guion
 	if e.state in [ZarekElena.S.DORMANT, ZarekElena.S.WANDER]:
 		if e.state == ZarekElena.S.DORMANT:
 			e.wake_far()
