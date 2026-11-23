@@ -8,3 +8,6 @@ https://opengameart.org/node/85875|CC0|rubberduck
 https://opengameart.org/content/4-door-closes|CC0|StarNinjas
 https://opengameart.org/content/door-open-sfx|CC0|Oiboo
 https://opengameart.org/content/opening-lock-and-door|CC0|RPG
+https://opengameart.org/content/q009s-weapon-sounds|CC0|Q009
+https://opengameart.org/content/shotgun-sound-effects|CC0|desconocido
+https://opengameart.org/content/bear-trap-sound|CC0|desconocido
