@@ -1,30 +1,44 @@
 [
  {
-  "clave": "w_escopeta",
-  "uid": "04741a40f2224cffafc343b0236d5bbe",
-  "nombre": "Double Barrel Shotgun",
-  "autor": "Pepego",
+  "clave": "h_kevin",
+  "uid": "a43c9c9059b24e2aa4af08d1a76f0916",
+  "nombre": "hand",
+  "autor": "kevinruiz",
   "licencia": "by"
  },
  {
-  "clave": "w_cuchillo",
-  "uid": "a27d59fa297249ecb99220e75eb67eb1",
-  "nombre": "Kitchen knife",
-  "autor": "sergeilihandristov",
+  "clave": "h_bum",
+  "uid": "046563449b144c67a2f8cc54bf86835b",
+  "nombre": "Hand",
+  "autor": "bumstrum",
   "licencia": "by"
  },
  {
-  "clave": "w_martillo",
-  "uid": "5d0d56d67e8a42c59a0867542b66a3a7",
-  "nombre": "Old Hammer PBR",
-  "autor": "smessierobjects",
+  "clave": "h_solo",
+  "uid": "c13c018958ab4c8e85a033825dec9c46",
+  "nombre": "Hand",
+  "autor": "Sololopenko",
   "licencia": "by"
  },
  {
-  "clave": "w_atizador",
-  "uid": "62c2a500aec647f8a7255651da259bf2",
-  "nombre": "Poker",
-  "autor": "milacetious",
+  "clave": "h_fischer",
+  "uid": "547a45535f0c4fe787948f7a7a6a88db",
+  "nombre": "First Person hands rigged",
+  "autor": "davidfischer",
+  "licencia": "by"
+ },
+ {
+  "clave": "h_arm",
+  "uid": "696f4493d39a44d7b5cf4c85b4239ae8",
+  "nombre": "arm",
+  "autor": "bumstrum",
+  "licencia": "by"
+ },
+ {
+  "clave": "h_adv",
+  "uid": "81706ab4fce644c69fa486de2c6e4953",
+  "nombre": "FPS Arms with Advanced Rig",
+  "autor": "bionic_leaf",
   "licencia": "by"
  }
 ]
