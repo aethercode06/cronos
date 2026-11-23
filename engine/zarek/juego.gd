@@ -871,10 +871,14 @@ func _update_hud() -> void:
 
 ## El objetivo en pantalla: qué hacer ahora y, debajo, cómo están las salidas.
 func texto_objetivo() -> String:
+	var hu := huida
+	if hu.encadenada:
+		return "Suéltate: busca algo para forzar el candado de la argolla del tobillo"
+	if hu.en_celda:
+		return "Sal del cuarto: la puerta está cerrada por fuera"
 	if not entered:
 		var dist := int(player.global_position.distance_to(mansion.front_door))
 		return "Pide ayuda en la casa de la luz encendida (%d m)" % dist
-	var hu := huida
 	var t := "SAL VIVA DE LA FINCA"
 	var sal: Array[String] = []
 	for r in ZarekHuida.SALIDAS:
@@ -948,9 +952,15 @@ func start_game(quick := false) -> void:
 	player.frozen = true
 	flash_on = true
 	if not quick and not autotest and not shots:
-		player.global_position = mansion.start_pos
+		# empieza despierta en la celda: encadenada en el cuarto de huéspedes, el portón ya cerrado
+		huida.empezar_celda()
+		huida.cerrar_porton()
+		entered = true
+		elena.set_state(ZarekElena.S.DORMANT, 75.0)
+		var desde: Vector3 = huida.ancla if huida.ancla != Vector3.INF else mansion.start_pos
+		player.global_position = desde + Vector3(0, 0.1, 0.3)
 		player.velocity = Vector3.ZERO
-		player.set_look(0.0, 0.0)
+		player.set_look(randf() * TAU, -0.2)
 	if quick:
 		state = "juego"
 		player.frozen = false
@@ -963,10 +973,10 @@ func start_game(quick := false) -> void:
 	_black_target = 1.0
 	await get_tree().create_timer(0.6).timeout
 	var lines := [
-		"Me llamo Sofía. Volvía a casa de noche y tomé un atajo\npor el bosque de Valdeoscuro.",
-		"Dos ruedas reventaron a la vez. El camino estaba lleno de clavos.\nEl móvil, sin cobertura. Nada en kilómetros…",
-		"Abrí el maletero: ni la rueda de repuesto ni el gato.\nAlguien había forzado la cerradura… y no hacía mucho.",
-		"…salvo una luz encendida en la ventana de una mansión.\nAlguien vivía ahí. Alguien podría ayudarme.",
+		"Me llamo Sofía. Anoche, volviendo a casa, tomé un atajo\npor el bosque de Valdeoscuro.",
+		"Los clavos del camino reventaron dos ruedas. En el maletero, ni la rueda de repuesto\nni el gato: alguien lo había forzado. Y el móvil, sin cobertura.",
+		"Fui a pedir ayuda a la única casa con una luz encendida.\nRecuerdo la puerta abriéndose… y un golpe en la nuca.",
+		"Ahora estoy despierta.\nY no sé dónde.",
 	]
 	for l in lines:
 		message(l, 3.6)
@@ -981,7 +991,7 @@ func start_game(quick := false) -> void:
 	var sc: Array = ZarekNoches.SUCESOS[suceso]
 	message(String(sc[0]) + "\n" + String(sc[1]), 4.5)
 	await get_tree().create_timer(4.8).timeout
-	message("Voy a pedir ayuda a esa casa.", 2.6)
+	message("Tengo el tobillo encadenado al suelo. Tengo que soltarme… sin hacer ruido.", 3.5)
 
 func _restart() -> void:
 	get_tree().paused = false
@@ -1832,6 +1842,8 @@ func _use() -> void:
 			_poner_fonografo()
 		"hold":
 			huida.empezar_hold(String(t.que))
+		"celda":
+			huida.completar(String(t.que))
 		"salida":
 			_escapar(String(t.que))
 		"nota":

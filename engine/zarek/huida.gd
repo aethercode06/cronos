@@ -3,8 +3,10 @@ extends Node
 ## La noche de Sofía: sobrevivir sola y salir de la finca Varela.
 ##
 ## Historia: Sofía toma un atajo de noche por el bosque de Valdeoscuro; dos ruedas revientan con los clavos que
-## siembra Damián. Sin cobertura, ve una luz en una ventana de la mansión y va a pedir ayuda: es el cebo. Al entrar,
-## alguien cierra el portón de la finca con una cadena. Damián caza para alimentar a su madre, Elena, poseída por
+## siembra Damián y le roban la rueda de repuesto y el gato. Sin cobertura, va a pedir ayuda a la única casa con luz
+## (el cebo) y recibe un golpe en la nuca. El juego empieza cuando despierta encadenada por el tobillo en el cuarto de
+## huéspedes, cerrado por fuera (la «celda»): primero hay que soltarse y salir del cuarto; el portón de la finca ya
+## está cerrado con cadena. Damián caza para alimentar a su madre, Elena, poseída por
 ## Zarek desde 1987 y encadenada en la capilla del sótano.
 ##
 ## La madre manda en la casa aunque esté encadenada (poltergeist): lanza objetos, cierra y abre puertas, quita
@@ -65,6 +67,20 @@ var hold_t := 0.0
 var cochera_pos := Vector3.INF
 var muro_pos := Vector3.INF
 
+# la celda del principio: el cuarto de huéspedes
+const SALA_CELDA := "Cuarto de huéspedes"
+const CADENA := 1.7          # lo que da de sí la cadena del tobillo
+const ARGOLLA := 3.0
+const CERRADURA := 4.0
+var en_celda := false
+var encadenada := false
+var tiene_clavo := false
+var ancla := Vector3.INF
+var clavo_pos := Vector3.INF
+var celda_puertas: Array = []
+var _clavo: Node3D
+var _cadena_vis: Node3D
+
 ## La salida bloqueada de la noche (con semilla 0, la de las pruebas, siempre el coche).
 static func salida_bloqueada(seed: int) -> String:
 	if seed == 0:
@@ -103,6 +119,7 @@ func preparar(mansion: ZarekMansion) -> void:
 	# un punto del muro oeste, entre el cementerio y el huerto, con la hiedra más espesa
 	muro_pos = m.cell_to_world("exterior", 20.0, 50.0) + Vector3(0.9, 0, 0)
 	_marca_muro()
+	_preparar_celda()
 	for n in m.find_children("*", "RigidBody3D", true, false):
 		if n is ZarekObjetoFisico and (n as RigidBody3D).mass < 9.0:
 			fisicos.append(n)
@@ -121,6 +138,57 @@ func _marca_muro() -> void:
 			var e := m.cyl(0.006, 0.006, 1.3, Vector3(-0.9, 2.5, -6.0 + k), m._mat.metal, n, 4)
 			e.rotation.x = PI * 0.5
 			e.rotation.z = 0.3 * (k % 2 * 2 - 1)
+
+# ---------------- la celda del principio ----------------
+## Colchón en el suelo, una argolla en la pared con la cadena al tobillo y un clavo suelto al alcance de la mano.
+func _preparar_celda() -> void:
+	var r := m._sala_por_nombre(SALA_CELDA)
+	if r.is_empty():
+		return
+	ZarekTerror._rng.seed = 4711
+	ancla = ZarekTerror._sitio_libre(m, r, 1.2)
+	if ancla == Vector3.INF:
+		var rc: Rect2 = r.rect
+		ancla = Vector3(rc.get_center().x, float(r.y), rc.get_center().y)
+	var rc2: Rect2 = r.rect
+	var n := Node3D.new()
+	n.position = ancla
+	m._house.add_child(n)
+	# colchón manchado
+	m.box(Vector3(0.9, 0.16, 1.9), Vector3(0, 0.08, 0), m._plain(Color(0.42, 0.36, 0.28), 0.95), false, n, false)
+	m.box(Vector3(0.5, 0.1, 0.35), Vector3(0, 0.2, -0.7), m._plain(Color(0.5, 0.45, 0.38), 0.95), false, n, false)
+	ZarekGore._charco(m, ancla + Vector3(0.25, 0, 0.2), 0.5)
+	# argolla en el suelo y la cadena hasta el colchón
+	m.cyl(0.08, 0.1, 0.05, Vector3(0.7, 0.025, 0.8), m._mat.hierro, n, 10)
+	_cadena_vis = Node3D.new()
+	n.add_child(_cadena_vis)
+	for k in 9:
+		var e := m.cyl(0.014, 0.014, 0.07, Vector3(0.7 - k * 0.075, 0.03, 0.8 - k * 0.06), m._mat.hierro, _cadena_vis, 5)
+		e.rotation = Vector3(PI * 0.5, 0.0, (k % 2) * PI * 0.5)
+	# el clavo, en el suelo junto al rodapié
+	clavo_pos = ancla + Vector3(-1.1, 0.0, 0.6)
+	if not rc2.has_point(Vector2(clavo_pos.x, clavo_pos.z)):
+		clavo_pos = ancla + Vector3(1.0, 0.0, -0.6)
+	_clavo = Node3D.new()
+	_clavo.position = clavo_pos
+	m._house.add_child(_clavo)
+	var cl := m.cyl(0.004, 0.004, 0.11, Vector3(0, 0.006, 0), m._mat.hierro, _clavo, 5)
+	cl.rotation.z = PI * 0.5
+	m.cyl(0.009, 0.009, 0.004, Vector3(0.055, 0.006, 0), m._mat.hierro, _clavo, 6).rotation.z = PI * 0.5
+	for d in m.doors:
+		if int(r.id) in (d.get("ids", []) as Array):
+			celda_puertas.append(d)
+
+## Empieza la partida aquí: encadenada y con las puertas del cuarto cerradas por fuera.
+func empezar_celda() -> void:
+	if ancla == Vector3.INF:
+		return
+	en_celda = true
+	encadenada = true
+	for d in celda_puertas:
+		m.set_door(d, false, true)
+		d.locked = true
+		d["celda"] = true
 
 # ---------------- el portón ----------------
 ## Al entrar en la casa: una cadena y un candado cierran el portón (las hojas giran y ya no se puede pasar).
@@ -162,6 +230,14 @@ func tick(delta: float) -> void:
 		return
 	var pp: Vector3 = j.player.global_position
 	_silencio_ruido = maxf(0.0, _silencio_ruido - delta)
+	if encadenada:
+		var off := Vector2(pp.x - ancla.x, pp.z - ancla.z)
+		if off.length() > CADENA:
+			var lim := Vector2(ancla.x, ancla.z) + off.normalized() * CADENA
+			j.player.global_position = Vector3(lim.x, pp.y, lim.y)
+			j.player.velocity = Vector3.ZERO
+			if randf() < 0.05:
+				j.sound_at("cadenas", ancla + Vector3(0, 0.2, 0), -12.0)
 	_t_grito -= delta
 	_t_aviso -= delta
 	if not madre_suelta and not madre_muerta:
@@ -472,6 +548,16 @@ func _quemar(cap: Dictionary) -> void:
 # ---------------- objetivos al alcance ----------------
 ## Lo que se puede hacer aquí (para la indicación en pantalla y USAR).
 func objetivo(pp: Vector3) -> Dictionary:
+	if encadenada:
+		if not tiene_clavo and Vector2(pp.x - clavo_pos.x, pp.z - clavo_pos.z).length() < 1.4:
+			return {"kind": "celda", "que": "clavo", "text": "USAR: coger el clavo del suelo"}
+		if tiene_clavo:
+			return {"kind": "hold", "que": "argolla", "text": "MANTÉN USAR: forzar el candado de la argolla con el clavo"}
+		return {"kind": "nada", "text": "Una cadena del tobillo a una argolla del suelo. El candado es viejo… si tuviera algo fino y duro."}
+	if en_celda:
+		for d in celda_puertas:
+			if (d.pos as Vector3).distance_to(pp) < 2.0:
+				return {"kind": "hold", "que": "cerradura", "text": "MANTÉN USAR: forzar la cerradura con el clavo (hace ruido)"}
 	if not madre_muerta and not capilla_rociada and tiene.get("gasolina", false) and not gasolina_usada and capilla_pos != Vector3.INF \
 			and pp.distance_to(capilla_pos) < 3.5:
 		return {"kind": "hold", "que": "rociar", "text": "MANTÉN USAR: rociar la capilla con gasolina (no podré usarla en la camioneta)"}
@@ -543,12 +629,12 @@ func _hold_tick(delta: float, pp: Vector3) -> void:
 		j.bar_rit.visible = false
 		return
 	hold_t += delta
-	var dur := {"rociar": ROCIAR, "porton": CORTAR, "rueda": RUEDA, "trepar": TREPAR}.get(hold_kind, 2.0) as float
+	var dur := {"rociar": ROCIAR, "porton": CORTAR, "rueda": RUEDA, "trepar": TREPAR, "argolla": ARGOLLA, "cerradura": CERRADURA}.get(hold_kind, 2.0) as float
 	j.bar_rit.visible = true
 	j.bar_rit.value = hold_t / dur * 100.0
 	if fmod(hold_t, 0.7) < delta:
-		j.oir_ruido(pp, {"rociar": 3.0, "porton": 14.0, "rueda": 10.0, "trepar": 8.0}.get(hold_kind, 6.0))
-		j.sound_at({"rociar": "chapoteo", "porton": "cadenas", "rueda": "impacto_metal", "trepar": "crujido"}.get(hold_kind, "golpe_madera"), pp + j.player.forward() * 0.8, -6.0)
+		j.oir_ruido(pp, {"rociar": 3.0, "porton": 14.0, "rueda": 10.0, "trepar": 8.0, "argolla": 2.0, "cerradura": 5.0}.get(hold_kind, 6.0))
+		j.sound_at({"rociar": "chapoteo", "porton": "cadenas", "rueda": "impacto_metal", "trepar": "crujido", "argolla": "cadenas", "cerradura": "pomo_cerrado"}.get(hold_kind, "golpe_madera"), pp + j.player.forward() * 0.8, -6.0)
 	if hold_t >= dur:
 		var k := hold_kind
 		hold_kind = ""
@@ -557,6 +643,33 @@ func _hold_tick(delta: float, pp: Vector3) -> void:
 
 func completar(que: String) -> void:
 	match que:
+		"clavo":
+			tiene_clavo = true
+			if _clavo:
+				j._a_la_mano(_clavo)
+			j.message("Un clavo largo y oxidado. Puede servir para forzar el candado.", 3.0)
+		"argolla":
+			encadenada = false
+			if _cadena_vis:
+				_cadena_vis.queue_free()
+			j.sound_at("cadenas", ancla + Vector3(0, 0.3, 0), -4.0)
+			j.message("¡Clic! El candado se abre. Tengo el tobillo en carne viva, pero soy libre.\nAhora la puerta… cerrada por fuera.", 4.0)
+		"cerradura":
+			en_celda = false
+			for d in celda_puertas:
+				d.locked = false
+				d.erase("celda")
+			if not celda_puertas.is_empty():
+				var dd: Dictionary = celda_puertas[0]
+				var mejor := 1e9
+				for d in celda_puertas:
+					var dist := (d.pos as Vector3).distance_to(j.player.global_position)
+					if dist < mejor:
+						mejor = dist
+						dd = d
+				m.entreabrir(dd)
+			j.message("La cerradura cede. Estoy fuera de ese cuarto.\nTengo que salir de esta casa. En silencio.", 4.0)
+			j._consejo("salir", "Busca una forma de salir de la finca: mira el DIARIO (arriba a la derecha). Cada noche hay una salida bloqueada.")
 		"rociar":
 			capilla_rociada = true
 			gasolina_usada = true

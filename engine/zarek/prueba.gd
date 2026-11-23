@@ -321,6 +321,22 @@ func _ready() -> void:
 	g.elena.vanish(60.0)
 	await _wait(0.2)
 	g.elena.vanish(60.0)
+	# la celda del principio: encadenada, clavo, argolla, cerradura
+	var hu: ZarekHuida = g.huida
+	hu.empezar_celda()
+	g.player.global_position = hu.ancla + Vector3(0, 0.1, 0.3)
+	await _wait(0.2)
+	g.player.global_position = hu.ancla + Vector3(4.0, 0.1, 0.0)
+	hu.tick(0.016)
+	var sujeta: bool = Vector2(g.player.global_position.x - hu.ancla.x, g.player.global_position.z - hu.ancla.z).length() <= ZarekHuida.CADENA + 0.05
+	g.player.global_position = hu.clavo_pos + Vector3(0.3, 0.1, 0.0)
+	var k_clavo: String = str(g._target().get("que", ""))
+	g._use()
+	var k_arg: String = str(g._target().get("que", ""))
+	hu.completar("argolla")
+	var puertas_cerradas: bool = hu.celda_puertas.size() > 0 and hu.celda_puertas.all(func(d): return d.locked)
+	hu.completar("cerradura")
+	_check(sujeta and k_clavo == "clavo" and hu.tiene_clavo and k_arg == "argolla" and not hu.encadenada and puertas_cerradas and not hu.en_celda and hu.celda_puertas.all(func(d): return not d.locked), "celda: encadenada, clavo, argolla y cerradura")
 	# recoger los objetos de la noche
 	var rs: ZarekHuida = g.huida
 	for so in m.seals:

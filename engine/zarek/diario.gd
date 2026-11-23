@@ -157,7 +157,8 @@ func texto_objetivos() -> String:
 	t += "[b]%s[/b] — %s\n\n" % [sc[0], sc[1]]
 	var rs: ZarekHuida = j.huida
 	t += "[b]SALIR VIVA DE LA FINCA[/b]\n"
-	t += "%s Entrar en la mansión (la luz de la ventana era un cebo: han cerrado el portón con cadena).\n" % _check(j.entered)
+	t += "%s Soltarme la cadena del tobillo (algo fino y duro para forzar el candado).\n" % _check(not rs.encadenada)
+	t += "%s Salir del cuarto donde me encerró (forzar la cerradura: hace ruido).\n" % _check(not rs.en_celda)
 	t += "%s Escapar por una de las salidas de esta noche:\n" % _check(j.state == "final")
 	for r in ZarekHuida.SALIDAS:
 		if r == rs.salida_cerrada:

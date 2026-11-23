@@ -16,7 +16,7 @@ const SUCESOS := {
 const ORDEN := ["normal", "tormenta", "niebla", "apagon", "luna_roja"]
 
 ## Salas que nunca se cierran (la historia pasa por ellas, tienen escaleras o son de paso).
-const NUNCA := ["Escalera", "Pasillo", "Vestíbulo", "Galería", "Cuarto de Damián", "Sala de calderas", "Capilla", "Cámara",
+const NUNCA := ["Escalera", "Pasillo", "Vestíbulo", "Galería", "Cuarto de Damián", "Cuarto de huéspedes", "Sala de calderas", "Capilla", "Cámara",
 	"Túnel", "Recibidor", "Distribuidor", "Rellano", "Cuarto de las escaleras"]
 
 static func elegir_suceso(seed: int) -> String:
