@@ -3894,5 +3894,61 @@
   "nombre": "Brain in a Jar",
   "autor": "Mad_Lobster_Workshop",
   "licencia": "by"
+ },
+ {
+  "clave": "e_cuadro_vintage",
+  "uid": "4109ae3e180d4ed8b3427fe6a97d58b6",
+  "nombre": "Freebie - Game Art: Vintage Fuse Box",
+  "autor": "filip.alecsandru",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_cuadro_pequeno",
+  "uid": "1818361dc6554d17bef8c0400959f93f",
+  "nombre": "Small Fuse Box",
+  "autor": "ondra.lit",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_cuadro_escaneado",
+  "uid": "253d13523bfc44f8b74563295f22ac78",
+  "nombre": "Electric box scan No. 11",
+  "autor": "Dystopia",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_bombilla_edison",
+  "uid": "aeb0e4832f04463280510e550e2cdbd5",
+  "nombre": "Edison Light Bulb",
+  "autor": "ministephen",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_bombilla_deco",
+  "uid": "97b4aa8865414f30b64017b0ce5006b1",
+  "nombre": "Decorative light bulb",
+  "autor": "Marcin.Kwiatkowski",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_interruptor_sucio",
+  "uid": "5b41c43f4b62434f8b852ace1ae54e1b",
+  "nombre": "Dirty light switch",
+  "autor": "gtvorets",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_interruptor_laton",
+  "uid": "90878a8d300b441d9c98ffa89a809afd",
+  "nombre": "Light switch from Poly by Google",
+  "autor": "ie-niels",
+  "licencia": "by"
+ },
+ {
+  "clave": "e_interruptor_marron",
+  "uid": "2e18d865b85941e59304719cd325322b",
+  "nombre": "Light Switch",
+  "autor": "watsonee",
+  "licencia": "by"
  }
 ]

@@ -3472,5 +3472,77 @@
   ],
   "tris": 508,
   "escala": 0.0059
+ },
+ "e_bombilla_deco": {
+  "tam": [
+   0.112,
+   0.16,
+   0.112
+  ],
+  "tris": 3196,
+  "escala": 0.2923
+ },
+ "e_bombilla_edison": {
+  "tam": [
+   0.078,
+   0.14,
+   0.078
+  ],
+  "tris": 8999,
+  "escala": 0.0157
+ },
+ "e_cuadro_escaneado": {
+  "tam": [
+   1.028,
+   0.902,
+   0.785
+  ],
+  "tris": 9000,
+  "escala": 0.0304
+ },
+ "e_cuadro_pequeno": {
+  "tam": [
+   0.557,
+   0.55,
+   0.582
+  ],
+  "tris": 9000,
+  "escala": 0.0097
+ },
+ "e_cuadro_vintage": {
+  "tam": [
+   0.533,
+   0.7,
+   0.707
+  ],
+  "tris": 3950,
+  "escala": 0.0067
+ },
+ "e_interruptor_laton": {
+  "tam": [
+   0.068,
+   0.12,
+   0.023
+  ],
+  "tris": 300,
+  "escala": 0.012
+ },
+ "e_interruptor_marron": {
+  "tam": [
+   0.095,
+   0.12,
+   0.027
+  ],
+  "tris": 2332,
+  "escala": 0.0099
+ },
+ "e_interruptor_sucio": {
+  "tam": [
+   0.12,
+   0.12,
+   0.038
+  ],
+  "tris": 4480,
+  "escala": 0.0023
  }
 }

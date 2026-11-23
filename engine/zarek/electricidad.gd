@@ -66,6 +66,19 @@ func _poner_interruptor(p: Vector3, fuera: Vector3, rid: int) -> void:
 	n.rotation.y = atan2(fuera.x, fuera.z)
 	n.set_meta("dyn", true)
 	m._house.add_child(n)
+	# interruptor viejo y sucio (modelo real); si no está, uno de baquelita hecho por código
+	var real := m._prop("e_interruptor_sucio", Vector3(0, -0.06, 0.0), 0.0, 1.0, false, n)
+	if real:
+		real.set_meta("dyn", true)
+		ZarekTerror._calco(m, "humedad_2", p + fuera * 0.004, fuera, Vector2(0.24, 0.28), _rng.randf() * TAU)
+		var on0 := false
+		for l in m.rooms[rid].get("lamps", []):
+			if not l.broken:
+				on0 = true
+		var palanca0 := Node3D.new()
+		n.add_child(palanca0)
+		interruptores.append({"pos": p, "room": rid, "nodo": n, "palanca": palanca0, "on": on0})
+		return
 	# placa de baquelita marrón con dos tornillos y la palanquita de porcelana
 	var placa := m.box(Vector3(0.085, 0.13, 0.012), Vector3(0, 0, 0.006), _mat_baquelita(), false, n, false)
 	placa.set_meta("dyn", true)
@@ -185,7 +198,18 @@ func _poner_cuadro(p: Vector3, fuera: Vector3) -> void:
 	m._house.add_child(n)
 	var chapa := m._plain(Color(0.2, 0.22, 0.2), 0.55, 0.6)
 	var oxido := m._plain(Color(0.32, 0.18, 0.1), 0.85, 0.2)
+	# cuadro de fusibles antiguo de verdad (abierto), y al lado el interruptor general de cuchillas
+	var real := m._prop("e_cuadro_vintage", Vector3(-0.2, -0.35, 0.0), 0.0, 1.0, false, n)
+	if real:
+		real.set_meta("dyn", true)
+		var pg := Node3D.new()
+		pg.position = Vector3(0.32, 0.0, 0.0)
+		n.add_child(pg)
+		n = pg
 	# armario de chapa (fondo y laterales) con la puerta abierta colgando de una bisagra
+	if real:
+		_palanca_general(n, chapa, oxido, p)
+		return
 	m.box(Vector3(0.62, 0.8, 0.04), Vector3(0, 0, 0.02), chapa, false, n, false)
 	for sx in [-1.0, 1.0]:
 		m.box(Vector3(0.025, 0.8, 0.16), Vector3(sx * 0.3, 0, 0.08), chapa, false, n, false)
@@ -207,6 +231,9 @@ func _poner_cuadro(p: Vector3, fuera: Vector3) -> void:
 			m.box(Vector3(0.05, 0.1, 0.035), fp, _mat_porcelana(), false, n, false)
 			var tap := m.cyl(0.016, 0.016, 0.02, fp + Vector3(0, 0, 0.025), m._plain(Color(0.1, 0.1, 0.1) if (fila + k) % 3 else Color(0.5, 0.12, 0.08), 0.5), n, 8)
 			tap.rotation.x = PI * 0.5
+	_palanca_general(n, chapa, oxido, p)
+
+func _palanca_general(n: Node3D, chapa: Material, oxido: Material, p: Vector3) -> void:
 	# interruptor general de cuchillas con su palanca larga
 	m.box(Vector3(0.24, 0.2, 0.03), Vector3(0, -0.22, 0.05), _mat_porcelana(), false, n, false)
 	var palanca := Node3D.new()
@@ -234,7 +261,7 @@ func _poner_cuadro(p: Vector3, fuera: Vector3) -> void:
 	zumbido.unit_size = 1.5
 	zumbido.max_distance = 7.0
 	n.add_child(zumbido)
-	cuadro = {"pos": n.global_position if n.is_inside_tree() else p + Vector3(0, 1.35, 0), "nodo": n, "palanca": palanca, "piloto": piloto, "zumbido": zumbido}
+	cuadro = {"pos": n.global_position, "nodo": n, "palanca": palanca, "piloto": piloto, "zumbido": zumbido}
 
 func cuadro_cerca(p: Vector3, dist := 1.8) -> bool:
 	return not cuadro.is_empty() and (cuadro.pos as Vector3).distance_to(p + Vector3(0, 1.2, 0)) < dist

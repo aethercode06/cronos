@@ -5048,6 +5048,46 @@ func _lamp(pos: Vector3) -> void:
 ## Bombilla incandescente vieja (~2400 K): luz naranja cálida, no blanca.
 const COLOR_BOMBILLA := Color(1.0, 0.72, 0.44)
 static var _tex_halo: ImageTexture
+## Bombilla Edison real (modelo con cristal, casquillo y filamento) colgando boca abajo en `pos`. Devuelve el
+## nodo y añade a `mats` los materiales que brillan (filamento y cristal) para encenderlos con la corriente.
+func _bombilla_real(padre: Node3D, pos: Vector3, mats: Array) -> Node3D:
+	const RUTA := "res://zarek/objetos/e_bombilla_edison.glb"
+	if not ResourceLoader.exists(RUTA):
+		return null
+	var b: Node3D = (load(RUTA) as PackedScene).instantiate()
+	b.rotation.x = PI
+	b.position = pos
+	b.set_meta("dyn", true)
+	padre.add_child(b)
+	for mi in b.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		m3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for k in m3.get_surface_override_material_count():
+			var mt := m3.mesh.surface_get_material(k)
+			if not (mt is StandardMaterial3D):
+				continue
+			var nm := String(mt.resource_name).to_lower()
+			var c := (mt as StandardMaterial3D).duplicate() as StandardMaterial3D
+			if nm.begins_with("glow"):
+				c.emission_enabled = true
+				c.emission = Color(1.0, 0.55, 0.2)
+				c.emission_energy_multiplier = 0.0
+				c.set_meta("brillo", 9.0)
+			elif nm.begins_with("glass"):
+				c.emission_enabled = true
+				c.emission = Color(1.0, 0.7, 0.4)
+				c.emission_energy_multiplier = 0.0
+				c.set_meta("brillo", 0.7)
+			else:
+				continue
+			m3.set_surface_override_material(k, c)
+			mats.append(c)
+	return b
+
+## Brillo del filamento y del cristal de las bombillas reales de una lámpara (0 apagada, 1 encendida).
+func _brillo(l: Dictionary, e: float) -> void:
+	for c in l.get("cristales", []):
+		(c as StandardMaterial3D).emission_energy_multiplier = float((c as StandardMaterial3D).get_meta("brillo", 1.0)) * e * e
 ## Halo alrededor de una bombilla encendida (se ve brillar aunque el móvil no tenga resplandor).
 func _halo(padre: Node3D, pos: Vector3, tam: float) -> MeshInstance3D:
 	if _tex_halo == null:
@@ -5212,13 +5252,17 @@ func _luz_electrica(pos: Vector3, tipo: String, dir := Vector3.ZERO, alcance := 
 			fil = _bombilla(cuelga, Vector3(0, ab.position.y + ab.size.y * (0.22 if modelo == "colgante_jaula" else 0.12), 0), null, true)
 			centro_luz = Vector3(0, -cable + ab.position.y + ab.size.y * 0.1, 0)
 		else:
-			# bombilla de filamento desnuda colgando del cable, con su casquillo
-			var b := _prop("luz_bombilla_edison", Vector3(0, -cable - 0.135, 0), 0.0, 1.1, false, n)
-			if b:
-				b.rotation.x = PI
-				b.position.y = -cable
-			fil = _bombilla(n, Vector3(0, -cable - 0.07, 0), null, true)
-			centro_luz = Vector3(0, -cable - 0.09, 0)
+			# bombilla Edison de verdad colgando del cable: casquillo, cristal y filamento que se pone al rojo
+			var cristales: Array = []
+			var b := _bombilla_real(n, Vector3(0, -cable, 0), cristales)
+			if b == null:
+				b = _prop("luz_bombilla_edison", Vector3(0, -cable - 0.135, 0), 0.0, 1.1, false, n)
+				if b:
+					b.rotation.x = PI
+					b.position.y = -cable
+			fil = _bombilla(n, Vector3(0, -cable - 0.09, 0), null, true)
+			centro_luz = Vector3(0, -cable - 0.1, 0)
+			n.set_meta("cristales", cristales)
 	var light := OmniLight3D.new()
 	light.position = centro_luz
 	light.light_color = COLOR_BOMBILLA
@@ -5232,6 +5276,7 @@ func _luz_electrica(pos: Vector3, tipo: String, dir := Vector3.ZERO, alcance := 
 	light.visible = false
 	n.add_child(light)
 	var l := {"node": n, "light": light, "bulb": fil, "pos": pos, "room": id, "on": false, "broken": false, "halo": halo, "tipo": tipo,
+		"cristales": n.get_meta("cristales", []),
 		"base": light.light_energy, "flicker": 0.0, "modo": "fija", "e": 1.0, "obj": 1.0, "t": _rng.randf() * 4.0, "rafaga": 0}
 	lamps.append(l)
 	if id >= 0:
@@ -5294,8 +5339,10 @@ func _iluminar_salas() -> void:
 		elif r.get("lamps", []).is_empty():
 			var c := rc.get_center()
 			var tipo := "colgante"
-			if t in ["servicio", "sotano"] or int(r.level) >= 2:
-				tipo = "desnuda" if _rng.randf() < 0.6 else "colgante"
+			if t in ["servicio", "sotano", "bano", "cocina"] or int(r.level) >= 2:
+				tipo = "desnuda" if _rng.randf() < 0.8 else "colgante"
+			elif _rng.randf() < 0.3:
+				tipo = "desnuda"
 			var alc := clampf(maxf(rc.size.x, rc.size.y) * 0.75, 5.5, 10.0)
 			if t == "dormitorio" or t == "epicentro":
 				# dos apliques a los lados del centro de la pared más larga
@@ -5365,6 +5412,7 @@ func _parpadeo(l: Dictionary, delta: float) -> void:
 	var e: float = l.e
 	(l.light as OmniLight3D).light_energy = float(l.base) * e
 	(l.bulb as StandardMaterial3D).emission_energy_multiplier = 4.0 * e * e
+	_brillo(l, e)
 	if l.has("halo") and is_instance_valid(l.halo):
 		(l.halo as MeshInstance3D).visible = e > 0.08
 		((l.halo as MeshInstance3D).material_override as StandardMaterial3D).albedo_color.a = 0.75 * e
@@ -5383,6 +5431,7 @@ func set_lamp(l: Dictionary, on: bool) -> void:
 	l.on = on
 	l.light.visible = on
 	l.bulb.emission_energy_multiplier = 3.5 if on else 0.0
+	_brillo(l, 1.0 if on else 0.0)
 	if l.has("halo") and is_instance_valid(l.halo):
 		(l.halo as MeshInstance3D).visible = on
 	if l.has("zumbido"):
@@ -6934,6 +6983,7 @@ func _process(delta: float) -> void:
 			l.flicker -= delta
 			var k := 0.15 if randf() < 0.5 else 1.0
 			l.light.light_energy = l.base * k
+			_brillo(l, k)
 			if l.has("halo") and is_instance_valid(l.halo):
 				(l.halo as MeshInstance3D).visible = k > 0.5
 			if l.flicker <= 0.0:
