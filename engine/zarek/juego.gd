@@ -926,7 +926,7 @@ func _huida() -> void:
 	player.frozen = true
 	elena.can_catch = false
 	elena.vanish(999.0)
-	sound_at("golpe_madera", mansion.car_pos + Vector3(0, 1, 0), 0.0)
+	sound_at("coche_puerta" if ZarekSonido.hay("coche_puerta") else "golpe_madera", mansion.car_pos + Vector3(0, 1, 0), 0.0)
 	_black_target = 1.0
 	await get_tree().create_timer(1.4).timeout
 	message("El motor tosió… y arrancó.\nNo miré atrás. Ni siquiera cuando la oí gritar mi nombre desde el sótano.", 5.0)
@@ -1555,6 +1555,15 @@ func _paso_sofia(pp: Vector3, noise: float) -> void:
 			tono = 0.85
 		elif t in ["cocina", "bano", "servicio"] or n.begins_with("Vestíbulo") or n.begins_with("Baño") or n.begins_with("Cocina") or n.begins_with("Antecocina") or n.begins_with("Despensa"):
 			sup = "baldosa"
+		elif t in ["sala", "dormitorio", "epicentro"] and ZarekSonido.hay("paso_alfombra"):
+			# en el centro de salones y dormitorios está la alfombra: pasos ahogados
+			var rc: Rect2 = mansion.rooms[r].rect
+			if rc.grow(-minf(rc.size.x, rc.size.y) * 0.22).has_point(Vector2(pp.x, pp.z)):
+				sup = "alfombra"
+		# en las escaleras (entre dos plantas) crujen los peldaños
+		var sobre_planta := fposmod(pp.y, ZarekMansion.LEVEL_H)
+		if sobre_planta > 0.35 and sobre_planta < ZarekMansion.LEVEL_H - 0.35 and ZarekSonido.hay("paso_escalera"):
+			sup = "escalera"
 	for q in mansion.charcos:
 		if absf((q as Vector3).y - pp.y) < 1.2 and Vector2(q.x - pp.x, q.z - pp.z).length() < 0.8:
 			sup = "agua"
@@ -1596,9 +1605,10 @@ func _casa_viva(delta: float) -> void:
 		var c := Vector3(rc.get_center().x, float(_sala_capilla.y) + 1.2, rc.end.y - 2.0)
 		var d := c.distance_to(pp)
 		if d < 45.0:
-			ZarekSonido.en(self, "madre_gime", c, 4.0 if d < 15.0 else 8.0, 50.0, randf_range(0.9, 1.05))
-			if randf() < 0.6:
-				sound_at("tintineo", c + Vector3(0.5, -0.8, 0), 2.0)
+			var voz := "elena_voz" if ZarekSonido.hay("elena_voz") and randf() < 0.4 else "madre_gime"
+			ZarekSonido.en(self, voz, c, 4.0 if d < 15.0 else 8.0, 50.0, randf_range(0.9, 1.05) if voz == "madre_gime" else 1.0)
+			if randf() < 0.7:
+				sound_at("cadenas" if ZarekSonido.hay("cadenas") else "tintineo", c + Vector3(0.5, -0.8, 0), 2.0)
 	_t_carne -= delta
 	if _t_carne <= 0.0 and not _sala_matadero.is_empty():
 		_t_carne = randf_range(40.0, 80.0)
@@ -2095,7 +2105,7 @@ func _registro_tick(delta: float) -> void:
 			_reg_hold = {}
 			bar_rit.visible = false
 			ZarekRegistro.abrir(mansion, x)
-			sound_at("cajon_abrir" if String(x.tipo) == "cajon" else "puerta_rendija", (x.pos as Vector3) + Vector3(0, 0.6, 0), -4.0)
+			sound_at("cajon_abrir" if String(x.tipo) == "cajon" else ("armario" if ZarekSonido.hay("armario") else "puerta_rendija"), (x.pos as Vector3) + Vector3(0, 0.6, 0), -4.0)
 			elena.hear(player.global_position, 3.0)
 			match String(x.botin):
 				"pila":
@@ -2774,7 +2784,16 @@ func _suceso_tick(delta: float) -> void:
 		return
 	var dentro := mansion.inside_house(player.global_position)
 	if snd_lluvia:
-		snd_lluvia.volume_db = lerpf(snd_lluvia.volume_db, -16.0 if dentro else -6.0, minf(1.0, delta * 2.0))
+		snd_lluvia.volume_db = lerpf(snd_lluvia.volume_db, -14.0 if dentro else -6.0, minf(1.0, delta * 2.0))
+		# dentro se oye la lluvia contra el tejado y las ventanas (otra grabación)
+		var quiero := "lluvia_dentro" if dentro and ZarekSonido.hay("lluvia_dentro") else "lluvia"
+		if snd_lluvia.get_meta("cual", "lluvia") != quiero:
+			snd_lluvia.set_meta("cual", quiero)
+			var st := ZarekSonido.uno(quiero)
+			if st is AudioStreamOggVorbis:
+				(st as AudioStreamOggVorbis).loop = true
+			snd_lluvia.stream = st
+			snd_lluvia.play()
 	_t_trueno -= delta
 	if _t_trueno <= 0.0:
 		_t_trueno = randf_range(14.0, 35.0)
@@ -2810,12 +2829,28 @@ func _secreto(id: String) -> void:
 		secretos_noche.append(id)
 	sound_at("pagina" if ZarekSonido.hay("pagina") else "recoger", player.global_position, -4.0)
 	_leer_nota({"titulo": s[2], "texto": s[3], "leida": true})
+	_poner_cinta(id)
 	var n := ZarekSecretos.cuantos()
 	if nuevo:
 		message("SECRETO %d/%d · %s guardado en el archivo" % [n, ZarekSecretos.TOTAL, ZarekSecretos.ICONO[s[1]]], 3.5)
 	else:
 		message("Esto ya lo había visto en otra noche…", 2.0)
 	sanity = maxf(0.0, sanity - 4.0)
+
+## Las cintas se oyen (voces hechas con Kokoro, con efecto de cinta vieja) a la vez que se leen.
+var snd_cinta: AudioStreamPlayer
+func _poner_cinta(id: String) -> void:
+	if not ZarekSonido.hay("cinta_" + id):
+		return
+	if snd_cinta == null:
+		snd_cinta = AudioStreamPlayer.new()
+		snd_cinta.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(snd_cinta)
+	snd_cinta.stream = ZarekSonido.uno("cinta_" + id)
+	snd_cinta.volume_db = 0.0
+	snd_cinta.play()
+	if state in ["juego", "escondido"] and elena:
+		elena.hear(player.global_position, 4.0)  # la grabadora suena: algo de ruido
 
 ## Archivo: los secretos encontrados en todas las noches, para volver a leerlos.
 func _abrir_archivo() -> void:
@@ -2866,13 +2901,20 @@ func _abrir_archivo() -> void:
 		b.custom_minimum_size = Vector2(360, 44)
 		b.clip_text = true
 		if ok:
-			b.pressed.connect(func(): texto.text = String(s[2]).to_upper() + "\n\n" + String(s[3]))
+			b.pressed.connect(func():
+				texto.text = String(s[2]).to_upper() + "\n\n" + String(s[3])
+				if s[1] == "cinta":
+					_poner_cinta(String(s[0]))
+				elif snd_cinta:
+					snd_cinta.stop())
 		lista.add_child(b)
 	var volver := Button.new()
 	volver.text = "VOLVER"
 	volver.custom_minimum_size = Vector2(200, 56)
 	volver.add_theme_font_size_override("font_size", 24)
 	volver.pressed.connect(func():
+		if snd_cinta:
+			snd_cinta.stop()
 		root.queue_free()
 		archivo_box = null)
 	izq.add_child(volver)

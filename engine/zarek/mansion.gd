@@ -6056,7 +6056,13 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 			if nombre.contains(clave) and not nombre.contains("brass") and not nombre.contains("metal") and not nombre.contains("wooden"):
 				rb.rompible = true
 		if _es_metal(nombre):
-			rb.sonido = "tintineo"
+			rb.sonido = "impacto_metal" if ZarekSonido.hay("impacto_metal") else "tintineo"
+		elif rb.rompible:
+			rb.sonido = "impacto_ceramica" if ZarekSonido.hay("impacto_ceramica") else "tintineo"
+		elif nombre.contains("book") or nombre.contains("bible") or nombre.contains("paper") or nombre.contains("letter") or nombre.contains("scroll") or nombre.contains("map"):
+			rb.sonido = "impacto_libro" if ZarekSonido.hay("impacto_libro") else "golpe_madera"
+		elif nombre.contains("teddy") or nombre.contains("pillow") or nombre.contains("shawl") or nombre.contains("sack") or nombre.contains("dress") or nombre.contains("hat") or nombre.contains("towel") or nombre.contains("glove"):
+			rb.sonido = "impacto_tela" if ZarekSonido.hay("impacto_tela") else "golpe_madera"
 		rb.position = p
 		rb.rotation.y = yaw
 		n.position = Vector3.ZERO
@@ -6703,7 +6709,13 @@ func _identidad_salas() -> void:
 		if ZarekHistoria.SONIDO.has(nombre):
 			var cfg: Array = ZarekHistoria.SONIDO[nombre]
 			var son := AudioStreamPlayer3D.new()
-			son.stream = (AetherSynth.make(cfg[0]) as AudioStreamWAV).duplicate()
+			# grabación real si la hay (reloj, latido, viento, nana); si no, el sonido hecho por código
+			if ZarekSonido.variantes(cfg[0]).size() == 1 and ZarekSonido.uno(cfg[0]) is AudioStreamOggVorbis:
+				var og := (ZarekSonido.uno(cfg[0]) as AudioStreamOggVorbis).duplicate() as AudioStreamOggVorbis
+				og.loop = true
+				son.stream = og
+			else:
+				son.stream = (AetherSynth.make(cfg[0]) as AudioStreamWAV).duplicate()
 			if son.stream is AudioStreamWAV:
 				(son.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
 				(son.stream as AudioStreamWAV).loop_end = (son.stream as AudioStreamWAV).data.size() / 2

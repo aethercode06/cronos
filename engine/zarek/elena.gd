@@ -621,8 +621,17 @@ func _physics_process(delta: float) -> void:
 		_creak_t = randf_range(5.0, 11.0)
 		if es_damian and state != S.DORMANT:
 			_creak_t = randf_range(4.0, 9.0) if state in [S.SEARCH, S.INVESTIGATE] else randf_range(7.0, 14.0)
-			_snd_one.stream = ZarekSonido.uno("risa" if (state == S.SEARCH and randf() < 0.25) else "damian_gruñe")
-			_snd_one.volume_db = -2.0
+			var que := "damian_gruñe"
+			if state in [S.SEARCH, S.INVESTIGATE]:
+				var r := randf()
+				if r < 0.35 and ZarekSonido.hay("damian_voz"):
+					que = "damian_voz"   # te habla mientras te busca
+				elif r < 0.55 and ZarekSonido.hay("damian_olfatea"):
+					que = "damian_olfatea"
+				elif r < 0.7:
+					que = "risa"
+			_snd_one.stream = ZarekSonido.uno(que)
+			_snd_one.volume_db = 2.0 if que == "damian_voz" else -2.0
 		else:
 			_snd_one.stream = ZarekSonido.uno("crujido")
 		_snd_one.play()

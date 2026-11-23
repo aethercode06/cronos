@@ -108,7 +108,7 @@ func romper() -> void:
 		t.angular_velocity = Vector3(rng.randf_range(-15, 15), rng.randf_range(-15, 15), rng.randf_range(-15, 15))
 	if lleno > 0.0:
 		_charco(padre, pos, rng)
-	_sonido("vidrio", 2.0, padre, pos)
+	_sonido("rotura_vidrio" if ZarekSonido.hay("rotura_vidrio") else "vidrio", 2.0, padre, pos)
 	get_tree().call_group("zarek_oyentes", "oir_ruido", pos, 14.0)
 	queue_free()
 
