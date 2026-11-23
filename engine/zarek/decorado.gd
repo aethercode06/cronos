@@ -1256,30 +1256,12 @@ func _pasillo_sotano(r: Dictionary) -> void:
 
 ## Galería de servicio (14,4 × 12): taller y trastero; pasadizo al estudio en (4,8; 3,6); armario en (13,2; 1,2).
 func _galeria_servicio(r: Dictionary) -> void:
+	# ahora es el matadero de Damián (ZarekGore.matadero); se conservan las viguetas, la tubería y el armario
 	var W: float = r.rect.size.x
-	var D: float = r.rect.size.y
 	_viguetas(r)
 	_tuberia(r, 0.4, 0.4, W - 0.4, 0.4)
-	_en(r, "WoodenTable_03", 9.0, 0.45, 0.0)
-	_en(r, "wooden_lantern_01", 8.6, 0.45, 0.0, 0.7, 0.83, false)
-	_en(r, "hatchet", 9.3, 0.5, 1.2, 1.2, 0.83, false)
-	_en(r, "folding_wooden_stool", 9.0, 1.2, 0.4)
-	_en(r, "wooden_ladder", 11.4, 0.4, 0.0, 1.3)
-	_en(r, "rusted_spade_01", 12.2, 0.15, 0.0, 1.0, 0.0, false)
-	_en(r, "vintage_wooden_drawer_01", 0.5, 7.6, PI * 0.5, 0.9)
 	_en(r, "vintage_cabinet_01", W - 0.4, 6.0, -PI * 0.5)
-	# muebles viejos bajados aquí y tapados con sábanas
-	for q in [Vector3(3.0, 0, 8.6), Vector3(5.2, 0, 9.4), Vector3(11.0, 0, 9.0)]:
-		var rect: Rect2 = r.rect
-		var c := Vector3(rect.position.x + q.x, float(r.y), rect.position.y + q.z)
-		var cub := m.box(Vector3(1.2 + rng.randf() * 0.6, 0.9 + rng.randf() * 0.7, 0.8 + rng.randf() * 0.4), c + Vector3(0, 0.6, 0), m._mat.sabana, true)
-		cub.rotation.y = rng.randf() * 0.6
-	_en(r, "treasure_chest", 1.6, D - 0.5, 0.0, 0.9)
-	_en(r, "vintage_suitcase", 7.4, D - 0.4, 0.2)
-	_en(r, "obj_sack_v1", 8.6, 10.0, 2.4)
-	_en(r, "wooden_crate_02", W - 0.4, D - 0.8, 0.0)
-	_en(r, "watering_can_metal_01", W - 1.2, D - 0.4, 0.6)
-	_telas(r)
+	ZarekGore.matadero(m, r)
 
 ## Archivo (12 × 12): puertas norte y sur (x 4,8-7,2); armario en (1,2; 9,6). Papeles de la familia y de la mina.
 func _archivo(r: Dictionary) -> void:

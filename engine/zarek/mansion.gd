@@ -166,11 +166,18 @@ func _pasos_build(q: int) -> Array:
 		func():
 			_build_stairs()
 			_roof()
+			_portico()
+			_decoracion_victoriana()
+			_tablas_rotas()
+			_miradores()
+			_techo_rico()
+			_frente_balcon()
 			_ornatos_fachada()
 			_abandono_exterior()
 			_tiempo("casa", t0),
 		func():
 			_exterior()
+			_entorno_casa()
 			_tiempo("exterior", t0),
 		func():
 			_markers()
@@ -544,32 +551,41 @@ func _materials() -> void:
 	laton.roughness = 0.38
 	laton.metallic_specular = 0.6
 	_mat["laton_viejo"] = laton
-	_mat["fachada"] = _fachada_mat("Bricks066", 0.32, Color(0.66, 0.64, 0.58))
-	_mat["fachada"].set_shader_parameter("suciedad", 1.35)
+	_mat["fachada"] = _fachada_mat("TablasPintadas", 1.0 / 3.0, Color(1.0, 1.0, 1.0))
+	_mat["fachada"].set_shader_parameter("suciedad", 1.5)
+	_mat["fachada"].set_shader_parameter("alto_base", 2.6)
 	var torre := ShaderMaterial.new()
 	torre.shader = load("res://zarek/torre.gdshader")
-	torre.set_shader_parameter("albedo_tex", load("res://zarek/texturas/Bricks066/color.jpg"))
-	torre.set_shader_parameter("normal_tex", load("res://zarek/texturas/Bricks066/normal.jpg"))
-	torre.set_shader_parameter("rough_tex", load("res://zarek/texturas/Bricks066/rough.jpg"))
+	torre.set_shader_parameter("albedo_tex", load("res://zarek/texturas/TablasPintadas/color.jpg"))
+	torre.set_shader_parameter("normal_tex", load("res://zarek/texturas/TablasPintadas/normal.jpg"))
+	torre.set_shader_parameter("rough_tex", load("res://zarek/texturas/TablasPintadas/rough.jpg"))
+	torre.set_shader_parameter("color", Vector3(0.7, 0.7, 0.7))
 	_mat["fachada_torre"] = torre
-	_mat["piedra_clara"] = _fachada_mat("Travertine009", 0.45, Color(0.66, 0.63, 0.56))
-	_mat["piedra_clara"].set_shader_parameter("suciedad", 1.25)
+	# molduras exteriores (marcos, cornisas, esquineras, pórtico): madera pintada de crema, sucia y gastada
+	_mat["piedra_clara"] = _fachada_mat("Plaster007", 0.5, Color(0.5, 0.48, 0.44))
+	_mat["piedra_clara"].set_shader_parameter("suciedad", 1.6)
 	_mat["contraventana"] = _pbr("Wood049", 0.8, Color(0.16, 0.2, 0.17), 0.7)
-	_mat["tejado"] = _pbr("RoofingTiles013A", 0.5, Color(0.9, 0.9, 0.95), 0.9)
+	_mat["tejado"] = _fachada_mat("RoofingTiles013A", 0.5, Color(0.62, 0.64, 0.66))
+	_mat["tejado"].set_shader_parameter("suciedad", 1.6)
+	_mat["tejado"].set_shader_parameter("rugosidad_min", 0.82)
+	_mat["tejado"].set_shader_parameter("especular", 0.15)
 	_mat["cesped"] = _suelo("Ground037", "ScatteredLeaves009", "Ground110", 0.25, Color(0.5, 0.52, 0.42), Color(0.66, 0.62, 0.56), Color(0.75, 0.72, 0.68), 0.3, 0.2)
 	_mat["bosque"] = _suelo("ScatteredLeaves009", "Ground085", "Ground037", 0.25, Color(0.7, 0.68, 0.62), Color(0.55, 0.5, 0.45), Color(0.48, 0.52, 0.4), 0.32, 0.28)
 	_mat["tierra"] = _suelo("Ground110", "Ground085", "ScatteredLeaves009", 0.35, Color(0.85, 0.82, 0.78), Color(0.62, 0.56, 0.5), Color(0.66, 0.62, 0.56), 0.35, 0.15)
 	_mat["agua"] = _plain(Color(0.03, 0.05, 0.07), 0.05, 0.3)
 	_mat["barro"] = _pbr("Ground085", 0.35, Color(0.35, 0.3, 0.26), 0.6)
+	_mat["ladrillo"] = _pbr("Bricks094", 0.55, Color(0.5, 0.4, 0.37), 1.0)
+	_mat["terracota"] = _plain(Color(0.42, 0.22, 0.15), 0.9)
 	_mat["madera_vieja"] = _pbr("Wood049", 0.5, Color(0.62, 0.57, 0.52), 0.9, 1.2)
 	_mat["madera"] = _pbr("Wood066", 0.55, Color(0.66, 0.74, 1.0), 0.75)
 	_mat["madera_clara"] = _pbr("WoodFloor043", 0.4, Color(0.9, 0.85, 0.8), 0.9)
 	_mat["moldura"] = _pbr("Plaster007", 0.8, Color(0.78, 0.73, 0.64), 0.7)
-	_mat["cimiento"] = _pbr("Bricks106A", 0.4, Color(0.8, 0.78, 0.75), 1.0)
+	_mat["cimiento"] = _pbr("Bricks106A", 0.4, Color(0.46, 0.43, 0.39), 1.0)
+	_mat["marco_ventana"] = _pbr("Plaster007", 0.8, Color(0.4, 0.38, 0.34), 1.0, 0.6)
 	# sótano: muros de sillería ennegrecida, suelo de losas, túneles en roca viva, hierro oxidado
 	_mat["muro_sotano"] = _pbr("Bricks106A", 0.42, Color(0.5, 0.46, 0.42), 1.0, 1.3)
 	_mat["losa"] = _pbr("Rock030", 0.3, Color(0.75, 0.72, 0.68), 1.0, 1.2)
-	_mat["roca"] = _pbr("Rock022", 0.3, Color(0.7, 0.66, 0.6), 1.0, 1.4)
+	_mat["roca"] = _pbr("Rock030", 0.35, Color(0.78, 0.74, 0.68), 1.0, 1.3)  # sin vetas horizontales: en los túneles largos hacían rayas en perspectiva
 	_mat["hierro"] = _pbr("Metal063", 0.6, Color(0.42, 0.33, 0.27), 1.0, 1.0)
 	_mat["hierro"].metallic = 0.6
 	_mat["tablas"] = _pbr("Planks037A", 0.45, Color(1, 1, 1), 0.95)
@@ -587,6 +603,11 @@ func _materials() -> void:
 	lit.emission = Color(1.0, 0.62, 0.28)
 	lit.emission_energy_multiplier = 1.4
 	_mat["ventana_luz"] = lit
+	var vela_m := _plain(Color(0.25, 0.12, 0.05), 0.4)
+	vela_m.emission_enabled = true
+	vela_m.emission = Color(1.0, 0.5, 0.18)
+	vela_m.emission_energy_multiplier = 0.45
+	_mat["vela"] = vela_m
 	var gold := _plain(Color(0.95, 0.7, 0.25), 0.3, 0.9)
 	gold.emission_enabled = true
 	gold.emission = Color(1.0, 0.65, 0.2)
@@ -835,6 +856,26 @@ func _level(key: String) -> void:
 		door_set["%s:%d:%d" % [d[0], int(d[1]), int(d[2])]] = true
 	# las celdas de balcón también abren hueco
 	var wall_h := WALL_H if level < 2 else 3.3
+	# ventanas: hueco cada cuatro celdas de muro exterior (antes cada dos); las salas que se quedarían sin
+	# ninguna recuperan la del centro de sus candidatas
+	var ventana_ok := {}
+	var cand_sala := {}
+	for k in edges:
+		var pk: PackedStringArray = k.split(":")
+		var ids0: Array = edges[k]
+		if _unique(ids0).size() == 1 and level >= 0 and level < 2 and not door_set.has(k) and (int(pk[1]) + int(pk[2])) % 2 == 1 and rooms[ids0[0]].type != "tunel":
+			cand_sala[ids0[0]] = cand_sala.get(ids0[0], []) + [k]
+			if (int(pk[1]) + int(pk[2])) % 4 == 1:
+				ventana_ok[k] = true
+	for sala in cand_sala:
+		var cs: Array = cand_sala[sala]
+		var alguna := false
+		for k in cs:
+			if ventana_ok.has(k):
+				alguna = true
+		if not alguna:
+			cs.sort()
+			ventana_ok[cs[cs.size() / 2]] = true
 	for k in edges:
 		var parts: PackedStringArray = k.split(":")
 		var horiz := parts[0] == "h"
@@ -845,7 +886,7 @@ func _level(key: String) -> void:
 		var exterior := _unique(ids).size() == 1
 		var room_a: Dictionary = rooms[ids[0]]
 		var is_door := door_set.has(k)
-		var window: bool = exterior and level >= 0 and level < 2 and not is_door and ((cx + cy) % 2 == 1) and room_a.type != "tunel"
+		var window: bool = ventana_ok.has(k)
 		_wall_unit(a, horiz, wall_h, _mat[room_a.paper], exterior, is_door, window, level, _unique(ids))
 
 func _unique(a: Array) -> Array:
@@ -916,27 +957,42 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 				box(zs, fuera + Vector3(0, 0.3, 0), _mat.cimiento, false, null, false)
 			if pc[2] < 0.01:
 				var im := Vector3(l, 0.22, 0.1) if horiz else Vector3(0.1, 0.22, l)
-				box(im, fuera + Vector3(0, -0.05 if level > 0 else 0.86, 0), _mat.moldura, false, null, false)
+				box(im, fuera + Vector3(0, -0.05 if level > 0 else 0.86, 0), _mat.piedra_clara, false, null, false)
+		elif _unique(ids).size() >= 2:
+			# muro entre dos salas: cada cara con el papel de su propia sala (antes las dos caras llevaban el de
+			# una sola, y en la otra sala aparecía el papel de la vecina)
+			var u := _unique(ids)
+			var r0: Dictionary = rooms[u[0]]
+			var r1: Dictionary = rooms[u[1]]
+			var c0: Vector2 = (r0.rect as Rect2).get_center()
+			var n0 := Vector3(0, 0, signf(c0.y - center.z)) if horiz else Vector3(signf(c0.x - center.x), 0, 0)
+			var half := Vector3(l, hh, thick * 0.5) if horiz else Vector3(thick * 0.5, hh, l)
+			box(half, pos + n0 * thick * 0.25, _mat[r0.paper], true)
+			box(half, pos - n0 * thick * 0.25, _mat[r1.paper], false)
 		else:
 			box(Vector3(l, hh, thick) if horiz else Vector3(thick, hh, l), pos, mat, true)
 	if level >= 0 and level < 2 and not is_door:
-		var off := inward * 0.03 if exterior else Vector3.ZERO
+		# revestimiento interior: en los muros exteriores solo por la cara de dentro (antes atravesaba el muro y
+		# asomaba por la fachada como una barandilla y una cornisa claras)
+		var grosor := func(e: float) -> float: return (thick * 0.5 + e * 0.5) if exterior else thick + e
+		var desp := func(e: float) -> Vector3: return inward * (thick * 0.25 + e * 0.25 + 0.005) if exterior else Vector3.ZERO
 		var rev_h := 1.1 if not window else 0.86
-		var wz := Vector3(len, rev_h, thick + 0.05) if horiz else Vector3(thick + 0.05, rev_h, len)
-		box(wz, center + Vector3(0, rev_h * 0.5, 0) + off, _mat.revestimiento, false, null, false)
+		var wz := Vector3(len, rev_h, grosor.call(0.05)) if horiz else Vector3(grosor.call(0.05), rev_h, len)
+		box(wz, center + Vector3(0, rev_h * 0.5, 0) + desp.call(0.05), _mat.revestimiento, false, null, false)
 		# paneles del revestimiento: montantes y travesaños en relieve
 		for k in 4:
-			var st := Vector3(0.07, rev_h - 0.3, thick + 0.085) if horiz else Vector3(thick + 0.085, rev_h - 0.3, 0.07)
-			box(st, a + along * (len * k / 3.0 + (0.035 if k == 0 else (-0.035 if k == 3 else 0.0))) + Vector3(0, 0.22 + (rev_h - 0.3) * 0.5, 0) + off, _mat.madera, false, null, false)
+			var st := Vector3(0.07, rev_h - 0.3, grosor.call(0.085)) if horiz else Vector3(grosor.call(0.085), rev_h - 0.3, 0.07)
+			box(st, a + along * (len * k / 3.0 + (0.035 if k == 0 else (-0.035 if k == 3 else 0.0))) + Vector3(0, 0.22 + (rev_h - 0.3) * 0.5, 0) + desp.call(0.085), _mat.madera, false, null, false)
 		for hy in [0.25, rev_h - 0.08]:
-			var rl := Vector3(len, 0.04, thick + 0.085) if horiz else Vector3(thick + 0.085, 0.04, len)
-			box(rl, center + Vector3(0, hy, 0) + off, _mat.madera, false, null, false)
+			var rl := Vector3(len, 0.04, grosor.call(0.085)) if horiz else Vector3(grosor.call(0.085), 0.04, len)
+			box(rl, center + Vector3(0, hy, 0) + desp.call(0.085), _mat.madera, false, null, false)
 		# zócalo, guardasilla, riel de cuadros y cornisa en dos escalones
 		for mol in [[0.11, 0.22, 0.1, "madera"], [rev_h + 0.03, 0.07, 0.12, "madera"], [h - 0.62, 0.045, 0.07, "madera"], [h - 0.2, 0.1, 0.16, "moldura"], [h - 0.085, 0.13, 0.3, "moldura"]]:
 			if window and float(mol[0]) > 0.5 and float(mol[0]) < 3.0:
 				continue
-			var ms := Vector3(len, float(mol[1]), thick + float(mol[2])) if horiz else Vector3(thick + float(mol[2]), float(mol[1]), len)
-			box(ms, center + Vector3(0, float(mol[0]), 0) + off, _mat[mol[3]], false, null, false)
+			var e := float(mol[2])
+			var ms := Vector3(len, float(mol[1]), grosor.call(e)) if horiz else Vector3(grosor.call(e), float(mol[1]), len)
+			box(ms, center + Vector3(0, float(mol[0]), 0) + desp.call(e), _mat[mol[3]], false, null, false)
 	if is_door:
 		_door(center, horiz, level, ids)
 	if window:
@@ -1045,19 +1101,19 @@ func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:
 	var glass := Vector3(1.6, 2.0, 0.04) if horiz else Vector3(0.04, 2.0, 1.6)
 	box(glass, c + Vector3(0, 1.9, 0), _mat.ventana_luz if lit else _mat.cristal, true, null, false)
 	var fr := Vector3(1.75, 0.1, thick + 0.1) if horiz else Vector3(thick + 0.1, 0.1, 1.75)
-	box(fr, c + Vector3(0, 0.9, 0), _mat.moldura, false, null, false)
-	box(fr, c + Vector3(0, 2.9, 0), _mat.moldura, false, null, false)
+	box(fr, c + Vector3(0, 0.9, 0), _mat.marco_ventana, false, null, false)
+	box(fr, c + Vector3(0, 2.9, 0), _mat.marco_ventana, false, null, false)
 	# parteluces finos de una ventana de guillotina, en el plano del cristal
 	var vb := Vector3(0.045, 2.0, 0.07) if horiz else Vector3(0.07, 2.0, 0.045)
-	box(vb, c + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
+	box(vb, c + Vector3(0, 1.9, 0), _mat.marco_ventana, false, null, false)
 	for hy in [1.55, 2.2]:
 		var hb := Vector3(1.6, 0.045, 0.07) if horiz else Vector3(0.07, 0.045, 1.6)
-		box(hb, c + Vector3(0, hy, 0), _mat.moldura, false, null, false)
+		box(hb, c + Vector3(0, hy, 0), _mat.marco_ventana, false, null, false)
 	# marco interior alrededor del hueco
 	var ej2: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
 	for sj in [-1.0, 1.0]:
 		var mj := Vector3(0.09, 2.0, 0.09) if horiz else Vector3(0.09, 2.0, 0.09)
-		box(mj, c + ej2 * sj * 0.79 + Vector3(0, 1.9, 0), _mat.moldura, false, null, false)
+		box(mj, c + ej2 * sj * 0.79 + Vector3(0, 1.9, 0), _mat.marco_ventana, false, null, false)
 	# por fuera: recerco de piedra clara con dintel y clave, alféizar sobre ménsulas, frontón (triangular en la
 	# planta baja, cornisa recta con ménsulas arriba) y contraventanas de madera abiertas contra el muro
 	var ej: Vector3 = Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
@@ -1394,19 +1450,12 @@ func _ornatos_fachada() -> void:
 	var cara := 0.26
 	var alto_total := lvl_y(2) + 3.4
 	var esquinas := [[r.position, Vector2(1, 1)], [Vector2(r.end.x, r.position.y), Vector2(-1, 1)], [Vector2(r.position.x, r.end.y), Vector2(1, -1)], [r.end, Vector2(-1, -1)]]
+	# esquineras: tablas verticales pintadas que cubren cada esquina
 	for e in esquinas:
 		var p: Vector2 = e[0]
 		var d: Vector2 = e[1]
-		var k := 0
-		var y := 0.55
-		while y < alto_total:
-			var largo := 0.75 if k % 2 == 0 else 0.45
-			var bx := box(Vector3(largo, 0.4, 0.42), Vector3(p.x + d.x * (largo * 0.5 - cara), y + 0.2, p.y - d.y * cara + d.y * 0.21 - d.y * 0.21), pc, false, self, false)
-			bx.position = Vector3(p.x + d.x * (largo * 0.5 - cara - 0.02), y + 0.2, p.y - d.y * (cara + 0.02) + d.y * 0.2)
-			var bz := box(Vector3(0.42, 0.4, 0.45 if k % 2 == 0 else 0.75), Vector3.ZERO, pc, false, self, false)
-			bz.position = Vector3(p.x - d.x * (cara + 0.02) + d.x * 0.2, y + 0.2, p.y + d.y * ((0.45 if k % 2 == 0 else 0.75) * 0.5 - cara - 0.02))
-			y += 0.43
-			k += 1
+		box(Vector3(0.32, alto_total - 0.5, 0.07), Vector3(p.x + d.x * (0.16 - cara), 0.5 + (alto_total - 0.5) * 0.5, p.y - d.y * (cara + 0.035)), pc, false, self, false)
+		box(Vector3(0.07, alto_total - 0.5, 0.32), Vector3(p.x - d.x * (cara + 0.035), 0.5 + (alto_total - 0.5) * 0.5, p.y + d.y * (0.16 - cara)), pc, false, self, false)
 	# cornisa con ménsulas bajo el alero
 	var yc := lvl_y(2) + 3.2
 	for lado in 4:
@@ -1434,6 +1483,7 @@ func _ornatos_fachada() -> void:
 ## capiteles, entablamento y frontón partido con clave; escalinata de piedra y dos faroles a los lados.
 ## Se abre como las demás (las dos hojas a la vez).
 func _puerta_principal(c: Vector3, horiz: bool, ids: Array) -> void:
+	_portada = c
 	var gap := 2.1
 	var alto := 3.2
 	var ej := Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
@@ -1631,10 +1681,10 @@ func _abandono_exterior() -> void:
 	_mm_trozos(q, hojas, quality >= 2, 50.0)
 	# --- luz roja temblorosa en una ventana del ático ---
 	_luz_atico = OmniLight3D.new()
-	_luz_atico.light_color = Color(0.9, 0.12, 0.05)
+	_luz_atico.light_color = Color(1.0, 0.55, 0.25)
 	_luz_atico.light_energy = 1.2
 	_luz_atico.omni_range = 4.0
-	_luz_atico.position = Vector3(r.get_center().x - r.size.x * 0.22, lvl_y(2) + 3.45 + 2.8, r.end.y - 0.3)
+	_luz_atico.position = Vector3(r.get_center().x - r.size.x * 0.22 + 0.85, lvl_y(2) + 3.45 + 2.0, r.end.y + 1.5)
 	add_child(_luz_atico)
 
 ## Textura de arañazos: cuatro surcos paralelos que bajan torciéndose, con astillas en los bordes.
@@ -1702,8 +1752,15 @@ func _roof() -> void:
 	box(Vector3(r.size.x + 1.5, 0.3, r.size.y + 1.5), Vector3(c.x, y + 0.15, c.y), _mat.tejado, false, self)
 	box(Vector3(r.size.x + 1.5, 0.3, 0.3), Vector3(c.x, y + 12.5, c.y), _mat.metal, false, self)
 	# crestería de hierro sobre la cumbrera
-	for k in int(r.size.x / 0.6):
-		box(Vector3(0.03, 0.45, 0.03), Vector3(r.position.x + 0.3 + k * 0.6, y + 12.85, c.y), _mat.metal, false, self, false)
+	var nb := int(r.size.x / 0.3)
+	for k in nb:
+		var alto_b := 0.55 if k % 3 == 0 else 0.38
+		box(Vector3(0.025, alto_b, 0.025), Vector3(r.position.x + 0.15 + k * 0.3, y + 12.65 + alto_b * 0.5, c.y), _mat.metal, false, self, false)
+	for hy in [12.72, 13.0]:
+		box(Vector3(r.size.x, 0.035, 0.035), Vector3(c.x, y + hy, c.y), _mat.metal, false, self, false)
+	for ex in [r.position.x - 0.6, r.end.x + 0.6]:
+		cyl(0.03, 0.06, 1.6, Vector3(ex, y + 13.45, c.y), _mat.metal, self, 6)
+		cyl(0.1, 0.1, 0.16, Vector3(ex, y + 13.6, c.y), _mat.metal, self, 8)
 	# muro del ático (fachada entre el primer piso y el tejado)
 	for s in [[r.position, Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), r.end], [r.position, Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), r.end]]:
 		var a: Vector2 = s[0]
@@ -1732,13 +1789,23 @@ func _roof() -> void:
 		roja.emission_enabled = true
 		roja.emission = Color(0.7, 0.06, 0.02)
 		roja.emission_energy_multiplier = 0.8
-		var ow := cyl(0.9, 0.9, 0.1, Vector3(c.x + sx, y + 2.8, r.end.y + 1.05), roja if sx < 0 else _mat.vidrio, self, 14)
-		ow.rotation.x = PI * 0.5
-	for cp in [Vector2(r.position.x + 8, c.y - 6), Vector2(r.end.x - 10, c.y + 4), Vector2(c.x - 3, c.y + 6)]:
-		box(Vector3(1.6, 12.0, 1.6), Vector3(cp.x, y + 8.0, cp.y), _mat.piedra, false, self)
-		box(Vector3(2.0, 0.3, 2.0), Vector3(cp.x, y + 14.1, cp.y), _mat.piedra, false, self)
-		for k in 2:
-			cyl(0.22, 0.25, 0.6, Vector3(cp.x - 0.35 + k * 0.7, y + 14.55, cp.y), _mat.cimiento, self, 8)
+		# dos ventanas de guillotina del ático (antes un óculo redondo, que hacía parecer la casa una iglesia)
+		for vx in [-0.85, 0.85]:
+			var wp := Vector3(c.x + sx + vx, y + 1.2, r.end.y + 1.04)
+			var vela: bool = sx < 0 and vx > 0  # en una ventana del ático tiembla la luz de una vela
+			box(Vector3(0.95, 1.55, 0.04), wp + Vector3(0, 0.78, 0), _mat.vela if vela else _mat.vidrio, false, self, false)
+			box(Vector3(0.04, 1.55, 0.06), wp + Vector3(0, 0.78, 0.03), _mat.marco_ventana, false, self, false)
+			box(Vector3(0.95, 0.04, 0.06), wp + Vector3(0, 0.95, 0.03), _mat.marco_ventana, false, self, false)
+			for s2 in [-1.0, 1.0]:
+				box(Vector3(0.12, 1.75, 0.08), wp + Vector3(s2 * 0.53, 0.78, 0.05), _mat.piedra_clara, false, self, false)
+			box(Vector3(1.25, 0.1, 0.18), wp + Vector3(0, -0.04, 0.08), _mat.piedra_clara, false, self, false)
+			box(Vector3(1.3, 0.16, 0.14), wp + Vector3(0, 1.66, 0.07), _mat.piedra_clara, false, self, false)
+	for cp in [Vector2(c.x + 9, c.y + 3)]:  # una sola chimenea, en el faldón delantero
+		box(Vector3(1.6, 10.6, 1.1), Vector3(cp.x, y + 7.3, cp.y), _mat.ladrillo, false, self)
+		box(Vector3(1.8, 0.16, 1.3), Vector3(cp.x, y + 11.9, cp.y), _mat.cimiento, false, self, false)
+		box(Vector3(1.9, 0.28, 1.4), Vector3(cp.x, y + 12.7, cp.y), _mat.cimiento, false, self, false)
+		for k in 3:
+			cyl(0.13, 0.17, 0.5, Vector3(cp.x - 0.48 + k * 0.48, y + 13.09, cp.y), _mat.terracota, self, 8)
 	# torre redonda con techo cónico (esquina delantera oeste)
 	var t0 := cell_to_world("baja", 0, 9)
 	# tambor de la torre: toca la pared de la sala de música sin entrar en ella y sobresale hacia el oeste y el sur
@@ -1750,15 +1817,992 @@ func _roof() -> void:
 	var tambor := cyl(rt, rt, th, tc + Vector3(0, th * 0.5 - 0.02, 0), _mat.fachada_torre, self, 48)
 	tambor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	cyl(0.0, rt + 1.0, 9.0, tc + Vector3(0, th + 4.5, 0), _mat.tejado, self, 24)
-	cyl(0.05, 0.05, 3.0, tc + Vector3(0, th + 10.0, 0), _mat.metal, self, 6)
+	cyl(0.04, 0.06, 0.9, tc + Vector3(0, th + 9.2, 0), _mat.metal, self, 6)
 	for lv in 3:
 		for k in 6:
 			var a := TAU * k / 6.0 + 0.3
 			var wp := tc + Vector3(cos(a) * (rt + 0.05), lvl_y(lv) + 1.9, sin(a) * (rt + 0.05))
 			if house_rect.grow(-0.12).has_point(Vector2(wp.x, wp.z)):
 				continue  # ventana que caería dentro de una sala
-			var w := box(Vector3(0.1, 2.0, 1.1), wp, _mat.ventana_luz if (k == 2 and lv == 2) else _mat.vidrio, false, self)
-			w.rotation.y = -a
+			var nd := Node3D.new()
+			nd.position = wp
+			nd.rotation.y = -a
+			add_child(nd)
+			box(Vector3(0.1, 2.0, 1.1), Vector3.ZERO, _mat.vela if (k == 2 and lv == 2) else _mat.vidrio, false, nd, false)
+			box(Vector3(0.12, 2.0, 0.04), Vector3(0.02, 0, 0), _mat.marco_ventana, false, nd, false)
+			box(Vector3(0.12, 0.04, 1.1), Vector3(0.02, 0.25, 0), _mat.marco_ventana, false, nd, false)
+			for s2 in [-1.0, 1.0]:
+				box(Vector3(0.14, 2.25, 0.12), Vector3(0.04, 0, s2 * 0.61), _mat.piedra_clara, false, nd, false)
+			box(Vector3(0.26, 0.1, 1.45), Vector3(0.08, -1.05, 0), _mat.piedra_clara, false, nd, false)
+			box(Vector3(0.26, 0.16, 1.5), Vector3(0.08, 1.15, 0), _mat.piedra_clara, false, nd, false)
+			for s2 in [-1.0, 1.0]:
+				box(Vector3(0.16, 0.22, 0.08), Vector3(0.08, 1.0, s2 * 0.66), _mat.piedra_clara, false, nd, false)
+
+## Decoración victoriana de madera tallada («gingerbread»): hastiales con tejas en escama, tablas de alero
+## caladas con colgantes, cercha decorativa y pináculo en cada vértice, aro en los óculos; friso de
+## dentículos bajo la cornisa; en la torre, banda de escamas, ménsulas bajo el alero y remate con bola; en
+## el pórtico, friso de husillos y ménsulas curvas. Todo sin colisión.
+func _decoracion_victoriana() -> void:
+	var r := house_rect
+	var c := r.get_center()
+	var y := lvl_y(2) + 3.45
+	var tr: Material = _mat.piedra_clara
+	var escamas := _fachada_mat("Escamas", 0.5, Color(0.95, 0.95, 0.95))
+	escamas.set_shader_parameter("suciedad", 0.9)
+	# --- hastiales delanteros ---
+	for sx in [-r.size.x * 0.22, r.size.x * 0.2]:
+		var gx: float = c.x + sx
+		var zf := r.end.y + 1.0
+		# tejas en escama en la parte alta del hastial (la de abajo sigue de tablas)
+		var h := 5.2
+		var esc := MeshInstance3D.new()
+		var em := PrismMesh.new()
+		em.size = Vector3(13.0 * h / 7.0, h, 0.04)
+		esc.mesh = em
+		esc.material_override = escamas
+		esc.position = Vector3(gx, y + 7.0 - h * 0.5, zf + 0.03)
+		esc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(esc)
+		# moldura horizontal donde empiezan las escamas
+		box(Vector3(13.0 * h / 7.0 + 0.3, 0.16, 0.12), Vector3(gx, y + 7.0 - h, zf + 0.07), tr, false, self, false)
+		# tablas de alero caladas a lo largo de los dos faldones, con colgantes torneados
+		var ang := atan2(7.8, 7.25)
+		var largo := sqrt(7.8 * 7.8 + 7.25 * 7.25)
+		for lado in [-1.0, 1.0]:
+			var mid := Vector3(gx + lado * 7.25 * 0.5, y + 3.9 - 0.32, r.end.y + 1.12)
+			var tabla := box(Vector3(largo, 0.42, 0.07), mid, tr, false, self, false)
+			tabla.rotation.z = -lado * ang
+			var n := int(largo / 0.55)
+			for k in range(1, n):
+				var t := float(k) / n
+				var p := Vector3(gx + lado * 7.25 * (1.0 - t), y + 7.8 * t - 0.6, r.end.y + 1.12)
+				cyl(0.035, 0.05, 0.3, p, tr, self, 6)
+				cyl(0.06, 0.06, 0.07, p + Vector3(0, -0.17, 0), tr, self, 8)
+			# remate tallado en el pie del faldón
+			box(Vector3(0.35, 0.8, 0.1), Vector3(gx + lado * 7.1, y - 0.2, r.end.y + 1.12), tr, false, self, false)
+		# cercha decorativa en el vértice: pendolón, tirante, tornapuntas y abanico de listones
+		var ap := Vector3(gx, y + 7.8 - 0.35, r.end.y + 1.14)
+		box(Vector3(0.16, 2.0, 0.12), ap + Vector3(0, -1.0, 0), tr, false, self, false)
+		cyl(0.09, 0.05, 0.4, ap + Vector3(0, -2.2, 0), tr, self, 8)
+		var ancho_t := 2.0 * 2.0 * 7.25 / 7.8
+		box(Vector3(ancho_t, 0.14, 0.12), ap + Vector3(0, -1.85, 0), tr, false, self, false)
+		# pináculo con aguja sobre el vértice
+		var cima := Vector3(gx, y + 7.8 + 0.05, r.end.y + 0.9)
+		box(Vector3(0.18, 0.4, 0.18), cima + Vector3(0, 0.2, 0), tr, false, self, false)
+	# --- friso de dentículos bajo la cornisa de toda la casa ---
+	var yd := lvl_y(2) + 3.2 - 0.4
+	for lado in 4:
+		var horiz := lado < 2
+		var l := r.size.x if horiz else r.size.y
+		var n := int(l / 0.32)
+		for k in n:
+			var t := -l * 0.5 + 0.16 + k * 0.32
+			var p := Vector3(c.x + t, yd, (r.position.y - 0.33) if lado == 0 else (r.end.y + 0.33)) if horiz else Vector3((r.position.x - 0.33) if lado == 2 else (r.end.x + 0.33), yd, c.y + t)
+			box(Vector3(0.14, 0.16, 0.12) if horiz else Vector3(0.12, 0.16, 0.14), p, tr, false, self, false)
+	# --- torre: banda de escamas en lo alto, moldura, ménsulas bajo el alero y remate con bola ---
+	var t0 := cell_to_world("baja", 0, 9)
+	var tc := t0 + Vector3(3.0, 0, 5.0)
+	var rt := 4.2
+	var th := lvl_y(3) + 1.0
+	var esc_t := ShaderMaterial.new()
+	esc_t.shader = load("res://zarek/torre.gdshader")
+	esc_t.set_shader_parameter("albedo_tex", load("res://zarek/texturas/Escamas/color.jpg"))
+	esc_t.set_shader_parameter("normal_tex", load("res://zarek/texturas/Escamas/normal.jpg"))
+	esc_t.set_shader_parameter("rough_tex", load("res://zarek/texturas/Escamas/rough.jpg"))
+	esc_t.set_shader_parameter("color", Vector3(0.85, 0.85, 0.85))
+	esc_t.set_shader_parameter("uv_escala", Vector2(TAU * rt / 2.0, 1.8 / 1.25))
+	esc_t.set_shader_parameter("casa", Vector4(r.position.x, r.position.y, r.size.x, r.size.y))
+	var banda := cyl(rt + 0.04, rt + 0.04, 1.8, tc + Vector3(0, th - 0.9, 0), esc_t, self, 48)
+	banda.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for hy in [th - 1.85, th - 0.05]:
+		var mold := cyl(rt + 0.13, rt + 0.13, 0.16, tc + Vector3(0, hy, 0), tr, self, 48)
+		mold.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	for k in 20:
+		var a := TAU * k / 20.0
+		var p := tc + Vector3(cos(a) * (rt + 0.35), th - 0.3, sin(a) * (rt + 0.35))
+		if r.grow(-0.3).has_point(Vector2(p.x, p.z)):
+			continue
+		var men := box(Vector3(0.62, 0.42, 0.12), p, tr, false, self, false)
+		men.rotation.y = -a
+	cyl(0.22, 0.22, 0.4, tc + Vector3(0, th + 9.0 + 0.1, 0), _mat.metal, self, 10).scale = Vector3(1, 1.1, 1)
+
+## Tablas arrancadas y colgando en la fachada: huecos negros donde faltan tablas y alguna tabla suelta,
+## torcida y medio caída, lejos de las ventanas. Solo decorado.
+func _tablas_rotas() -> void:
+	var r := house_rect
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1987
+	var fach: Material = _mat.fachada
+	var torre := Rect2(r.position.x - 1.5, cell_to_world("baja", 0, 9).z - 1.5, 3 * CELL + 3.0, 3 * CELL + 4.5)
+	for lado in 4:
+		var horiz := lado < 2
+		var l := r.size.x if horiz else r.size.y
+		var fuera := Vector3(0, 0, -1 if lado == 0 else 1) if horiz else Vector3(-1 if lado == 2 else 1, 0, 0)
+		var ej := Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+		var origen := Vector3(r.position.x, 0, r.position.y if lado == 0 else r.end.y) if horiz else Vector3(r.position.x if lado == 2 else r.end.x, 0, r.position.y)
+		var puestos := 0
+		var intentos := 0
+		while puestos < int(l / 2.6) and intentos < 300:
+			intentos += 1
+			var u := rng.randf_range(1.0, l - 1.0)
+			var yy := rng.randf_range(0.9, lvl_y(2) - 0.6)
+			var p := origen + ej * u + Vector3(0, yy, 0)
+			if torre.has_point(Vector2(p.x, p.z)):
+				continue
+			var mal := false
+			for w in ventanas_info:
+				var cw: Vector3 = w.c
+				if absf(cw.y - lvl_y(level_of(yy))) < 0.5 and Vector2(cw.x - p.x, cw.z - p.z).length() < 1.6:
+					mal = true
+			if absf(yy - lvl_y(1)) < 0.5:
+				mal = true  # impostas
+			if mal:
+				continue
+			puestos += 1
+			var ancho := rng.randf_range(0.8, 2.2)
+			var alto := 0.19 * rng.randi_range(1, 4)
+			var cara := p + fuera * 0.14
+			var hueco := box(Vector3(ancho, alto, 0.02) if horiz else Vector3(0.02, alto, ancho), cara, _mat.oscuro, false, self, false)
+			hueco.set_meta("rota", true)
+			# trozos de las tablas que faltan: una colgando torcida, a veces otra astillada en el borde
+			var tabla := box(Vector3(ancho * rng.randf_range(0.6, 1.1), 0.18, 0.035) if horiz else Vector3(0.035, 0.18, ancho * rng.randf_range(0.6, 1.1)), cara + fuera * 0.05 - Vector3(0, alto * 0.5 + 0.12, 0) + ej * rng.randf_range(-0.2, 0.2), fach, false, self, false)
+			var giro := rng.randf_range(0.25, 0.7) * (1 if rng.randf() < 0.5 else -1)
+			if horiz:
+				tabla.rotation.z = giro
+			else:
+				tabla.rotation.x = giro
+			if rng.randf() < 0.5:
+				box(Vector3(0.25, 0.18, 0.04) if horiz else Vector3(0.04, 0.18, 0.25), cara + fuera * 0.03 + ej * (ancho * 0.5 + 0.1) + Vector3(0, alto * 0.5 - 0.09, 0), fach, false, self, false)
+
+## Prisma vertical de planta poligonal (lista de puntos xz en orden, sentido horario visto desde arriba):
+## caras laterales hacia fuera y, si se pide, tapa arriba y abajo.
+func _prisma(pts: Array, y0: float, y1: float, mat: Material, tapas := true) -> MeshInstance3D:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in pts.size() - 1:
+		var a: Vector2 = pts[k]
+		var b: Vector2 = pts[k + 1]
+		var a0 := Vector3(a.x, y0, a.y); var b0 := Vector3(b.x, y0, b.y)
+		var a1 := Vector3(a.x, y1, a.y); var b1 := Vector3(b.x, y1, b.y)
+		for v in [a0, b0, b1, a0, b1, a1]:
+			st.set_uv(Vector2(v.x + v.z, v.y))
+			st.add_vertex(v)
+	if tapas:
+		for k in range(1, pts.size() - 2):
+			var p0: Vector2 = pts[0]; var p1: Vector2 = pts[k]; var p2: Vector2 = pts[k + 1]
+			for v in [Vector3(p0.x, y1, p0.y), Vector3(p1.x, y1, p1.y), Vector3(p2.x, y1, p2.y)]:
+				st.set_uv(Vector2(v.x + v.z, v.y))
+				st.add_vertex(v)
+			for v in [Vector3(p0.x, y0, p0.y), Vector3(p2.x, y0, p2.y), Vector3(p1.x, y0, p1.y)]:
+				st.set_uv(Vector2(v.x + v.z, v.y))
+				st.add_vertex(v)
+	st.generate_normals()
+	st.generate_tangents()  # mismo formato que las cajas: así la fusión de mallas las junta bien
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = mat
+	add_child(mi)
+	return mi
+
+## Mirador saliente de tres caras bajo cada hastial (estilo Reina Ana): nace sobre el tejadillo de la veranda
+## con ménsulas talladas y colgantes; columnillas torneadas en los cantos; paneles en relieve bajo cada
+## ventana; ventanas altas con montante superior y guardapolvo con ménsulas; banda de escamas entre plantas;
+## cornisa con dentículos y ménsulas; y un tejadillo de pizarra en faldones con crestería de hierro.
+func _mirador_en(p0: Vector3, yaw: float, y0: float, mensulas: bool) -> void:
+	var antes := get_child_count()
+	var tr: Material = _mat.piedra_clara
+	var esc := _fachada_mat("Escamas", 0.5, Color(0.95, 0.95, 0.95))
+	var panel := _pbr("Wood049", 0.8, Color(0.22, 0.21, 0.2), 1.0, 0.8)
+	var zf := 0.12
+	var y1 := lvl_y(2) + 2.55      # cornisa del mirador; encima va su tejadillo, bajo el hastial
+	var ab := 2.3                  # medio ancho junto al muro
+	var af := 1.35                 # medio ancho del frente
+	var sal := 1.0                 # cuánto sale
+	var ang_l := atan2(-(ab - af), sal)
+	var gx := 0.0
+	var pts := [Vector2(gx - ab, zf), Vector2(gx - af, zf + sal), Vector2(gx + af, zf + sal), Vector2(gx + ab, zf)]
+	var crece := func(g: float) -> Array:
+		return [Vector2(gx - ab - g, zf), Vector2(gx - af - g * 0.6, zf + sal + g), Vector2(gx + af + g * 0.6, zf + sal + g), Vector2(gx + ab + g, zf)]
+	_prisma(_al_reves(pts), y0, y1, _mat.fachada)
+	# zócalo moldurado, banda de escamas entre plantas y cornisa en tres escalones
+	_prisma(_al_reves(crece.call(0.14)), y0 - 0.12, y0 + 0.2, tr)
+	_prisma(_al_reves(crece.call(0.06)), y0 + 0.2, y0 + 0.3, tr)
+	_prisma(_al_reves(crece.call(0.1)), lvl_y(2) - 0.4, lvl_y(2) - 0.28, tr)
+	_prisma(_al_reves(crece.call(0.03)), lvl_y(2) - 0.28, lvl_y(2) + 0.22, esc)
+	_prisma(_al_reves(crece.call(0.1)), lvl_y(2) + 0.22, lvl_y(2) + 0.34, tr)
+	_prisma(_al_reves(crece.call(0.05)), y1 - 0.45, y1 - 0.3, tr)
+	_prisma(_al_reves(crece.call(0.14)), y1 - 0.12, y1, tr)
+	_prisma(_al_reves(crece.call(0.26)), y1, y1 + 0.12, tr)
+	# dentículos y ménsulas bajo la cornisa, a lo largo de las tres caras
+	for k in 3:
+		var a: Vector2 = pts[k]
+		var b: Vector2 = pts[k + 1]
+		var l := a.distance_to(b)
+		var giro: float = [ang_l, 0.0, -ang_l][k]
+		var fuera := Vector2(-(b.y - a.y), b.x - a.x).normalized()
+		var nd := int(l / 0.2)
+		for j in nd:
+			var q := a.lerp(b, (j + 0.5) / nd) + fuera * 0.08
+			var d := box(Vector3(0.08, 0.1, 0.12), Vector3(q.x, y1 - 0.2, q.y), tr, false, self, false)
+			d.rotation.y = giro
+		for j in 3:
+			var q := a.lerp(b, (j + 0.5) / 3.0) + fuera * 0.14
+			var m := box(Vector3(0.1, 0.32, 0.22), Vector3(q.x, y1 - 0.2, q.y), tr, false, self, false)
+			m.rotation.y = giro
+	# ménsulas talladas con colgante bajo el mirador (si nace en alto)
+	for k in (4 if mensulas else 0):
+		var u := lerpf(-af + 0.15, af - 0.15, k / 3.0)
+		var men := box(Vector3(0.16, 0.7, 0.85), Vector3(gx + u, y0 - 0.38, zf + sal - 0.42), tr, false, self, false)
+		men.rotation.x = -0.32
+		box(Vector3(0.2, 0.12, 0.2), Vector3(gx + u, y0 - 0.12, zf + sal - 0.05), tr, false, self, false)
+		cyl(0.07, 0.03, 0.32, Vector3(gx + u, y0 - 0.34, zf + sal - 0.05), tr, self, 8)
+	# columnillas torneadas en los cuatro cantos, con basa y capitel
+	for p in pts:
+		var pp: Vector2 = p
+		var cp := Vector3(pp.x, 0, pp.y + 0.03)
+		for tramo in [[y0 + 0.3, lvl_y(2) - 0.4], [lvl_y(2) + 0.34, y1 - 0.45]]:
+			var ya: float = tramo[0]
+			var yb: float = tramo[1]
+			cyl(0.06, 0.07, yb - ya - 0.3, cp + Vector3(0, (ya + yb) * 0.5, 0), tr, self, 8)
+			cyl(0.1, 0.1, 0.15, cp + Vector3(0, ya + 0.08, 0), tr, self, 8)
+			cyl(0.11, 0.07, 0.15, cp + Vector3(0, yb - 0.08, 0), tr, self, 8)
+			cyl(0.09, 0.09, 0.06, cp + Vector3(0, (ya + yb) * 0.5, 0), tr, self, 8)
+	# ventanas: frente y caras inclinadas, en el primer piso y en el ático
+	var caras := [[Vector2(gx, zf + sal), 0.0, 1.05], [(pts[0] + pts[1]) * 0.5, ang_l, 0.62], [(pts[2] + pts[3]) * 0.5, -ang_l, 0.62]]
+	var niveles := [0, 1, 2] if y0 < 1.0 else [1, 2]
+	for lv in niveles:
+		var yv := lvl_y(lv) + (1.0 if lv == 1 else 0.7)
+		var hv := 2.3 if lv == 1 else 1.35
+		for cf in caras:
+			var p2: Vector2 = cf[0]
+			var nd2 := Node3D.new()
+			nd2.position = Vector3(p2.x, yv, p2.y)
+			nd2.rotation.y = cf[1]
+			add_child(nd2)
+			var w: float = cf[2]
+			# panel en relieve bajo la ventana
+			if lv == niveles[0]:
+				box(Vector3(w, 0.55, 0.03), Vector3(0, -0.42, 0.02), panel, false, nd2, false)
+				box(Vector3(w + 0.1, 0.06, 0.06), Vector3(0, -0.13, 0.04), tr, false, nd2, false)
+				box(Vector3(w + 0.1, 0.06, 0.06), Vector3(0, -0.72, 0.04), tr, false, nd2, false)
+				box(Vector3(w * 0.6, 0.25, 0.04), Vector3(0, -0.42, 0.04), tr, false, nd2, false)
+			# cristal con montante arriba (vidrios pequeños) y guillotina
+			box(Vector3(w, hv, 0.04), Vector3(0, hv * 0.5, 0.02), _mat.vidrio, false, nd2, false)
+			box(Vector3(0.035, hv * 0.78, 0.06), Vector3(0, hv * 0.39, 0.04), _mat.marco_ventana, false, nd2, false)
+			for hy in [hv * 0.42, hv * 0.78]:
+				box(Vector3(w, 0.04, 0.06), Vector3(0, hy, 0.04), _mat.marco_ventana, false, nd2, false)
+			for k in 3:
+				box(Vector3(0.025, hv * 0.22, 0.06), Vector3(lerpf(-w * 0.5, w * 0.5, (k + 1) / 4.0), hv * 0.89, 0.04), _mat.marco_ventana, false, nd2, false)
+			for s in [-1.0, 1.0]:
+				box(Vector3(0.09, hv + 0.1, 0.08), Vector3(s * (w * 0.5 + 0.045), hv * 0.5, 0.05), tr, false, nd2, false)
+			box(Vector3(w + 0.26, 0.08, 0.16), Vector3(0, -0.04, 0.08), tr, false, nd2, false)
+			# guardapolvo con ménsulas
+			box(Vector3(w + 0.34, 0.12, 0.22), Vector3(0, hv + 0.14, 0.1), tr, false, nd2, false)
+			box(Vector3(w + 0.2, 0.08, 0.12), Vector3(0, hv + 0.04, 0.06), tr, false, nd2, false)
+			for s in [-1.0, 1.0]:
+				box(Vector3(0.07, 0.2, 0.14), Vector3(s * (w * 0.5 + 0.1), hv + 0.0, 0.08), tr, false, nd2, false)
+	# tejadillo de pizarra en faldones contra la fachada, con crestería
+	var base: Array = crece.call(0.3)
+	var tope := [Vector2(gx - ab + 0.3, zf), Vector2(gx - af + 0.35, zf + 0.35), Vector2(gx + af - 0.35, zf + 0.35), Vector2(gx + ab - 0.3, zf)]
+	_tejadillo(_al_reves(base), _al_reves(tope), y1 + 0.12, y1 + 1.05)
+	for k in 3:
+		var a: Vector2 = tope[k]
+		var b: Vector2 = tope[k + 1]
+		var l := a.distance_to(b)
+		var n := maxi(int(l / 0.18), 1)
+		for j in n + 1:
+			var q := a.lerp(b, float(j) / n)
+			box(Vector3(0.02, 0.3 if j % 2 == 0 else 0.2, 0.02), Vector3(q.x, y1 + 1.2, q.y), _mat.metal, false, self, false)
+		var mm := (a + b) * 0.5
+		var rail := box(Vector3(l, 0.025, 0.025), Vector3(mm.x, y1 + 1.33, mm.y), _mat.metal, false, self, false)
+		rail.rotation.y = -atan2(b.y - a.y, b.x - a.x)
+	if not mensulas:
+		var sb := StaticBody3D.new()
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = Vector3(ab * 2.0, y1, sal + 0.12)
+		cs.shape = bs
+		sb.add_child(cs)
+		sb.position = Vector3(0, y1 * 0.5, (sal + 0.12) * 0.5)
+		add_child(sb)
+	# todo lo construido (en el origen, mirando a +z) se lleva a la fachada que toque: se aplica la colocación a
+	# cada pieza directamente (sin nodo intermedio, para que la fusión de mallas las junte bien)
+	var colocar := Transform3D(Basis(Vector3.UP, yaw), p0)
+	for k in range(antes, get_child_count()):
+		var n := get_child(k)
+		if n is Node3D:
+			(n as Node3D).transform = colocar * (n as Node3D).transform
+		# las mallas hechas a mano (cuerpo, bandas, tejadillo) no entran en la fusión: giradas salían invisibles
+		if n is MeshInstance3D and (n as MeshInstance3D).mesh is ArrayMesh:
+			n.set_meta("dyn", true)
+	var fuera := Vector3(sin(yaw), 0, cos(yaw))
+	var lat := Vector3(cos(yaw), 0, -sin(yaw))
+	var ctr := p0 + fuera * 0.7
+	huellas_miradores.append(Rect2(Vector2(ctr.x, ctr.z) - Vector2(absf(lat.x) * 2.6 + absf(fuera.x) * 0.9, absf(lat.z) * 2.6 + absf(fuera.z) * 0.9), Vector2(absf(lat.x) * 5.2 + absf(fuera.x) * 1.8, absf(lat.z) * 5.2 + absf(fuera.z) * 1.8)))
+
+var huellas_miradores: Array[Rect2] = []
+
+## Miradores: dos en el frente (sobre la veranda, bajo los hastiales), dos detrás y uno en cada costado
+## (estos nacen del suelo).
+func _miradores() -> void:
+	var r := house_rect
+	var c := r.get_center()
+	for sx in [-r.size.x * 0.22, r.size.x * 0.2]:
+		_mirador_en(Vector3(c.x + sx, 0, r.end.y), 0.0, lvl_y(1) - 0.15, true)
+		_mirador_en(Vector3(c.x + sx, 0, r.position.y), PI, 0.3, false)
+	_mirador_en(Vector3(r.position.x, 0, r.position.y + 9.0), -PI * 0.5, 0.3, false)
+	_mirador_en(Vector3(r.end.x, 0, r.position.y + 10.0), PI * 0.5, 0.3, false)
+
+func _al_reves(a: Array) -> Array:
+	var b := a.duplicate()
+	b.reverse()
+	return b
+
+## Faldones de un tejadillo entre un contorno abajo y otro arriba (mismo número de puntos), abierto por detrás.
+func _tejadillo(abajo: Array, arriba: Array, y0: float, y1: float) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in abajo.size() - 1:
+		var a0 := Vector3(abajo[k].x, y0, abajo[k].y)
+		var b0 := Vector3(abajo[k + 1].x, y0, abajo[k + 1].y)
+		var a1 := Vector3(arriba[k].x, y1, arriba[k].y)
+		var b1 := Vector3(arriba[k + 1].x, y1, arriba[k + 1].y)
+		for v in [a0, b0, b1, a0, b1, a1]:
+			st.set_uv(Vector2(v.x + v.z, v.y))
+			st.add_vertex(v)
+	# remate plano arriba
+	for k in range(1, arriba.size() - 2):
+		for v in [Vector3(arriba[0].x, y1, arriba[0].y), Vector3(arriba[k + 1].x, y1, arriba[k + 1].y), Vector3(arriba[k].x, y1, arriba[k].y)]:
+			st.set_uv(Vector2(v.x + v.z, v.y))
+			st.add_vertex(v)
+	st.generate_normals()
+	st.generate_tangents()  # mismo formato que las cajas: así la fusión de mallas las junta bien
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = _mat.tejado
+	add_child(mi)
+
+## Chimeneas exteriores de ladrillo pegadas a los muros de los dos extremos: suben desde el suelo y pasan por
+## encima del tejado, con pecho escalonado y remate de piedra.
+func _chimeneas_laterales() -> void:
+	var r := house_rect
+	var c := r.get_center()
+	var cima := lvl_y(2) + 3.45 + 13.6
+	for lado in [-1.0, 1.0]:
+		var x: float = (r.position.x - 0.55) if lado < 0 else (r.end.x + 0.55)
+		var z := c.y - 4.5
+		box(Vector3(1.1, 7.0, 2.6), Vector3(x, 3.5, z), _mat.ladrillo, true, self)
+		var pecho := box(Vector3(1.1, 1.2, 2.6), Vector3(x - lado * 0.0, 7.4, z), _mat.ladrillo, false, self)
+		pecho.scale = Vector3(1, 1, 0.8)
+		box(Vector3(1.0, cima - 7.6, 1.5), Vector3(x, 7.6 + (cima - 7.6) * 0.5, z), _mat.ladrillo, false, self)
+		for hy in [lvl_y(1), lvl_y(2), cima - 1.0]:
+			box(Vector3(1.2, 0.16, 1.7), Vector3(x, hy, z), _mat.cimiento, false, self, false)
+		box(Vector3(1.3, 0.28, 1.8), Vector3(x, cima + 0.1, z), _mat.cimiento, false, self, false)
+		for k in 3:
+			cyl(0.13, 0.17, 0.55, Vector3(x, cima + 0.5, z - 0.45 + k * 0.45), _mat.terracota, self, 8)
+
+## Cuerpo central que sobresale sobre la entrada: balcón volado sobre la veranda con arquería de madera
+## tallada y barandilla; encima, un cuerpo saliente con ventana palladiana (arco de medio punto entre dos
+## ventanas estrechas) y un gran hastial propio, más alto que los otros dos, con escamas, tablas caladas y
+## cercha; y en lo alto del tejado, un mirador cuadrado acristalado con tejado a cuatro aguas y crestería.
+func _frente_balcon() -> void:
+	var r := house_rect
+	var c := r.get_center()
+	var tr: Material = _mat.piedra_clara
+	var esc := _fachada_mat("Escamas", 0.5, Color(0.95, 0.95, 0.95))
+	var x7 := cell_to_world("alta", 7, 0).x
+	var x11 := cell_to_world("alta", 11, 0).x
+	var cx := (x7 + x11) * 0.5
+	var sal := 2.1                       # cuánto sobresale el cuerpo central
+	var zf := r.end.y + sal
+	var yb := lvl_y(1)                   # suelo del balcón
+	var alto := 3.0
+	var ye := yb + alto + 0.45           # arranque del cuerpo de arriba
+	var y_alero := lvl_y(2) + 3.45
+	# --- suelo del balcón volado (sobre la veranda), con canto moldurado y ménsulas debajo ---
+	box(Vector3(x11 - x7 + 0.4, 0.22, sal + 0.1), Vector3(cx, yb - 0.11, r.end.y + sal * 0.5), _mat.madera_vieja, true, self, false)
+	box(Vector3(x11 - x7 + 0.6, 0.14, 0.2), Vector3(cx, yb - 0.08, zf + 0.05), tr, false, self, false)
+	for k in 6:
+		var x := lerpf(x7 + 0.3, x11 - 0.3, k / 5.0)
+		var m := box(Vector3(0.14, 0.45, 0.7), Vector3(x, yb - 0.4, zf - 0.35), tr, false, self, false)
+		m.rotation.x = -0.4
+	# --- arquería: cuatro columnas torneadas en el borde, arcos rebajados y friso calado ---
+	var xs: Array[float] = []
+	for k in 4:
+		xs.append(lerpf(x7 + 0.15, x11 - 0.15, k / 3.0))
+	var zc := zf - 0.15
+	for x in xs:
+		box(Vector3(0.36, 0.25, 0.36), Vector3(x, yb + 0.12, zc), tr, false, self, false)
+		cyl(0.11, 0.13, alto - 0.6, Vector3(x, yb + 0.25 + (alto - 0.6) * 0.5, zc), tr, self, 10)
+		for hy in [1.0, 2.0]:
+			cyl(0.16, 0.16, 0.1, Vector3(x, yb + hy, zc), tr, self, 10)
+		cyl(0.21, 0.13, 0.16, Vector3(x, yb + alto - 0.28, zc), tr, self, 10)
+		box(Vector3(0.34, 0.12, 0.34), Vector3(x, yb + alto - 0.14, zc), tr, false, self, false)
+		_static_cyl(0.15, alto, Vector3(x, yb + alto * 0.5, zc))
+	for k in 3:
+		var a: float = xs[k] + 0.2
+		var b: float = xs[k + 1] - 0.2
+		var m := (a + b) * 0.5
+		var semi := (b - a) * 0.5
+		for j in 10:
+			var t0 := PI * j / 10.0
+			var t1 := PI * (j + 1) / 10.0
+			var p0 := Vector2(m - cos(t0) * semi, yb + alto - 0.1 + sin(t0) * 0.38)
+			var p1 := Vector2(m - cos(t1) * semi, yb + alto - 0.1 + sin(t1) * 0.38)
+			var seg := box(Vector3(p0.distance_to(p1) + 0.03, 0.12, 0.12), Vector3((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5, zc), tr, false, self, false)
+			seg.rotation.z = atan2(p1.y - p0.y, p1.x - p0.x)
+		var nh := int((b - a) / 0.13)
+		for j in nh:
+			var x := lerpf(a, b, (j + 0.5) / nh)
+			var ay := yb + alto - 0.1 + sin(acos(clampf((x - m) / semi, -1, 1))) * 0.38
+			var top := ye - 0.05
+			if top - ay > 0.08:
+				cyl(0.016, 0.016, top - ay, Vector3(x, (top + ay) * 0.5, zc), tr, self, 4)
+	# --- barandilla del balcón: frente y costados ---
+	var tramos := []
+	for k in 3:
+		tramos.append([Vector3(xs[k] + 0.2, yb, zc), Vector3(xs[k + 1] - 0.2, yb, zc)])
+	tramos.append([Vector3(x7 + 0.15, yb, r.end.y + 0.15), Vector3(x7 + 0.15, yb, zc - 0.2)])
+	tramos.append([Vector3(x11 - 0.15, yb, r.end.y + 0.15), Vector3(x11 - 0.15, yb, zc - 0.2)])
+	for t in tramos:
+		var a: Vector3 = t[0]
+		var b: Vector3 = t[1]
+		var l := a.distance_to(b)
+		var m := (a + b) * 0.5
+		var horiz := absf(a.z - b.z) < 0.01
+		box(Vector3(l, 0.08, 0.12) if horiz else Vector3(0.12, 0.08, l), m + Vector3(0, 0.95, 0), tr, false, self, false)
+		box(Vector3(l, 0.07, 0.1) if horiz else Vector3(0.1, 0.07, l), m + Vector3(0, 0.2, 0), tr, false, self, false)
+		var nb := int(l / 0.15)
+		for k in nb:
+			var q := a.lerp(b, (k + 0.5) / nb)
+			cyl(0.025, 0.04, 0.72, q + Vector3(0, 0.57, 0), tr, self, 6)
+		_choque(Vector3(l, 1.4, 0.15) if horiz else Vector3(0.15, 1.4, l), m + Vector3(0, 0.7, 0))
+	# --- cuerpo saliente de arriba, sobre la arquería, con ventana palladiana ---
+	var ancho := x11 - x7 + 0.3
+	box(Vector3(ancho, y_alero - ye, sal), Vector3(cx, (ye + y_alero) * 0.5, r.end.y + sal * 0.5), _mat.fachada, false, self)
+	box(Vector3(ancho + 0.3, 0.26, sal + 0.15), Vector3(cx, ye - 0.05, r.end.y + sal * 0.5 + 0.05), tr, false, self, false)
+	box(Vector3(ancho + 0.3, 0.2, sal + 0.15), Vector3(cx, y_alero - 0.1, r.end.y + sal * 0.5 + 0.05), tr, false, self, false)
+	for s in [-1.0, 1.0]:
+		box(Vector3(0.22, y_alero - ye, 0.22), Vector3(cx + s * ancho * 0.5, (ye + y_alero) * 0.5, zf), tr, false, self, false)
+	var yv := ye + 0.75
+	var hv := 2.2
+	var vf := zf + 0.02
+	# ventana central de medio punto
+	box(Vector3(1.5, hv, 0.04), Vector3(cx, yv + hv * 0.5, vf), _mat.vidrio, false, self, false)
+	var arco_v := cyl(0.75, 0.75, 0.04, Vector3(cx, yv + hv, vf), _mat.vidrio, self, 20)
+	arco_v.rotation.x = PI * 0.5
+	for j in 12:
+		var t0 := PI * j / 12.0
+		var t1 := PI * (j + 1) / 12.0
+		var p0 := Vector2(cx - cos(t0) * 0.85, yv + hv + sin(t0) * 0.85)
+		var p1 := Vector2(cx - cos(t1) * 0.85, yv + hv + sin(t1) * 0.85)
+		var seg := box(Vector3(p0.distance_to(p1) + 0.03, 0.16, 0.12), Vector3((p0.x + p1.x) * 0.5, (p0.y + p1.y) * 0.5, vf + 0.04), tr, false, self, false)
+		seg.rotation.z = atan2(p1.y - p0.y, p1.x - p0.x)
+	box(Vector3(0.22, 0.32, 0.14), Vector3(cx, yv + hv + 0.88, vf + 0.06), tr, false, self, false)  # clave
+	box(Vector3(0.04, hv + 0.7, 0.06), Vector3(cx, yv + (hv + 0.7) * 0.5, vf + 0.03), _mat.marco_ventana, false, self, false)
+	box(Vector3(1.5, 0.04, 0.06), Vector3(cx, yv + hv * 0.55, vf + 0.03), _mat.marco_ventana, false, self, false)
+	box(Vector3(1.5, 0.05, 0.06), Vector3(cx, yv + hv, vf + 0.03), _mat.marco_ventana, false, self, false)
+	# ventanas estrechas a los lados y pilastras
+	for s in [-1.0, 1.0]:
+		var vx: float = cx + s * 1.55
+		box(Vector3(0.65, hv * 0.85, 0.04), Vector3(vx, yv + hv * 0.425, vf), _mat.vidrio, false, self, false)
+		box(Vector3(0.65, 0.04, 0.06), Vector3(vx, yv + hv * 0.5, vf + 0.03), _mat.marco_ventana, false, self, false)
+		box(Vector3(0.95, 0.14, 0.18), Vector3(vx, yv + hv * 0.85 + 0.07, vf + 0.06), tr, false, self, false)
+		for p in [-1.0, 1.0]:
+			box(Vector3(0.14, hv + 0.2, 0.12), Vector3(cx + s * (0.83 + (0.0 if p * s < 0 else 1.13)), yv + (hv + 0.2) * 0.5 - 0.1, vf + 0.05), tr, false, self, false)
+	box(Vector3(3.9, 0.12, 0.24), Vector3(cx, yv - 0.08, vf + 0.1), tr, false, self, false)
+	# --- gran hastial central, más alto y adelantado ---
+	var gw := 7.4
+	var gh := 6.6
+	var gz := zf - 1.6
+	var hast := MeshInstance3D.new()
+	var hm := PrismMesh.new()
+	hm.size = Vector3(gw, gh, 3.2)
+	hast.mesh = hm
+	hast.material_override = _mat.fachada
+	hast.position = Vector3(cx, y_alero + gh * 0.5, gz)
+	add_child(hast)
+	var es := MeshInstance3D.new()
+	var em := PrismMesh.new()
+	em.size = Vector3(gw * 0.75, gh * 0.75, 0.04)
+	es.mesh = em
+	es.material_override = esc
+	es.position = Vector3(cx, y_alero + gh - gh * 0.375, gz + 1.62)
+	add_child(es)
+	box(Vector3(gw * 0.75 + 0.3, 0.16, 0.12), Vector3(cx, y_alero + gh * 0.25, gz + 1.66), tr, false, self, false)
+	var tj := MeshInstance3D.new()
+	var tm := PrismMesh.new()
+	tm.size = Vector3(gw + 1.1, gh + 0.55, 3.7)
+	tj.mesh = tm
+	tj.material_override = _mat.tejado
+	tj.position = Vector3(cx, y_alero + (gh + 0.55) * 0.5 - 0.05, gz - 0.35)
+	add_child(tj)
+	var ang := atan2(gh + 0.55, (gw + 1.1) * 0.5)
+	var largo := sqrt(pow(gh + 0.55, 2) + pow((gw + 1.1) * 0.5, 2))
+	for s in [-1.0, 1.0]:
+		var tb := box(Vector3(largo, 0.4, 0.07), Vector3(cx + s * (gw + 1.1) * 0.25, y_alero + (gh + 0.55) * 0.5 - 0.3, gz + 1.7), tr, false, self, false)
+		tb.rotation.z = -s * ang
+		var n := int(largo / 0.5)
+		for k in range(1, n):
+			var t := float(k) / n
+			var p := Vector3(cx + s * (gw + 1.1) * 0.5 * (1.0 - t), y_alero + (gh + 0.55) * t - 0.6, gz + 1.7)
+			cyl(0.035, 0.05, 0.28, p, tr, self, 6)
+	# ventana del ático en el hastial y cercha en el vértice
+	var wy := y_alero + 1.6
+	box(Vector3(1.0, 1.5, 0.04), Vector3(cx, wy + 0.75, gz + 1.63), _mat.vidrio, false, self, false)
+	box(Vector3(0.04, 1.5, 0.06), Vector3(cx, wy + 0.75, gz + 1.66), _mat.marco_ventana, false, self, false)
+	for s in [-1.0, 1.0]:
+		box(Vector3(0.13, 1.7, 0.08), Vector3(cx + s * 0.57, wy + 0.75, gz + 1.68), tr, false, self, false)
+	box(Vector3(1.35, 0.1, 0.18), Vector3(cx, wy - 0.05, gz + 1.7), tr, false, self, false)
+	box(Vector3(1.4, 0.16, 0.14), Vector3(cx, wy + 1.62, gz + 1.69), tr, false, self, false)
+	var ap := Vector3(cx, y_alero + gh + 0.2, gz + 1.72)
+	box(Vector3(0.16, 1.8, 0.12), ap + Vector3(0, -0.9, 0), tr, false, self, false)
+	box(Vector3(1.9, 0.14, 0.12), ap + Vector3(0, -1.65, 0), tr, false, self, false)
+	cyl(0.09, 0.05, 0.35, ap + Vector3(0, -1.95, 0), tr, self, 8)
+	box(Vector3(0.2, 0.45, 0.2), Vector3(cx, y_alero + gh + 0.8, gz + 1.5), tr, false, self, false)
+	# --- mirador cuadrado en lo alto del tejado (sobre la cumbrera) ---
+	var ycum := lvl_y(2) + 3.45 + 12.5
+	var mc := Vector3(cx, ycum - 0.3, c.y)
+	var lado := 3.4
+	var hm2 := 2.6
+	box(Vector3(lado, hm2, lado), mc + Vector3(0, hm2 * 0.5, 0), _mat.fachada, false, self)
+	box(Vector3(lado + 0.3, 0.25, lado + 0.3), mc + Vector3(0, 0.1, 0), tr, false, self, false)
+	box(Vector3(lado + 0.45, 0.22, lado + 0.45), mc + Vector3(0, hm2 + 0.05, 0), tr, false, self, false)
+	for k in 4:
+		var giro := PI * 0.5 * k
+		var fuera := Vector3(sin(giro), 0, cos(giro))
+		var lat := Vector3(cos(giro), 0, -sin(giro))
+		for s in [-0.75, 0.75]:
+			var p: Vector3 = mc + fuera * (lado * 0.5 + 0.02) + lat * s + Vector3(0, 1.35, 0)
+			var v := box(Vector3(0.6, 1.5, 0.04), p, _mat.vidrio, false, self, false)
+			v.rotation.y = giro
+			var f := box(Vector3(0.6, 0.04, 0.06), p + Vector3(0, 0.15, 0) + fuera * 0.02, _mat.marco_ventana, false, self, false)
+			f.rotation.y = giro
+		for s in [-1.0, 0.0, 1.0]:
+			var pp := box(Vector3(0.14, hm2 - 0.3, 0.1), mc + fuera * (lado * 0.5 + 0.04) + lat * s * 1.55 + Vector3(0, hm2 * 0.5, 0), tr, false, self, false)
+			pp.rotation.y = giro
+	cyl(0.0, lado * 0.82, 2.4, mc + Vector3(0, hm2 + 1.35, 0), _mat.tejado, self, 4).rotation.y = PI * 0.25
+	cyl(0.08, 0.08, 0.2, mc + Vector3(0, hm2 + 2.6, 0), _mat.metal, self, 8)
+	cyl(0.02, 0.04, 0.6, mc + Vector3(0, hm2 + 2.95, 0), _mat.metal, self, 6)
+
+## Alrededores de la casa: arbustos crecidos, ortigas y helechos pegados a los cimientos y delante de la
+## veranda, hierba alta y matojos por el jardín abandonado, árboles muertos, tocones, farolas de gas a los
+## lados del camino de entrada (solo una encendida, temblando), dos estatuas y un banco viejo.
+func _entorno_casa() -> void:
+	var r := house_rect
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1888
+	var cx := _portada.x if _portada != Vector3.INF else r.get_center().x
+	var veranda := Rect2(cell_to_world("baja", 3, 0).x + 0.6, r.end.y, r.end.x - 3.1 - cell_to_world("baja", 3, 0).x - 0.6, 2.8)
+	var torre := Rect2(r.position.x - 1.3, cell_to_world("baja", 0, 9).z - 1.3, 3 * CELL + 2.6, 3 * CELL + 2.6)
+	# zonas que no se tocan: caminos, agua, edificios y la propia casa
+	var evitar: Array[Rect2] = [r.grow(0.35), veranda.grow(0.3), Rect2(cx - 2.6, r.end.y, 5.2, 40.0)]
+	for z in plan.exterior.zonas:
+		var t: String = z[1]
+		var nm: String = z[0]
+		if nm.begins_with("Bosque") or nm.begins_with("Terrenos"):
+			continue
+		if t in ["camino", "agua", "edificio"] or nm.begins_with("Fuente") or nm.begins_with("Pozo"):
+			evitar.append(Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL).grow(0.6))
+	var libre := func(p: Vector2) -> bool:
+		if not grounds_rect.grow(-1.0).has_point(p):
+			return false
+		for e in evitar:
+			if e.has_point(p):
+				return false
+		return true
+	var plantas := {"shrub_01": [], "shrub_02": [], "shrub_03": [], "shrub_04": [], "nettle_plant": [], "fern_02": [], "grass_medium_01": [], "dry_branches_medium_01": []}
+	var pon := func(nm: String, p: Vector2, s0: float, s1: float) -> void:
+		var sc := rng.randf_range(s0, s1)
+		plantas[nm].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, -0.02, p.y)))
+	var arbustos := ["shrub_01", "shrub_02", "shrub_03", "shrub_04"]
+	# 1) franja pegada a los cimientos, en los cuatro lados (y delante de la veranda)
+	var franjas := [[Vector2(r.position.x, r.position.y - 1.0), Vector2(r.end.x, r.position.y - 1.0)],
+		[Vector2(r.position.x - 1.0, r.position.y), Vector2(r.position.x - 1.0, r.end.y)],
+		[Vector2(r.end.x + 1.0, r.position.y), Vector2(r.end.x + 1.0, r.end.y)],
+		[Vector2(veranda.position.x, veranda.end.y + 1.0), Vector2(veranda.end.x, veranda.end.y + 1.0)]]
+	for f in franjas:
+		var a: Vector2 = f[0]
+		var b: Vector2 = f[1]
+		var l := a.distance_to(b)
+		var u := 0.6
+		while u < l:
+			var p := a.lerp(b, u / l) + Vector2(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.4, 0.4))
+			u += rng.randf_range(1.0, 2.2)
+			if absf(p.x - cx) < 2.6 and (p.y > r.end.y or p.y < r.position.y):
+				continue  # la entrada y la puerta trasera
+			if torre.has_point(p):
+				continue
+			var en_mirador := false
+			for hm in huellas_miradores:
+				if hm.grow(0.2).has_point(p):
+					en_mirador = true
+			if en_mirador:
+				continue
+			var cual := rng.randf()
+			if cual < 0.55:
+				pon.call(arbustos[rng.randi_range(0, 3)], p, 1.7, 2.8)
+			elif cual < 0.75:
+				pon.call("nettle_plant", p, 1.5, 2.3)
+			else:
+				pon.call("fern_02", p, 1.6, 2.5)
+			for k in 2:
+				pon.call("grass_medium_01", p + Vector2(rng.randf_range(-0.8, 0.8), rng.randf_range(-0.8, 0.8)), 1.5, 2.6)
+	# alrededor de la torre: arbustos siguiendo el círculo
+	var tc := cell_to_world("baja", 0, 9) + Vector3(3.0, 0, 5.0)
+	for k in 9:
+		var ang := PI * 0.35 + PI * 1.1 * k / 8.0
+		var p := Vector2(tc.x, tc.z) + Vector2(cos(ang), sin(ang)) * rng.randf_range(5.0, 5.6)
+		if not r.grow(0.3).has_point(p):
+			pon.call(arbustos[rng.randi_range(0, 3)], p, 1.8, 2.8)
+	# 2) jardín abandonado: matas de hierba alta, ortigas y ramas secas por todo el terreno
+	var n := 0
+	var intentos := 0
+	var total := 520 if quality >= 2 else 320
+	while n < total and intentos < total * 6:
+		intentos += 1
+		var p := Vector2(rng.randf_range(grounds_rect.position.x, grounds_rect.end.x), rng.randf_range(grounds_rect.position.y, grounds_rect.end.y))
+		if not libre.call(p):
+			continue
+		n += 1
+		var cual := rng.randf()
+		if cual < 0.7:
+			pon.call("grass_medium_01", p, 1.5, 2.8)
+		elif cual < 0.85:
+			pon.call("nettle_plant", p, 1.4, 2.2)
+		elif cual < 0.93:
+			pon.call(arbustos[rng.randi_range(0, 3)], p, 1.4, 2.4)
+		else:
+			pon.call("dry_branches_medium_01", p, 0.8, 1.3)
+	for nm in plantas:
+		_multi_planta(nm, plantas[nm])
+	# 3) árboles muertos y tocones cerca de la casa
+	var muertos := ["muerto_roble", "muerto_fresno", "muerto_roble_2", "muerto_alamo"]
+	var sitios := [Vector2(r.position.x - 7.0, r.end.y + 9.0), Vector2(r.end.x + 7.5, r.end.y + 7.0), Vector2(r.position.x - 6.0, r.position.y + 6.0), Vector2(cx + 13.0, r.end.y + 16.0), Vector2(r.end.x + 6.0, r.position.y + 4.0)]
+	for k in sitios.size():
+		var p: Vector2 = sitios[k]
+		if not libre.call(p):
+			continue
+		var malla := _malla_glb("res://zarek/arboles/%s.glb" % muertos[k % muertos.size()])
+		if malla == null:
+			continue
+		var mi := MeshInstance3D.new()
+		mi.mesh = malla
+		var sc := rng.randf_range(1.1, 1.5)
+		mi.transform = Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, -0.05, p.y))
+		add_child(mi)
+		_static_cyl(0.4, 4.0, Vector3(p.x, 2.0, p.y))
+	for p in [Vector2(cx - 9.0, r.end.y + 12.0), Vector2(cx + 8.0, r.end.y + 5.5), Vector2(r.position.x - 3.5, r.end.y + 4.0)]:
+		if libre.call(p):
+			_prop("tree_stump_0%d" % rng.randi_range(1, 2), Vector3(p.x, 0, p.y), rng.randf() * TAU, 1.2)
+	# 4) farolas de gas a los dos lados del camino de entrada; solo una sigue encendida
+	var enc := 0
+	for k in 3:
+		for s in [-1.0, 1.0]:
+			var p := Vector3(cx + s * 3.3, 0, r.end.y + 6.0 + k * 8.0)
+			if not grounds_rect.has_point(Vector2(p.x, p.z)):
+				continue
+			var f := _prop("street_lamp_01", p, (PI * 0.5) * -s, 1.0)
+			if f != null and enc == 0 and k == 1 and s > 0:
+				enc += 1
+				var luz := OmniLight3D.new()
+				luz.light_color = Color(1.0, 0.68, 0.35)
+				luz.light_energy = 1.1
+				luz.omni_range = 7.0
+				luz.position = p + Vector3(0, 3.0, 0)
+				add_child(luz)
+				_luz_farola = luz
+	# 5) dos estatuas a los lados del camino y un banco viejo junto a la torre
+	for s in [-1.0, 1.0]:
+		var p := Vector3(cx + s * 5.5, 0, r.end.y + 12.0)
+		if libre.call(Vector2(p.x, p.z)):
+			_prop("gothic_statue", p, 0.0, 1.0)
+	var pb := Vector2(tc.x - 2.0, tc.z + 7.0)
+	if libre.call(pb):
+		_prop("painted_wooden_bench", Vector3(pb.x, 0, pb.y), PI * 0.15, 1.0)
+
+var _luz_farola: OmniLight3D
+
+## Tejado más rico: dos hastiales también en la fachada de atrás (iguales a los de delante), hastiales
+## acabados en los dos extremos del tejado (pared con escamas, ventanas, tablas caladas y cercha) y bandas
+## de pizarra en escama a lo largo de los faldones, como en los tejados victorianos de pizarra de colores.
+func _techo_rico() -> void:
+	var r := house_rect
+	var c := r.get_center()
+	var y := lvl_y(2) + 3.45
+	var tr: Material = _mat.piedra_clara
+	var esc := _fachada_mat("Escamas", 0.5, Color(0.95, 0.95, 0.95))
+	var esc_tejado := _fachada_mat("Escamas", 0.45, Color(0.6, 0.62, 0.68))
+	esc_tejado.set_shader_parameter("suciedad", 1.3)
+	esc_tejado.set_shader_parameter("rugosidad_min", 0.85)
+	esc_tejado.set_shader_parameter("especular", 0.15)
+	# --- hastiales de atrás ---
+	var zb := r.position.y
+	for sx in [-r.size.x * 0.22, r.size.x * 0.2]:
+		var gx: float = c.x + sx
+		var g := MeshInstance3D.new()
+		var gp := PrismMesh.new()
+		gp.size = Vector3(13.0, 7.0, 4.0)
+		g.mesh = gp
+		g.material_override = _mat.fachada
+		g.position = Vector3(gx, y + 3.5, zb + 1.0)
+		add_child(g)
+		var gr := MeshInstance3D.new()
+		var grm := PrismMesh.new()
+		grm.size = Vector3(14.5, 7.8, 5.0)
+		gr.mesh = grm
+		gr.material_override = _mat.tejado
+		gr.position = Vector3(gx, y + 3.9, zb + 1.6)
+		add_child(gr)
+		_adorno_hastial(Vector3(gx, y, zb - 1.0), PI, 13.0, 7.0, 7.25, 7.8, esc)
+	# --- hastiales en los dos extremos del tejado principal ---
+	var ancho := r.size.y + 1.5
+	for lado in [-1.0, 1.0]:
+		var x: float = (r.position.x - 0.78) if lado < 0 else (r.end.x + 0.78)
+		var w := MeshInstance3D.new()
+		var wm := PrismMesh.new()
+		wm.size = Vector3(ancho - 2.4, 12.5 - 1.4, 0.08)
+		w.mesh = wm
+		w.material_override = _mat.fachada
+		w.position = Vector3(x, y + (12.5 - 1.4) * 0.5 + 0.05, c.y)
+		w.rotation.y = PI * 0.5
+		add_child(w)
+		_adorno_hastial(Vector3(x, y, c.y), lado * PI * 0.5, ancho - 2.4, 12.5 - 1.4, ancho * 0.5, 12.5, esc, true)
+	# --- bandas de pizarra en escama en los dos faldones largos ---
+	var mitad := r.size.y * 0.5 + 0.75
+	var ang := atan2(12.5, mitad)
+	var largo := sqrt(mitad * mitad + 12.5 * 12.5)
+	for frente in [1.0, -1.0]:
+		for t in [0.22, 0.5, 0.74]:
+			var zc: float = c.y + frente * mitad * (1.0 - t)
+			var yc: float = y + 12.5 * t
+			var nrm := Vector3(0, cos(ang), frente * sin(ang))
+			var banda := box(Vector3(r.size.x + 1.4, 0.02, largo * 0.09), Vector3(c.x, yc, zc) + nrm * 0.04, esc_tejado, false, self, false)
+			banda.rotation.x = frente * ang
+
+## Adornos de un hastial: escamas en la parte alta, moldura, dos ventanas del ático, tablas de alero caladas
+## con colgantes, cercha en el vértice y remate. `p`: centro de la base del hastial en su cara exterior;
+## `giro`: hacia dónde mira (0 = +z); `w`/`h`: triángulo de pared; `semi`/`alto`: faldones del tejado.
+func _adorno_hastial(p: Vector3, giro: float, w: float, h: float, semi: float, alto: float, esc: Material, grande := false) -> void:
+	var tr: Material = _mat.piedra_clara
+	var nd := Node3D.new()
+	nd.position = p
+	nd.rotation.y = giro
+	add_child(nd)
+	var he := h * 0.72
+	var es := MeshInstance3D.new()
+	var em := PrismMesh.new()
+	em.size = Vector3(w * he / h, he, 0.04)
+	es.mesh = em
+	es.material_override = esc
+	es.position = Vector3(0, h - he * 0.5, 0.05)
+	nd.add_child(es)
+	box(Vector3(w * he / h + 0.3, 0.16, 0.12), Vector3(0, h - he, 0.08), tr, false, nd, false)
+	# ventanas del ático
+	var wy := 1.3 if not grande else 1.8
+	for vx in ([-0.85, 0.85] if not grande else [-2.2, -0.75, 0.75, 2.2]):
+		var c := Vector3(vx, wy, 0.06)
+		box(Vector3(0.95, 1.55, 0.04), c + Vector3(0, 0.78, 0), _mat.vidrio, false, nd, false)
+		box(Vector3(0.04, 1.55, 0.06), c + Vector3(0, 0.78, 0.03), _mat.marco_ventana, false, nd, false)
+		box(Vector3(0.95, 0.04, 0.06), c + Vector3(0, 0.95, 0.03), _mat.marco_ventana, false, nd, false)
+		for s in [-1.0, 1.0]:
+			box(Vector3(0.12, 1.75, 0.08), c + Vector3(s * 0.53, 0.78, 0.05), tr, false, nd, false)
+		box(Vector3(1.25, 0.1, 0.18), c + Vector3(0, -0.04, 0.08), tr, false, nd, false)
+		box(Vector3(1.3, 0.16, 0.14), c + Vector3(0, 1.66, 0.07), tr, false, nd, false)
+	# tablas de alero caladas con colgantes
+	var ang := atan2(alto, semi)
+	var largo := sqrt(alto * alto + semi * semi)
+	for s in [-1.0, 1.0]:
+		var tb := box(Vector3(largo, 0.42, 0.07), Vector3(s * semi * 0.5, alto * 0.5 - 0.32, 0.14), tr, false, nd, false)
+		tb.rotation.z = -s * ang
+		var n := int(largo / 0.55)
+		for k in range(1, n):
+			var t := float(k) / n
+			cyl(0.035, 0.05, 0.3, Vector3(s * semi * (1.0 - t), alto * t - 0.6, 0.14), tr, nd, 6)
+		box(Vector3(0.35, 0.8, 0.1), Vector3(s * (semi - 0.15), -0.2, 0.14), tr, false, nd, false)
+	# cercha en el vértice y remate
+	var ap := Vector3(0, alto - 0.35, 0.16)
+	box(Vector3(0.16, 2.0, 0.12), ap + Vector3(0, -1.0, 0), tr, false, nd, false)
+	box(Vector3(2.0 * 2.0 * semi / alto, 0.14, 0.12), ap + Vector3(0, -1.85, 0), tr, false, nd, false)
+	cyl(0.09, 0.05, 0.4, ap + Vector3(0, -2.2, 0), tr, nd, 8)
+	box(Vector3(0.18, 0.4, 0.18), Vector3(0, alto + 0.25, -0.1), tr, false, nd, false)
+
+var _portada := Vector3.INF  # centro de la puerta principal (lo fija _puerta_principal)
+
+## Material con el shader de la torre (mapeado por UV y recortado dentro de la casa) para piezas curvas que
+## se meten en las esquinas de la casa sin asomar en las salas.
+func _mat_curvo(carpeta: String, color: Vector3, uv: Vector2) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = load("res://zarek/torre.gdshader")
+	var base := "res://zarek/texturas/%s/" % carpeta
+	m.set_shader_parameter("albedo_tex", load(base + "color.jpg"))
+	m.set_shader_parameter("normal_tex", load(base + "normal.jpg"))
+	m.set_shader_parameter("rough_tex", load(base + "rough.jpg"))
+	m.set_shader_parameter("color", color)
+	m.set_shader_parameter("uv_escala", uv)
+	m.set_shader_parameter("casa", Vector4(house_rect.position.x, house_rect.position.y, house_rect.size.x, house_rect.size.y))
+	return m
+
+## Pared invisible de colisión (barandillas por las que no se debe saltar).
+func _choque(size: Vector3, pos: Vector3) -> void:
+	var sb := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	sb.add_child(cs)
+	sb.position = pos
+	add_child(sb)
+
+## Veranda victoriana a lo largo de la fachada principal (de la torre al torreón): suelo de tablas, columnas
+## torneadas con ménsulas caladas, friso de husillos, tejadillo de pizarra, barandilla de balaustres y, sobre la
+## escalinata de la entrada, un frontón con escamas y pináculo. Columnas y barandilla tienen colisión.
+func _portico() -> void:
+	var r := house_rect
+	var tr: Material = _mat.piedra_clara
+	var cx := _portada.x if _portada != Vector3.INF else r.get_center().x
+	var x0 := cell_to_world("baja", 3, 0).x + 0.6     # justo después de la torre
+	var x1 := r.end.x - 3.1                            # antes del torreón de la esquina
+	var fondo := 2.8
+	var z0 := r.end.y
+	var z1 := r.end.y + fondo
+	var zc := z1 - 0.25
+	var alto := 3.35
+	# suelo de tablas sobre un zócalo de piedra
+	box(Vector3(x1 - x0, 0.12, fondo), Vector3((x0 + x1) * 0.5, 0.06, (z0 + z1) * 0.5), _mat.madera_vieja, true, self, false)
+	box(Vector3(x1 - x0 + 0.1, 0.1, 0.14), Vector3((x0 + x1) * 0.5, 0.05, z1 + 0.02), _mat.cimiento, false, self, false)
+	# escalones anchos delante de la entrada
+	for k in 2:
+		box(Vector3(4.2 - k * 0.4, 0.06, 0.4), Vector3(cx, 0.03 + k * 0.0, z1 + 0.25 + (1 - k) * 0.35), _mat.cimiento, true, self, false)
+	# columnas: cada 2,4 m, dejando libre el paso de la entrada
+	var xs: Array[float] = []
+	var n := int((x1 - x0) / 2.4)
+	for k in n + 1:
+		var x := lerpf(x0 + 0.2, x1 - 0.2, float(k) / n)
+		if absf(x - cx) < 2.7:
+			continue  # la entrada lleva su propio par de columnas
+		xs.append(x)
+	for x in xs:
+		box(Vector3(0.36, 0.3, 0.36), Vector3(x, 0.27, zc), tr, false, self, false)
+		cyl(0.11, 0.13, alto - 0.75, Vector3(x, 0.42 + (alto - 0.75) * 0.5, zc), tr, self, 10)
+		for hy in [1.1, 2.3]:
+			cyl(0.16, 0.16, 0.12, Vector3(x, hy, zc), tr, self, 10)
+		cyl(0.2, 0.13, 0.16, Vector3(x, alto - 0.24, zc), tr, self, 10)
+		box(Vector3(0.34, 0.12, 0.34), Vector3(x, alto - 0.1, zc), tr, false, self, false)
+		_static_cyl(0.15, alto, Vector3(x, alto * 0.5, zc))
+		# ménsulas caladas a los dos lados del capitel
+		for s in [-1.0, 1.0]:
+			var m1 := box(Vector3(0.62, 0.08, 0.06), Vector3(x + s * 0.24, alto - 0.42, zc), tr, false, self, false)
+			m1.rotation.z = s * 0.7
+			box(Vector3(0.06, 0.4, 0.06), Vector3(x + s * 0.42, alto - 0.26, zc), tr, false, self, false)
+	# vigas, friso de husillos y tejadillo
+	box(Vector3(x1 - x0 + 0.3, 0.24, 0.2), Vector3((x0 + x1) * 0.5, alto + 0.08, zc), tr, false, self, false)
+	box(Vector3(x1 - x0, 0.06, 0.08), Vector3((x0 + x1) * 0.5, alto - 0.5, zc), tr, false, self, false)
+	var nh := int((x1 - x0) / 0.14)
+	for k in nh:
+		var x := lerpf(x0, x1, (k + 0.5) / nh)
+		var hus := cyl(0.018, 0.018, 0.42, Vector3(x, alto - 0.26, zc), tr, self, 5)
+		hus.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var techo := box(Vector3(x1 - x0 + 0.6, 0.14, fondo + 0.7), Vector3((x0 + x1) * 0.5, alto + 0.45, (z0 + z1) * 0.5 + 0.2), _mat.tejado, false, self)
+	techo.rotation.x = 0.16
+	var cielo := box(Vector3(x1 - x0, 0.04, fondo), Vector3((x0 + x1) * 0.5, alto + 0.22, (z0 + z1) * 0.5), _mat.madera_clara, false, self, false)
+	cielo.rotation.x = 0.16
+	box(Vector3(x1 - x0 + 0.6, 0.22, 0.06), Vector3((x0 + x1) * 0.5, alto + 0.04, z1 + 0.6), tr, false, self, false)
+	# barandilla de balaustres entre columnas (con hueco en la entrada) y por los dos costados
+	var tramos: Array = []
+	var bordes: Array[float] = [x0]
+	bordes.append_array(xs)
+	bordes.append(x1)
+	for k in bordes.size() - 1:
+		var a: float = bordes[k]
+		var b: float = bordes[k + 1]
+		if a < cx and b > cx:
+			continue  # la entrada
+		tramos.append([Vector3(a + 0.18, 0, zc), Vector3(b - 0.18, 0, zc)])
+	tramos.append([Vector3(x0, 0, z0 + 0.2), Vector3(x0, 0, zc)])
+	tramos.append([Vector3(x1, 0, z0 + 0.2), Vector3(x1, 0, zc)])
+	for t in tramos:
+		var a: Vector3 = t[0]
+		var b: Vector3 = t[1]
+		var l := a.distance_to(b)
+		if l < 0.3:
+			continue
+		var m := (a + b) * 0.5
+		var horiz := absf(a.z - b.z) < 0.01
+		box(Vector3(l, 0.07, 0.1) if horiz else Vector3(0.1, 0.07, l), m + Vector3(0, 0.95, 0), tr, false, self, false)
+		box(Vector3(l, 0.06, 0.08) if horiz else Vector3(0.08, 0.06, l), m + Vector3(0, 0.25, 0), tr, false, self, false)
+		var nb := int(l / 0.16)
+		for k in nb:
+			var q := a.lerp(b, (k + 0.5) / nb)
+			var bal := cyl(0.025, 0.035, 0.68, q + Vector3(0, 0.6, 0), tr, self, 6)
+			bal.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_choque(Vector3(l, 1.4, 0.15) if horiz else Vector3(0.15, 1.4, l), m + Vector3(0, 0.7, 0))
+	for s in [-1.0, 1.0]:
+		var x: float = cx + s * 1.5
+		box(Vector3(0.4, 0.3, 0.4), Vector3(x, 0.27, zc), tr, false, self, false)
+		cyl(0.13, 0.15, alto - 0.75, Vector3(x, 0.42 + (alto - 0.75) * 0.5, zc), tr, self, 10)
+		cyl(0.22, 0.15, 0.16, Vector3(x, alto - 0.24, zc), tr, self, 10)
+		_static_cyl(0.16, alto, Vector3(x, alto * 0.5, zc))
+	# farolillo colgado sobre la entrada
+	cyl(0.012, 0.012, 0.5, Vector3(cx, alto - 0.15, z1 - 0.9), _mat.metal, self, 4)
+	cyl(0.1, 0.14, 0.3, Vector3(cx, alto - 0.55, z1 - 0.9), _mat.ventana_luz, self, 6)
+	_torreon()
+
+## Torreón de esquina (este): torre redonda volada desde el primer piso sobre una ménsula de piedra, con
+## ventanas altas, banda de escamas y un chapitel cónico muy esbelto con pináculo.
+func _torreon() -> void:
+	var r := house_rect
+	var tr: Material = _mat.piedra_clara
+	var rc := 2.3
+	var cen := Vector3(r.end.x + 0.5, 0, r.end.y + 0.5)
+	var y0 := lvl_y(1) - 0.2
+	var y1 := lvl_y(2) + 3.45 + 1.2
+	var tablas := _mat_curvo("TablasPintadas", Vector3(0.7, 0.7, 0.7), Vector2(TAU * rc / 3.0, (y1 - y0) / 3.0))
+	var moldura := _mat_curvo("Plaster007", Vector3(0.46, 0.44, 0.4), Vector2(4.0, 1.0))
+	var esc := _mat_curvo("Escamas", Vector3(0.85, 0.85, 0.85), Vector2(TAU * rc / 2.0, 2.2 / 1.25))
+	var cuerpo := cyl(rc, rc, y1 - y0, cen + Vector3(0, (y0 + y1) * 0.5, 0), tablas, self, 32)
+	cuerpo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# ménsula: cono invertido con anillos que lo sostiene sobre la planta baja
+	# ménsula escalonada: anillos que se estrechan hacia abajo y acaban en un colgante torneado
+	var radios := [rc + 0.15, rc - 0.25, rc - 0.75, rc - 1.3, rc - 1.75]
+	for k in radios.size():
+		var rk: float = radios[k]
+		cyl(rk, rk, 0.2, cen + Vector3(0, y0 - 0.1 - k * 0.32, 0), moldura, self, 32)
+		if k < radios.size() - 1:
+			cyl(rk - 0.05, float(radios[k + 1]), 0.12, cen + Vector3(0, y0 - 0.26 - k * 0.32, 0), moldura, self, 32)
+	cyl(0.22, 0.32, 0.25, cen + Vector3(0, y0 - 1.75, 0), moldura, self, 12)
+	cyl(0.04, 0.2, 0.45, cen + Vector3(0, y0 - 2.08, 0), moldura, self, 12)
+	# banda de escamas arriba, molduras y ménsulas bajo el alero
+	cyl(rc + 0.04, rc + 0.04, 2.2, cen + Vector3(0, y1 - 1.1, 0), esc, self, 32)
+	for hy in [lvl_y(2) - 0.05, y1 - 2.25, y1 - 0.05]:
+		cyl(rc + 0.12, rc + 0.12, 0.16, cen + Vector3(0, hy, 0), moldura, self, 32)
+	# ventanas en la parte que mira afuera (primer piso y ático)
+	for lv in [1, 2]:
+		for k in 8:
+			var a := TAU * k / 8.0 + PI / 8.0
+			var p := cen + Vector3(cos(a) * (rc + 0.03), lvl_y(lv) + 1.75, sin(a) * (rc + 0.03))
+			if r.grow(0.2).has_point(Vector2(p.x, p.z)):
+				continue
+			var nd := Node3D.new()
+			nd.position = p
+			nd.rotation.y = -a + PI * 0.5
+			add_child(nd)
+			box(Vector3(0.7, 1.7 if lv == 1 else 1.3, 0.05), Vector3.ZERO, _mat.vidrio, false, nd, false)
+			box(Vector3(0.04, 1.7 if lv == 1 else 1.3, 0.07), Vector3(0, 0, 0.02), _mat.moldura, false, nd, false)
+			for s in [-1.0, 1.0]:
+				box(Vector3(0.1, 1.95 if lv == 1 else 1.5, 0.1), Vector3(s * 0.4, 0, 0.04), tr, false, nd, false)
+			box(Vector3(0.95, 0.12, 0.16), Vector3(0, (1.0 if lv == 1 else 0.8), 0.06), tr, false, nd, false)
+			box(Vector3(0.9, 0.08, 0.18), Vector3(0, -(0.9 if lv == 1 else 0.7), 0.08), tr, false, nd, false)
+	# chapitel cónico con ménsulas, remate y aguja
+	for k in 14:
+		var a := TAU * k / 14.0
+		var p := cen + Vector3(cos(a) * (rc + 0.25), y1 - 0.25, sin(a) * (rc + 0.25))
+		if r.grow(-0.2).has_point(Vector2(p.x, p.z)):
+			continue
+		var men := box(Vector3(0.45, 0.3, 0.1), p, tr, false, self, false)
+		men.rotation.y = -a
+	cyl(0.0, rc + 0.6, 5.0, cen + Vector3(0, y1 + 2.5, 0), _mat.tejado, self, 28)
+	cyl(0.1, 0.1, 0.22, cen + Vector3(0, y1 + 5.0, 0), _mat.metal, self, 10)
 
 # ---------------- exterior ----------------
 func _exterior() -> void:
@@ -1791,11 +2835,13 @@ func _exterior() -> void:
 		var r := Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL)
 		if name.begins_with("Terrenos"):
 			grounds_rect = r
-			for q in _split_holes(r, [house_rect]):
+			for q in _split_holes(r, cauces):  # sin tapar la casa ni el estanque
 				var qr: Rect2 = q
 				box(Vector3(qr.size.x, 0.05, qr.size.y), Vector3(qr.get_center().x, 0.01, qr.get_center().y), _mat.cesped, false, self, false)
 			_stone_wall(r)
 		elif t == "camino":
+			if name.begins_with("Huerto"):
+				_huerto(r)
 			for q in _split_holes(r, cauces):
 				var qr: Rect2 = q
 				box(Vector3(qr.size.x, 0.05, qr.size.y), Vector3(qr.get_center().x, 0.03, qr.get_center().y), _mat.tierra, false, self, false)
@@ -2691,41 +3737,112 @@ func _hedge(a: Vector2, b: Vector2, h: float) -> void:
 	box(Vector3(l, h, 1.0) if absf(a.y - b.y) < 0.01 else Vector3(1.0, h, l), Vector3(c.x, h * 0.5, c.y), _mat.seto, true, self)
 
 func _shed(name: String, r: Rect2) -> void:
+	if name == "Invernadero":
+		_invernadero(r)
+		return
 	var c := Vector3(r.get_center().x, 0, r.get_center().y)
-	var hh := 3.6
-	var glass := name == "Invernadero"
-	var wm: Material = _mat.vidrio if glass else (_mat.fachada if name == "Cochera" else _mat.madera_vieja)
+	var hh := 3.2 if name != "Cochera" else 3.8
+	var wm: Material = _mat.fachada
+	var tr: Material = _mat.piedra_clara
 	var thick := 0.3
+	var largo_x := r.size.x >= r.size.y   # la cumbrera va a lo largo del lado más largo
+	# zócalo de piedra
+	for k in 4:
+		var horiz := k < 2
+		var l := r.size.x if horiz else r.size.y
+		var p := Vector3(c.x, 0.3, r.position.y if k == 0 else r.end.y) if horiz else Vector3(r.position.x if k == 2 else r.end.x, 0.3, c.z)
+		box(Vector3(l + 0.2, 0.6, thick + 0.1) if horiz else Vector3(thick + 0.1, 0.6, l + 0.2), p, _mat.cimiento, false, self, false)
+	# muros: la puerta en el lado sur (hacia la casa o el camino); ventanas en los lados largos
 	var sides := [[Vector2(r.position.x, r.position.y), Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.end.y)],
 		[Vector2(r.position.x, r.position.y), Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y)]]
-	var open_side := 2 if glass else 1
+	var open_side := 1
+	var gap := 2.0 if name != "Cochera" else 3.6
 	for i in 4:
 		var a: Vector2 = sides[i][0]
 		var b: Vector2 = sides[i][1]
 		var horiz := absf(a.y - b.y) < 0.01
 		var l := a.distance_to(b)
 		var mid := (a + b) * 0.5
+		var ej := Vector2(1, 0) if horiz else Vector2(0, 1)
+		var fuera := Vector3(0, 0, -1 if i == 0 else 1) if horiz else Vector3(-1 if i == 2 else 1, 0, 0)
 		if i == open_side:
-			var gap := 2.2
 			var part := (l - gap) * 0.5
 			for s in [-1.0, 1.0]:
-				var pc: Vector2 = mid + (Vector2(1, 0) if horiz else Vector2(0, 1)) * s * (gap * 0.5 + part * 0.5)
+				var pc: Vector2 = mid + ej * s * (gap * 0.5 + part * 0.5)
 				box(Vector3(part, hh, thick) if horiz else Vector3(thick, hh, part), Vector3(pc.x, hh * 0.5, pc.y), wm, true, self)
-			box(Vector3(gap, hh - 2.6, thick) if horiz else Vector3(thick, hh - 2.6, gap), Vector3(mid.x, 2.6 + (hh - 2.6) * 0.5, mid.y), wm, false, self)
+			box(Vector3(gap, hh - 2.5, thick) if horiz else Vector3(thick, hh - 2.5, gap), Vector3(mid.x, 2.5 + (hh - 2.5) * 0.5, mid.y), wm, false, self)
+			# marco de la puerta y una hoja medio abierta, colgando de una bisagra
+			var m3 := Vector3(mid.x, 0, mid.y)
+			for s in [-1.0, 1.0]:
+				box(Vector3(0.16, 2.6, 0.12) if horiz else Vector3(0.12, 2.6, 0.16), m3 + Vector3(ej.x, 0, ej.y) * s * (gap * 0.5 + 0.08) + fuera * (thick * 0.5 + 0.04) + Vector3(0, 1.3, 0), tr, false, self, false)
+			box(Vector3(gap + 0.4, 0.18, 0.14) if horiz else Vector3(0.14, 0.18, gap + 0.4), m3 + fuera * (thick * 0.5 + 0.05) + Vector3(0, 2.6, 0), tr, false, self, false)
+			var hoja := box(Vector3(gap * 0.5 - 0.05, 2.4, 0.06) if horiz else Vector3(0.06, 2.4, gap * 0.5 - 0.05), Vector3.ZERO, _mat.tablas, false, self, false)
+			var bis := m3 + Vector3(ej.x, 0, ej.y) * (-gap * 0.5) + fuera * (thick * 0.5 + 0.1)
+			var giro := 1.1
+			var dirh := (Vector3(ej.x, 0, ej.y) * cos(giro) + fuera * sin(giro)).normalized()
+			hoja.position = bis + dirh * (gap * 0.25) + Vector3(0, 1.25, 0)
+			hoja.rotation.y = atan2(-dirh.z, dirh.x) if horiz else atan2(-dirh.z, dirh.x) - PI * 0.5
+			if gap > 3.0:
+				var hoja2 := box(Vector3(gap * 0.5 - 0.05, 2.4, 0.06) if horiz else Vector3(0.06, 2.4, gap * 0.5 - 0.05), m3 + Vector3(ej.x, 0, ej.y) * (gap * 0.25) + Vector3(0, 1.25, 0), _mat.tablas, true, self, false)
+				hoja2.rotation.z = 0.04
 			continue
 		box(Vector3(l, hh, thick) if horiz else Vector3(thick, hh, l), Vector3(mid.x, hh * 0.5, mid.y), wm, true, self)
-		if glass:
-			for k in int(l / 1.5):
-				var fp := a + (b - a).normalized() * (k * 1.5)
-				box(Vector3(0.08, hh, 0.08), Vector3(fp.x, hh * 0.5, fp.y), _mat.metal, false, self)
-	var pm := PrismMesh.new()
-	pm.size = Vector3(r.size.x + 0.8, 2.2, r.size.y + 0.8)
-	var roof := MeshInstance3D.new()
-	roof.mesh = pm
-	roof.material_override = _mat.vidrio if glass else _mat.tejado
-	roof.position = c + Vector3(0, hh + 1.1, 0)
-	add_child(roof)
-	box(Vector3(r.size.x, 0.1, r.size.y), c + Vector3(0, 0.05, 0), _mat.madera if not glass else _mat.piedra, false, self, false)
+		# ventanas pequeñas con marco y cristal sucio (una por cada 4 m), alguna tapiada
+		var nv := int(l / 4.0)
+		for k in nv:
+			var t := (k + 0.5) / nv
+			var wp := a.lerp(b, t)
+			var cw := Vector3(wp.x, 1.7, wp.y) + fuera * (thick * 0.5 + 0.02)
+			var tapiada := _rng.randf() < 0.35
+			box(Vector3(1.0, 0.9, 0.04) if horiz else Vector3(0.04, 0.9, 1.0), cw, _mat.oscuro if tapiada else _mat.vidrio, false, self, false)
+			for s in [-1.0, 1.0]:
+				box(Vector3(0.1, 1.1, 0.08) if horiz else Vector3(0.08, 1.1, 0.1), cw + Vector3(ej.x, 0, ej.y) * s * 0.55, tr, false, self, false)
+			box(Vector3(1.25, 0.1, 0.16) if horiz else Vector3(0.16, 0.1, 1.25), cw + Vector3(0, -0.5, 0) + fuera * 0.05, tr, false, self, false)
+			box(Vector3(1.25, 0.12, 0.12) if horiz else Vector3(0.12, 0.12, 1.25), cw + Vector3(0, 0.52, 0), tr, false, self, false)
+			if tapiada:
+				for tb in 3:
+					var t2 := box(Vector3(1.3, 0.16, 0.04) if horiz else Vector3(0.04, 0.16, 1.3), cw + fuera * 0.04 + Vector3(0, -0.3 + tb * 0.3, 0), _mat.tablas, false, self, false)
+					t2.rotation.z = (tb - 1) * 0.12 if horiz else 0.0
+					t2.rotation.x = 0.0 if horiz else (tb - 1) * 0.12
+	# esquineras
+	for q in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+		box(Vector3(0.36, hh, 0.36), Vector3(q.x, hh * 0.5, q.y), tr, false, self, false)
+	# tejado a dos aguas con hastiales de tablas, alero y tabla de remate
+	var lx := r.size.x if largo_x else r.size.y
+	var ly := r.size.y if largo_x else r.size.x
+	var alto_t := ly * 0.42
+	var hast := MeshInstance3D.new()
+	var hm := PrismMesh.new()
+	hm.size = Vector3(ly, alto_t, lx)
+	hast.mesh = hm
+	hast.material_override = wm
+	hast.position = c + Vector3(0, hh + alto_t * 0.5, 0)
+	hast.rotation.y = PI * 0.5 if largo_x else 0.0
+	add_child(hast)
+	var semi := ly * 0.5 + 0.5
+	var ang := atan2(alto_t + 0.25, semi)
+	var faldon := sqrt(semi * semi + pow(alto_t + 0.25, 2))
+	for s in [-1.0, 1.0]:
+		var f := box(Vector3(lx + 0.9, 0.12, faldon), Vector3.ZERO, _mat.tejado, false, self)
+		var dir_c := Vector3(0, 0, 1) if largo_x else Vector3(1, 0, 0)
+		f.position = c + Vector3(0, hh + (alto_t + 0.25) * 0.5 - 0.1, 0) + dir_c * s * (semi * 0.5)
+		if largo_x:
+			f.rotation.x = s * ang
+		else:
+			f.rotation.z = -s * ang
+		f.position += Vector3(0, 0.06, 0)
+	for s in [-1.0, 1.0]:
+		var ext: Vector3 = c + (Vector3(1, 0, 0) if largo_x else Vector3(0, 0, 1)) * s * (lx * 0.5 + 0.35)
+		for k in [-1.0, 1.0]:
+			var tb := box(Vector3(0.06, 0.28, faldon) if largo_x else Vector3(faldon, 0.28, 0.06), Vector3.ZERO, tr, false, self, false)
+			var dir_c2 := Vector3(0, 0, 1) if largo_x else Vector3(1, 0, 0)
+			tb.position = ext + Vector3(0, hh + (alto_t + 0.25) * 0.5 - 0.15, 0) + dir_c2 * k * (semi * 0.5)
+			if largo_x:
+				tb.rotation.x = k * ang
+			else:
+				tb.rotation.z = -k * ang
+	box(Vector3(lx + 1.0, 0.14, 0.14) if largo_x else Vector3(0.14, 0.14, lx + 1.0), c + Vector3(0, hh + alto_t + 0.3, 0), _mat.metal, false, self, false)
+	box(Vector3(r.size.x, 0.1, r.size.y), c + Vector3(0, 0.05, 0), _mat.madera_vieja, false, self, false)
 	if name == "Cochera":
 		box(Vector3(2.0, 1.2, 4.6), c + Vector3(0, 0.6, 0), _mat.sabana, true, self)
 	var l := OmniLight3D.new()
@@ -2734,6 +3851,149 @@ func _shed(name: String, r: Rect2) -> void:
 	l.omni_range = 7.0
 	l.position = c + Vector3(0, 2.5, 0)
 	add_child(l)
+
+## Invernadero victoriano en ruinas: zócalo de ladrillo, estructura de hierro, paneles de cristal sucio (alguno
+## roto), tejado de cristal a dos aguas con crestería, mesas de cultivo y plantas secas.
+func _invernadero(r: Rect2) -> void:
+	var c := Vector3(r.get_center().x, 0, r.get_center().y)
+	var hh := 3.0
+	var hierro: Material = _mat.hierro
+	var cristal := _plain(Color(0.35, 0.4, 0.38, 0.35), 0.25, 0.1)
+	cristal.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	cristal.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var lados := [[Vector2(r.position.x, r.position.y), Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.end.y)],
+		[Vector2(r.position.x, r.position.y), Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y)]]
+	for i in 4:
+		var a: Vector2 = lados[i][0]
+		var b: Vector2 = lados[i][1]
+		var horiz := absf(a.y - b.y) < 0.01
+		var l := a.distance_to(b)
+		var mid := (a + b) * 0.5
+		var puerta := i == 2
+		# zócalo de ladrillo (con el hueco de la puerta)
+		if puerta:
+			for s in [-1.0, 1.0]:
+				var pc: Vector2 = mid + Vector2(0, 1) * s * (l * 0.25 + 0.6)
+				box(Vector3(0.3, 0.8, l * 0.5 - 1.2), Vector3(pc.x, 0.4, pc.y), _mat.ladrillo, true, self)
+		else:
+			box(Vector3(l, 0.8, 0.3) if horiz else Vector3(0.3, 0.8, l), Vector3(mid.x, 0.4, mid.y), _mat.ladrillo, true, self)
+		# montantes de hierro y paneles de cristal
+		var n := int(l / 1.2)
+		for k in n + 1:
+			var p := a.lerp(b, float(k) / n)
+			box(Vector3(0.07, hh, 0.07), Vector3(p.x, hh * 0.5, p.y), hierro, false, self, false)
+			if k < n:
+				var q := a.lerp(b, (k + 0.5) / n)
+				if puerta and absf((q - mid).length()) < 1.0:
+					continue
+				if _rng.randf() > 0.18:  # algunos cristales rotos
+					box(Vector3(l / n - 0.08, hh - 0.85, 0.02) if horiz else Vector3(0.02, hh - 0.85, l / n - 0.08), Vector3(q.x, 0.8 + (hh - 0.8) * 0.5, q.y), cristal, false, self, false)
+		box(Vector3(l, 0.08, 0.08) if horiz else Vector3(0.08, 0.08, l), Vector3(mid.x, hh, mid.y), hierro, false, self, false)
+		box(Vector3(l, 0.06, 0.06) if horiz else Vector3(0.06, 0.06, l), Vector3(mid.x, 1.9, mid.y), hierro, false, self, false)
+		# los cristales no detienen al jugador del todo: una pared invisible por encima del zócalo
+		if not puerta:
+			_choque(Vector3(l, hh, 0.2) if horiz else Vector3(0.2, hh, l), Vector3(mid.x, hh * 0.5, mid.y))
+		else:
+			for s in [-1.0, 1.0]:
+				var pc: Vector2 = mid + Vector2(0, 1) * s * (l * 0.25 + 0.6)
+				_choque(Vector3(0.2, hh, l * 0.5 - 1.2), Vector3(pc.x, hh * 0.5, pc.y))
+	# tejado de cristal a dos aguas (cumbrera a lo largo de x)
+	var semi := r.size.y * 0.5
+	var alto := 2.2
+	var ang := atan2(alto, semi)
+	var faldon := sqrt(semi * semi + alto * alto)
+	for s in [-1.0, 1.0]:
+		var f := box(Vector3(r.size.x, 0.03, faldon), c + Vector3(0, hh + alto * 0.5, s * semi * 0.5), cristal, false, self, false)
+		f.rotation.x = s * ang
+		var nc := int(r.size.x / 1.2)
+		for k in nc + 1:
+			var x := r.position.x + r.size.x * float(k) / nc
+			var cab := box(Vector3(0.06, 0.06, faldon), Vector3(x, hh + alto * 0.5, c.z + s * semi * 0.5), hierro, false, self, false)
+			cab.rotation.x = s * ang
+	# hastiales de cristal y cumbrera con crestería
+	for s in [-1.0, 1.0]:
+		var g := MeshInstance3D.new()
+		var gm := PrismMesh.new()
+		gm.size = Vector3(r.size.y, alto, 0.02)
+		g.mesh = gm
+		g.material_override = cristal
+		g.position = Vector3(r.position.x if s < 0 else r.end.x, hh + alto * 0.5, c.z)
+		g.rotation.y = PI * 0.5
+		add_child(g)
+	box(Vector3(r.size.x + 0.2, 0.1, 0.1), c + Vector3(0, hh + alto, 0), hierro, false, self, false)
+	for k in int(r.size.x / 0.3):
+		box(Vector3(0.02, 0.35, 0.02), Vector3(r.position.x + 0.15 + k * 0.3, hh + alto + 0.2, c.z), hierro, false, self, false)
+	# suelo de baldosa, mesas de cultivo con macetas y plantas secas
+	box(Vector3(r.size.x, 0.08, r.size.y), c + Vector3(0, 0.04, 0), _mat.s_hidraulica, false, self, false)
+	for s in [-1.0, 1.0]:
+		var mz: float = c.z + s * (semi - 1.2)
+		box(Vector3(r.size.x - 3.0, 0.08, 1.2), Vector3(c.x + 0.6, 0.9, mz), _mat.madera_vieja, true, self)
+		for k in 4:
+			box(Vector3(0.1, 0.9, 0.1), Vector3(c.x + 0.6 + (k - 1.5) * (r.size.x - 3.2) / 3.0, 0.45, mz), _mat.madera_vieja, false, self, false)
+		var nm := int((r.size.x - 3.5) / 0.7)
+		for k in nm:
+			var mp := Vector3(r.position.x + 2.3 + k * 0.7, 1.05, mz + _rng.randf_range(-0.3, 0.3))
+			if _rng.randf() < 0.15:
+				var caida := cyl(0.14, 0.1, 0.22, mp + Vector3(0, -0.9, 0.7 * s), _mat.terracota, self, 8)
+				caida.rotation.z = PI * 0.5
+				continue
+			cyl(0.14, 0.1, 0.22, mp, _mat.terracota, self, 8)
+	var secos: Array = []
+	for k in 30:
+		var p := Vector2(_rng.randf_range(r.position.x + 1.5, r.end.x - 1.0), _rng.randf_range(r.position.y + 1.0, r.end.y - 1.0))
+		var sc := _rng.randf_range(0.6, 1.1)
+		secos.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), Vector3(p.x, 0.08, p.y)))
+	_multi_planta("dry_branches_medium_01", secos)
+
+## Huerto abandonado: surcos de tierra con plantas secas, valla de estacas medio caída y un espantapájaros.
+func _huerto(r: Rect2) -> void:
+	var nf := int(r.size.y / 1.4)
+	var secos: Array = []
+	var hierba: Array = []
+	for k in nf:
+		var z := r.position.y + 0.9 + k * 1.4
+		var surco := box(Vector3(r.size.x - 1.6, 0.22, 0.55), Vector3(r.get_center().x, 0.06, z), _mat.barro, false, self, false)
+		surco.rotation.y = _rng.randf_range(-0.02, 0.02)
+		var n := int((r.size.x - 2.0) / 0.6)
+		for j in n:
+			if _rng.randf() < 0.35:
+				continue
+			var p := Vector3(r.position.x + 1.2 + j * 0.6 + _rng.randf_range(-0.15, 0.15), 0.15, z)
+			var sc := _rng.randf_range(0.4, 0.8)
+			secos.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc, sc, sc)), p))
+			if _rng.randf() < 0.3:
+				hierba.append(Transform3D(Basis(Vector3.UP, _rng.randf() * TAU).scaled(Vector3(sc * 1.6, sc * 1.6, sc * 1.6)), p + Vector3(0, -0.1, 0.5)))
+	_multi_planta("dry_branches_medium_01", secos)
+	_multi_planta("grass_medium_01", hierba)
+	# valla de estacas
+	var lados := [[Vector2(r.position.x, r.position.y), Vector2(r.end.x, r.position.y)], [Vector2(r.position.x, r.end.y), Vector2(r.end.x, r.end.y)],
+		[Vector2(r.position.x, r.position.y), Vector2(r.position.x, r.end.y)], [Vector2(r.end.x, r.position.y), Vector2(r.end.x, r.end.y)]]
+	for ld in lados:
+		var a: Vector2 = ld[0]
+		var b: Vector2 = ld[1]
+		var l := a.distance_to(b)
+		var n := int(l / 0.35)
+		for k in n:
+			if _rng.randf() < 0.12:
+				continue
+			var p := a.lerp(b, (k + 0.5) / n)
+			var e := box(Vector3(0.08, 1.0, 0.04), Vector3(p.x, 0.5, p.y), _mat.madera_vieja, false, self, false)
+			e.rotation = Vector3(_rng.randf_range(-0.15, 0.15), atan2(b.y - a.y, b.x - a.x) * -1.0, _rng.randf_range(-0.15, 0.15))
+		var m := (a + b) * 0.5
+		var rail := box(Vector3(l, 0.06, 0.04), Vector3(m.x, 0.75, m.y), _mat.madera_vieja, false, self, false)
+		rail.rotation.y = -atan2(b.y - a.y, b.x - a.x)
+	# espantapájaros: cruz de madera, saco por cabeza, abrigo raído
+	var ec := Vector3(r.get_center().x + 1.5, 0, r.get_center().y)
+	box(Vector3(0.1, 2.4, 0.1), ec + Vector3(0, 1.2, 0), _mat.madera_vieja, true, self)
+	box(Vector3(1.6, 0.08, 0.08), ec + Vector3(0, 1.85, 0), _mat.madera_vieja, false, self, false)
+	box(Vector3(0.7, 0.9, 0.3), ec + Vector3(0, 1.55, 0), _mat.tela_roja if false else _pbr("Fabric028", 1.2, Color(0.25, 0.22, 0.18), 1.0), false, self, false)
+	for s in [-1.0, 1.0]:
+		var manga := box(Vector3(0.6, 0.2, 0.22), ec + Vector3(s * 0.6, 1.82, 0), _pbr("Fabric028", 1.2, Color(0.25, 0.22, 0.18), 1.0), false, self, false)
+		manga.rotation.z = s * -0.1
+	var cabeza := cyl(0.2, 0.22, 0.42, ec + Vector3(0, 2.25, 0), _mat.sabana, self, 10)
+	cabeza.rotation.z = 0.15
+	cyl(0.36, 0.36, 0.04, ec + Vector3(0.03, 2.47, 0), _mat.madera_vieja, self, 12)
+	cyl(0.18, 0.2, 0.22, ec + Vector3(0.03, 2.58, 0), _mat.madera_vieja, self, 10)
 
 func _porch(r: Rect2) -> void:
 	var c := Vector3(r.get_center().x, 0, r.get_center().y)
@@ -3365,11 +4625,19 @@ func _xf_rel(n: Node3D, raiz: Node3D) -> Transform3D:
 	return t
 
 func _dead_tree(c: Vector3, with_swing: bool) -> void:
-	cyl(0.35, 0.6, 7.0, c + Vector3(0, 3.5, 0), _mat.corteza, self, 8)
+	# roble muerto de verdad (antes un tronco hecho con cilindros); el columpio cuelga de una rama horizontal
+	var malla := _malla_glb("res://zarek/arboles/%s.glb" % ("muerto_roble" if with_swing else "muerto_roble_2"))
+	if malla != null:
+		var mi := MeshInstance3D.new()
+		mi.mesh = malla
+		mi.transform = Transform3D(Basis(Vector3.UP, 0.4).scaled(Vector3(2.0, 2.0, 2.0)), c)
+		add_child(mi)
+	else:
+		cyl(0.35, 0.6, 7.0, c + Vector3(0, 3.5, 0), _mat.corteza, self, 8)
 	_static_cyl(0.6, 4.0, c + Vector3(0, 2.0, 0))
-	for k in 6:
-		var b := cyl(0.06, 0.18, 3.5, c + Vector3(cos(k * 1.05) * 1.2, 4.5 + k * 0.5, sin(k * 1.05) * 1.2), _mat.corteza, self, 6)
-		b.rotation = Vector3(_rng.randf_range(0.6, 1.2), k * 1.05, 0)
+	if with_swing:
+		var rama := cyl(0.1, 0.16, 3.2, c + Vector3(1.4, 5.5, 0), _mat.corteza, self, 8)
+		rama.rotation.z = PI * 0.5 - 0.08
 	if with_swing:
 		swing = Node3D.new()
 		swing.set_meta("dyn", true)
@@ -4273,6 +5541,7 @@ func _decorate() -> void:
 	_identidad_salas()
 	ZarekAbandono.aplicar(self)
 	ZarekTerror.aplicar(self)
+	ZarekGore.aplicar(self)
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect
@@ -5039,6 +6308,8 @@ func _canon_mat(mat: Material) -> Material:
 ## (solo los que no hace falta asentar después de la física: los de encima de mesas y estantes se quedan sueltos)
 const FUSIONABLES := ["terr_cobwebs", "ropa_wood_clothes_hanger"]
 func _merge_static() -> void:
+	if OS.get_environment("SIN_FUSION") != "":
+		return
 	var groups := {}
 	var nodes: Array = []
 	# se fusionan todas las piezas hechas por código que no se mueven (muros, molduras, marcos, contraventanas,
@@ -5431,6 +6702,9 @@ func _process(delta: float) -> void:
 	if _luz_atico:
 		var tt := Time.get_ticks_msec() / 1000.0
 		_luz_atico.light_energy = 0.9 + 0.5 * sin(tt * 7.3) * sin(tt * 2.1) + (0.6 if fmod(tt, 9.0) < 0.15 else 0.0)
+	if _luz_farola:
+		var tf := Time.get_ticks_msec() / 1000.0
+		_luz_farola.light_energy = 1.0 + 0.25 * sin(tf * 11.0) * sin(tf * 3.7) - (0.9 if fmod(tf, 6.3) < 0.12 else 0.0)
 	for d in doors:
 		if absf(d.ang - d.target) > 0.001:
 			d.ang = move_toward(d.ang, d.target, delta * float(d.get("speed", 3.0)))

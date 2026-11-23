@@ -10,6 +10,9 @@ uniform vec3 tinte : source_color = vec3(0.78, 0.75, 0.7);
 uniform float escala = 0.33;
 uniform float suciedad = 1.0;
 uniform bool usa_ao = true;
+uniform float alto_base = 1.3;  // hasta dónde sube la humedad verdosa desde el suelo
+uniform float rugosidad_min = 0.0;  // evita brillos de espejo (tejados)
+uniform float especular = 0.5;
 varying vec3 mpos;
 varying vec3 mnor;
 
@@ -35,7 +38,7 @@ void fragment() {
 	float bajo_cornisa = smoothstep(0.2, 0.0, fract(h / 3.6 + 0.05)) * 0.6 + 0.4;
 	float sucio = smoothstep(0.38, 0.75, chorreo) * bajo_cornisa;
 	// base húmeda: más oscura y algo verde hasta ~1,2 m
-	float base = 1.0 - smoothstep(0.0, 1.3, h);
+	float base = 1.0 - smoothstep(0.0, alto_base, h);
 	float manchas = texture(ruido, mpos.xz * 0.02 + vec2(h * 0.01)).r;
 	// hollín negro que cae desde cada cornisa y alféizar, más ancho cuanto más viejo
 	float hollin = smoothstep(0.55, 0.95, texture(ruido, vec2(dot(mpos.xz, vec2(0.7, 0.7)) * 2.3, h * 0.025 + 0.3)).r) * smoothstep(0.65, 0.0, fract(h / 3.6 + 0.12));
@@ -52,7 +55,8 @@ void fragment() {
 	ALBEDO = col * mix(0.75, 1.0, ao);
 	NORMAL_MAP = nm;
 	NORMAL_MAP_DEPTH = 1.2;
-	ROUGHNESS = clamp(ru + base * 0.1, 0.0, 1.0);
+	ROUGHNESS = clamp(max(ru + base * 0.1, rugosidad_min), 0.0, 1.0);
 	AO = ao;
+	SPECULAR = especular;
 	AO_LIGHT_AFFECT = 0.4;
 }
