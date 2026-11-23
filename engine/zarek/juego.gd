@@ -2840,15 +2840,17 @@ func _secreto(id: String) -> void:
 ## Las cintas se oyen (voces hechas con Kokoro, con efecto de cinta vieja) a la vez que se leen.
 var snd_cinta: AudioStreamPlayer
 func _poner_cinta(id: String) -> void:
-	if not ZarekSonido.hay("cinta_" + id):
-		return
+	# sin voces: la grabadora suena con su siseo (la cinta 7 sí tiene sonido propio: latidos y la nana)
+	var nombre := "cinta_" + id if ZarekSonido.hay("cinta_" + id) else "estatica"
 	if snd_cinta == null:
 		snd_cinta = AudioStreamPlayer.new()
 		snd_cinta.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(snd_cinta)
-	snd_cinta.stream = ZarekSonido.uno("cinta_" + id)
-	snd_cinta.volume_db = 0.0
+	snd_cinta.stream = ZarekSonido.uno(nombre)
+	snd_cinta.volume_db = 0.0 if nombre != "estatica" else -14.0
 	snd_cinta.play()
+	if nombre == "estatica":
+		get_tree().create_timer(2.5).timeout.connect(func(): if snd_cinta and snd_cinta.stream == ZarekSonido.uno("estatica"): snd_cinta.stop())
 	if state in ["juego", "escondido"] and elena:
 		elena.hear(player.global_position, 4.0)  # la grabadora suena: algo de ruido
 
