@@ -148,7 +148,7 @@ jobs:
           arch: x86_64
           ram-size: 6144M
           disk-size: 8G
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             # el emulador recién encendido sigue configurándose (servicios, teclado, roles) durante un minuto largo y
@@ -173,7 +173,11 @@ jobs:
           log = open('emu/logcat.txt', errors='ignore').read()
           control = open('emu/logcat_control.txt', errors='ignore').read() if os.path.exists('emu/logcat_control.txt') else ''
           fallos, avisos = [], []
-          if 'ZAREK CARGA' not in log: fallos.append('no terminó de cargar')
+          # el OpenGL por software del emulador (SwiftShader) cierra cualquier juego de Godot a los pocos segundos con un
+          # SIGSEGV en su GLThread; si también tumba la escena mínima de control, no es culpa del juego: solo aviso
+          emu_roto = 'Fatal signal' in control and 'GLThread' in control
+          if 'ZAREK CARGA' not in log:
+              (avisos if emu_roto else fallos).append('no terminó de cargar' + (' (el emulador también cierra la escena mínima de control)' if emu_roto else ''))
           if open('emu/pid_tras_carga.txt').read().strip() in ('', 'MUERTO'):
               avisos.append('se cerró justo al cargar' + (' (como la escena de control)' if 'Fatal signal' in control else ''))
           def plana(f):
