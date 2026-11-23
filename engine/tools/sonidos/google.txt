@@ -1,1 +1,11 @@
-# (vacío esta vez)
+# sonidos de la biblioteca de Google (dominio público / CC BY 4.0): ruta sin .ogg
+weather/thunder_crack
+weather/thunder_heavy_rumble
+weather/rolling_thunder
+weather/distant_thunder
+weather/thunderstorm
+weather/rain_heavy_loud
+weather/rain_on_roof
+weather/rain_heavy_thunder
+weather/rain_on_window
+weather/heavy_rain_on_tin_roof
