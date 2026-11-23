@@ -1,0 +1,72 @@
+[
+ {
+  "nombre": "golpe_tension_1",
+  "prompt": "horror movie jump scare stinger, sudden dissonant orchestral string hit with low brass, reverb",
+  "seg": 4
+ },
+ {
+  "nombre": "golpe_tension_2",
+  "prompt": "horror sting, screeching violins cluster, sudden loud hit then silence, cinematic",
+  "seg": 4
+ },
+ {
+  "nombre": "golpe_tension_3",
+  "prompt": "deep cinematic horror boom with metallic scrape, sudden impact, dark reverb",
+  "seg": 4
+ },
+ {
+  "nombre": "nana_elena",
+  "prompt": "eerie slow detuned music box lullaby, old and broken, creepy horror atmosphere, mono",
+  "seg": 30
+ },
+ {
+  "nombre": "cadenas",
+  "prompt": "heavy iron chains dragging slowly on a stone floor in a basement, close, reverb",
+  "seg": 8
+ },
+ {
+  "nombre": "latido_roca",
+  "prompt": "very low deep heartbeat coming from underground, slow, rumbling, horror ambience",
+  "seg": 12
+ },
+ {
+  "nombre": "susurros",
+  "prompt": "many creepy indistinct whispers in a dark room, horror ambience, reverb",
+  "seg": 10
+ },
+ {
+  "nombre": "amb_casa_2",
+  "prompt": "dark horror ambient drone inside an old empty mansion at night, low strings, distant creaks, wind",
+  "seg": 45
+ },
+ {
+  "nombre": "persecucion_2",
+  "prompt": "intense horror chase music, pounding low drums, frantic dissonant strings, fast tempo, terrifying",
+  "seg": 40
+ },
+ {
+  "nombre": "titulo_2",
+  "prompt": "sad haunting horror piano melody, slow, minor key, reverb, dark atmosphere, title theme",
+  "seg": 45
+ },
+ {
+  "nombre": "tension_cerca",
+  "prompt": "rising horror tension drone, low strings crescendo, heartbeat, something approaching",
+  "seg": 15
+ },
+ {
+  "nombre": "respiracion_pesada",
+  "prompt": "heavy menacing male breathing close behind, slow, horror",
+  "seg": 6
+ },
+ {
+  "nombre": "golpes_pared",
+  "prompt": "loud banging on a wooden wall from the other side, three heavy knocks, horror, reverb",
+  "seg": 5
+ },
+ {
+  "nombre": "madre_lamento",
+  "prompt": "distant woman moaning and crying in a stone basement, eerie, echo, horror",
+  "seg": 10
+ }
+]
