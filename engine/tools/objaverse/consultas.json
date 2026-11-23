@@ -1,61 +1,12 @@
 {
- "m_mano3": {
-  "k": [
-   "hand",
-   "hands",
-   "female hand",
-   "human hand",
-   "hand rigged",
-   "arm",
-   "arms",
-   "female arm",
-   "human arm",
-   "forearm",
-   "hand holding",
-   "hand pose",
-   "realistic hands",
-   "scanned hand",
-   "3d scan hand",
-   "woman arm"
-  ],
-  "n": 48,
-  "max_caras": 200000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox",
-   "robot",
-   "lego",
-   "claw",
-   "monster",
-   "zombie",
-   "robotic",
-   "cyborg",
-   "mechanical",
-   "statue",
-   "sculpture",
-   "clock",
-   "fan",
-   "dryer",
-   "truck",
-   "crane",
-   "drill",
-   "cream",
-   "sanitizer",
-   "watch"
-  ]
+ "fp_anim": {
+  "k": ["fps arms", "fp arms", "first person arms", "first person hands", "fps hands", "arms animated", "hands animated", "flashlight arms", "fps arms flashlight", "first person flashlight", "fps arms animations", "viewmodel", "arms rig animation", "hands rig animations", "horror arms", "realistic fps arms"],
+  "n": 48, "max_caras": 300000, "animado": true, "min_anim": 1,
+  "no": ["cartoon","toon","stylized","low poly","lowpoly","chibi","anime","minecraft","toy","nsfw","nude","robot","lego","claw","monster","zombie","robotic","cyborg","mechanical","skeleton","alien"]
+ },
+ "fp_lint": {
+  "k": ["hand holding flashlight", "flashlight hand", "arm flashlight", "hands flashlight", "fps flashlight"],
+  "n": 24, "max_caras": 300000,
+  "no": ["cartoon","toon","stylized","low poly","lowpoly","anime","robot","monster"]
  }
 }
