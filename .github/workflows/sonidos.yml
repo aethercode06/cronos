@@ -32,6 +32,7 @@ jobs:
           grep -v '^#' engine/tools/sonidos/google.txt | while read s; do
             [ -z "$s" ] && continue; curl -sL "https://actions.google.com/sounds/v1/$s.ogg" -o "out/google/$(basename $s).ogg"
           done
+          python3 engine/tools/sonidos/google_buscar.py engine/tools/sonidos/palabras_google.txt out/gbib || true
           find out -type f | sed 's/^/  /' > out/lista.txt; du -sh out
       - name: Guardar en la rama aether-sonidos
         run: |

@@ -11,3 +11,8 @@ https://opengameart.org/content/opening-lock-and-door|CC0|RPG
 https://opengameart.org/content/q009s-weapon-sounds|CC0|Q009
 https://opengameart.org/content/shotgun-sound-effects|CC0|desconocido
 https://opengameart.org/content/bear-trap-sound|CC0|desconocido
+https://opengameart.org/content/impact-sounds|CC0|Kenney
+https://opengameart.org/content/rpg-sound-pack|CC0|artisticdude
+https://opengameart.org/content/50-cc0-sfx|CC0|rubberduck
+https://opengameart.org/content/glass-breaking|CC0|varios
+https://opengameart.org/content/heartbeat|CC0|varios
