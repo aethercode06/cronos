@@ -1,52 +1,17 @@
 {
- "g_cerdo": {
+ "e_interruptor": {
   "k": [
-   "pig carcass",
-   "hanging pig",
-   "dead pig",
-   "pork carcass",
-   "meat carcass",
-   "butchered pig",
-   "carcass",
-   "half carcass",
-   "beef carcass"
+   "light switch",
+   "vintage light switch",
+   "toggle switch wall",
+   "old light switch",
+   "rotary light switch",
+   "wall switch",
+   "switch plate",
+   "porcelain switch"
   ],
   "n": 24,
-  "max_caras": 90000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox"
-  ]
- },
- "g_carne": {
-  "k": [
-   "raw meat",
-   "meat chunk",
-   "steak",
-   "ribs",
-   "raw flesh",
-   "beef",
-   "pork",
-   "ham leg",
-   "meat"
-  ],
-  "n": 24,
-  "max_caras": 60000,
+  "max_caras": 20000,
   "no": [
    "cartoon",
    "toon",
@@ -65,167 +30,22 @@
    "pokemon",
    "fortnite",
    "roblox",
-   "burger",
-   "sandwich",
-   "pizza"
+   "sci-fi",
+   "scifi",
+   "futuristic"
   ]
  },
- "g_cadaver": {
+ "e_cuadro": {
   "k": [
-   "corpse",
-   "dead body",
-   "body bag",
-   "cadaver",
-   "morgue",
-   "dead man",
-   "dead woman",
-   "victim",
-   "wrapped body",
-   "mummy"
-  ],
-  "n": 30,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox",
-   "egypt"
-  ]
- },
- "g_restos": {
-  "k": [
-   "severed hand",
-   "severed arm",
-   "severed leg",
-   "severed head",
-   "dismembered",
-   "body parts",
-   "gore",
-   "severed",
-   "bloody hand",
-   "decapitated"
-  ],
-  "n": 30,
-  "max_caras": 90000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox"
-  ]
- },
- "g_huesos": {
-  "k": [
-   "human skull",
-   "skull",
-   "skeleton",
-   "bones",
-   "ribcage",
-   "femur",
-   "bone pile",
-   "pile of bones",
-   "skulls"
-  ],
-  "n": 30,
-  "max_caras": 80000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox",
-   "dinosaur",
-   "dragon",
-   "cow skull",
-   "deer"
-  ]
- },
- "g_tortura": {
-  "k": [
-   "torture",
-   "torture chair",
-   "iron maiden",
-   "torture rack",
-   "shackles",
-   "manacles",
-   "chains",
-   "guillotine",
-   "electric chair",
-   "medieval torture",
-   "torture table"
-  ],
-  "n": 30,
-  "max_caras": 90000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "anime",
-   "minecraft",
-   "toy",
-   "sex",
-   "nsfw",
-   "nude",
-   "naked",
-   "porn",
-   "pokemon",
-   "fortnite",
-   "roblox"
-  ]
- },
- "g_carnicero": {
-  "k": [
-   "meat hook",
-   "butcher",
-   "butcher table",
-   "butcher block",
-   "cleaver",
-   "bone saw",
-   "meat grinder",
-   "slaughterhouse",
-   "hook"
+   "fuse box",
+   "electrical panel",
+   "breaker box",
+   "old fuse box",
+   "electric box",
+   "circuit breaker panel",
+   "electrical cabinet",
+   "knife switch",
+   "power switch lever"
   ],
   "n": 30,
   "max_caras": 60000,
@@ -247,24 +67,21 @@
    "pokemon",
    "fortnite",
    "roblox",
-   "fishing",
-   "crane",
-   "pirate"
+   "sci-fi",
+   "scifi",
+   "futuristic"
   ]
  },
- "g_organos": {
+ "e_generador": {
   "k": [
-   "heart organ",
-   "human heart",
-   "intestines",
-   "brain",
-   "organs",
-   "anatomical heart",
-   "kidney",
-   "liver"
+   "generator",
+   "diesel generator",
+   "old generator",
+   "power generator",
+   "electric generator"
   ],
-  "n": 24,
-  "max_caras": 60000,
+  "n": 18,
+  "max_caras": 90000,
   "no": [
    "cartoon",
    "toon",
@@ -282,7 +99,78 @@
    "porn",
    "pokemon",
    "fortnite",
-   "roblox"
+   "roblox",
+   "sci-fi",
+   "scifi",
+   "futuristic"
+  ]
+ },
+ "e_bombilla": {
+  "k": [
+   "light bulb",
+   "incandescent bulb",
+   "edison bulb",
+   "vintage bulb",
+   "filament bulb",
+   "bulb socket"
+  ],
+  "n": 24,
+  "max_caras": 20000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "anime",
+   "minecraft",
+   "toy",
+   "sex",
+   "nsfw",
+   "nude",
+   "naked",
+   "porn",
+   "pokemon",
+   "fortnite",
+   "roblox",
+   "sci-fi",
+   "scifi",
+   "futuristic"
+  ]
+ },
+ "e_cable": {
+  "k": [
+   "electrical wire",
+   "cable reel",
+   "power cable",
+   "extension cord",
+   "wire spool",
+   "electric meter"
+  ],
+  "n": 18,
+  "max_caras": 40000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "anime",
+   "minecraft",
+   "toy",
+   "sex",
+   "nsfw",
+   "nude",
+   "naked",
+   "porn",
+   "pokemon",
+   "fortnite",
+   "roblox",
+   "sci-fi",
+   "scifi",
+   "futuristic"
   ]
  }
 }
