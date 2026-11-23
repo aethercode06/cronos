@@ -29,6 +29,17 @@ var rapidez := 1.0
 var vista := 1.0
 ## Cuánto le atrae rondar cerca de ti al pasear (el director de tensión lo baja en los respiros).
 var rondar := 1.0
+## Segundos que queda aturdido (golpe, objeto lanzado, cepo, escopeta).
+var aturdido := 0.0
+## Veces que le han herido esta noche: aprende a cubrirse (forcejeos más difíciles).
+var heridas := 0
+var _anim_aturdido := "dolor"
+func aturdir(sec: float, anim := "dolor") -> void:
+	aturdido = maxf(aturdido, sec)
+	_anim_aturdido = anim
+	_cur_anim = ""
+	if es_damian:
+		play_anim(anim, 1.0)
 var _anim_t := 0.0
 var _twitch := 0.0
 var _twitch_t := 0.0
@@ -488,6 +499,12 @@ func _can_see_player() -> bool:
 
 func _physics_process(delta: float) -> void:
 	if only_visual or mansion == null:
+		return
+	if aturdido > 0.0:
+		# herido o atrapado en un cepo: no se mueve ni puede atraparte
+		aturdido -= delta
+		if es_damian and model:
+			play_anim(_anim_aturdido if aturdido > 0.6 else "buscar")
 		return
 	timer -= delta
 	sees_player = state != S.DORMANT and _can_see_player()

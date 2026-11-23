@@ -173,7 +173,7 @@ static func aplicar(m: ZarekMansion) -> void:
 	print("ZAREK gore: %d ms" % (Time.get_ticks_msec() - t0))
 
 ## Cepo para osos en el suelo (abierto, o cerrado sobre una bota con sangre).
-static func cepo(m: ZarekMansion, p: Vector3, cerrado := false, yaw := 0.0) -> void:
+static func cepo(m: ZarekMansion, p: Vector3, cerrado := false, yaw := 0.0) -> Node3D:
 	var n := Node3D.new()
 	n.position = p
 	n.rotation.y = yaw
@@ -199,6 +199,7 @@ static func cepo(m: ZarekMansion, p: Vector3, cerrado := false, yaw := 0.0) -> v
 	if cerrado:
 		m._prop("ropa_kirza_boots", p + Vector3(0, 0.0, 0), yaw + 1.2, 1.0, false)
 		_charco(m, p, 1.0)
+	return n
 
 ## Los señuelos de Damián en el camino del bosque: el letrero falso del refugio, linternas colgadas de los
 ## árboles que llevan a la casa, mochilas abandonadas con sangre y cepos para osos (uno con una bota dentro).

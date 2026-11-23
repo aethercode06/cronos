@@ -3968,5 +3968,41 @@
   "licencia": "by",
   "url": "https://sketchfab.com/3d-models/1bca09efb5154e75b6f6f17d8f71deeb",
   "cat": "primera persona"
+ },
+ {
+  "clave": "w_escopeta",
+  "uid": "04741a40f2224cffafc343b0236d5bbe",
+  "nombre": "Double Barrel Shotgun",
+  "autor": "Pepego",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/04741a40f2224cffafc343b0236d5bbe",
+  "cat": "defensa"
+ },
+ {
+  "clave": "w_cuchillo",
+  "uid": "a27d59fa297249ecb99220e75eb67eb1",
+  "nombre": "Kitchen knife",
+  "autor": "sergeilihandristov",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a27d59fa297249ecb99220e75eb67eb1",
+  "cat": "defensa"
+ },
+ {
+  "clave": "w_martillo",
+  "uid": "5d0d56d67e8a42c59a0867542b66a3a7",
+  "nombre": "Old Hammer PBR",
+  "autor": "smessierobjects",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5d0d56d67e8a42c59a0867542b66a3a7",
+  "cat": "defensa"
+ },
+ {
+  "clave": "w_atizador",
+  "uid": "62c2a500aec647f8a7255651da259bf2",
+  "nombre": "Poker",
+  "autor": "milacetious",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/62c2a500aec647f8a7255651da259bf2",
+  "cat": "defensa"
  }
 ]

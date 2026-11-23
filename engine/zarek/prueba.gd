@@ -218,6 +218,55 @@ func _ready() -> void:
 	tn._poner_fase("calma")
 	g.elena.rondar = 1.0
 	g.elena.vanish(60.0)
+	# defensa: armas a la vista, forcejeo, trampa de caza y escopeta
+	var df: ZarekDefensa = g.defensa
+	var en_cajon := g.muebles_reg.filter(func(x): return String(x.botin) in ["cepo", "escopeta", "cartucho"] or String(x.botin).begins_with("arma:"))
+	_check(df.suelo.size() >= 1 and en_cajon.size() >= 3, "defensas repartidas (%d a la vista, %d en cajones)" % [df.suelo.size(), en_cajon.size()])
+	var vidas0: int = g.lives
+	df.arma = "cuchillo"
+	g.elena.set_state(ZarekElena.S.CHASE)
+	g.elena.visible = true
+	g.elena.global_position = g.player.global_position + Vector3(0.8, 0, 0)
+	g._on_caught()
+	var en_forcejeo: bool = g.state == "forcejeo"
+	await _wait(3.2)
+	_check(en_forcejeo and g.state == "juego" and df.arma == "" and g.lives == vidas0 and g.elena.heridas == 1, "forcejeo: se la clava y huye")
+	g.elena.vanish(60.0)
+	await _wait(3.2)
+	g.elena.can_catch = true
+	# trampa de caza
+	var pp_t: Vector3 = g.player.global_position
+	df.cepos = 1
+	df.poner_trampa(pp_t + Vector3(0, 0, 1.5), 0.0)
+	g.elena.set_state(ZarekElena.S.WANDER)
+	g.elena.global_position = pp_t + Vector3(0, 0, 1.5)
+	g.set_meta("no_catch", true)
+	await _wait(0.3)
+	_check(g.elena.aturdido > 3.0 and df.trampas.is_empty(), "trampa de caza: lo atrapa")
+	g.elena.aturdido = 0.0
+	# escopeta: buscar una dirección despejada y ponerle ahí
+	var dir_libre := Vector3.ZERO
+	for k in 12:
+		var dv := Vector3(cos(k * TAU / 12.0), 0, sin(k * TAU / 12.0))
+		var qq := PhysicsRayQueryParameters3D.create(pp_t + Vector3(0, 1.5, 0), pp_t + Vector3(0, 1.5, 0) + dv * 7.0)
+		qq.collision_mask = 1
+		if g.get_world_3d().direct_space_state.intersect_ray(qq).is_empty():
+			dir_libre = dv
+			break
+	df.escopeta = true
+	df.cartuchos = 1
+	var her0: int = g.elena.heridas
+	g.elena.set_state(ZarekElena.S.WANDER)
+	g.elena.global_position = pp_t + dir_libre * 5.0
+	g.player.set_look(atan2(-dir_libre.x, -dir_libre.z), 0.0)
+	await _wait(0.1)
+	df.disparar()
+	await _wait(0.3)
+	_check(dir_libre == Vector3.ZERO or g.elena.heridas == her0 + 1, "escopeta: lo derriba")
+	await _wait(3.2)
+	g.elena.vanish(60.0)
+	g.elena.aturdido = 0.0
+	g.set_meta("no_catch", false)
 	g.suceso = "normal"
 	var sucesos := {}
 	for sd in range(1, 400):

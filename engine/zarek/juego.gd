@@ -27,6 +27,7 @@ var _trueno_tapa := 0.0
 var snd_lluvia: AudioStreamPlayer
 var archivo_box: Control
 var tension: ZarekTension
+var defensa: ZarekDefensa
 var _reg_hold: Dictionary = {}
 var _t_reg := 0.0
 var _t_ruido_obj := {}
@@ -202,6 +203,10 @@ func _ready() -> void:
 	muebles_reg = ZarekRegistro.preparar(mansion)
 	suceso = ZarekNoches.elegir_suceso(mansion.partida_seed)
 	salas_cerradas = ZarekNoches.preparar(mansion, muebles_reg, mansion.partida_seed, 2, 6 if suceso == "luna_roja" else 4)
+	defensa = ZarekDefensa.new()
+	defensa.j = self
+	add_child(defensa)
+	defensa.preparar(mansion, muebles_reg, mansion.partida_seed)
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -218,6 +223,7 @@ func _ready() -> void:
 		["linterna", "LUZ", Vector2(-330, -115), 62.0],
 		["sal", "BENGALA", Vector2(-300, -290), 58.0],
 		["agachar", "AGACHAR", Vector2(-120, -330), 58.0],
+		["disparar", "DISPARAR", Vector2(-470, -150), 60.0],
 	]
 	add_child(touch)
 	carga.queue_free()
@@ -234,7 +240,7 @@ func _ready() -> void:
 
 # ---------------- preparación ----------------
 func _inputs() -> void:
-	var map := {"usar": [KEY_E, KEY_ENTER], "linterna": [KEY_F], "sal": [KEY_Q], "pausa": [KEY_ESCAPE, KEY_P], "agachar": [KEY_C, KEY_CTRL]}
+	var map := {"usar": [KEY_E, KEY_ENTER], "linterna": [KEY_F], "sal": [KEY_Q], "pausa": [KEY_ESCAPE, KEY_P], "agachar": [KEY_C, KEY_CTRL], "disparar": [KEY_R]}
 	for a in map:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a)
@@ -818,6 +824,17 @@ func _update_hud() -> void:
 	lbl_salt.text = "Bengalas: %d   Tablones: %d   Trampa: %d/%d   Secretos: %d/%d" % [salt, tablones, seals, SEALS_NEEDED, ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
 	if not llaves_salas.is_empty():
 		lbl_salt.text += "\nLlaves: " + ", ".join(llaves_salas)
+	if defensa:
+		var dfn: Array[String] = []
+		if defensa.arma != "":
+			dfn.append(String(ZarekDefensa.ARMAS[defensa.arma].nombre).capitalize())
+		if defensa.cepos > 0:
+			dfn.append("Trampas: %d" % defensa.cepos)
+		if defensa.escopeta:
+			dfn.append("Escopeta (%d)" % defensa.cartuchos)
+		if not dfn.is_empty():
+			lbl_salt.text += "\nDefensa: " + " · ".join(dfn)
+		touch.set_visible_button("disparar", defensa.escopeta and defensa.cartuchos > 0 and state == "juego")
 	if not entered:
 		var dist := int(player.global_position.distance_to(mansion.front_door))
 		lbl_obj.text = "Llega a la mansión Varela (%d m)" % dist
@@ -1099,6 +1116,8 @@ func _process(delta: float) -> void:
 			int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1e6), state, player.global_position.snapped(Vector3.ONE) if player else Vector3.ZERO])
 	_eventos_sala(delta)
 	_escala_adaptable(delta)
+	if defensa:
+		defensa.tick(delta)
 	if state == "titulo" and player:
 		_t_titulo += delta
 		player.set_look(sin(_t_titulo * 0.07) * 0.12, 0.13 + sin(_t_titulo * 0.05) * 0.03)
@@ -1381,6 +1400,8 @@ func _play(delta: float) -> void:
 		_click()
 	if Input.is_action_just_pressed("sal"):
 		_throw_salt()
+	if Input.is_action_just_pressed("disparar") and hidden_in.is_empty():
+		defensa.disparar()
 	_puerta_tick(delta)
 	if Input.is_action_just_pressed("agachar") and hidden_in.is_empty():
 		player.crouching = not player.crouching
@@ -1572,6 +1593,9 @@ func _target() -> Dictionary:
 	var nota := mansion.nota_cerca(pp + player.forward() * 0.5, 1.2)
 	if not nota.is_empty():
 		return {"kind": "nota", "obj": nota, "text": "USAR: leer «" + String(nota.titulo).get_slice(" · ", 0) + "»"}
+	var arma_s := defensa.arma_cerca(pp) if defensa else {}
+	if not arma_s.is_empty():
+		return {"kind": "arma_suelo", "obj": arma_s, "text": "USAR: coger " + String(ZarekDefensa.ARMAS[arma_s.tipo].nombre)}
 	for k in mansion.pickups:
 		if not k.taken and Vector2(pp.x - k.pos.x, pp.z - k.pos.z).length() < 1.6:
 			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + {"pila": "las pilas", "tablon": "los tablones", "llaves": "las llaves del coche"}.get(k.kind, "las bengalas")}
@@ -1634,7 +1658,9 @@ func _target() -> Dictionary:
 	q.exclude = [player.get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty() and hit.collider is RigidBody3D and (hit.collider as RigidBody3D).mass < 14.0:
-		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger"}
+		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger (y lanzárselo)"}
+	if defensa and defensa.cepos > 0 and state == "juego" and mansion.inside_house(pp):
+		return {"kind": "poner_cepo", "text": "USAR: poner una trampa de caza aquí (%d)" % defensa.cepos}
 	return {}
 
 # ---------------- notas y salas ----------------
@@ -1812,6 +1838,15 @@ func _use() -> void:
 			tablones += 1
 			sound_at("golpe_madera", t.obj.pos + Vector3(0, 1.2, 0), -4.0)
 			message("Quité los tablones.", 1.5)
+		"arma_suelo":
+			message(defensa.coger_del_suelo(t.obj), 3.0)
+			sound_at("recoger", player.global_position, -6.0)
+			_consejo("arma", "Con un arma, si Damián te atrapa podrás FORCEJEAR: machaca USAR para clavársela. Solo sirve una vez.")
+		"poner_cepo":
+			var fw := player.look_dir()
+			fw.y = 0.0
+			defensa.poner_trampa(player.global_position + fw.normalized() * 1.0, atan2(fw.x, fw.z))
+			message("Trampa puesta. Ahora tiene que pasar por aquí…", 2.0)
 		"cerrada":
 			# el pomo gira y la puerta traquetea contra el cerrojo
 			sound_at("pomo_cerrado", t.obj.pos + Vector3(0, 1.1, 0), -2.0)
@@ -1874,6 +1909,7 @@ func _use() -> void:
 			llevado.angular_velocity = Vector3(randf_range(-4, 4), randf_range(-4, 4), randf_range(-4, 4))
 			var lanzado := llevado
 			llevado = null
+			defensa.lanzado(lanzado)
 			get_tree().create_timer(0.4).timeout.connect(func(): if is_instance_valid(lanzado): player.remove_collision_exception_with(lanzado))
 
 func _use_portal(pt: Dictionary) -> void:
@@ -2044,7 +2080,16 @@ func _registro_tick(delta: float) -> void:
 					message("Una polaroid: yo, de niña, en brazos de mamá… delante de esta casa.\nNunca me dijo que había estado aquí.", 4.5)
 					sanity = maxf(0.0, sanity - 6.0)
 				_:
-					message(NADA_CAJON[randi() % NADA_CAJON.size()], 2.5)
+					var dm: String = defensa.botin(String(x.botin)) if String(x.botin) != "" else ""
+					if dm != "":
+						message(dm, 3.5)
+						sound_at("recoger", player.global_position, -6.0)
+						if defensa.arma != "":
+							_consejo("arma", "Con un arma, si Damián te atrapa podrás FORCEJEAR: machaca USAR para clavársela. Solo sirve una vez.")
+						if defensa.escopeta:
+							_consejo("escopeta", "DISPARAR (botón nuevo): apunta bien. No lo mata, lo derriba… y el disparo se oye en toda la casa.")
+					else:
+						message(NADA_CAJON[randi() % NADA_CAJON.size()], 2.5)
 		return
 	_reg_hold = {}
 	bar_rit.visible = false
@@ -2314,7 +2359,28 @@ func _throw_salt() -> void:
 
 # ---------------- atrapado / muerte ----------------
 func _on_caught() -> void:
-	if state in ["atrapado", "final", "muerte"] or (autotest and get_meta("no_catch", false)):
+	if state in ["atrapado", "final", "muerte", "forcejeo"] or (autotest and get_meta("no_catch", false)):
+		return
+	# con un arma en la mano, todavía se puede pelear
+	if defensa and defensa.puede_forcejear():
+		state = "forcejeo"
+		elena.can_catch = false
+		player.frozen = true
+		var to := elena.global_position - player.global_position
+		player.set_look(atan2(-to.x, -to.z), 0.05)
+		elena.global_position = player.global_position + Vector3(to.x, 0, to.z).normalized() * 0.9
+		elena.look_at(Vector3(player.global_position.x, elena.global_position.y, player.global_position.z), Vector3.UP)
+		elena.aturdir(2.6, "golpe")
+		snd_ui.stream = _s("damian_rugido")
+		snd_ui.volume_db = 2.0
+		snd_ui.play()
+		player.shake(14.0)
+		defensa.empezar_forcejeo()
+		return
+	_morir_atrapada()
+
+func _morir_atrapada() -> void:
+	if state in ["atrapado", "final", "muerte"]:
 		return
 	state = "atrapado"
 	elena.can_catch = false
