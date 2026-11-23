@@ -1,0 +1,8 @@
+Damián (La Sombra de Zarek) — copia de seguridad del trabajo en Blender.
+modelo/damian.blend         personaje con máscara, ropa, piel y dientes
+modelo/damian_mixamo.blend  el mismo con esqueleto estilo Mixamo (el que usan las animaciones)
+animaciones/hacha_*.blend   guardia, caminar, correr, buscar, golpe 1 mano, golpe 2 manos, golpeado1
+armas/                      hacha, mocha y motosierra (CC-BY, créditos en engine/zarek/armas/creditos.json)
+videos/                     vistas previas
+scripts/                    scripts de Blender (también en engine/tools/damian3d/)
+Las animaciones de base son de Mixamo (cuenta de Adobe del usuario); los .fbx originales no se incluyen.
