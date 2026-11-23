@@ -1,0 +1,38 @@
+name: Unir el vídeo de juego de Zarek
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Ejecución de «Vídeo de juego de La Sombra de Zarek» que tiene las partes'
+        required: true
+  push:
+    branches: [ main ]
+    paths: [ '.github/workflows/zarek_video_unir.yml' ]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  unir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: partes
+          run-id: ${{ inputs.run_id || '45205012879' }}
+          github-token: ${{ github.token }}
+      - name: Unir y publicar en la release zarek-video
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          mkdir -p out && find partes -type f -exec cp {} out/ \;
+          cd out && ls -la
+          for p in 1 2 3; do [ -f registro_$p.txt ] && tail -5 registro_$p.txt; done
+          for p in 1 2 3; do [ -f parte_$p.mp4 ] && echo "file 'parte_$p.mp4'" >> lista.txt; done
+          ffmpeg -v error -y -f concat -safe 0 -i lista.txt -c copy completo.mp4
+          ffprobe -v error -show_entries format=duration -of csv=p=0 completo.mp4
+          # versión ligera para el teléfono
+          ffmpeg -v error -y -i completo.mp4 -vf scale=960:540 -c:v libx264 -crf 26 -preset veryfast -c:a aac -b:a 128k zarek_gameplay.mp4
+          ls -la
+          gh release view zarek-video -R ${{ github.repository }} >/dev/null 2>&1 || gh release create zarek-video -R ${{ github.repository }} --title "Vídeo de juego de Zarek" --notes "Grabado con el Movie Maker de Godot"
+          gh release upload zarek-video zarek_gameplay.mp4 registro_*.txt -R ${{ github.repository }} --clobber
