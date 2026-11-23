@@ -30,6 +30,15 @@ EXACTO.update({'t_altar_triptico': ('h', 0.75), 't_angel_pedestal': ('h', 2.3), 
     't_pozo_viejo': ('h', 3.4), 't_sarcofago': ('m', 2.2), 't_silla_ruedas_antigua': ('h', 1.15), 't_silla_ruedas_rota': ('h', 0.95),
     't_tablas_6': ('m', 1.8), 't_tablas_podridas': ('m', 1.8), 't_velas_4': ('m', 0.5), 't_velas_cuenco': ('h', 0.18), 't_velas_dos': ('h', 0.3),
     't_verja_gotica': ('h', 1.7), 't_verja_hierro': ('h', 1.5)})
+EXACTO.update({'x_cadaver_body_bag_v1': ('m', 1.9), 'x_cadaver_dead_body': ('m', 2.1), 'x_cadaver_murder_scene_cloth_body': ('m', 1.9),
+    'x_carne_cote_de_boeuf': ('m', 0.32), 'x_carne_eataly_steak_scanned_wit': ('m', 0.26), 'x_carne_meat': ('m', 0.35), 'x_carne_meat_can___sketchfab_can': ('h', 0.22),
+    'x_carnicero_ax_with_a_stump': ('h', 1.0), 'x_carnicero_cleaver___butcher_s_best': ('m', 0.32), 'x_carnicero_knife_collection': ('m', 0.6), 'x_carnicero_sacrificial_hook': ('h', 2.2),
+    'x_cerdo_lamb_in_carcass': ('h', 1.2), 'x_cerdo_pig_carcass': ('h', 1.6), 'x_huesos_free_human_skull': ('m', 0.22), 'x_huesos_human_skull': ('m', 0.22),
+    'x_huesos_skeleton': ('h', 1.75), 'x_huesos_skeleton_hand': ('m', 0.2), 'x_organos_brain_in_a_jar': ('h', 0.3), 'x_organos_human_brain__cerebrum': ('m', 0.17),
+    'x_organos_human_heart': ('m', 0.13), 'x_organos_human_liver': ('m', 0.25), 'x_organos_small_and_large_intestin': ('m', 0.35), 'x_restos_bloody_axe': ('m', 0.8),
+    'x_restos_formaldehyde_jar_asset_p': ('m', 0.4), 'x_restos_severed_hand': ('m', 0.2), 'x_restos_skeleton_gore_model': ('h', 1.75), 'x_restos_turmoil_chest': ('m', 0.8),
+    'x_tortura_hanging_wall_chains': ('h', 1.8), 'x_tortura_head_crusher': ('h', 1.6), 'x_tortura_horror_bed': ('m', 2.1), 'x_tortura_iron_shackles': ('m', 0.5),
+    'x_tortura_medieval_asset_19__cage': ('h', 2.0), 'x_tortura_rusted_chain_shackles': ('m', 0.6), 'x_tortura_rusty_chains': ('m', 1.5), 'x_tortura_witch_s_chair': ('h', 1.4)})
 GRANDE = ("piano", "wardrobe", "bookcase", "bookshel", "fireplace", "fire_place", "sofa", "lounge", "bathtub", "tree", "pine", "spruce", "fir", "stove", "cabinet", "clock", "desk", "table", "safe", "armchair", "chair", "mirror")
 os.makedirs(OUT, exist_ok=True)
 info = {}

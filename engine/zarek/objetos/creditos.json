@@ -3649,5 +3649,250 @@
   "licencia": "by",
   "url": "https://sketchfab.com/3d-models/2a62fa5f86b74a9b8279c0809df1335f",
   "cat": "terror"
+ },
+ {
+  "clave": "x_cadaver_murder_scene_cloth_body",
+  "uid": "2775896b55c54d21a82e4aa1d485ec15",
+  "nombre": "Murder Scene Cloth Body",
+  "autor": "Snossage",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_cadaver_dead_body",
+  "uid": "fdfca2c19a784789804f39d24f25bd8c",
+  "nombre": "Dead Body",
+  "autor": "LukasBobor",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_cadaver_body_bag_v1",
+  "uid": "d5cc618b12714b2aa7481887eeaae740",
+  "nombre": "Body Bag V1",
+  "autor": "BeauMoore",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_restos_severed_hand",
+  "uid": "e22dd31ab8864e129c4c1dd88ce1cc71",
+  "nombre": "Severed Hand",
+  "autor": "EComputer",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_restos_bloody_axe",
+  "uid": "711a137aa049452894b342c9c7cdd34f",
+  "nombre": "Bloody Axe",
+  "autor": "Georgia.Perry",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_restos_turmoil_chest",
+  "uid": "de3b69cd0750488b93a883b2a7e58056",
+  "nombre": "Turmoil chest",
+  "autor": "neominigan",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_restos_formaldehyde_jar_asset_p",
+  "uid": "0b3b6eea6ee94b6fa9ffe3163c4f4f06",
+  "nombre": "formaldehyde jar asset pack",
+  "autor": "Meanphrog",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_restos_skeleton_gore_model",
+  "uid": "f80e51109cf04f38869adb1d0de90daa",
+  "nombre": "Skeleton gore model",
+  "autor": "bumstrum",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_cerdo_pig_carcass",
+  "uid": "5c73c8653a584dee9ebb6d2956416afe",
+  "nombre": "Pig Carcass",
+  "autor": "oparaskos",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_cerdo_lamb_in_carcass",
+  "uid": "adb2a798b502428d8cbe3a092b23aa74",
+  "nombre": "Lamb in carcass",
+  "autor": "carlos.moreno.g",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_huesos_human_skull",
+  "uid": "b0251e48e906418ebae34b7f811ca065",
+  "nombre": "Human Skull",
+  "autor": "egelsky",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_huesos_free_human_skull",
+  "uid": "6a3c0f1b165a489db40c11912efe59c5",
+  "nombre": "Free Human Skull",
+  "autor": "riach",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_huesos_skeleton",
+  "uid": "b8e05af2837d483190d196928b2bd9dc",
+  "nombre": "Skeleton",
+  "autor": "soidev",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_huesos_skeleton_hand",
+  "uid": "a4bf7eabaca24985b3aa2dbfc2d369ca",
+  "nombre": "Skeleton Hand",
+  "autor": "zachariah.the.hale",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_horror_bed",
+  "uid": "88af775b40f14f788293e865c62537f4",
+  "nombre": "Horror Bed",
+  "autor": "denis_cliofas",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_rusty_chains",
+  "uid": "be9648f8e0324bbd967c10b44007bee1",
+  "nombre": "Rusty Chains",
+  "autor": "amanda_98",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_medieval_asset_19__cage",
+  "uid": "1fb5fb1fc62a4d22b819705273f79941",
+  "nombre": "Medieval asset 19\\ cage",
+  "autor": "hamsterspit",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_rusted_chain_shackles",
+  "uid": "924c7cc2ee074e57a81cc82b58e0ac6f",
+  "nombre": "Rusted Chain Shackles",
+  "autor": "SangeetBlaze",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_iron_shackles",
+  "uid": "bd481fe4f5eb44ad9f9f64786ae7f56f",
+  "nombre": "Iron Shackles",
+  "autor": "BookBoy",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_hanging_wall_chains",
+  "uid": "97bc5d1699c94b619d0666f6eab79ea0",
+  "nombre": "Hanging wall chains",
+  "autor": "karyu.lucca",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_head_crusher",
+  "uid": "ef97871e17c24a45bcec0f193e6e604e",
+  "nombre": "Head Crusher",
+  "autor": "nudluria",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_tortura_witch_s_chair",
+  "uid": "e18002149e2a479d9798ec4fe8833947",
+  "nombre": "Witch's chair",
+  "autor": "nudluria",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carnicero_cleaver___butcher_s_best",
+  "uid": "8b3a394b1e6741e187e15b8dc5075b54",
+  "nombre": "Cleaver - Butcher's Best Friend",
+  "autor": "3dsofsan",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carnicero_knife_collection",
+  "uid": "7f6df3818e5544c982e8cbbbbcb6305c",
+  "nombre": "Knife collection",
+  "autor": "Helindu",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carnicero_ax_with_a_stump",
+  "uid": "bee3645990e14378acaad55971296629",
+  "nombre": "Ax with a Stump",
+  "autor": "malovsky",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carnicero_sacrificial_hook",
+  "uid": "a00836bcf751467d964cf19d9934407a",
+  "nombre": "Sacrificial Hook",
+  "autor": "KennersEd",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carne_cote_de_boeuf",
+  "uid": "8e2a4923a1064dd5abf1fd93e4878910",
+  "nombre": "Cote de boeuf",
+  "autor": "alban",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carne_meat",
+  "uid": "fdcbd368e9454f559364a4ee794453a9",
+  "nombre": "Meat",
+  "autor": "coffe0wolf",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carne_eataly_steak_scanned_wit",
+  "uid": "9753fcce430a463aa463240cea633d99",
+  "nombre": "Eataly steak scanned with iPhone 12 lidar",
+  "autor": "alban",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_carne_meat_can___sketchfab_can",
+  "uid": "223d62b97d9c468fb040aa635f1ea1dc",
+  "nombre": "Meat Can - Sketchfab Can Texturing Challenge",
+  "autor": "iggy-design",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_organos_human_heart",
+  "uid": "a294c26cb0e34c8f97d72e4dc4e9fdd5",
+  "nombre": "Human Heart",
+  "autor": "adorezooey",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_organos_human_brain__cerebrum",
+  "uid": "0aa0e33c5c854d1bab7bac9e1c7acaec",
+  "nombre": "Human brain, Cerebrum & Brainstem",
+  "autor": "pranktoy",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_organos_small_and_large_intestin",
+  "uid": "d978d71a8f6147d5a9d371dad415c880",
+  "nombre": "Small And Large Intestines",
+  "autor": "tompat2552",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_organos_human_liver",
+  "uid": "e1a051624fa54d72a50c8186b44a0d31",
+  "nombre": "Human Liver",
+  "autor": "hdyuan",
+  "licencia": "by"
+ },
+ {
+  "clave": "x_organos_brain_in_a_jar",
+  "uid": "b95791959dc74dc6a0d39bd4f563ab90",
+  "nombre": "Brain in a Jar",
+  "autor": "Mad_Lobster_Workshop",
+  "licencia": "by"
  }
 ]

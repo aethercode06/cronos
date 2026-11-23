@@ -3157,5 +3157,320 @@
   ],
   "tris": 3458,
   "escala": 1.0714
+ },
+ "x_cadaver_body_bag_v1": {
+  "tam": [
+   1.9,
+   0.69,
+   1.685
+  ],
+  "tris": 9000,
+  "escala": 0.0516
+ },
+ "x_cadaver_dead_body": {
+  "tam": [
+   0.781,
+   0.846,
+   2.1
+  ],
+  "tris": 1816,
+  "escala": 1.05
+ },
+ "x_cadaver_murder_scene_cloth_body": {
+  "tam": [
+   1.068,
+   0.223,
+   1.9
+  ],
+  "tris": 510,
+  "escala": 0.169
+ },
+ "x_carne_cote_de_boeuf": {
+  "tam": [
+   0.32,
+   0.068,
+   0.18
+  ],
+  "tris": 8260,
+  "escala": 2.048
+ },
+ "x_carne_eataly_steak_scanned_wit": {
+  "tam": [
+   0.219,
+   0.033,
+   0.26
+  ],
+  "tris": 8838,
+  "escala": 0.5834
+ },
+ "x_carne_meat": {
+  "tam": [
+   0.35,
+   0.143,
+   0.162
+  ],
+  "tris": 782,
+  "escala": 0.0807
+ },
+ "x_carne_meat_can___sketchfab_can": {
+  "tam": [
+   0.749,
+   0.22,
+   0.749
+  ],
+  "tris": 4330,
+  "escala": 0.1807
+ },
+ "x_carnicero_ax_with_a_stump": {
+  "tam": [
+   0.43,
+   1.0,
+   0.864
+  ],
+  "tris": 1074,
+  "escala": 0.0011
+ },
+ "x_carnicero_cleaver___butcher_s_best": {
+  "tam": [
+   0.32,
+   0.263,
+   0.021
+  ],
+  "tris": 980,
+  "escala": 0.3521
+ },
+ "x_carnicero_knife_collection": {
+  "tam": [
+   0.6,
+   0.009,
+   0.398
+  ],
+  "tris": 9000,
+  "escala": 0.3982
+ },
+ "x_carnicero_sacrificial_hook": {
+  "tam": [
+   1.861,
+   2.2,
+   1.855
+  ],
+  "tris": 5096,
+  "escala": 1.1
+ },
+ "x_cerdo_lamb_in_carcass": {
+  "tam": [
+   0.639,
+   1.2,
+   0.263
+  ],
+  "tris": 9000,
+  "escala": 0.0516
+ },
+ "x_cerdo_pig_carcass": {
+  "tam": [
+   0.323,
+   1.6,
+   0.695
+  ],
+  "tris": 2052,
+  "escala": 0.7245
+ },
+ "x_huesos_free_human_skull": {
+  "tam": [
+   0.181,
+   0.211,
+   0.22
+  ],
+  "tris": 8999,
+  "escala": 0.0018
+ },
+ "x_huesos_human_skull": {
+  "tam": [
+   0.149,
+   0.22,
+   0.203
+  ],
+  "tris": 9000,
+  "escala": 0.11
+ },
+ "x_huesos_skeleton": {
+  "tam": [
+   0.709,
+   1.751,
+   0.294
+  ],
+  "tris": 9000,
+  "escala": 0.0096
+ },
+ "x_huesos_skeleton_hand": {
+  "tam": [
+   0.131,
+   0.2,
+   0.125
+  ],
+  "tris": 4688,
+  "escala": 0.0068
+ },
+ "x_organos_brain_in_a_jar": {
+  "tam": [
+   0.209,
+   0.3,
+   0.238
+  ],
+  "tris": 1016,
+  "escala": 0.15
+ },
+ "x_organos_human_brain__cerebrum": {
+  "tam": [
+   0.162,
+   0.162,
+   0.17
+  ],
+  "tris": 8999,
+  "escala": 0.9722
+ },
+ "x_organos_human_heart": {
+  "tam": [
+   0.099,
+   0.13,
+   0.092
+  ],
+  "tris": 9000,
+  "escala": 0.008
+ },
+ "x_organos_human_liver": {
+  "tam": [
+   0.25,
+   0.218,
+   0.188
+  ],
+  "tris": 8999,
+  "escala": 0.1256
+ },
+ "x_organos_small_and_large_intestin": {
+  "tam": [
+   0.281,
+   0.35,
+   0.294
+  ],
+  "tris": 9000,
+  "escala": 0.0253
+ },
+ "x_restos_bloody_axe": {
+  "tam": [
+   0.171,
+   0.8,
+   0.053
+  ],
+  "tris": 281,
+  "escala": 0.007
+ },
+ "x_restos_formaldehyde_jar_asset_p": {
+  "tam": [
+   0.4,
+   0.143,
+   0.108
+  ],
+  "tris": 1886,
+  "escala": 0.4501
+ },
+ "x_restos_severed_hand": {
+  "tam": [
+   0.2,
+   0.046,
+   0.105
+  ],
+  "tris": 820,
+  "escala": 2.9266
+ },
+ "x_restos_skeleton_gore_model": {
+  "tam": [
+   0.581,
+   1.75,
+   0.259
+  ],
+  "tris": 9000,
+  "escala": 0.009
+ },
+ "x_restos_turmoil_chest": {
+  "tam": [
+   0.8,
+   0.305,
+   0.523
+  ],
+  "tris": 516,
+  "escala": 0.4498
+ },
+ "x_tortura_hanging_wall_chains": {
+  "tam": [
+   0.14,
+   1.8,
+   1.279
+  ],
+  "tris": 2304,
+  "escala": 0.4509
+ },
+ "x_tortura_head_crusher": {
+  "tam": [
+   0.337,
+   1.6,
+   1.282
+  ],
+  "tris": 946,
+  "escala": 0.0189
+ },
+ "x_tortura_horror_bed": {
+  "tam": [
+   2.1,
+   0.397,
+   2.1
+  ],
+  "tris": 2994,
+  "escala": 0.4725
+ },
+ "x_tortura_iron_shackles": {
+  "tam": [
+   0.233,
+   0.5,
+   0.063
+  ],
+  "tris": 9000,
+  "escala": 0.0048
+ },
+ "x_tortura_medieval_asset_19__cage": {
+  "tam": [
+   0.934,
+   2.0,
+   0.875
+  ],
+  "tris": 2160,
+  "escala": 0.7499
+ },
+ "x_tortura_rusted_chain_shackles": {
+  "tam": [
+   0.6,
+   0.036,
+   0.121
+  ],
+  "tris": 608,
+  "escala": 0.3068
+ },
+ "x_tortura_rusty_chains": {
+  "tam": [
+   1.501,
+   0.156,
+   0.499
+  ],
+  "tris": 9000,
+  "escala": 0.75
+ },
+ "x_tortura_witch_s_chair": {
+  "tam": [
+   0.744,
+   1.4,
+   1.065
+  ],
+  "tris": 508,
+  "escala": 0.0059
  }
 }

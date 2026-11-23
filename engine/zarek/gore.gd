@@ -31,6 +31,28 @@ static func _carne() -> StandardMaterial3D:
 	m.metallic_specular = 0.7  # húmeda
 	return m
 
+# ---------------- modelos reales (Objaverse CC-BY, zarek/objetos/x_*.glb) ----------------
+## Coloca un modelo x_*; los órganos que vienen sin textura se tiñen de carne húmeda.
+static func _x(m: ZarekMansion, nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := false) -> Node3D:
+	var n := m._prop("x_" + nombre, p, yaw, escala, choca)
+	if n == null:
+		return null
+	var tinte := {"organos_small_and_large_intestin": Color(0.55, 0.17, 0.15), "organos_human_liver": Color(0.3, 0.05, 0.04),
+		"tortura_hanging_wall_chains": Color(0.25, 0.22, 0.2), "tortura_iron_shackles": Color(0.3, 0.26, 0.22)}
+	if tinte.has(nombre):
+		var mt := StandardMaterial3D.new()
+		mt.albedo_color = tinte[nombre]
+		mt.roughness = 0.3 if nombre.begins_with("organos") else 0.55
+		mt.metallic = 0.0 if nombre.begins_with("organos") else 0.7
+		mt.metallic_specular = 0.8
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).material_override = mt
+	return n
+
+## Modelo colgado de un gancho: su base queda `alto` metros por debajo de la punta.
+static func _colgado(m: ZarekMansion, nombre: String, punta: Vector3, alto: float, yaw := 0.0) -> void:
+	_x(m, nombre, punta - Vector3(0, alto, 0), yaw)
+
 # ---------------- piezas ----------------
 ## Capsula (cuerpo envuelto, trozo de carne...) tumbada a lo largo de `dir` o colgando si dir es vertical.
 static func _capsula(m: ZarekMansion, c: Vector3, radio: float, largo: float, dir: Vector3, mat: Material, escala := Vector3.ONE) -> MeshInstance3D:
@@ -223,7 +245,8 @@ static func _comedor(m: ZarekMansion) -> void:
 		var p := Vector3(c.x, y + 0.04, c.z) + eje * (l * (k - 1) * 0.28) + lado * _rng.randf_range(-0.1, 0.1)
 		var plato := m.cyl(0.22, 0.2, 0.025, p, m._mat.marmol, m._house, 20)
 		plato.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_trozo(m, p + Vector3(0, 0.08, 0), eje.rotated(Vector3.UP, _rng.randf_range(-0.6, 0.6)), 0.55)
+		var plato_de: String = ["carne_cote_de_boeuf", "organos_human_heart", "carne_eataly_steak_scanned_wit"][k]
+		_x(m, plato_de, p + Vector3(0, 0.015, 0), _rng.randf() * TAU)
 	# chorro que cae por el borde y charco en el suelo
 	var borde := Vector3(c.x, float(r.y), c.z) + lado * (w * 0.5 + 0.25)
 	_charco(m, borde, 1.1)
@@ -242,6 +265,7 @@ static func _banera_sangre(m: ZarekMansion) -> void:
 		var ab := m._caja_mallas(nd)
 		ZarekTerror._calco(m, "sangre_goteo_2", Vector3(ab.get_center().x, ab.end.y - 0.3, ab.end.z + 0.005), Vector3(0, 0, 1), Vector2(0.6, 0.8))
 		_charco(m, Vector3(ab.get_center().x, ab.position.y, ab.end.z + 0.5), 1.0)
+		_x(m, "restos_severed_hand", Vector3(ab.get_center().x + 0.4, ab.position.y + 0.01, ab.end.z + 0.45), 2.2)
 
 ## Cuerpos: uno tapado con una sábana empapada en el cuarto de huéspedes, otro envuelto en plástico a medio
 ## arrastrar en el pasillo del sótano, y uno bajo la escalera de servicio.
@@ -256,9 +280,13 @@ static func _cuerpos(m: ZarekMansion) -> void:
 		var p := ZarekTerror._sitio_libre(m, r, 1.0)
 		if p == Vector3.INF:
 			continue
-		var dir := Vector3(1, 0, 0).rotated(Vector3.UP, _rng.randf() * TAU)
-		_envuelto(m, p + Vector3(0, 0.2, 0), dir, it[1])
-		_charco(m, p + dir * 0.2, 1.6)
+		var giro := _rng.randf() * TAU
+		var dir := Vector3(1, 0, 0).rotated(Vector3.UP, giro)
+		if it[1] == tela:
+			_x(m, "cadaver_murder_scene_cloth_body", p, giro)
+		else:
+			_envuelto(m, p + Vector3(0, 0.2, 0), dir, it[1])
+		_charco(m, p + dir * 0.2, 1.8)
 
 ## Despensa: carne colgada de ganchos en una barra del techo.
 static func _despensa(m: ZarekMansion) -> void:
@@ -273,9 +301,12 @@ static func _despensa(m: ZarekMansion) -> void:
 	barra.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	for k in 4:
 		var p := a.lerp(b, (k + 0.5) / 4.0)
-		var punta := _gancho(m, p, y, _rng.randf_range(0.3, 0.6))
-		_trozo(m, punta - Vector3(0, 0.4, 0), Vector3.UP, _rng.randf_range(0.9, 1.2))
-		_charco(m, Vector3(p.x, float(r.y), p.z), 0.7)
+		var punta := _gancho(m, p, y, 0.2)
+		if k % 2 == 0:
+			_colgado(m, "cerdo_lamb_in_carcass", punta + Vector3(0, 0.1, 0), 1.2, _rng.randf_range(-0.4, 0.4))
+		else:
+			_colgado(m, "cerdo_pig_carcass", punta + Vector3(0, 0.15, 0), 1.6, _rng.randf_range(-0.4, 0.4))
+		_charco(m, Vector3(p.x, float(r.y), p.z), 0.9)
 
 ## Capilla: huesos roídos alrededor de donde comía la madre.
 static func _capilla(m: ZarekMansion) -> void:
@@ -286,6 +317,10 @@ static func _capilla(m: ZarekMansion) -> void:
 		var p := ZarekTerror._sitio_libre(m, r, 0.2)
 		if p != Vector3.INF:
 			_hueso(m, p, _rng.randf_range(0.25, 0.5), _rng.randf() * TAU)
+	for k in 4:
+		var p := ZarekTerror._sitio_libre(m, r, 0.3)
+		if p != Vector3.INF:
+			_x(m, "huesos_human_skull" if k < 3 else "huesos_skeleton_hand", p, _rng.randf() * TAU)
 
 ## El matadero (antes la galería de servicio): lo llama ZarekDecorado en lugar del taller.
 static func matadero(m: ZarekMansion, r: Dictionary) -> void:
@@ -294,79 +329,89 @@ static func matadero(m: ZarekMansion, r: Dictionary) -> void:
 	var rc: Rect2 = r.rect
 	var y := float(r.y)
 	var L := func(x: float, z: float, alto := 0.0) -> Vector3: return Vector3(rc.position.x + x, y + alto, rc.position.y + z)
-	var tela := _mat("tela_sangre", 0.95)
 	var plast := _mat("plastico", 0.35)
-	# barra con ganchos: dos cuerpos envueltos, tres trozos de carne y un gancho vacío
+	# barra con ganchos: un cuerpo desollado, canales de cerdo y cordero, uno envuelto en plástico y un gancho vacío
 	var ya := y + 3.3
-	var a: Vector3 = L.call(7.2, 2.6, 3.3)
-	var b: Vector3 = L.call(13.6, 2.6, 3.3)
+	var a: Vector3 = L.call(7.0, 2.6, 3.3)
+	var b: Vector3 = L.call(13.8, 2.6, 3.3)
 	m.box(Vector3(a.distance_to(b), 0.08, 0.08), (a + b) * 0.5, m._mat.hierro, false)
 	for s in [a, b]:
 		m.box(Vector3(0.08, 0.6, 0.08), s + Vector3(0, 0.3, 0), m._mat.hierro, false)
-	var cuelgan := ["cuerpo", "carne", "cuerpo_p", "carne", "vacio", "carne"]
+	var cuelgan := ["cerdo", "desollado", "cordero", "plastico", "vacio", "cerdo"]
 	for k in cuelgan.size():
 		var p := a.lerp(b, (k + 0.5) / cuelgan.size())
-		var punta := _gancho(m, p, ya, 0.35 if cuelgan[k].begins_with("cuerpo") else _rng.randf_range(0.4, 0.7))
+		var punta := _gancho(m, p, ya, 0.3)
+		var giro := _rng.randf_range(-0.5, 0.5)
 		match cuelgan[k]:
-			"cuerpo":
-				_envuelto(m, punta - Vector3(0, 0.9, 0), Vector3.UP, tela)
-			"cuerpo_p":
+			"cerdo":
+				_colgado(m, "cerdo_pig_carcass", punta + Vector3(0, 0.15, 0), 1.6, giro)
+			"cordero":
+				_colgado(m, "cerdo_lamb_in_carcass", punta + Vector3(0, 0.1, 0), 1.2, giro)
+			"desollado":
+				_colgado(m, "restos_skeleton_gore_model", punta + Vector3(0, 0.05, 0), 1.75, giro)
+			"plastico":
 				_envuelto(m, punta - Vector3(0, 0.9, 0), Vector3.UP, plast)
-			"carne":
-				_trozo(m, punta - Vector3(0, 0.4, 0), Vector3.UP, _rng.randf_range(1.0, 1.4))
 		if cuelgan[k] != "vacio":
-			_charco(m, Vector3(p.x, y, p.z), _rng.randf_range(0.8, 1.3))
-	# mesa de despiece: tablón grueso manchado, cuchillas y trozos encima, cubo debajo
+			_charco(m, Vector3(p.x, y, p.z), _rng.randf_range(0.9, 1.4))
+	# mesa de despiece: tablón manchado con vísceras, una mano cortada, cuchillas y el hacha
 	var mc: Vector3 = L.call(10.0, 7.2)
 	m.box(Vector3(2.4, 0.12, 1.0), mc + Vector3(0, 0.88, 0), m._mat.madera_vieja, true)
 	for q in [Vector3(-1.05, 0, -0.38), Vector3(1.05, 0, -0.38), Vector3(-1.05, 0, 0.38), Vector3(1.05, 0, 0.38)]:
 		m.box(Vector3(0.12, 0.82, 0.12), mc + q + Vector3(0, 0.41, 0), m._mat.madera_vieja, false)
-	ZarekTerror._calco(m, "sangre_charco_1", mc + Vector3(0, 0.945, 0), Vector3.UP, Vector2(1.6, 1.0), 0.0)
-	_trozo(m, mc + Vector3(-0.5, 1.05, 0.05), Vector3(1, 0, 0.2), 0.8)
-	_trozo(m, mc + Vector3(0.3, 1.02, -0.15), Vector3(0.3, 0, 1), 0.55)
-	m._prop("obj_meat_cleaver", mc + Vector3(0.85, 0.95, 0.2), 0.4, 1.0, false)
-	m._prop("hatchet", mc + Vector3(0.6, 0.95, -0.3), 1.2, 1.0, false)
+	var top := mc + Vector3(0, 0.94, 0)
+	ZarekTerror._calco(m, "sangre_charco_1", top + Vector3(0, 0.005, 0), Vector3.UP, Vector2(1.7, 1.0), 0.0)
+	_x(m, "organos_small_and_large_intestin", top + Vector3(-0.55, 0, 0.05), 0.4, 1.0)
+	_x(m, "organos_human_liver", top + Vector3(-0.1, 0, -0.2), 1.1)
+	_x(m, "organos_human_heart", top + Vector3(0.15, 0, 0.18), 2.0)
+	_x(m, "restos_severed_hand", top + Vector3(0.5, 0, -0.1), 0.7)
+	_x(m, "carnicero_cleaver___butcher_s_best", top + Vector3(0.85, 0, 0.25), 1.6)
+	_x(m, "carnicero_knife_collection", top + Vector3(0.75, 0, -0.32), 0.1, 0.8)
 	_cubo_sangre(m, mc + Vector3(0.4, 0, 0.75))
-	_charco(m, mc, 2.2)
-	# sierra colgada en la pared norte
-	var sierra := m.box(Vector3(0.9, 0.18, 0.02), L.call(10.0, 0.15, 1.8), m._mat.metal, false)
-	sierra.rotation.z = 0.08
-	m.box(Vector3(0.16, 0.24, 0.05), L.call(10.5, 0.17, 1.85), m._mat.madera_vieja, false)
-	# silla de tortura: correas en brazos y patas, cadenas en el suelo y un charco debajo
-	var sc: Vector3 = L.call(2.4, 9.4)
-	m.box(Vector3(0.6, 0.08, 0.6), sc + Vector3(0, 0.5, 0), m._mat.madera_vieja, true)
-	m.box(Vector3(0.6, 0.9, 0.08), sc + Vector3(0, 0.95, 0.28), m._mat.madera_vieja, false)
-	for q in [Vector3(-0.26, 0, -0.26), Vector3(0.26, 0, -0.26), Vector3(-0.26, 0, 0.26), Vector3(0.26, 0, 0.26)]:
-		m.box(Vector3(0.07, 0.5, 0.07), sc + q + Vector3(0, 0.25, 0), m._mat.madera_vieja, false)
-	for s in [-1.0, 1.0]:
-		m.box(Vector3(0.07, 0.07, 0.55), sc + Vector3(s * 0.3, 0.75, 0), m._mat.madera_vieja, false)
-		m.box(Vector3(0.1, 0.05, 0.12), sc + Vector3(s * 0.3, 0.79, -0.05), m._mat.oscuro, false)
-		m.box(Vector3(0.1, 0.1, 0.05), sc + Vector3(s * 0.26, 0.2, -0.26), m._mat.oscuro, false)
-	m.box(Vector3(0.62, 0.06, 0.05), sc + Vector3(0, 1.2, 0.24), m._mat.oscuro, false)
-	_charco(m, sc, 1.8)
-	for k in 6:
-		var e := m.cyl(0.03, 0.03, 0.09, sc + Vector3(_rng.randf_range(-0.8, 0.8), 0.02, _rng.randf_range(-0.9, -0.3)), m._mat.hierro, m._house, 6)
-		e.rotation = Vector3(PI * 0.5, _rng.randf() * TAU, 0)
-	# bolsas con restos amontonadas y huesos
-	for q in [Vector3(12.6, 0, 10.4), Vector3(13.4, 0, 9.6), Vector3(12.9, 0.38, 10.0)]:
-		var p: Vector3 = L.call(q.x, q.z, q.y)
-		_capsula(m, p + Vector3(0, 0.24, 0), 0.3, 1.1, Vector3(1, 0, 0).rotated(Vector3.UP, _rng.randf() * PI), plast, Vector3(1.0, 1.0, 0.75))
-	_charco(m, L.call(12.9, 10.0), 1.6)
+	_charco(m, mc, 2.4)
+	# gancho de sacrificio (viga con gancho ensangrentado) en la esquina
+	_x(m, "carnicero_sacrificial_hook", L.call(1.3, 1.3), PI * 0.25, 1.0, true)
+	# silla de bruja con púas y correas, el aplastacabezas y cadenas colgando de la pared
+	_x(m, "tortura_witch_s_chair", L.call(2.6, 9.4), PI * 0.15, 1.0, true)
+	_charco(m, L.call(2.6, 9.4), 2.0)
+	_x(m, "tortura_rusty_chains", L.call(3.4, 8.4), 0.6)
+	_x(m, "tortura_head_crusher", L.call(5.6, 11.4), PI, 1.0, true)
+	_x(m, "tortura_hanging_wall_chains", L.call(0.12, 6.0, 1.0), PI * 0.5)
+	_x(m, "tortura_iron_shackles", L.call(0.15, 4.2, 1.2), PI * 0.5)
+	_x(m, "tortura_rusted_chain_shackles", L.call(1.0, 5.0), 0.8)
+	# jaula colgada con un esqueleto dentro
+	var jc: Vector3 = L.call(5.0, 6.5)
+	_x(m, "tortura_medieval_asset_19__cage", jc, 0.3, 1.0, true)
+	_x(m, "huesos_skeleton", jc + Vector3(0, 0.12, 0), 0.3, 0.85)
+	# cama ensangrentada donde los ata, y cuerpo bajo una sábana empapada
+	_x(m, "cadaver_dead_body", L.call(12.2, 10.2), PI * 0.5, 1.0, true)
+	ZarekTerror._calco(m, "sangre_charco_3", L.call(12.2, 10.0, 0.9), Vector3.UP, Vector2(0.7, 0.7), 0.4)
+	ZarekTerror._calco(m, "sangre_salpicadura_2", L.call(12.2, 10.7, 0.88), Vector3.UP, Vector2(0.6, 0.6), 1.3)
+	_charco(m, L.call(12.2, 10.2), 1.6)
+	_x(m, "cadaver_murder_scene_cloth_body", L.call(8.2, 9.6), 1.9)
+	_charco(m, L.call(8.2, 9.6), 2.0)
+	# calaveras, huesos y frascos con restos en una repisa
+	var rep: Vector3 = L.call(9.0, 0.3, 1.45)
+	m.box(Vector3(2.6, 0.06, 0.4), rep, m._mat.madera_vieja, false)
+	_x(m, "huesos_human_skull", rep + Vector3(-0.9, 0.03, 0.02), PI)
+	_x(m, "organos_brain_in_a_jar", rep + Vector3(-0.3, 0.03, 0.0), PI)
+	_x(m, "restos_formaldehyde_jar_asset_p", rep + Vector3(0.45, 0.03, 0.0), PI)
+	_x(m, "huesos_human_skull", rep + Vector3(1.0, 0.03, 0.02), PI * 0.8)
 	for k in 10:
-		_hueso(m, L.call(_rng.randf_range(0.8, 2.6), _rng.randf_range(10.4, 11.4)), _rng.randf_range(0.2, 0.5), _rng.randf() * TAU)
-	_cubo_sangre(m, L.call(8.2, 10.8))
+		_hueso(m, L.call(_rng.randf_range(4.0, 6.5), _rng.randf_range(10.4, 11.4)), _rng.randf_range(0.2, 0.5), _rng.randf() * TAU)
+	_x(m, "huesos_human_skull", L.call(4.6, 11.0), 0.7)
+	_x(m, "huesos_skeleton_hand", L.call(5.6, 10.6), 2.0)
+	_x(m, "restos_bloody_axe", L.call(13.9, 6.8, 0.0), -PI * 0.5)
+	_cubo_sangre(m, L.call(8.2, 11.2))
 	_cubo_sangre(m, L.call(6.6, 3.0))
-	# desagüe en el centro con sangre acumulada alrededor
+	# desagüe en el centro con sangre acumulada y el rastro desde la puerta
 	var dc: Vector3 = L.call(7.8, 6.4)
 	m.cyl(0.18, 0.18, 0.01, dc + Vector3(0, 0.005, 0), m._mat.hierro, m._house, 12)
-	_charco(m, dc, 2.6)
+	_charco(m, dc + Vector3(0.6, 0, 0), 2.6)
 	_rastro(m, L.call(7.2, 0.4), dc, 0.7)
-	# chorretones y salpicaduras en las paredes
 	for k in 4:
 		ZarekTerror._en_pared(m, r, "sangre_salpicadura_%d" % _rng.randi_range(1, 3), Vector2(1.5, 1.5), 1.3)
 	for k in 2:
 		ZarekTerror._en_pared(m, r, "sangre_goteo_%d" % _rng.randi_range(1, 2), Vector2(1.0, 2.0), 1.4)
-	# una bombilla roja y débil que apenas alumbra
 	var luz := OmniLight3D.new()
 	luz.light_color = Color(1.0, 0.35, 0.25)
 	luz.light_energy = 0.7
