@@ -182,8 +182,9 @@ func _ready() -> void:
 	# recoger los 4 sellos
 	for s in m.seals:
 		g.player.global_position = s.pos + Vector3(0.8, 0.05, 0)
-		await _wait(0.1)
+		g.player.velocity = Vector3.ZERO
 		g._use()
+		await _wait(0.1)
 	_check(g.seals == 4, "4 sellos recogidos")
 	var unlocked := true
 	for d in m.doors:

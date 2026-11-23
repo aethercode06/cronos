@@ -3950,5 +3950,23 @@
   "nombre": "Light Switch",
   "autor": "watsonee",
   "licencia": "by"
+ },
+ {
+  "clave": "sofia_mano (brazos)",
+  "uid": "453e0248925c4c3e807d3d36fe1b916a",
+  "nombre": "FREE FPS Arms with glove",
+  "autor": "Alexander_Ovelar",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/453e0248925c4c3e807d3d36fe1b916a",
+  "cat": "primera persona"
+ },
+ {
+  "clave": "sofia_mano (linterna)",
+  "uid": "1bca09efb5154e75b6f6f17d8f71deeb",
+  "nombre": "Retro Style Flashlight",
+  "autor": "mattyu",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/1bca09efb5154e75b6f6f17d8f71deeb",
+  "cat": "primera persona"
  }
 ]

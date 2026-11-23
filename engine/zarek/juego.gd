@@ -200,6 +200,7 @@ func _ready() -> void:
 		["usar", "USAR", Vector2(-150, -175), 86.0],
 		["linterna", "LUZ", Vector2(-330, -115), 62.0],
 		["sal", "BENGALA", Vector2(-300, -290), 58.0],
+		["agachar", "AGACHAR", Vector2(-120, -330), 58.0],
 	]
 	add_child(touch)
 	carga.queue_free()
@@ -216,7 +217,7 @@ func _ready() -> void:
 
 # ---------------- preparación ----------------
 func _inputs() -> void:
-	var map := {"usar": [KEY_E, KEY_ENTER], "linterna": [KEY_F], "sal": [KEY_Q], "pausa": [KEY_ESCAPE, KEY_P]}
+	var map := {"usar": [KEY_E, KEY_ENTER], "linterna": [KEY_F], "sal": [KEY_Q], "pausa": [KEY_ESCAPE, KEY_P], "agachar": [KEY_C, KEY_CTRL]}
 	for a in map:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a)
@@ -345,6 +346,26 @@ func _flashlight() -> void:
 	near.light_energy = 0.45
 	near.name = "cerca"
 	flash_node.add_child(near)
+	# la mano de Sofía con la linterna (brazos «FREE FPS Arms with glove» y «Retro Style Flashlight», CC-BY):
+	# el modelo tiene el origen en el cristal y el haz hacia +Z; va en la capa 20 para que no haga sombra
+	var ps: PackedScene = load("res://zarek/modelos/sofia_mano.glb")
+	if ps:
+		mano_fp = ps.instantiate()
+		# la linterna apunta al frente; el brazo baja hacia la esquina de abajo a la derecha
+		mano_fp.rotation = Vector3(-0.5, PI - 0.1, 0.3)
+		flash_node.add_child(mano_fp)
+		for g in mano_fp.find_children("*", "GeometryInstance3D", true, false):
+			(g as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			(g as GeometryInstance3D).layers = 1 << 19
+		# un poco de luz solo para la mano: que se vea aunque la casa esté a oscuras
+		var lm := OmniLight3D.new()
+		lm.light_cull_mask = 1 << 19
+		lm.omni_range = 0.9
+		lm.light_energy = 0.7
+		lm.light_color = Color(1.0, 0.86, 0.7)
+		lm.position = Vector3(-0.15, 0.2, 0.15)
+		lm.light_specular = 0.2
+		mano_fp.add_child(lm)
 	# luz que rebota: un poco de luz cálida sale de donde da el haz y alumbra lo de alrededor
 	_rebote = OmniLight3D.new()
 	_rebote.light_color = Color(1.0, 0.85, 0.68)
@@ -1141,12 +1162,21 @@ func _textura_hoja() -> ImageTexture:
 var _color_linterna := Color.WHITE
 var _alcance_linterna := 0.0
 var _t_mano := 0.0
+var mano_fp: Node3D
+var _mano_bob := 0.0
 func _update_flash(delta: float) -> void:
 	if _alcance_linterna == 0.0:
 		_color_linterna = flash.light_color
 		_alcance_linterna = flash.spot_range
 	var cam := player.camera
-	flash_node.global_position = cam.global_position + cam.global_transform.basis * Vector3(0.18, -0.15, 0.0)
+	# el cristal de la linterna, delante y abajo a la derecha (la mano y el brazo quedan detrás, en pantalla)
+	var corre := player.running and player.moving > 0.5
+	_mano_bob += delta * (11.5 if corre else 7.5) * clampf(player.moving, 0.0, 1.0)
+	var bamb := Vector3(cos(_mano_bob * 0.5) * 0.012, absf(sin(_mano_bob * 0.5)) * -0.014, 0.0) * (2.2 if corre else 1.0) * clampf(player.moving, 0.0, 1.0)
+	var baja := 0.05 if corre else 0.0
+	flash_node.global_position = cam.global_position + cam.global_transform.basis * (Vector3(0.17, -0.19 - baja, -0.48) + bamb)
+	if mano_fp:
+		mano_fp.visible = hidden_in.is_empty() and state != "titulo"
 	# la mano no es una cámara: la linterna va con un poco de retraso y un temblor muy leve
 	_t_mano += delta
 	var temblor := Quaternion(Vector3(1, 0, 0), sin(_t_mano * 1.7) * 0.004 + sin(_t_mano * 4.3) * 0.0015) * Quaternion(Vector3(0, 1, 0), sin(_t_mano * 1.3 + 1.0) * 0.005)
@@ -1264,6 +1294,9 @@ func _play(delta: float) -> void:
 	if Input.is_action_just_pressed("sal"):
 		_throw_salt()
 	_puerta_tick(delta)
+	if Input.is_action_just_pressed("agachar") and hidden_in.is_empty():
+		player.crouching = not player.crouching
+		message("Agachada: más lenta, pero casi no hago ruido." if player.crouching else "", 1.5 if player.crouching else 0.01)
 	_electricidad(delta)
 	_registro_tick(delta)
 	# ritual
@@ -2040,6 +2073,7 @@ func _enter_wardrobe(wd: Dictionary) -> void:
 	aliento = 1.0
 	_t_revisar = randf_range(4.0, 9.0)
 	var cama: bool = wd.get("tipo", "") == "cama"
+	player.altura_fija = true
 	player.head.position.y = 0.2 if cama else player.eye_height
 	player.speed_mult = 0.0
 	player.velocity = Vector3.ZERO
@@ -2064,6 +2098,7 @@ func _exit_wardrobe(normal: bool) -> void:
 	slit_r.visible = false
 	slit_cama.visible = false
 	player.head.position.y = player.eye_height
+	player.altura_fija = false
 	_aguantando = false
 	player.speed_mult = 1.0
 	state = "juego"
