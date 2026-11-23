@@ -5282,7 +5282,7 @@ func _iluminar_salas() -> void:
 				modo = ["fija", "parpadea", "apagada", "parpadea"][int(i / 2) % 4]
 			elif modo == "":
 				var dado := _rng.randf()
-				modo = "parpadea" if dado < 0.55 else ("fija" if dado < 0.85 else "apagada")
+				modo = "parpadea" if dado < 0.35 else ("fija" if dado < 0.55 else "apagada")
 			elif modo == "parpadea" and _rng.randf() < 0.15:
 				modo = "apagada"
 			l.modo = modo
@@ -5705,6 +5705,8 @@ func _decorate() -> void:
 	ZarekTerror.aplicar(self)
 	ZarekGore.aplicar(self)
 	_repartir_objetos()
+	if OS.get_environment("SIN_RUINA") == "":
+		ZarekRuina.aplicar(self)
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect
