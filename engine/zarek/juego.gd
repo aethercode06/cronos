@@ -26,6 +26,7 @@ var _t_trueno := 20.0
 var _trueno_tapa := 0.0
 var snd_lluvia: AudioStreamPlayer
 var archivo_box: Control
+var tension: ZarekTension
 var _reg_hold: Dictionary = {}
 var _t_reg := 0.0
 var _t_ruido_obj := {}
@@ -201,6 +202,10 @@ func _ready() -> void:
 	muebles_reg = ZarekRegistro.preparar(mansion)
 	suceso = ZarekNoches.elegir_suceso(mansion.partida_seed)
 	salas_cerradas = ZarekNoches.preparar(mansion, muebles_reg, mansion.partida_seed, 2, 6 if suceso == "luna_roja" else 4)
+	tension = ZarekTension.new()
+	tension.j = self
+	tension.activo = not autotest
+	add_child(tension)
 	sustos = ZarekSustos.new()
 	add_child(sustos)
 	sustos.setup(self)
@@ -518,6 +523,37 @@ func _bar(col: Color, w: float) -> ProgressBar:
 	return b
 
 var lbl_fps: Label
+## Resolución adaptable (en el teléfono): si los fps bajan de 52 se dibuja el 3D un poco más pequeño;
+## si van sobrados un rato, se recupera. Un juego de terror a tirones no da miedo.
+var _escala_base := 0.0
+var _t_escala := 0.0
+var _fps_acum := 0.0
+var _fps_n := 0
+var _fps_bien := 0.0
+func _escala_adaptable(delta: float) -> void:
+	if _escala_base <= 0.0 or not (state in ["juego", "escondido", "ritual"]):
+		return
+	_fps_acum += 1.0 / maxf(delta, 0.001)
+	_fps_n += 1
+	_t_escala += delta
+	if _t_escala < 2.0:
+		return
+	var fps := _fps_acum / float(_fps_n)
+	_t_escala = 0.0
+	_fps_acum = 0.0
+	_fps_n = 0
+	var vp := get_viewport()
+	if fps < 52.0 and vp.scaling_3d_scale > 0.5:
+		vp.scaling_3d_scale = maxf(0.5, vp.scaling_3d_scale - 0.05)
+		_fps_bien = 0.0
+		print("ZAREK escala 3D %.2f (fps %d)" % [vp.scaling_3d_scale, int(fps)])
+	elif fps > 58.0:
+		_fps_bien += 2.0
+		if _fps_bien >= 8.0 and vp.scaling_3d_scale < _escala_base - 0.01:
+			vp.scaling_3d_scale = minf(_escala_base, vp.scaling_3d_scale + 0.05)
+			_fps_bien = 0.0
+	else:
+		_fps_bien = 0.0
 func _ui() -> void:
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	if OS.get_name() == "Android":
@@ -529,6 +565,7 @@ func _ui() -> void:
 		var lado_corto := minf(alto, ancho)
 		if lado_corto > 0.0:
 			get_viewport().scaling_3d_scale = clampf(720.0 / lado_corto, 0.45, 0.8)
+			_escala_base = get_viewport().scaling_3d_scale
 	# contador de fps (arriba a la izquierda, pequeño): para medir en el teléfono de verdad
 	var capa_fps := CanvasLayer.new()
 	capa_fps.layer = 90
@@ -677,6 +714,13 @@ void fragment() {
 	ui.add_child(black)
 	_black_target = 1.0
 	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)], ["ARCHIVO", _abrir_archivo]], "Usa auriculares. Juega a oscuras.")
+	# en el título se ve la mansión detrás: fondo más claro y botones más compactos
+	(title_box.get_child(0) as ColorRect).color = Color(0, 0, 0, 0.5)
+	var vbt := title_box.get_child(1) as VBoxContainer
+	vbt.add_theme_constant_override("separation", 9)
+	for b in vbt.get_children():
+		if b is Button:
+			(b as Button).custom_minimum_size = Vector2(300, 52)
 	end_box = _menu_box(["", ""], [["JUGAR DE NUEVO", _restart], ["MENÚ", _to_title]], "")
 	lbl_end_t = end_box.get_meta("t")
 	lbl_end_s = end_box.get_meta("s")
@@ -750,12 +794,16 @@ func _hud_visible(v: bool) -> void:
 	lbl_prompt.visible = v
 	touch.visible = v
 
+var _t_titulo := 0.0
 func _show_title() -> void:
 	state = "titulo"
 	_hud_visible(false)
 	title_box.visible = true
 	player.frozen = true
-	_black_target = 0.35
+	_black_target = 0.25
+	# de fondo, la mansión de noche vista desde el camino, con la cámara moviéndose muy despacio
+	player.global_position = mansion.cell_to_world("exterior", 44.0, 63.0)
+	player.velocity = Vector3.ZERO
 	flash.visible = true
 
 func message(text: String, sec := 4.0) -> void:
@@ -799,13 +847,16 @@ func _nearest_seal() -> Dictionary:
 # ---------------- flujo de la partida ----------------
 func _resumen_titulo() -> String:
 	var hechos: Array = Aether.save.get_value("zarek_finales", [])
-	var t := "Noche I · La casa Varela\nEsta noche: " + String(ZarekNoches.SUCESOS[suceso][0]).capitalize()
+	var t := "Noche I · La casa Varela\nEsta noche: " + String(ZarekNoches.SUCESOS[suceso][0]).substr(0, 1) + String(ZarekNoches.SUCESOS[suceso][0]).substr(1).to_lower()
 	t += "\nSecretos de la familia: %d/%d" % [ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
 	if not hechos.is_empty():
 		t += "\nFinales: %d/%d" % [hechos.size(), FINALES.size()]
 		var mejor: float = Aether.save.get_value("zarek_mejor", 0.0)
 		if mejor > 0.0:
 			t += " · Mejor tiempo: " + _fmt(mejor)
+		var rg := String(Aether.save.get_value("zarek_rango", ""))
+		if rg != "":
+			t += " · Mejor rango: " + rg
 	return t
 
 func _jugar(d: int) -> void:
@@ -851,6 +902,10 @@ func start_game(quick := false) -> void:
 	state = "intro"
 	player.frozen = true
 	flash_on = true
+	if not quick and not autotest and not shots:
+		player.global_position = mansion.start_pos
+		player.velocity = Vector3.ZERO
+		player.set_look(0.0, 0.0)
 	if quick:
 		state = "juego"
 		player.frozen = false
@@ -1043,6 +1098,10 @@ func _process(delta: float) -> void:
 			Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 			int(Performance.get_monitor(Performance.MEMORY_STATIC) / 1e6), state, player.global_position.snapped(Vector3.ONE) if player else Vector3.ZERO])
 	_eventos_sala(delta)
+	_escala_adaptable(delta)
+	if state == "titulo" and player:
+		_t_titulo += delta
+		player.set_look(sin(_t_titulo * 0.07) * 0.12, 0.13 + sin(_t_titulo * 0.05) * 0.03)
 	# de vez en cuando salta un pez en el río si el jugador anda cerca
 	if mansion and player and mansion.rio_rect.size != Vector2.ZERO:
 		_t_pez -= delta
@@ -1063,6 +1122,8 @@ func _process(delta: float) -> void:
 	if state in ["juego", "escondido", "ritual"]:
 		_play(delta)
 		_suceso_tick(delta)
+		tension.tick(delta)
+		_consejos_tick(delta)
 	_update_hud()
 	_update_audio(delta)
 
@@ -1650,6 +1711,54 @@ func _eventos_sala(delta: float) -> void:
 func _interact_prompt() -> void:
 	var t := _target()
 	lbl_prompt.text = str(t.get("text", ""))
+	match str(t.get("kind", "")):
+		"armario":
+			_consejo("esconder", "Pulsa USAR para esconderte.\nSi se acerca mientras estás dentro, MANTÉN LUZ para contener la respiración (sin pasarte: acabarás jadeando).")
+		"registrar":
+			_consejo("registrar", "MANTÉN USAR para registrar muebles: hay pilas, bengalas, llaves de salas cerradas… y secretos de la familia que se guardan para siempre.")
+		"puerta":
+			_consejo("puerta", "Un toque de USAR entreabre la puerta para asomarte. Otro la abre del todo.\nCon tablones, MANTÉN USAR para atrancarla.")
+		"fonografo":
+			_consejo("fonografo", "El fonógrafo lo atrae hasta aquí. Ponlo y vete a otra parte… pero no abuses: aprende.")
+
+## Consejos la primera vez que pasa algo (una sola vez en todas las partidas), abajo a la izquierda.
+var lbl_consejo: Label
+var _t_consejo := 0.0
+func _consejo(clave: String, texto: String) -> void:
+	if autotest or shots:
+		return
+	var vistos: Array = Aether.save.get_value("zarek_consejos", [])
+	if clave in vistos or _t_consejo > 0.0:
+		return
+	vistos.append(clave)
+	Aether.save.set_value("zarek_consejos", vistos)
+	if lbl_consejo == null:
+		lbl_consejo = _label("", 20, Color(0.95, 0.9, 0.78))
+		lbl_consejo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_consejo.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+		lbl_consejo.position = Vector2(26, -250)
+		lbl_consejo.size = Vector2(560, 120)
+		lbl_consejo.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		lbl_consejo.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+		lbl_consejo.add_theme_constant_override("outline_size", 6)
+		lbl_consejo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ui.add_child(lbl_consejo)
+	lbl_consejo.text = "◆ " + texto
+	lbl_consejo.modulate.a = 1.0
+	_t_consejo = 8.0
+
+func _consejos_tick(delta: float) -> void:
+	if _t_consejo > 0.0:
+		_t_consejo -= delta
+		if lbl_consejo:
+			lbl_consejo.modulate.a = clampf(_t_consejo / 1.0, 0.0, 1.0)
+	if not entered:
+		return
+	_consejo("agachar", "AGACHAR: vas más lenta pero casi no haces ruido. Damián te oye antes de verte.")
+	if elena.visible and elena.state == ZarekElena.S.CHASE:
+		_consejo("persecucion", "¡CORRE! Cierra puertas detrás de ti, rómpele la línea de visión y escóndete cuando no te vea.")
+	elif salt > 0 and elena.visible and elena.global_position.distance_to(player.global_position) < 7.0:
+		_consejo("bengala", "Si está a punto de alcanzarte, una BENGALA lo aparta unos segundos.")
 
 func _use() -> void:
 	var t := _target()
@@ -1673,7 +1782,7 @@ func _use() -> void:
 		"pick":
 			var k: Dictionary = t.obj
 			k.taken = true
-			k.item.visible = false
+			_a_la_mano(k.item)
 			if k.kind == "pila":
 				battery = minf(100.0, battery + 50.0)
 				message("Pilas nuevas para la linterna.", 2.0)
@@ -1782,9 +1891,24 @@ func _use_portal(pt: Dictionary) -> void:
 	if state == "juego":
 		message(mansion.room_name(player.global_position).capitalize(), 1.8)
 
+## Al coger algo, el objeto vuela hasta la mano en vez de desaparecer de golpe.
+func _a_la_mano(n: Node3D) -> void:
+	if n == null or not is_instance_valid(n):
+		return
+	if autotest:
+		n.visible = false
+		return
+	var desde := n.global_position
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_method(func(k: float):
+		if is_instance_valid(n):
+			n.global_position = desde.lerp(flash_node.global_position + Vector3(0, -0.15, 0), k), 0.0, 1.0, 0.32)
+	tw.tween_property(n, "scale", n.scale * 0.25, 0.32)
+	tw.chain().tween_callback(func(): n.visible = false)
+
 func _take_seal(s: Dictionary) -> void:
 	s.taken = true
-	s.node.visible = false
+	_a_la_mano(s.node)
 	seals += 1
 	elena.aggro = seals + (2 if dif == 2 else 0)
 	snd_ui.stream = _s("campana")
@@ -2213,7 +2337,18 @@ func _on_caught() -> void:
 	player.shake(22.0)
 	Aether.flash(Color(0.7, 0.0, 0.0), 0.6)
 	vig_mat.set_shader_parameter("red", 1.0)
-	await get_tree().create_timer(1.3).timeout
+	# el hachazo: Sofía cae de lado al suelo y la vista se queda mirándole desde abajo
+	await get_tree().create_timer(0.55).timeout
+	sound_at("damian_hacha" if ZarekSonido.hay("damian_hacha") else "golpe_madera", player.global_position + Vector3(0, 1.4, 0), 2.0)
+	sound_at("carne" if ZarekSonido.hay("carne") else "aplastar", player.global_position + Vector3(0, 1.2, 0), 0.0)
+	player.altura_fija = true
+	var cae := create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	cae.tween_property(player.head, "position:y", 0.25, 0.45)
+	cae.tween_property(player.head, "rotation:z", 1.35, 0.45)
+	cae.tween_property(player.head, "rotation:x", 0.35, 0.45)
+	await get_tree().create_timer(0.45).timeout
+	player.shake(10.0)
+	await get_tree().create_timer(0.3).timeout
 	_black_target = 1.0
 	black.color.a = 1.0
 	vig_mat.set_shader_parameter("red", 0.0)
@@ -2222,6 +2357,9 @@ func _on_caught() -> void:
 	if lives <= 0:
 		_lose()
 		return
+	player.head.rotation = Vector3.ZERO
+	player.head.position.y = player.eye_height
+	player.altura_fija = false
 	if not hidden_in.is_empty():
 		_exit_wardrobe(false)
 	player.global_position = respawn_pos
@@ -2290,6 +2428,7 @@ func _win() -> void:
 		lbl_end_s.text += "\n☠ PESADILLA SUPERADA"
 		Aether.save.set_value("zarek_pesadilla", true)
 	lbl_end_s.text += "\nSecretos encontrados esta noche: %d · Archivo: %d/%d" % [secretos_noche.size(), ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
+	lbl_end_s.text += "\n" + _rango()
 	end_box.visible = true
 	if oculto:
 		_final("oculto")
@@ -2297,6 +2436,24 @@ func _win() -> void:
 	if verdad:
 		_final("trampa")
 	Aether.save.set_value("zarek_noche1", true)
+
+## Rango de la noche: rapidez, veces atrapada, secretos y notas. Se guarda el mejor (motivo para repetir).
+const RANGOS := [[92, "S", "Sombra"], [78, "A", "Fantasma"], [60, "B", "Superviviente"], [0, "C", "Presa"]]
+func _rango() -> String:
+	var p := 100.0 - deaths * 18.0 - maxf(0.0, (play_time - 540.0) / 20.0) + secretos_noche.size() * 3.0
+	p += 6.0 if notas_leidas >= mansion.notas.size() else 0.0
+	p += [-8.0, 0.0, 10.0][dif]
+	var r: Array = RANGOS[RANGOS.size() - 1]
+	for x in RANGOS:
+		if p >= float(x[0]):
+			r = x
+			break
+	var mejor := String(Aether.save.get_value("zarek_rango", ""))
+	var orden := "SABC"
+	var nuevo := mejor == "" or orden.find(String(r[1])) < orden.find(mejor)
+	if nuevo:
+		Aether.save.set_value("zarek_rango", r[1])
+	return "RANGO %s · %s%s" % [r[1], r[2], "  ¡NUEVO RÉCORD!" if nuevo and mejor != "" else ""]
 
 func _fmt(t: float) -> String:
 	return "%d:%02d" % [int(t) / 60, int(t) % 60]
@@ -2311,6 +2468,10 @@ func _director(delta: float) -> void:
 	_scare_t = randf_range(26.0, 48.0) - seals * 3.0
 	var pp := player.global_position
 	var pool := ["golpes", "susurro", "pasos", "portazo", "vistazo", "risa"]
+	# en el respiro la casa se calma: sustos más espaciados y suaves (el silencio también da miedo)
+	if tension and tension.fase == "respiro":
+		_scare_t *= 1.6
+		pool = ["susurro", "risa", "golpes"]
 	pool.append("apagon")
 	if seals >= 1:
 		pool.append("lampara")

@@ -27,6 +27,8 @@ var _speed := 1.6
 var rapidez := 1.0
 ## Cuánto ve (la niebla la baja).
 var vista := 1.0
+## Cuánto le atrae rondar cerca de ti al pasear (el director de tensión lo baja en los respiros).
+var rondar := 1.0
 var _anim_t := 0.0
 var _twitch := 0.0
 var _twitch_t := 0.0
@@ -500,7 +502,7 @@ func _physics_process(delta: float) -> void:
 				_start_chase()
 			elif path.is_empty():
 				var target: Vector3
-				var bias := 0.25 + aggro * 0.17
+				var bias := (0.25 + aggro * 0.17) * rondar
 				if randf() < bias:
 					target = player.global_position + Vector3(randf_range(-6, 6), 0, randf_range(-6, 6))
 					if mansion.room_at(target) < 0:

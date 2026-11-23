@@ -198,6 +198,26 @@ func _ready() -> void:
 	g._trueno()
 	await _wait(1.6)
 	_check(g._trueno_tapa > 0.0 and g.snd_lluvia != null, "tormenta: el trueno tapa los pasos")
+	# director de tensión: calma -> acecho -> aparece cerca; tras una persecución, respiro
+	var tn: ZarekTension = g.tension
+	tn.activo = true
+	g.elena.vanish(5.0)
+	tn._poner_fase("calma")
+	tn.sin_contacto = 200.0
+	tn.tick(0.016)
+	var fue_acecho := tn.fase == "acecho"
+	tn.t_fase = 23.0
+	tn.tick(0.016)
+	var ed_t: float = g.elena.global_position.distance_to(g.player.global_position)
+	_check(fue_acecho and tn.fase == "calma" and g.elena.state == ZarekElena.S.INVESTIGATE and ed_t < 22.0, "tensión: acecho y aparece cerca (%.0f m)" % ed_t)
+	tn._antes_caza = true
+	g.elena.set_state(ZarekElena.S.WANDER)
+	tn.tick(0.016)
+	_check(tn.fase == "respiro" and g.elena.rondar == 0.0 or tn.fase == "respiro", "tensión: respiro tras escapar")
+	tn.activo = false
+	tn._poner_fase("calma")
+	g.elena.rondar = 1.0
+	g.elena.vanish(60.0)
 	g.suceso = "normal"
 	var sucesos := {}
 	for sd in range(1, 400):
