@@ -267,6 +267,22 @@ func _ready() -> void:
 	g.elena.vanish(60.0)
 	g.elena.aturdido = 0.0
 	g.set_meta("no_catch", false)
+	# diario: objetivos con pistas y mapa
+	g.diario.abrir("objetivos")
+	var txt_obj: String = g.diario.texto_objetivos()
+	await _wait(0.2)
+	var pausado := get_tree().paused
+	g.diario._pestana = "mapa"
+	g.diario.refrescar()
+	await _wait(0.2)
+	g.diario.cerrar_diario()
+	_check(pausado and not get_tree().paused and "CÓMO SALIR CON VIDA" in txt_obj and "FINALES" in txt_obj and "MANTÉN USAR" in txt_obj, "diario: objetivos, pistas y mapa")
+	var s0: Dictionary = m.seals[0]
+	var pista_vaga: String = g.diario.pista(s0)
+	s0["visto"] = true
+	var pista_exacta: String = g.diario.pista(s0)
+	s0.erase("visto")
+	_check(pista_vaga != pista_exacta and m.room_name(s0.pos) in pista_exacta, "pistas: vaga y luego exacta")
 	g.suceso = "normal"
 	var sucesos := {}
 	for sd in range(1, 400):

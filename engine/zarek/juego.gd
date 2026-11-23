@@ -28,6 +28,8 @@ var snd_lluvia: AudioStreamPlayer
 var archivo_box: Control
 var tension: ZarekTension
 var defensa: ZarekDefensa
+var diario: ZarekDiario
+var btn_diario: Button
 var _reg_hold: Dictionary = {}
 var _t_reg := 0.0
 var _t_ruido_obj := {}
@@ -240,7 +242,7 @@ func _ready() -> void:
 
 # ---------------- preparación ----------------
 func _inputs() -> void:
-	var map := {"usar": [KEY_E, KEY_ENTER], "linterna": [KEY_F], "sal": [KEY_Q], "pausa": [KEY_ESCAPE, KEY_P], "agachar": [KEY_C, KEY_CTRL], "disparar": [KEY_R]}
+	var map := {"usar": [KEY_E, KEY_ENTER], "linterna": [KEY_F], "sal": [KEY_Q], "pausa": [KEY_ESCAPE, KEY_P], "agachar": [KEY_C, KEY_CTRL], "disparar": [KEY_R], "diario": [KEY_TAB, KEY_M]}
 	for a in map:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a)
@@ -730,7 +732,9 @@ void fragment() {
 	end_box = _menu_box(["", ""], [["JUGAR DE NUEVO", _restart], ["MENÚ", _to_title]], "")
 	lbl_end_t = end_box.get_meta("t")
 	lbl_end_s = end_box.get_meta("s")
-	pause_box = _menu_box(["PAUSA", ""], [["CONTINUAR", _resume], ["REINICIAR", _restart]], "")
+	pause_box = _menu_box(["PAUSA", ""], [["CONTINUAR", _resume], ["DIARIO Y MAPA", func():
+		pause_box.visible = false
+		diario.abrir()], ["REINICIAR", _restart]], "")
 	end_box.visible = false
 	pause_box.visible = false
 	var pb := Button.new()
@@ -743,6 +747,25 @@ void fragment() {
 	pb.size = Vector2(80, 64)
 	pb.pressed.connect(_pause)
 	ui.add_child(pb)
+	# el diario: objetivos, pistas y mapa (pausa el juego)
+	diario = ZarekDiario.new()
+	diario.j = self
+	ui.add_child(diario)
+	btn_diario = Button.new()
+	btn_diario.text = "DIARIO"
+	btn_diario.add_theme_font_size_override("font_size", 22)
+	btn_diario.add_theme_color_override("font_color", Color(0.95, 0.88, 0.7, 0.8))
+	var sbd := StyleBoxFlat.new()
+	sbd.bg_color = Color(0.1, 0.06, 0.03, 0.55)
+	sbd.border_color = Color(0.6, 0.45, 0.25, 0.7)
+	sbd.set_border_width_all(2)
+	sbd.set_corner_radius_all(6)
+	btn_diario.add_theme_stylebox_override("normal", sbd)
+	btn_diario.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	btn_diario.position = Vector2(-240, 14)
+	btn_diario.size = Vector2(140, 52)
+	btn_diario.pressed.connect(func(): diario.abrir())
+	ui.add_child(btn_diario)
 	ui.move_child(pb, title_box.get_index())
 
 func _menu_box(titles: Array, buttons: Array, foot: String) -> Control:
@@ -795,6 +818,8 @@ func _menu_box(titles: Array, buttons: Array, foot: String) -> Control:
 	return root
 
 func _hud_visible(v: bool) -> void:
+	if btn_diario:
+		btn_diario.visible = v
 	top.visible = v
 	lbl_obj.visible = v
 	lbl_prompt.visible = v
@@ -841,9 +866,9 @@ func _update_hud() -> void:
 	elif seals < SEALS_NEEDED:
 		var near := _nearest_seal()
 		var where := ""
-		if not near.is_empty():
-			where = " · El más cercano está en " + mansion.room_name(near.pos)
-		lbl_obj.text = "Reúne lo necesario para la trampa (%d/%d)%s" % [seals, SEALS_NEEDED, where]
+		if not near.is_empty() and diario:
+			where = "\n%s: %s" % [ZarekDiario.nombre_objeto(near).capitalize(), diario.pista(near).replace("[b]", "").replace("[/b]", "")]
+		lbl_obj.text = "Reúne lo necesario para la trampa (%d/%d) · DIARIO: pistas y mapa%s" % [seals, SEALS_NEEDED, where]
 	elif state == "ritual" or ritual > 0.0:
 		lbl_obj.text = "Prepara la trampa junto a su colchón"
 	else:
@@ -1363,7 +1388,7 @@ func _play(delta: float) -> void:
 	if sanity <= 0.0 and _sanity_zero_cd <= 0.0:
 		_sanity_zero_cd = 30.0
 		sanity = 25.0
-		message("Ella me encontró en mi propia mente.", 3.0)
+		message("El miedo me ha hecho gritar. Ahora sabe dónde estoy.", 3.0)
 		sound_behind("risa", 2.0, 2.0)
 		if elena.state == ZarekElena.S.DORMANT:
 			elena.wake_far()
@@ -1402,6 +1427,17 @@ func _play(delta: float) -> void:
 		_throw_salt()
 	if Input.is_action_just_pressed("disparar") and hidden_in.is_empty():
 		defensa.disparar()
+	if Input.is_action_just_pressed("diario"):
+		diario.abrir()
+	diario.tick(delta, false)
+	# objetos de la trampa que ves de cerca: quedan apuntados en el diario y el mapa
+	_t_ver_obj -= delta
+	if _t_ver_obj <= 0.0:
+		_t_ver_obj = 0.4
+		for so in mansion.seals:
+			if not so.taken and not so.get("visto", false) and pp.distance_to(so.pos) < 9.0 and absf(pp.y - (so.pos as Vector3).y) < 2.0 and _in_view((so.pos as Vector3) + Vector3(0, 0.9, 0)):
+				so["visto"] = true
+				message("Ahí está %s. (Apuntado en el DIARIO)" % ZarekDiario.nombre_objeto(so), 2.5)
 	_puerta_tick(delta)
 	if Input.is_action_just_pressed("agachar") and hidden_in.is_empty():
 		player.crouching = not player.crouching
@@ -1471,6 +1507,7 @@ func _in_view(p: Vector3) -> bool:
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 var _t_crujido := 0
+var _t_ver_obj := 0.0
 func _on_step(noise: float) -> void:
 	if state != "juego" and state != "ritual":
 		return
@@ -1780,6 +1817,7 @@ func _consejos_tick(delta: float) -> void:
 			lbl_consejo.modulate.a = clampf(_t_consejo / 1.0, 0.0, 1.0)
 	if not entered:
 		return
+	_consejo("diario", "Pulsa DIARIO (arriba a la derecha) para ver qué tienes que hacer, las pistas de los objetos y el mapa de la casa.")
 	_consejo("agachar", "AGACHAR: vas más lenta pero casi no haces ruido. Damián te oye antes de verte.")
 	if elena.visible and elena.state == ZarekElena.S.CHASE:
 		_consejo("persecucion", "¡CORRE! Cierra puertas detrás de ti, rómpele la línea de visión y escóndete cuando no te vea.")
@@ -1858,7 +1896,7 @@ func _use() -> void:
 			if String(dd.get("llave", "")) != "":
 				message("Cerrada con llave. En la placa del pomo pone «%s».\nLa llave tiene que estar en algún cajón de la casa." % dd.llave, 3.0)
 			else:
-				message("Cerrada. Algo la sella desde el otro lado.", 1.8)
+				message("Cerrada por dentro. Es su cuarto: no podré entrar\nhasta tener los 4 objetos de la trampa.", 3.0)
 		"abrir_llave":
 			var dl: Dictionary = t.obj
 			dl.locked = false
@@ -1944,6 +1982,8 @@ func _a_la_mano(n: Node3D) -> void:
 
 func _take_seal(s: Dictionary) -> void:
 	s.taken = true
+	if diario:
+		diario.tick(0.0, true)
 	_a_la_mano(s.node)
 	seals += 1
 	elena.aggro = seals + (2 if dif == 2 else 0)
