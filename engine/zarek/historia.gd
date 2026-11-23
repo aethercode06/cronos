@@ -4,37 +4,37 @@ extends RefCounted
 ## color de su luz, su sonido de fondo y lo que pasa la primera vez que entras.
 ##
 ## 1874: Aurelio Varela construye la casa sobre una cueva con una roca negra que «late»: dentro duerme Zarek.
-## 1987: Elena Varela, la heredera, baja a la cueva y Zarek entra en ella; solo puede comer carne humana. Su
-## marido Julián intenta matarla y su hijo Damián, de 9 años, lo mata con un hacha y encadena a su madre en la
-## capilla del sótano con cuatro candados. Inés, la hermana menor de Elena, huye embarazada. Desde 1988 han
-## desaparecido 43 personas en el bosque: Damián las atrae y alimenta a su madre. Hoy la protagonista, Sofía (la
-## hija de Inés), recibe la carta de un «abogado»: la escribió Damián. La madre necesita sangre Varela.
+## 1986-87: Elena Varela baja a la cueva y Zarek entra en ella: la luz le quema, solo come carne humana, mueve las
+## cosas de la casa sin tocarlas y su mordisco contagia el hambre. Su marido Julián intenta quemarla con gasolina y
+## su hijo Damián, de 9 años, lo mata con un hacha y la encadena en la capilla del sótano. Desde 1988 han
+## desaparecido 43 personas: Damián siembra de clavos el atajo del bosque y deja una luz encendida en una ventana;
+## los conductores, sin cobertura, vienen solos a pedir ayuda. Él los guarda vivos para ella. Solo el fuego la mata.
 
 const NOTAS := [
-	["Vestíbulo y gran escalera", "Carta del abogado Ramiro Castell",
-		"Estimada señorita Sofía:\nComo última heredera de la familia Varela, debe presentarse en la finca de Valdeoscuro para firmar el inventario. La esperaremos en la casa. Venga sola y de noche: así se evitan los curiosos del pueblo.\nLa familia la espera desde hace mucho tiempo."],
+	["Vestíbulo y gran escalera", "Libro de visitas",
+		"Un libro de visitas cubierto de polvo. Las últimas firmas son de gente que pedía ayuda:\n«Se nos han pinchado las ruedas» (2003). «¿Tienen teléfono? No hay cobertura» (2011). «Gracias por dejar la luz encendida» (2019).\nNinguna tiene fecha de salida."],
 	["Estudio del padre", "Diario de Julián Varela · octubre de 1987",
-		"Elena bajó otra vez a la cueva. Ya no come nada de lo que le pongo. Ayer la encontré en la cocina con el perro… Dios mío, con el perro.\nDamián la defiende. Dice que mamá solo tiene hambre. Esta noche termino con esto."],
+		"Elena bajó otra vez a la cueva. Ya no come nada de lo que le pongo. Ayer la encontré en la cocina con el perro… Dios mío, con el perro.\nDamián la defiende. Dice que mamá solo tiene hambre. Esta noche termino con esto: tengo la gasolina."],
 	["Biblioteca", "Página arrancada de un libro antiguo",
-		"…Zarek, hijo de la roca madre, no tiene cuerpo propio. Toma uno y le da un hambre que nada sacia salvo la carne de los hombres. Solo la sangre de la misma estirpe que lo encerró puede romper del todo el pacto con la piedra y dejarlo libre por el mundo."],
+		"…Zarek, hijo de la roca, no tiene cuerpo propio. Toma uno y le da un hambre que nada sacia salvo la carne de los hombres. La luz le quema la carne prestada; su mordisco deja la semilla del hambre en quien lo recibe.\nNo muere mientras su cuerpo viva: solo el fuego lo devuelve a la piedra."],
 	["Cuarto de niños", "Dibujo infantil · firmado «Damián, 9 años»",
 		"Un niño con un hacha y, detrás, una mujer con cadenas y una boca enorme.\nDebajo, con letra torcida: «YO CUIDO A MAMÁ. MAMÁ TIENE HAMBRE. PAPÁ ERA MALO»."],
 	["Cuarto de la institutriz", "Diario de Marta, la institutriz · 1987",
-		"El niño baja al sótano todas las noches con un plato tapado. La cocinera dice que no es comida de su cocina. Hoy olía a carne cruda y tenía las manos rojas hasta los codos.\nMañana me voy. No vuelvo."],
-	["Tocador de la madre", "Carta de Inés a su hermana · sin enviar",
-		"Elena: me voy esta noche. Estoy embarazada y no quiero que mi hija crezca en esta casa ni cerca de esa cueva. No me busques. Si algún día te curas, te escribiré.\nPerdóname.\nInés"],
+		"Los platos se caen solos de los estantes. Las puertas se cierran de golpe cuando la señora está de mal humor, y ella ya no sale del sótano.\nEl niño baja todas las noches con un plato tapado. Mañana me voy. No vuelvo."],
+	["Tocador de la madre", "Diario de Elena · 1986",
+		"La roca me canta cuando bajo a la cueva. Dice mi nombre con la voz de mi madre.\nJulián no lo entiende. Mañana bajaré sin linterna: la luz le duele."],
 	["Cuarto del hermano", "Cartel de SE BUSCA · 2019",
-		"SE BUSCA: Andrés Ortega, 34 años. Visto por última vez en la ruta de Valdeoscuro. Llevaba mochila roja y una radio.\nAlguien ha tachado la cara con un rotulador y ha escrito encima: «RICO»."],
+		"SE BUSCA: Andrés Ortega, 34 años. Su coche apareció en el atajo de Valdeoscuro con dos ruedas reventadas y el maletero forzado.\nAlguien ha tachado la cara con un rotulador y ha escrito encima: «VINO SOLO»."],
 	["Cuarto de Damián", "Cuaderno de Damián",
-		"Comida para mamá: ||||| ||||| ||||| ||||| ||||| ||||| ||||| ||||| |||\nMamá dice que ya no quiere más excursionistas. Quiere a la de su sangre.\nLa señora Sofía viene el martes. Mamá dice que con ella se acaba el hambre para siempre."],
+		"Comida para mamá: ||||| ||||| ||||| ||||| ||||| ||||| ||||| ||||| |||\nClavos en el atajo. La lámpara en la ventana. Quitarles la rueda y el gato. Siempre vienen solos.\nCuando mamá tiene hambre, mueve las cosas. Si se enfada mucho, rompe las cadenas. ABAJO NO SE HACE RUIDO."],
 	["Archivo", "Informe de la Guardia Civil · 1988",
-		"Mansión Varela. Hallado el cuerpo de Julián Varela con heridas de hacha. Ni rastro de la esposa, Elena, ni del hijo, Damián (9). Se da por muertos a ambos. El pozo y el sótano no se inspeccionan por peligro de derrumbe."],
+		"Mansión Varela. Hallado el cuerpo de Julián Varela con heridas de hacha y una lata de gasolina sin abrir. Ni rastro de la esposa, Elena, ni del hijo, Damián (9). Se da por muertos a ambos. El sótano no se inspecciona por peligro de derrumbe."],
 	["Cámara de la roca madre", "Inscripción en la piedra · 1874",
-		"AQVÍ DVERME EL HIJO DE LA ROCA. LA SANGRE VARELA LO ENCERRÓ. SOLO LA SANGRE VARELA LO PVEDE SOLTAR.\n— Aurelio Varela, fundador"],
+		"AQVÍ DVERME EL HIJO DE LA ROCA. NO LE DEIS CVERPO.\nTEME LA LVZ. SOLO EL FVEGO LO DEVVELVE A LA PIEDRA.\n— Aurelio Varela, fundador"],
 	["Comedor formal", "Nota en una servilleta",
-		"«Mamá come primero. Luego yo. Lo que sobra, a los perros del bosque.»\nEn el mantel hay una lista de nombres. Los últimos están sin tachar."],
+		"«Mamá come primero. Luego yo. Lo que sobra, a los perros del bosque.»\nEn el mantel hay una lista de matrículas de coche. Las últimas, sin tachar."],
 	["Capilla de la madre", "Libro de rezos de Elena · 1987",
-		"Cuatro candados. Damián lleva las llaves colgadas del cuello y nunca se las quita. Dice que es por mi bien.\nTengo tanta hambre. Hijo mío, tráeme a alguien. Tráeme a alguien que sea nuestro."],
+		"Cuatro candados. Damián lleva las llaves colgadas del cuello y nunca se las quita. Dice que es por mi bien.\nTengo tanta hambre. Hijo mío, tráeme a alguien vivo. Y apaga esas velas: me queman."],
 	["Sala de música", "Partitura con anotaciones",
 		"«Nana para Damián», compuesta por Elena. Las últimas líneas están escritas con otra letra, apretada y torcida, y las notas repiten la misma palabra: HAMBRE."],
 ]

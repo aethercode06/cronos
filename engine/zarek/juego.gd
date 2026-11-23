@@ -1,11 +1,8 @@
 class_name ZarekJuego
 extends Node3D
 ## La Sombra de Zarek — Noche I (Aether Engine).
-## Una noche corta (10-15 min): reunir los 4 objetos de la trampa en la
-## mansión, sobrevivir a Elena y expulsar a Zarek con el ritual del Epicentro.
-
-const SEALS_NEEDED := 4
-const RITUAL_TIME := 10.0
+## Una noche corta (10-15 min): Sofía, sola y con el coche pinchado en el bosque, pide ayuda en la mansión Varela y
+## queda atrapada; tiene que salir viva (ZarekHuida) mientras la cazan Damián y su madre, que domina la casa.
 
 var autotest := false
 var shots := false
@@ -48,7 +45,8 @@ var tablones := 0
 ## no le asusta la luz y los objetos siempre cambian de sitio).
 var dif := 1
 var tiene_llaves := false
-const FINALES := {"trampa": "La trampa", "verdadero": "La verdad de los Varela", "huida": "La huida", "oculto": "La hija de la roca"}
+const FINALES := {"escapar": "Escapé", "verdadero": "El fuego", "oculto": "Hambre"}
+var huida: ZarekHuida
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
 var seals := 0
@@ -174,6 +172,11 @@ func _ready() -> void:
 	player = AetherPlayerFP.new()
 	add_child(player)
 	player.collision_mask = 3 | 8  # suelo/paredes + puertas + objetos con física
+	# campo de visión de cámara real: 82° en horizontal (el teléfono es muy apaisado, 20:9; con 72° en vertical
+	# se veían ~116° a lo ancho, como un ojo de pez de videojuego)
+	player.camera.keep_aspect = Camera3D.KEEP_WIDTH
+	player.base_fov = 82.0
+	player.camera.fov = 82.0
 	add_to_group("zarek_oyentes")
 	player.global_position = mansion.start_pos
 	player.set_look(0.0, 0.0)
@@ -209,6 +212,10 @@ func _ready() -> void:
 	defensa.j = self
 	add_child(defensa)
 	defensa.preparar(mansion, muebles_reg, mansion.partida_seed)
+	huida = ZarekHuida.new()
+	huida.j = self
+	add_child(huida)
+	huida.preparar(mansion)
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -846,7 +853,7 @@ func _update_hud() -> void:
 	lbl_lives.text = "♥ ".repeat(lives).strip_edges()
 	bar_san.value = sanity
 	bar_bat.value = battery
-	lbl_salt.text = "Bengalas: %d   Tablones: %d   Trampa: %d/%d   Secretos: %d/%d" % [salt, tablones, seals, SEALS_NEEDED, ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
+	lbl_salt.text = "Bengalas: %d   Tablones: %d   Objetos: %d/%d   Secretos: %d/%d" % [salt, tablones, seals, mansion.seals.size(), ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
 	if not llaves_salas.is_empty():
 		lbl_salt.text += "\nLlaves: " + ", ".join(llaves_salas)
 	if defensa:
@@ -860,19 +867,33 @@ func _update_hud() -> void:
 		if not dfn.is_empty():
 			lbl_salt.text += "\nDefensa: " + " · ".join(dfn)
 		touch.set_visible_button("disparar", defensa.escopeta and defensa.cartuchos > 0 and state == "juego")
+	lbl_obj.text = texto_objetivo()
+
+## El objetivo en pantalla: qué hacer ahora y, debajo, cómo están las salidas.
+func texto_objetivo() -> String:
 	if not entered:
 		var dist := int(player.global_position.distance_to(mansion.front_door))
-		lbl_obj.text = "Llega a la mansión Varela (%d m)" % dist
-	elif seals < SEALS_NEEDED:
-		var near := _nearest_seal()
-		var where := ""
-		if not near.is_empty() and diario:
-			where = "\n%s: %s" % [ZarekDiario.nombre_objeto(near).capitalize(), diario.pista(near).replace("[b]", "").replace("[/b]", "")]
-		lbl_obj.text = "Reúne lo necesario para la trampa (%d/%d) · DIARIO: pistas y mapa%s" % [seals, SEALS_NEEDED, where]
-	elif state == "ritual" or ritual > 0.0:
-		lbl_obj.text = "Prepara la trampa junto a su colchón"
+		return "Pide ayuda en la casa de la luz encendida (%d m)" % dist
+	var hu := huida
+	var t := "SAL VIVA DE LA FINCA"
+	var sal: Array[String] = []
+	for r in ZarekHuida.SALIDAS:
+		if r == hu.salida_cerrada:
+			continue
+		var f := hu.faltan(r)
+		var nom: String = {"camioneta": "Camioneta", "coche": "Tu coche", "muro": "Muro"}[r]
+		sal.append(nom + (": lista" if f.is_empty() else ": falta " + String(f[0]).get_slice(" (", 0)))
+	t += " — " + " · ".join(sal)
+	if hu.madre_muerta:
+		t += "\nLa madre ha ardido."
+	elif hu.madre_suelta:
+		t += "\n¡LA MADRE ESTÁ SUELTA! Solo la luz la frena."
 	else:
-		lbl_obj.text = "Ve al cuarto de Damián y prepara la trampa junto a su colchón"
+		t += "\nFuria de la madre: %d %%%s" % [int(hu.furia), "  ¡CUIDADO!" if hu.furia >= 80.0 else ""]
+	var near := _nearest_seal()
+	if not near.is_empty() and diario:
+		t += "\n%s: %s" % [ZarekDiario.nombre_objeto(near).capitalize(), diario.pista(near).replace("[b]", "").replace("[/b]", "")]
+	return t
 
 func _nearest_seal() -> Dictionary:
 	var best := {}
@@ -915,28 +936,10 @@ func _final(clave: String) -> void:
 	if not clave in hechos:
 		hechos.append(clave)
 		Aether.save.set_value("zarek_finales", hechos)
-	if clave != "huida":
+	if true:
 		var mejor: float = Aether.save.get_value("zarek_mejor", 0.0)
 		if mejor <= 0.0 or play_time < mejor:
 			Aether.save.set_value("zarek_mejor", play_time)
-
-## Final de la huida: con las llaves, al coche. Sofía se salva… y deja a todos los demás atrás.
-func _huida() -> void:
-	state = "final"
-	player.frozen = true
-	elena.can_catch = false
-	elena.vanish(999.0)
-	sound_at("coche_puerta" if ZarekSonido.hay("coche_puerta") else "golpe_madera", mansion.car_pos + Vector3(0, 1, 0), 0.0)
-	_black_target = 1.0
-	await get_tree().create_timer(1.4).timeout
-	message("El motor tosió… y arrancó.\nNo miré atrás. Ni siquiera cuando la oí gritar mi nombre desde el sótano.", 5.0)
-	await get_tree().create_timer(5.2).timeout
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	_hud_visible(false)
-	lbl_end_t.text = "FINAL: LA HUIDA"
-	lbl_end_s.text = "Tiempo: %s\nUna semana después, otra carta salió de la mansión Varela.\nIba dirigida a alguien que no sabe nada. (Final %d/%d)" % [_fmt(play_time), Aether.save.get_value("zarek_finales", []).size() + (0 if "huida" in Aether.save.get_value("zarek_finales", []) else 1), FINALES.size()]
-	end_box.visible = true
-	_final("huida")
 
 func start_game(quick := false) -> void:
 	title_box.visible = false
@@ -960,9 +963,10 @@ func start_game(quick := false) -> void:
 	_black_target = 1.0
 	await get_tree().create_timer(0.6).timeout
 	var lines := [
-		"Me llamo Sofía. Hace una semana me llegó una carta:\nsoy la última heredera de los Varela.",
-		"Tenía que firmar el inventario de la finca, en el bosque de Valdeoscuro.\nA las 3:00 el coche se apagó en medio del camino.",
-		"Desde 1988 han desaparecido 43 personas en este bosque.\nNunca encontraron ningún cuerpo.",
+		"Me llamo Sofía. Volvía a casa de noche y tomé un atajo\npor el bosque de Valdeoscuro.",
+		"Dos ruedas reventaron a la vez. El camino estaba lleno de clavos.\nEl móvil, sin cobertura. Nada en kilómetros…",
+		"Abrí el maletero: ni la rueda de repuesto ni el gato.\nAlguien había forzado la cerradura… y no hacía mucho.",
+		"…salvo una luz encendida en la ventana de una mansión.\nAlguien vivía ahí. Alguien podría ayudarme.",
 	]
 	for l in lines:
 		message(l, 3.6)
@@ -977,7 +981,7 @@ func start_game(quick := false) -> void:
 	var sc: Array = ZarekNoches.SUCESOS[suceso]
 	message(String(sc[0]) + "\n" + String(sc[1]), 4.5)
 	await get_tree().create_timer(4.8).timeout
-	message("Tengo que llegar a la mansión.", 2.6)
+	message("Voy a pedir ayuda a esa casa.", 2.6)
 
 func _restart() -> void:
 	get_tree().paused = false
@@ -1012,6 +1016,8 @@ func _unhandled_input(e: InputEvent) -> void:
 func oir_ruido(pos: Vector3, fuerza: float) -> void:
 	if elena:
 		elena.hear(pos, fuerza)
+	if huida:
+		huida.ruido(pos, fuerza)
 
 var _pos_segura := Vector3.ZERO
 var _t_segura := 0.0
@@ -1388,7 +1394,8 @@ func _play(delta: float) -> void:
 	if sanity <= 0.0 and _sanity_zero_cd <= 0.0:
 		_sanity_zero_cd = 30.0
 		sanity = 25.0
-		message("El miedo me ha hecho gritar. Ahora sabe dónde estoy.", 3.0)
+		message("El miedo me ha hecho gritar. Ahora sabe dónde estoy.\nY abajo, la madre también me ha oído.", 3.0)
+		huida.subir_furia(20.0, "")
 		sound_behind("risa", 2.0, 2.0)
 		if elena.state == ZarekElena.S.DORMANT:
 			elena.wake_far()
@@ -1444,33 +1451,17 @@ func _play(delta: float) -> void:
 		message("Agachada: más lenta, pero casi no hago ruido." if player.crouching else "", 1.5 if player.crouching else 0.01)
 	_electricidad(delta)
 	_registro_tick(delta)
-	# ritual
-	if seals >= SEALS_NEEDED and _in_circle(pp):
-		if Input.is_action_pressed("usar") or (autotest and state == "ritual"):
-			if state != "ritual":
-				state = "ritual"
-				_ritual_start()
-			ritual += delta
-			player.speed_mult = 0.0
-		else:
-			player.speed_mult = 1.0
-			ritual = maxf(0.0, ritual - delta * 0.3)
-		bar_rit.visible = true
-		bar_rit.value = ritual / RITUAL_TIME * 100.0
-		if ritual >= RITUAL_TIME:
-			_win()
-	else:
-		bar_rit.visible = false
-		player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
-		if state == "ritual":
-			state = "juego"
+	# la noche: la madre (furia y poltergeist), las salidas (las acciones mantenidas llevan su propia barra)
+	huida.tick(delta)
+	player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
 
 func _events(pp: Vector3) -> void:
 	if not entered and mansion.inside_house(pp):
 		entered = true
 		sound_behind("portazo", 3.0, 4.0)
 		player.shake(10.0)
-		message("La puerta se cerró detrás de mí.\nYa no hay vuelta atrás.", 3.5)
+		message("La puerta se cerró detrás de mí. Y a lo lejos, el ruido de una cadena:\nalguien ha cerrado el portón de la finca. No he venido a pedir ayuda. Me han cazado.", 5.0)
+		huida.cerrar_porton()
 		elena.timer = 30.0
 	# sustos del bosque: una sola vez cada uno
 	var pts := {"puente": mansion.cell_to_world("exterior", 31.0, 87.0), "columpio": mansion.cell_to_world("exterior", 12.0, 61.0),
@@ -1492,8 +1483,6 @@ func _events(pp: Vector3) -> void:
 				"cuervos":
 					pass
 
-func _in_circle(pp: Vector3) -> bool:
-	return absf(pp.y - mansion.circle_pos.y) < 1.5 and Vector2(pp.x - mansion.circle_pos.x, pp.z - mansion.circle_pos.z).length() < 1.9
 
 func _in_view(p: Vector3) -> bool:
 	var cam := player.camera
@@ -1526,6 +1515,7 @@ func _on_step(noise: float) -> void:
 	if _trueno_tapa > 0.0:
 		noise *= 0.2
 	elena.hear(player.global_position, noise)
+	huida.ruido(player.global_position, noise)
 	# tablones rotos: crujen fuerte al pisarlos (y Elena lo oye)
 	var pp := player.global_position
 	for c in mansion.crujidos:
@@ -1634,6 +1624,9 @@ func _target() -> Dictionary:
 	for s in mansion.seals:
 		if not s.taken and Vector2(pp.x - s.pos.x, pp.z - s.pos.z).length() < 1.7:
 			return {"kind": "sello", "obj": s, "text": "USAR: tomar " + String(ZarekMansion.NOMBRE_OBJETO.get(s.get("tipo", ""), "el objeto"))}
+	var rs := huida.objetivo(pp)
+	if not rs.is_empty():
+		return rs
 	if fauna and is_instance_valid(fauna.gato) and fauna.gato.process_mode != Node.PROCESS_MODE_DISABLED \
 			and fauna.gato.global_position.distance_to(pp + player.forward() * 0.6) < 1.1 and fauna.gato.estado != ZarekAnimal.E.HUYE:
 		return {"kind": "gato", "text": "USAR: acariciar al gato"}
@@ -1645,13 +1638,7 @@ func _target() -> Dictionary:
 		return {"kind": "arma_suelo", "obj": arma_s, "text": "USAR: coger " + String(ZarekDefensa.ARMAS[arma_s.tipo].nombre)}
 	for k in mansion.pickups:
 		if not k.taken and Vector2(pp.x - k.pos.x, pp.z - k.pos.z).length() < 1.6:
-			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + {"pila": "las pilas", "tablon": "los tablones", "llaves": "las llaves del coche"}.get(k.kind, "las bengalas")}
-	if seals >= SEALS_NEEDED and _in_circle(pp):
-		return {"kind": "ritual", "text": "MANTÉN USAR: preparar la trampa"}
-	if entered and mansion.car_pos != Vector3.ZERO and Vector2(pp.x - mansion.car_pos.x, pp.z - mansion.car_pos.z).length() < 3.0:
-		if tiene_llaves:
-			return {"kind": "huir", "text": "USAR: huir en el coche (final)"}
-		return {"kind": "nada", "text": "El coche no arranca sin las llaves. ¿Dónde las dejé…?"}
+			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + {"pila": "las pilas", "tablon": "los tablones", "llaves": "las llaves de la camioneta"}.get(k.kind, "las bengalas")}
 	var pt := mansion.portal_near(pp, 1.7)
 	if not pt.is_empty():
 		return {"kind": "portal", "obj": pt, "text": "USAR: " + str(pt.text)}
@@ -1670,6 +1657,8 @@ func _target() -> Dictionary:
 			if String(d.llave) in llaves_salas:
 				return {"kind": "abrir_llave", "obj": d, "text": "USAR: abrir con la llave de «%s»" % d.llave}
 			return {"kind": "cerrada", "obj": d, "text": "USAR: probar el pomo (cerrada con llave)"}
+		if d.locked and huida.tiene.get("llave", false):
+			return {"kind": "abrir_cuarto", "obj": d, "text": "USAR: abrir con la llave del cuarto de Damián"}
 		if d.locked:
 			return {"kind": "cerrada", "obj": d, "text": "USAR: probar el pomo (cerrada)"}
 		if float(d.get("barricada", 0.0)) > 0.0:
@@ -1841,8 +1830,10 @@ func _use() -> void:
 			_exit_wardrobe(true)
 		"fonografo":
 			_poner_fonografo()
-		"huir":
-			_huida()
+		"hold":
+			huida.empezar_hold(String(t.que))
+		"salida":
+			_escapar(String(t.que))
 		"nota":
 			_leer_nota(t.obj)
 		"gato":
@@ -1862,7 +1853,8 @@ func _use() -> void:
 				message("Pilas nuevas para la linterna.", 2.0)
 			elif k.kind == "llaves":
 				tiene_llaves = true
-				message("Las llaves de mi coche… las tenía él. Podría huir.\n(Pero si me voy, Damián seguirá cazando.)", 4.0)
+				huida.tiene["llaves_camioneta"] = true
+				message("Las llaves de su camioneta. Está en la cochera, junto a la casa.\n" + ("Me falta gasolina." if not huida.tiene.get("gasolina", false) else "Tengo gasolina: podemos irnos."), 4.0)
 			elif k.kind == "tablon":
 				tablones += 1
 				message("Tablones y clavos. Puedo atrancar una puerta (mantén USAR en una puerta cerrada).", 3.5)
@@ -1905,8 +1897,17 @@ func _use() -> void:
 			player.shake(0.8)
 			if String(dd.get("llave", "")) != "":
 				message("Cerrada con llave. En la placa del pomo pone «%s».\nLa llave tiene que estar en algún cajón de la casa." % dd.llave, 3.0)
+			elif huida.salida_cerrada == "camioneta":
+				message("Cerrada. Es su cuarto. Esta noche no necesito nada de ahí dentro.", 3.0)
 			else:
-				message("Cerrada por dentro. Es su cuarto: no podré entrar\nhasta tener los 4 objetos de la trampa.", 3.0)
+				message("Cerrada. Es el cuarto de Damián: las llaves de su camioneta tienen que estar ahí.\nLa llave del cuarto estará en algún sitio de la casa.", 3.5)
+		"abrir_cuarto":
+			for dd2 in mansion.doors:
+				if dd2.locked and String(dd2.get("llave", "")) == "":
+					dd2.locked = false
+			sound_at("llaves", (t.obj.pos as Vector3) + Vector3(0, 1.1, 0), -2.0)
+			mansion.set_door(t.obj, true)
+			message("Su cuarto. Huele a sangre seca y a sudor.", 2.5)
 		"abrir_llave":
 			var dl: Dictionary = t.obj
 			dl.locked = false
@@ -1996,52 +1997,33 @@ func _take_seal(s: Dictionary) -> void:
 		diario.tick(0.0, true)
 	_a_la_mano(s.node)
 	seals += 1
+	var tipo := String(s.get("tipo", ""))
+	huida.tiene[tipo] = true
 	elena.aggro = seals + (2 if dif == 2 else 0)
-	snd_ui.stream = _s("campana")
+	snd_ui.stream = _s("recoger")
 	snd_ui.volume_db = -6.0
 	snd_ui.play()
-	player.shake(4.0)
+	var txt: String = {
+		"cizalla": "Una cizalla. Puedo cortar la cadena del portón.",
+		"llave": "Una llave con una etiqueta: «CUARTO D.». El cuarto de Damián.",
+		"gasolina": "Gasolina. Para su camioneta… o para otra cosa.",
+		"rueda": "Una rueda de repuesto. Puede valer para mi coche.",
+		"gato": "Un gato. Con la rueda, puedo cambiar la que me rajó.",
+		"cuerda": "Una cuerda con un garfio. Podría trepar el muro de la finca."}.get(tipo, _obj_msg(s))
+	message(txt, 3.5)
+	# la casa reacciona: cuanto más tienes, más inquieta está
 	match seals:
-		1:
-			message(_obj_msg(s) + "\nEn algún lugar empezó a sonar una radio: «…ayuda… por favor…»", 4.0)
-			snd_box.play()
-			if elena.state == ZarekElena.S.DORMANT:
-				elena.timer = minf(elena.timer, 4.0)
 		2:
-			message(_obj_msg(s) + "\nHa notado que falta algo. Ya no espera en la oscuridad.", 4.5)
-			snd_radio.play()
 			for l in mansion.lamps:
 				mansion.flicker_lamp(l, 1.5)
 			sound_behind("susurro", 2.0, 2.0)
 		3:
-			message(_obj_msg(s) + "\nSabe lo que estoy haciendo.", 3.0)
 			sound_behind("risa", 4.0, 0.0)
-			_corte_luz(3.5)
-		4:
-			_blackout()
+			_corte_luz(4.5)
 
 func _obj_msg(s: Dictionary) -> String:
 	var n := String(ZarekMansion.NOMBRE_OBJETO.get(s.get("tipo", ""), "otro objeto"))
 	return "Tengo " + n + "."
-
-func _blackout() -> void:
-	message("Ya lo tengo todo.\nHa cortado la luz de la casa. Sabe que estoy aquí.", 4.5)
-	for l in mansion.lamps:
-		mansion.break_lamp(l)
-	snd_box.stop()
-	snd_radio.stop()
-	player.shake(14.0)
-	Aether.flash(Color(0.6, 0, 0), 0.4)
-	sound_behind("grito", 6.0, 3.0)
-	for d in mansion.doors:
-		if d.locked and String(d.get("llave", "")) == "":
-			d.locked = false
-			mansion.set_door(d, true, true)
-			d.snd.stream = _s("portazo")
-			d.snd.play()
-	if elena.state == ZarekElena.S.DORMANT:
-		elena.wake_far()
-	elena.hear(player.global_position, 999.0)
 
 ## Toque en una puerta cerrada: se abre. Mantener 1,4 s: se clava con tablones (gasta uno).
 func _puerta_tick(delta: float) -> void:
@@ -2395,6 +2377,14 @@ func _throw_salt() -> void:
 		return
 	salt -= 1
 	Aether.flash(Color(0.9, 0.9, 0.85), 0.25)
+	if huida.bengala(player.global_position):
+		return
+	var md := huida.madre if huida.madre_suelta and is_instance_valid(huida.madre) else null
+	if md and md.visible and md.global_position.distance_to(player.global_position) < 9.0:
+		md.repel(player.global_position)
+		sound_at("grito", md.global_position + Vector3(0, 1.6, 0), 2.0)
+		message("La luz de la bengala la quema. Se arrastra lejos, chillando.", 2.2)
+		return
 	var ed := elena.global_position.distance_to(player.global_position)
 	var to := elena.global_position - player.global_position
 	to.y = 0
@@ -2429,11 +2419,26 @@ func _on_caught() -> void:
 		return
 	_morir_atrapada()
 
-func _morir_atrapada() -> void:
+## La madre te toca: sin forcejeo posible.
+func _on_caught_madre() -> void:
+	if state in ["atrapado", "final", "muerte", "forcejeo"] or (autotest and get_meta("no_catch", false)):
+		return
+	_morir_atrapada(huida.madre)
+
+func _morir_atrapada(quien: ZarekElena = null) -> void:
 	if state in ["atrapado", "final", "muerte"]:
 		return
+	if quien == null:
+		quien = elena
+	var es_madre := quien != elena
 	state = "atrapado"
 	elena.can_catch = false
+	if es_madre:
+		quien.can_catch = false
+	else:
+		huida.subir_furia(25.0, "")
+	var _real := elena
+	elena = quien
 	elena.set_state(ZarekElena.S.GHOST)
 	elena.visible = true
 	player.frozen = true
@@ -2453,10 +2458,15 @@ func _morir_atrapada() -> void:
 	player.shake(22.0)
 	Aether.flash(Color(0.7, 0.0, 0.0), 0.6)
 	vig_mat.set_shader_parameter("red", 1.0)
-	# el hachazo: Sofía cae de lado al suelo y la vista se queda mirándole desde abajo
+	# Damián no mata: un golpe con el mango del hacha y Sofía cae inconsciente (la quiere viva, para su madre).
+	# La madre muerde. En los dos casos la vista cae al suelo.
 	await get_tree().create_timer(0.55).timeout
-	sound_at("damian_hacha" if ZarekSonido.hay("damian_hacha") else "golpe_madera", player.global_position + Vector3(0, 1.4, 0), 2.0)
-	sound_at("carne" if ZarekSonido.hay("carne") else "aplastar", player.global_position + Vector3(0, 1.2, 0), 0.0)
+	if es_madre:
+		sound_at("carne" if ZarekSonido.hay("carne") else "aplastar", player.global_position + Vector3(0, 1.4, 0), 2.0)
+		huida.mordida = true
+	else:
+		sound_at("golpe_madera", player.global_position + Vector3(0, 1.6, 0), 4.0)
+		sound_at("impacto_mueble" if ZarekSonido.hay("impacto_mueble") else "golpe_madera", player.global_position + Vector3(0, 1.0, 0), 0.0)
 	player.altura_fija = true
 	var cae := create_tween().set_parallel(true).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	cae.tween_property(player.head, "position:y", 0.25, 0.45)
@@ -2469,88 +2479,109 @@ func _morir_atrapada() -> void:
 	black.color.a = 1.0
 	vig_mat.set_shader_parameter("red", 0.0)
 	lives -= 1
+	if es_madre:
+		elena.vanish(25.0)
+		elena.can_catch = true
+		elena = _real
 	await get_tree().create_timer(1.2).timeout
 	if lives <= 0:
-		_lose()
+		_lose(es_madre)
 		return
 	player.head.rotation = Vector3.ZERO
 	player.head.position.y = player.eye_height
 	player.altura_fija = false
 	if not hidden_in.is_empty():
 		_exit_wardrobe(false)
-	player.global_position = respawn_pos
-	player.set_look(PI, 0.0)
-	sanity = maxf(sanity, 60.0)
-	elena.vanish(14.0)
-	elena.can_catch = true
+	var quedan := "Me quedan fuerzas para una vez más." if lives == 1 else "Me quedan fuerzas para %d más." % lives
+	var txt := ""
+	if es_madre:
+		# la madre muerde y te suelta para relamerse: sigues donde estabas, con su mordisco
+		sanity = maxf(sanity - 15.0, 25.0)
+		txt = "Me ha mordido en el brazo. Me soltó para relamerse y pude zafarme.\nLa herida arde. %s" % quedan
+	else:
+		# Damián te cuelga en el matadero, junto a la capilla: carne fresca para su madre
+		player.global_position = huida.matadero_pos
+		player.set_look(randf() * TAU, 0.0)
+		sanity = maxf(sanity, 45.0)
+		elena.vanish(18.0)
+		elena.can_catch = true
+		sound_at("cadenas", player.global_position + Vector3(0, 1.8, 0), -4.0)
+		txt = "Desperté en el matadero, colgada de un gancho por las muñecas. La cuerda estaba podrida: me solté.\nMe guarda para ella. Está muy cerca: tengo que salir del sótano sin hacer ruido. %s" % quedan
 	await get_tree().create_timer(0.6).timeout
-	message("Desperté en el vestíbulo.\n%s" % ("Me queda una oportunidad." if lives == 1 else "Me quedan %d oportunidades." % lives), 3.5)
+	message(txt, 5.0)
 	_black_target = 0.0
 	player.frozen = false
 	state = "juego"
 
-func _lose() -> void:
+func _lose(por_madre := false) -> void:
 	state = "muerte"
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_hud_visible(false)
 	lbl_end_t.text = "AHORA ERES LA CENA"
-	lbl_end_s.text = "Objetos de la trampa: %d/%d · Tiempo: %s" % [seals, SEALS_NEEDED, _fmt(play_time)]
+	var como := "Ella no esperó a que Damián me bajara a la capilla." if por_madre else "La tercera vez no me colgó en el matadero. Me bajó directamente a la capilla."
+	lbl_end_s.text = "%s\nEsa noche, la luz de la ventana volvió a encenderse. Para el siguiente.\nTiempo: %s · Objetos: %d/%d" % [como, _fmt(play_time), seals, mansion.seals.size()]
 	end_box.visible = true
 	snd_heart.volume_db = -60.0
 
-func _ritual_start() -> void:
-	message("Coloco el cepo junto al colchón, la gasolina en la puerta, el sedante en su agua…", 3.5)
-	if elena.state == ZarekElena.S.DORMANT:
-		elena.wake_far()
-	elena.hear(player.global_position, 999.0)
-	elena.aggro = 4
-
-func _win() -> void:
+## Escapar por una salida (camioneta, coche o muro). El final depende de lo que pasó esa noche: si la madre ardió en
+## su capilla (verdadero: el fuego mata a Zarek y cura su mordisco), si te mordió y sigue viva (oculto: «Hambre») o
+## ninguna de las dos. Con los 24 secretos se añade el epílogo con toda la verdad.
+func _escapar(ruta: String) -> void:
+	if state == "final":
+		return
 	state = "final"
 	player.frozen = true
 	elena.can_catch = false
-	elena.set_state(ZarekElena.S.GHOST)
-	var fwd := -player.global_transform.basis.z
-	elena.global_position = player.global_position + fwd * 2.2
-	elena.global_position.y = player.global_position.y
-	elena.look_at(Vector3(player.global_position.x, 0.0, player.global_position.z), Vector3.UP)
-	elena.play_anim("attack", 1.0)
-	elena.visible = true
-	snd_ui.stream = _s("grito")
-	snd_ui.volume_db = 2.0
-	snd_ui.play()
-	player.shake(18.0)
-	await get_tree().create_timer(1.1).timeout
-	Aether.flash(Color(1, 1, 1), 1.0)
-	elena.visible = false
+	elena.vanish(999.0)
+	if huida.madre_suelta and is_instance_valid(huida.madre):
+		huida.madre.can_catch = false
+		huida.madre.vanish(999.0)
+	var madre_viva := not huida.madre_muerta
+	var oculto := huida.mordida and madre_viva
+	var archivo := ZarekSecretos.cuantos() >= ZarekSecretos.TOTAL
+	match ruta:
+		"camioneta":
+			sound_at("coche_puerta" if ZarekSonido.hay("coche_puerta") else "golpe_madera", huida.cochera_pos + Vector3(0, 1, 0), 0.0)
+		"coche":
+			sound_at("coche_puerta" if ZarekSonido.hay("coche_puerta") else "golpe_madera", mansion.car_pos + Vector3(0, 1, 0), 0.0)
+		"muro":
+			sound_at("crujido", player.global_position + Vector3(0, 2, 0), 0.0)
 	_black_target = 1.0
-	await get_tree().create_timer(1.6).timeout
-	message("La trampa se cerró. Lo he encerrado.\nY desde el sótano, una voz de mujer: «Sofía… sácame de aquí…»", 5.0)
+	await get_tree().create_timer(1.4).timeout
+	var como: String = {"camioneta": "La camioneta ruge. Piso a fondo y el portón salta en pedazos.",
+		"coche": "Aprieto la última tuerca con las manos temblando. Arranca. Arranca.",
+		"muro": "Salto al otro lado y corro entre los árboles hasta que deja de oírse nada."}.get(ruta, "")
+	message(como + ("\nDetrás, la casa se queda en silencio." if madre_viva else "\nDetrás, el humo de la capilla sube entre los árboles."), 5.0)
 	await get_tree().create_timer(5.2).timeout
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_hud_visible(false)
-	var verdad := notas_leidas >= mansion.notas.size() and mansion.notas.size() > 0
-	var oculto := ZarekSecretos.cuantos() >= ZarekSecretos.TOTAL
+	var clave := "escapar"
 	if oculto:
-		lbl_end_t.text = "FINAL OCULTO: LA HIJA DE LA ROCA"
-		lbl_end_s.text = "Tiempo: %s\nLo he visto y escuchado todo. Inés no era mi madre: nací en esta casa en octubre de 1987.\nLa trampa se cierra sobre Damián, mi hermano. Pero no huyo. Bajo a la capilla.\nElla me sonríe. Y por primera vez en mi vida… tengo hambre de verdad." % _fmt(play_time)
-	elif verdad:
-		lbl_end_t.text = "FINAL VERDADERO"
-		lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d\nLo leí todo. Mi madre no huyó de esta casa: huyó de su hermana.\nY la mujer del sótano no pide ayuda… pide comida. Continuará." % [_fmt(play_time), deaths]
+		clave = "oculto"
+		lbl_end_t.text = "FINAL OCULTO: HAMBRE"
+		lbl_end_s.text = "Ya en la carretera, la mordedura del brazo ha dejado de doler. Se ha cerrado sola.\nTengo hambre. Mucha hambre. Y no de cualquier cosa. Bajo la casa, ella sonríe."
+	elif not madre_viva:
+		clave = "verdadero"
+		lbl_end_t.text = "FINAL VERDADERO: EL FUEGO"
+		lbl_end_s.text = "La capilla ardió con ella dentro y, bajo la casa, el latido se paró. Zarek ha muerto.\n" + ("La mordedura de mi brazo dejó de arder en el mismo momento. " if huida.mordida else "") + "Pero Damián sigue ahí fuera. Y ha visto mi cara."
 	else:
-		lbl_end_t.text = "NOCHE I SUPERADA"
-		lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d · Notas: %d/%d\nLa carta no la escribió ningún abogado. Te estaban esperando… Continuará.\n(Lee todas las notas para el final verdadero)" % [_fmt(play_time), deaths, notas_leidas, mansion.notas.size()]
+		lbl_end_t.text = "FINAL: ESCAPÉ"
+		lbl_end_s.text = "Salí viva. Al amanecer volví con ayuda: la mansión estaba vacía.\nPero bajo la tierra algo seguía latiendo. (Pista: «solo el fuego lo devuelve a la piedra».)"
+	lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d · Salida: %s\n" % [_fmt(play_time), deaths, {"camioneta": "la camioneta", "coche": "tu coche", "muro": "el muro"}.get(ruta, ruta)] + lbl_end_s.text
+	if archivo:
+		lbl_end_s.text += "\nEPÍLOGO — Lo sé todo de los Varela. Aurelio no construyó la casa para vivir en ella: la construyó encima de la roca para que nadie la encontrara. Y la roca tiene más hijos. NOCHE II: próximamente."
+	if not huida.madre_suelta and not huida.madre_muerta:
+		lbl_end_s.text += "\n★ Ella nunca rompió las cadenas"
 	if dif == 2:
 		lbl_end_s.text += "\n☠ PESADILLA SUPERADA"
 		Aether.save.set_value("zarek_pesadilla", true)
 	lbl_end_s.text += "\nSecretos encontrados esta noche: %d · Archivo: %d/%d" % [secretos_noche.size(), ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
 	lbl_end_s.text += "\n" + _rango()
+	var hechos: Array = Aether.save.get_value("zarek_finales", [])
+	lbl_end_s.text += "\nFinales: %d/%d" % [hechos.size() + (0 if clave in hechos else 1), FINALES.size()]
 	end_box.visible = true
-	if oculto:
-		_final("oculto")
-	_final("verdadero" if verdad else "trampa")
-	if verdad:
-		_final("trampa")
+	_final(clave)
+	_final("escapar")
 	Aether.save.set_value("zarek_noche1", true)
 
 ## Rango de la noche: rapidez, veces atrapada, secretos y notas. Se guarda el mejor (motivo para repetir).
@@ -2559,6 +2590,7 @@ func _rango() -> String:
 	var p := 100.0 - deaths * 18.0 - maxf(0.0, (play_time - 540.0) / 20.0) + secretos_noche.size() * 3.0
 	p += 6.0 if notas_leidas >= mansion.notas.size() else 0.0
 	p += [-8.0, 0.0, 10.0][dif]
+	p += (8.0 if huida.madre_muerta else 0.0) + (8.0 if not huida.madre_suelta and not huida.madre_muerta else 0.0)
 	var r: Array = RANGOS[RANGOS.size() - 1]
 	for x in RANGOS:
 		if p >= float(x[0]):

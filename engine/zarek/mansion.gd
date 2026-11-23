@@ -2942,6 +2942,10 @@ func _zone(name: String) -> Rect2:
 			return Rect2(float(z[2]) * CELL, float(z[3]) * CELL, float(z[4]) * CELL, float(z[5]) * CELL)
 	return Rect2()
 
+## El portón de la finca: sus dos hojas (ZarekHuida las cierra con una cadena al entrar en la casa).
+var porton_hojas: Array = []
+var porton_pos := Vector3.ZERO
+var porton_ancho := 6.0
 func _stone_wall(r: Rect2) -> void:
 	var gz := _zone("Portón")
 	var gate_x0 := gz.position.x
@@ -2958,11 +2962,15 @@ func _stone_wall(r: Rect2) -> void:
 			for gx in [gate_x0, gate_x1]:
 				box(Vector3(1.0, 3.6, 1.0), Vector3(gx, 1.8, a.y), _mat.piedra, true, self)
 				cyl(0.0, 0.5, 0.9, Vector3(gx, 4.05, a.y), _mat.piedra, self, 8)
+			porton_pos = Vector3((gate_x0 + gate_x1) * 0.5, 0, a.y)
+			porton_ancho = gate_x1 - gate_x0
 			for side in [-1.0, 1.0]:
 				var gp := Node3D.new()
 				add_child(gp)
 				gp.position = Vector3(gate_x0 if side < 0 else gate_x1, 0, a.y)
 				gp.rotation.y = side * 1.9
+				gp.set_meta("abierta", side * 1.9)
+				porton_hojas.append(gp)
 				for k in 9:
 					box(Vector3(0.06, 2.8, 0.06), Vector3(-side * (0.3 + k * 0.95), 1.4, 0), _mat.metal, false, gp)
 				box(Vector3(8.6, 0.08, 0.08), Vector3(-side * 4.2, 2.6, 0), _mat.metal, false, gp)
@@ -4785,11 +4793,23 @@ func _car(p: Vector3) -> void:
 	n.add_child(head)
 	set_meta("car", n)
 
-## Los cuatro objetos para la trampa de Damián (antes los sellos): cada uno sobre un velador, con una luz tenue.
-const OBJETOS_TRAMPA := ["cepo", "gasolina", "llave", "sedante"]
-const NOMBRE_OBJETO := {"cepo": "el cepo para osos", "gasolina": "la lata de gasolina", "llave": "la llave del cuarto de Damián", "sedante": "el sedante"}
+## Los objetos de la noche (ZarekHuida.objetos): lo que piden las salidas abiertas (llave del cuarto de Damián y
+## gasolina para su camioneta; cizalla para el portón, rueda y gato para tu coche; cuerda con garfio para el muro).
+const NOMBRE_OBJETO := {"cizalla": "la cizalla", "gasolina": "la lata de gasolina", "llave": "la llave del cuarto de Damián",
+	"rueda": "la rueda de repuesto", "gato": "el gato del coche", "cuerda": "la cuerda con garfio"}
+var objetos_noche: Array = []
 
-## Salas donde pueden aparecer los objetos de la trampa (además de los sitios del plano) y los tablones.
+## Dónde tiene sentido cada objeto: la gasolina y la cizalla con las herramientas; la llave de repuesto de su
+## cuarto en el llavero de la familia; tu rueda y tu gato (los robó de tu maletero) donde Damián guarda lo que les
+## quita a sus víctimas; la cuerda con garfio en el desván o con los aperos.
+const SITIOS_POR_OBJETO := {
+	"gasolina": ["Sala de calderas", "Salida a la cochera", "Galería de servicio", "Cuarto de servicio"],
+	"cizalla": ["Sala de calderas", "Galería de servicio", "Salida a la cochera", "Cava de vinos", "Cuarto de servicio"],
+	"llave": ["Dormitorio de los padres", "Estudio del padre", "Tocador de la madre", "Cuarto de servicio", "Guardarropa"],
+	"rueda": ["Salida a la cochera", "Galería de servicio", "Ático (vigas, baúles, muñecos tapados)", "Guardarropa"],
+	"gato": ["Salida a la cochera", "Galería de servicio", "Ático (vigas, baúles, muñecos tapados)", "Cuarto de servicio", "Despensa"],
+	"cuerda": ["Ático (vigas, baúles, muñecos tapados)", "Escondite de Damián niño", "Sala de calderas", "Cuarto de plancha", "Galería de servicio"]}
+## Salas de reserva (y para los tablones).
 const SITIOS_OBJETOS := ["Cocina", "Biblioteca", "Estudio del padre", "Sala de calderas", "Cuarto del hermano", "Despensa",
 	"Cuarto de huéspedes", "Sala de música", "Comedor formal", "Cava de vinos", "Dormitorio de los padres", "Salón con chimenea"]
 func _repartir_objetos() -> void:
@@ -4811,18 +4831,39 @@ func _repartir_objetos() -> void:
 			var t0 := sitios[i]
 			sitios[i] = sitios[j]
 			sitios[j] = t0
+	objetos_noche = ZarekHuida.objetos(partida_seed)
+	# cada objeto en un sitio que tenga sentido (cambia de sala cada noche, nunca dos en la misma)
 	var usados: Array[int] = []
-	for p in sitios:
-		if seals.size() >= 4:
+	ZarekTerror._rng.seed = partida_seed + 11
+	for tipo in objetos_noche:
+		var salas: Array = (SITIOS_POR_OBJETO.get(tipo, []) as Array).duplicate()
+		if partida_seed != 0:
+			for i in range(salas.size() - 1, 0, -1):
+				var k := azar.randi_range(0, i)
+				var t1 = salas[i]
+				salas[i] = salas[k]
+				salas[k] = t1
+		var puesto := false
+		for nombre in salas:
+			var r := _sala_por_nombre(nombre)
+			if r.is_empty() or int(r.id) in usados:
+				continue
+			var p := ZarekTerror._sitio_libre(self, r, 0.7)
+			if p == Vector3.INF:
+				continue
+			usados.append(int(r.id))
+			_seal(p, tipo)
+			puesto = true
 			break
-		var rid := room_at(p)
-		if rid >= 0 and rid in usados:
-			continue
-		usados.append(rid)
-		_seal(p)
-	# las llaves del coche de Sofía: Damián las dejó en su cuarto, entre los trofeos
+		if not puesto:
+			for p in sitios:
+				if not room_at(p) in usados:
+					usados.append(room_at(p))
+					_seal(p, tipo)
+					break
+	# las llaves de su camioneta: en su cuarto, entre los trofeos (si esa salida está abierta esta noche)
 	var rd := _sala_por_nombre("Cuarto de Damián")
-	if not rd.is_empty():
+	if not rd.is_empty() and ZarekHuida.salida_bloqueada(partida_seed) != "camioneta":
 		ZarekTerror._rng.seed = partida_seed + 77
 		var pl := ZarekTerror._sitio_libre(self, rd, 0.6)
 		if pl != Vector3.INF and pl.distance_to(circle_pos) > 2.2:
@@ -4840,8 +4881,7 @@ func _repartir_objetos() -> void:
 			_pickup(p, "tablon")
 			n_tab += 1
 
-func _seal(pos: Vector3) -> void:
-	var tipo: String = OBJETOS_TRAMPA[seals.size() % OBJETOS_TRAMPA.size()]
+func _seal(pos: Vector3, tipo: String) -> void:
 	var alto := 0.9
 	var mesa := _prop("side_table_tall_01", pos, 0.4, 1.15)
 	if mesa:
@@ -4853,29 +4893,61 @@ func _seal(pos: Vector3) -> void:
 	n.position = pos + Vector3(-0.05, alto, 0)
 	add_child(n)
 	match tipo:
-		"cepo":
-			# cepo para osos: placa, dos mandíbulas dentadas abiertas, muelles y cadena
-			cyl(0.05, 0.05, 0.02, Vector3(0, 0.01, 0), _mat.hierro, n, 10)
+		"cizalla":
+			# cizalla grande: dos mangos largos de hierro con puños de goma y las mandíbulas cortas
+			var goma := _plain(Color(0.45, 0.08, 0.05), 0.7)
 			for s2 in [-1.0, 1.0]:
-				var mand := MeshInstance3D.new()
-				var tm := TorusMesh.new()
-				tm.inner_radius = 0.17
-				tm.outer_radius = 0.19
-				tm.rings = 16
-				tm.ring_segments = 4
-				mand.mesh = tm
-				mand.material_override = _mat.hierro
-				mand.transform = Transform3D(Basis(Vector3(1, 0, 0), s2 * 0.25).scaled(Vector3(1, 1, 0.55)), Vector3(0, 0.03, s2 * 0.08))
-				n.add_child(mand)
-				for k in 7:
-					var a2 := PI * (k + 0.5) / 7.0
-					box(Vector3(0.012, 0.035, 0.012), Vector3(cos(a2) * 0.18, 0.05, s2 * (0.08 + sin(a2) * 0.1)), _mat.hierro, false, n, false)
+				var mango := box(Vector3(0.62, 0.025, 0.025), Vector3(0.05, 0.02, s2 * 0.035), _mat.hierro, false, n, false)
+				mango.rotation.y = s2 * 0.08
+				box(Vector3(0.2, 0.035, 0.035), Vector3(0.28, 0.02, s2 * 0.06), goma, false, n, false)
+				var boca := box(Vector3(0.12, 0.03, 0.04), Vector3(-0.31, 0.02, s2 * 0.012), _mat.metal, false, n, false)
+				boca.rotation.y = -s2 * 0.2
+			cyl(0.02, 0.02, 0.05, Vector3(-0.24, 0.02, 0), _mat.metal, n, 8)
+		"rueda":
+			# rueda de repuesto apoyada contra la mesa (en el suelo, de canto)
+			var neu := MeshInstance3D.new()
+			var tm := TorusMesh.new()
+			tm.inner_radius = 0.2
+			tm.outer_radius = 0.33
+			tm.rings = 20
+			tm.ring_segments = 10
+			neu.mesh = tm
+			neu.material_override = _plain(Color(0.05, 0.05, 0.05), 0.9)
+			neu.position = Vector3(0, -alto + 0.34, 0.45)
+			neu.rotation.x = PI * 0.5 - 0.15
+			n.add_child(neu)
+			var llanta := cyl(0.2, 0.2, 0.16, Vector3.ZERO, _mat.metal, neu, 16)
+			llanta.rotation.x = 0.0
+		"cuerda":
+			# rollo de cuerda gruesa con un garfio de hierro de tres puntas
+			var cuerda_m := _plain(Color(0.42, 0.34, 0.22), 0.95)
+			for k in 4:
+				var anillo := MeshInstance3D.new()
+				var tm2 := TorusMesh.new()
+				tm2.inner_radius = 0.1 + k * 0.012
+				tm2.outer_radius = 0.125 + k * 0.012
+				tm2.rings = 14
+				tm2.ring_segments = 5
+				anillo.mesh = tm2
+				anillo.material_override = cuerda_m
+				anillo.position = Vector3(0, 0.02 + k * 0.02, 0)
+				n.add_child(anillo)
+			var vara := cyl(0.012, 0.012, 0.22, Vector3(0.22, 0.03, 0), _mat.hierro, n, 6)
+			vara.rotation.z = PI * 0.5
+			for k in 3:
+				var una := box(Vector3(0.09, 0.015, 0.015), Vector3(0.34, 0.03, 0), _mat.hierro, false, n, false)
+				una.rotation.y = (k - 1) * 0.9
+				una.rotation.z = 0.5
+		"gato":
+			# gato de tijera: base, brazos en rombo y el husillo
+			box(Vector3(0.3, 0.02, 0.09), Vector3(0, 0.01, 0), _mat.hierro, false, n, false)
 			for s2 in [-1.0, 1.0]:
-				box(Vector3(0.12, 0.025, 0.03), Vector3(s2 * 0.22, 0.015, 0), _mat.hierro, false, n, false)
-			for k in 5:
-				var e := cyl(0.012, 0.012, 0.05, Vector3(0.28 + k * 0.045, 0.01, 0.02 * (k % 2)), _mat.hierro, n, 5)
-				e.rotation.z = PI * 0.5
-			cyl(0.06, 0.06, 0.004, Vector3(0, 0.003, 0.05), _mat.oscuro, n, 10)
+				for s3 in [-1.0, 1.0]:
+					var br := box(Vector3(0.13, 0.015, 0.05), Vector3(s2 * 0.06, 0.06 + (s3 + 1.0) * 0.035, 0), _mat.hierro, false, n, false)
+					br.rotation.z = s2 * s3 * 0.6
+			box(Vector3(0.12, 0.02, 0.08), Vector3(0, 0.17, 0), _mat.hierro, false, n, false)
+			var hus := cyl(0.008, 0.008, 0.36, Vector3(0, 0.095, 0), _mat.metal, n, 6)
+			hus.rotation.z = PI * 0.5
 		"gasolina":
 			# lata de gasolina roja, abollada y oxidada, con asa y boquilla
 			var roja := _plain(Color(0.45, 0.06, 0.04), 0.5, 0.6)
@@ -4891,24 +4963,6 @@ func _seal(pos: Vector3) -> void:
 				box(Vector3(0.14, 0.01, 0.03), Vector3(0, 0.01, 0), _mat.oro, false, n, false)
 			# etiqueta de cartón atada con cordel: «CUARTO D.»
 			box(Vector3(0.06, 0.003, 0.04), Vector3(0.1, 0.005, 0.03), _mat.sabana, false, n, false)
-		"sedante":
-			# frasco de sedante, jeringuilla y un trapo
-			var vidrio := _plain(Color(0.55, 0.6, 0.62, 0.7), 0.1, 0.2)
-			vidrio.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			cyl(0.035, 0.035, 0.1, Vector3(0, 0.05, 0), vidrio, n, 12)
-			cyl(0.02, 0.02, 0.02, Vector3(0, 0.11, 0), _mat.oscuro, n, 10)
-			cyl(0.03, 0.03, 0.04, Vector3(0, 0.035, 0), _plain(Color(0.5, 0.42, 0.1), 0.3), n, 12)
-			var j := cyl(0.008, 0.008, 0.11, Vector3(0.09, 0.008, 0.02), vidrio, n, 8)
-			j.rotation.z = PI * 0.5
-			var ag := cyl(0.001, 0.002, 0.05, Vector3(0.17, 0.008, 0.02), _mat.metal, n, 4)
-			ag.rotation.z = PI * 0.5
-			box(Vector3(0.18, 0.01, 0.14), Vector3(-0.08, 0.005, 0.04), _mat.sabana, false, n, false)
-	var l := OmniLight3D.new()
-	l.light_color = Color(1.0, 0.75, 0.45)
-	l.omni_range = 2.5
-	l.light_energy = 0.45
-	l.position = Vector3(0, 0.4, 0)
-	n.add_child(l)
 	seals.append({"node": n, "pos": pos, "taken": false, "tipo": tipo})
 
 func _wall_dir(pos: Vector3) -> Vector3:

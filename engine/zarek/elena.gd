@@ -71,6 +71,10 @@ const DAMIAN := "res://zarek/modelos/damian.glb"
 const ANIM_DAMIAN := {"idle": "hacha_guardia", "walk": "hacha_caminar", "run": "hacha_correr", "attack": "hacha_golpe_2manos",
 	"golpe": "hacha_golpe_1mano", "buscar": "hacha_buscar", "dolor": "hacha_golpeado1"}
 var es_damian := false
+## La madre (Elena) como segunda cazadora: usa su modelo aunque exista el de Damián.
+var forzar_elena := false
+## Siempre evita la luz (la madre), aunque suba su agresividad.
+var teme_luz := false
 const USAR_NORMAL := 0.0
 const PIEL := preload("res://zarek/elena_piel.gdshader")
 ## Expresiones faciales: si falta alguna se usa la de reserva.
@@ -96,7 +100,10 @@ func setup(m: ZarekMansion, p: AetherPlayerFP) -> void:
 	_ray = PhysicsRayQueryParameters3D.new()
 	_ray.collision_mask = 3
 	_snd_loop = AudioStreamPlayer3D.new()
-	_snd_loop.stream = ZarekSonido.uno("damian_resp" if ZarekSonido.hay("damian_resp") else "aliento")
+	if es_damian:
+		_snd_loop.stream = ZarekSonido.uno("damian_resp" if ZarekSonido.hay("damian_resp") else "aliento")
+	else:
+		_snd_loop.stream = ZarekSonido.uno("madre_gime" if ZarekSonido.hay("madre_gime") else "aliento")
 	if _snd_loop.stream is AudioStreamOggVorbis:
 		(_snd_loop.stream as AudioStreamOggVorbis).loop = true
 	_snd_loop.unit_size = 3.0
@@ -163,7 +170,7 @@ func _stain_tex() -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 func build_body() -> void:
-	if ResourceLoader.exists(DAMIAN) and OS.get_environment("ELENA") == "":
+	if ResourceLoader.exists(DAMIAN) and OS.get_environment("ELENA") == "" and not forzar_elena:
 		_build_damian()
 		return
 	if ResourceLoader.exists(MODEL):
@@ -553,7 +560,7 @@ func _physics_process(delta: float) -> void:
 					path = [last_seen]
 				else:
 					path = mansion.path(global_position, last_seen)
-			if mansion.is_lit(player.global_position) and aggro < 2 and global_position.distance_to(player.global_position) > 2.0:
+			if mansion.is_lit(player.global_position) and (aggro < 2 or teme_luz) and global_position.distance_to(player.global_position) > 2.0:
 				# la luz la detiene: se aleja
 				set_state(S.SEARCH, 3.0)
 		S.SEARCH:
@@ -632,6 +639,9 @@ func _physics_process(delta: float) -> void:
 					que = "risa"
 			_snd_one.stream = ZarekSonido.uno(que)
 			_snd_one.volume_db = 2.0 if que == "damian_voz" else -2.0
+		elif state != S.DORMANT and ZarekSonido.hay("madre_gime"):
+			_snd_one.stream = ZarekSonido.uno("madre_gime" if randf() < 0.7 else "risa")
+			_snd_one.volume_db = -3.0
 		else:
 			_snd_one.stream = ZarekSonido.uno("crujido")
 		_snd_one.play()
@@ -648,10 +658,10 @@ func _start_chase() -> void:
 
 ## Camino que evita habitaciones iluminadas (le temen a la luz).
 func _safe_path(target: Vector3) -> Array[Vector3]:
-	if aggro < 2 and mansion.is_lit(target):
+	if (aggro < 2 or teme_luz) and mansion.is_lit(target):
 		return [] as Array[Vector3]
 	var p := mansion.path(global_position, target)
-	if aggro < 2:
+	if aggro < 2 or teme_luz:
 		for wp in p:
 			if mansion.is_lit(wp):
 				return [] as Array[Vector3]
@@ -678,8 +688,8 @@ func _move(delta: float) -> void:
 			_dist_paso += step.length()
 			if _snd_paso and _dist_paso > (1.05 if state == S.CHASE else 0.85):
 				_dist_paso = 0.0
-				_snd_paso.stream = ZarekSonido.uno("damian_paso")
-				_snd_paso.volume_db = 2.0 if state == S.CHASE else -2.0
+				_snd_paso.stream = ZarekSonido.uno("damian_paso" if es_damian else "paso_alfombra")
+				_snd_paso.volume_db = (2.0 if state == S.CHASE else -2.0) if es_damian else (-4.0 if state == S.CHASE else -10.0)
 				_snd_paso.pitch_scale = randf_range(0.92, 1.05)
 				_snd_paso.play()
 				if state == S.CHASE and randf() < 0.18 and es_damian:

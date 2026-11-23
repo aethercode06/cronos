@@ -1,8 +1,8 @@
 class_name ZarekDiario
 extends Control
 ## El diario de Sofía (botón DIARIO o tecla TAB/M): pausa el juego y deja claro qué hay que hacer.
-## - OBJETIVOS: los pasos para salir con vida (con ✔ los hechos), las pistas de cada objeto de la trampa, la otra
-##   salida (el coche), qué pasa si te atrapa, lo que llevas y cómo se consigue cada final.
+## - OBJETIVOS: salir viva: las salidas de la noche y lo que falta en cada una, las pistas de cada objeto, la furia
+##   de la madre, qué pasa si te atrapa, lo que llevas y cómo se consigue cada final.
 ## - MAPA: plano de cada planta dibujado a mano; las salas que has pisado tienen nombre, las demás son siluetas.
 ##   Marca dónde estás, el cuarto de Damián, las escaleras, las salas cerradas con llave y los objetos que has
 ##   visto (o de los que tienes un presentimiento).
@@ -155,20 +155,36 @@ func texto_objetivos() -> String:
 	var t := ""
 	var sc: Array = ZarekNoches.SUCESOS[j.suceso]
 	t += "[b]%s[/b] — %s\n\n" % [sc[0], sc[1]]
-	t += "[b]CÓMO SALIR CON VIDA[/b]\n"
-	t += "%s 1. Llegar a la mansión Varela.\n" % _check(j.entered)
-	t += "%s 2. Reunir los 4 objetos para la trampa de Damián (%d/4):\n" % [_check(j.seals >= 4), j.seals]
+	var rs: ZarekHuida = j.huida
+	t += "[b]SALIR VIVA DE LA FINCA[/b]\n"
+	t += "%s Entrar en la mansión (la luz de la ventana era un cebo: han cerrado el portón con cadena).\n" % _check(j.entered)
+	t += "%s Escapar por una de las salidas de esta noche:\n" % _check(j.state == "final")
+	for r in ZarekHuida.SALIDAS:
+		if r == rs.salida_cerrada:
+			t += "      [color=#a06050]✖ %s — bloqueada: %s[/color]\n" % [ZarekHuida.NOMBRE_SALIDA[r].capitalize(), ZarekHuida.BLOQUEO[r]]
+			continue
+		var f := rs.faltan(r)
+		t += "      %s %s%s\n" % [_check(f.is_empty()), ZarekHuida.NOMBRE_SALIDA[r].capitalize(), "" if f.is_empty() else " — falta: " + ", ".join(f)]
+	t += "      Lo largo (cortar la cadena, cambiar la rueda, trepar, rociar) se hace con [b]MANTÉN USAR[/b], y hace ruido.\n"
+	t += "\n[b]OBJETOS DE LA NOCHE[/b] (%d/%d)\n" % [j.seals, m.seals.size()]
 	for s in m.seals:
 		if s.taken:
 			t += "      %s %s\n" % [_check(true), nombre_objeto(s)]
 		else:
 			t += "      %s %s — %s\n" % [_check(false), nombre_objeto(s), pista(s)]
-	t += "%s 3. Con los 4, su cuarto (planta alta) deja de estar sellado.\n" % _check(j.seals >= 4)
-	t += "%s 4. Preparar la trampa junto a su colchón: [b]MANTÉN USAR 10 segundos[/b]. Él vendrá corriendo: aguanta.\n\n" % _check(j.state == "final")
-	t += "[b]OTRA SALIDA[/b]\n"
-	t += "%s Las llaves de mi coche están en el cuarto de Damián. Con ellas puedo huir por el camino del bosque (final «La huida»)… y dejar a todos atrás.\n\n" % _check(j.tiene_llaves)
+	t += "\n[b]LA MADRE (furia: %d %%)[/b]\n" % int(rs.furia)
+	if rs.madre_muerta:
+		t += "%s Ardió en la capilla. Zarek ha muerto con ella.\n\n" % _check(true)
+	elif rs.madre_suelta:
+		t += "Está suelta. Es más rápida que Damián y si me toca no hay forcejeo. [b]Solo la luz la detiene[/b]: la linterna, las salas iluminadas, las bengalas.\n"
+		t += "Para acabar con ella: rociar la capilla con gasolina, atraerla dentro y lanzar una bengala.\n\n"
+	else:
+		t += "Encadenada en la capilla del sótano, pero la casa es suya: mueve cosas, cierra puertas, apaga luces. Si hago ruido abajo, grita y Damián acude.\n"
+		t += "Su furia sube con mis errores: ruido en el sótano, correr, romper cosas, que Damián me atrape, gritar de miedo, entrar en su capilla. Baja si soy sigilosa. [b]Al 100 %% rompe las cadenas.[/b]\n"
+		t += "Para acabar con ella: rociar la capilla con gasolina y lanzar una bengala dentro.\n\n"
 	t += "[b]SI ME ATRAPA[/b]\n"
-	t += "Me quedan [b]%d[/b] %s. Si me atrapa, despierto en el vestíbulo con una menos. Sin vidas, se acabó.\n" % [j.lives, "vida" if j.lives == 1 else "vidas"]
+	t += "Me quedan fuerzas para [b]%d[/b] %s. Damián no me mata: me deja inconsciente y me cuelga en el matadero del sótano, junto a la capilla, para su madre. La última vez me bajará a la capilla.\n" % [j.lives, "vez" if j.lives == 1 else "veces"]
+	t += "Si me atrapa la madre, me muerde: me suelto, pero llevo su mordisco%s.\n" % (" [color=#d05050](ya me ha mordido)[/color]" if j.huida.mordida else "")
 	t += "Con un arma en la mano puedo forcejear (machacar USAR) en vez de perder una vida.\n"
 	t += "Me oye antes de verme: agachada hago menos ruido. Me ve mejor con la linterna encendida.\n\n"
 	t += "[b]LO QUE LLEVO[/b]\n"
@@ -191,10 +207,10 @@ func texto_objetivos() -> String:
 		t += "Salas cerradas con llave esta noche: %s. Las llaves están en algún cajón.\n" % ", ".join(cerradas)
 	t += "\n[b]FINALES[/b]\n"
 	var hechos: Array = Aether.save.get_value("zarek_finales", [])
-	t += "%s La trampa — pon la trampa en su cuarto.\n" % _check("trampa" in hechos)
-	t += "%s La verdad de los Varela — pon la trampa habiendo leído todas las notas de la casa (%d/%d esta noche).\n" % [_check("verdadero" in hechos), j.notas_leidas, m.notas.size()]
-	t += "%s La huida — escapa en el coche con las llaves.\n" % _check("huida" in hechos)
-	t += "%s La hija de la roca — pon la trampa teniendo los 24 secretos del ARCHIVO (%d/24).\n" % [_check("oculto" in hechos), ZarekSecretos.cuantos()]
+	t += "%s Escapé — sal viva por cualquier salida.\n" % _check("escapar" in hechos)
+	t += "%s El fuego — quema a la madre en su capilla (gasolina + bengala) y escapa.\n" % _check("verdadero" in hechos)
+	t += "%s Hambre — ¿qué pasa si escapas llevando su mordisco… y ella sigue viva?\n" % _check("oculto" in hechos)
+	t += "Con los 24 secretos del ARCHIVO (%d/24), cualquier final añade el epílogo con toda la verdad.\n" % ZarekSecretos.cuantos()
 	return t
 
 
@@ -227,7 +243,7 @@ class Mapa extends Control:
 			var vista: bool = j._salas_vistas.has(r.id)
 			var col := Color(0.32, 0.26, 0.19) if vista else Color(0.12, 0.1, 0.08)
 			if r.type == "epicentro":
-				col = Color(0.42, 0.1, 0.08) if vista or j.seals >= 4 else col
+				col = Color(0.42, 0.1, 0.08) if vista else col
 			draw_rect(pr, col)
 			draw_rect(pr, Color(0.62, 0.5, 0.36), false, 2.0)
 			var nombre := String(r.name)

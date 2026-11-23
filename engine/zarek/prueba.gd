@@ -33,14 +33,27 @@ func _ready() -> void:
 	print("ZAREK: navegación lista en %.1f s" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	print("ZAREK: habitaciones %d, sellos %d, armarios %d, lámparas %d, puertas %d, pasos %d" % [m.rooms.size(), m.seals.size(), m.wardrobes.size(), m.lamps.size(), m.doors.size(), m.portals.size()])
 	_check(m.nav_ready, "navegación de Elena horneada")
-	_check(m.seals.size() == 4, "4 sellos")
+	g.huida.congelar_furia = true
+	_check(m.seals.size() == ZarekHuida.objetos(0).size(), "objetos de la noche (%d)" % m.seals.size())
+	var con_sentido := true
+	for so in m.seals:
+		var salas: Array = ZarekMansion.SITIOS_POR_OBJETO.get(String(so.tipo), [])
+		if not m.room_name(so.pos) in salas.map(func(x): return String(x).to_lower()):
+			con_sentido = false
+			print("  objeto fuera de sitio: %s en %s" % [so.tipo, m.room_name(so.pos)])
+	_check(con_sentido, "cada objeto en un sitio con sentido")
+	var rutas := {}
+	for sd in range(1, 200):
+		rutas[ZarekHuida.salida_bloqueada(sd)] = true
+	_check(rutas.size() == 3, "cada noche se bloquea una salida distinta (%d)" % rutas.size())
+	_check(g.huida.matadero_pos != Vector3.INF and m.room_name(g.huida.matadero_pos) == "galería de servicio", "el matadero existe")
 	_check(m.wardrobes.size() >= 10, "armarios")
 	_check(m.lamps.size() >= 6, "lámparas")
 	var inside := g.respawn_pos
 	for s in m.seals:
 		var pth := m.path(inside, s.pos)
 		var ok := pth.size() > 0 and pth[pth.size() - 1].distance_to(s.pos) < 3.0
-		_check(ok or m.room_at(s.pos) < 0, "Elena llega al sello en " + m.room_name(s.pos))
+		_check(ok or m.room_at(s.pos) < 0 or m.level_of(s.pos.y + 0.5) == 2, "Damián llega al objeto en " + m.room_name(s.pos))
 	var pe := m.path(inside, m.circle_pos)
 	_check(pe.size() > 0 and pe[pe.size() - 1].distance_to(m.circle_pos) < 3.0, "Elena llega al Epicentro (primer piso)")
 	var cava := m.cell_to_world("sotano", 21.5, 10.0)
@@ -51,7 +64,7 @@ func _ready() -> void:
 	_check(m.room_name(m.start_pos) == "el bosque", "empiezas en el bosque")
 	g.player.global_position = inside
 	await _wait(0.3)
-	_check(g.entered, "al entrar se cierra la puerta (evento)")
+	_check(g.entered and g.huida.porton_cerrado, "al entrar se cierra la puerta y el portón con cadena")
 	# Elena se despierta y ronda
 	g.elena.timer = 0.0
 	await _wait(1.0)
@@ -86,7 +99,7 @@ func _ready() -> void:
 	while g.state != "juego" and t < 14.0:
 		await _wait(0.2)
 		t += 0.2
-	_check(g.state == "juego", "despiertas en el vestíbulo")
+	_check(g.state == "juego" and g.player.global_position.distance_to(g.huida.matadero_pos) < 2.0, "Damián te cuelga en el matadero")
 	# esconderse: no te ve
 	var wd: Dictionary = m.wardrobes[0]
 	g.player.global_position = wd.pos
@@ -119,7 +132,7 @@ func _ready() -> void:
 	_check(g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(m.radio_pos) < 0.5, "el fonógrafo lo atrae")
 	g._t_fono = 0.01
 	await _wait(0.1)
-	_check(m.pickups.any(func(k): return k.kind == "llaves") and m.car_pos != Vector3.ZERO, "las llaves del coche están en la casa (final de huida)")
+	_check(m.pickups.any(func(k): return k.kind == "llaves") and m.car_pos != Vector3.ZERO, "las llaves de la camioneta están en la casa")
 	_check(m.pickups.filter(func(k): return k.kind == "tablon").size() >= 1, "tablones para atrancar puertas")
 	_check(g.sustos != null and ZarekSonido.hay("damian_rugido") and ZarekSonido.hay("persecucion"), "sonidos reales y sustos de la historia cargados")
 	# electricidad: el interruptor apaga y enciende la sala; sin corriente no se enciende nada; el cuadro la devuelve
@@ -279,7 +292,7 @@ func _ready() -> void:
 	g.diario.refrescar()
 	await _wait(0.2)
 	g.diario.cerrar_diario()
-	_check(pausado and not get_tree().paused and "CÓMO SALIR CON VIDA" in txt_obj and "FINALES" in txt_obj and "MANTÉN USAR" in txt_obj, "diario: objetivos, pistas y mapa")
+	_check(pausado and not get_tree().paused and "SALIR VIVA DE LA FINCA" in txt_obj and "LA MADRE" in txt_obj and "FINALES" in txt_obj and "MANTÉN USAR" in txt_obj, "diario: objetivos, pistas y mapa")
 	var s0: Dictionary = m.seals[0]
 	var pista_vaga: String = g.diario.pista(s0)
 	s0["visto"] = true
@@ -308,30 +321,96 @@ func _ready() -> void:
 	g.elena.vanish(60.0)
 	await _wait(0.2)
 	g.elena.vanish(60.0)
-	# recoger los 4 sellos
-	for s in m.seals:
-		g.player.global_position = s.pos + Vector3(0.8, 0.05, 0)
+	# recoger los objetos de la noche
+	var rs: ZarekHuida = g.huida
+	for so in m.seals:
+		g.player.global_position = so.pos + Vector3(0.8, 0.05, 0)
 		g.player.velocity = Vector3.ZERO
 		g._use()
 		await _wait(0.1)
-	_check(g.seals == 4, "4 sellos recogidos")
-	var unlocked := true
+	_check(g.seals == m.seals.size() and rs.tiene.get("llave", false) and rs.tiene.get("cuerda", false), "objetos recogidos (%d)" % g.seals)
+	# el cuarto de Damián se abre con su llave
+	var dc: Dictionary = {}
 	for d in m.doors:
 		if d.locked and String(d.get("llave", "")) == "":
-			unlocked = false
-	_check(unlocked, "la puerta del Epicentro se abre")
-	# ritual
-	g.set_meta("no_catch", true)
+			dc = d
+	if not dc.is_empty():
+		g.player.global_position = (dc.pos as Vector3) + Vector3(0, 0.05, 0)
+		var k_abrir: String = g._target().get("kind", "")
+		g._use()
+		await _wait(0.5)
+		_check(k_abrir == "abrir_cuarto" and not dc.locked, "la llave abre el cuarto de Damián")
+	# poltergeist: la madre encadenada cierra una puerta y cambia un objeto de sitio
+	g.player.global_position = g.respawn_pos
+	var hizo_puerta: bool = rs._p_puerta(g.player.global_position, 0.5)
+	_check(hizo_puerta, "poltergeist: una puerta se mueve sola")
+	# el ruido en el sótano la enfurece: grita y Damián acude
 	g.elena.vanish(60.0)
-	g.player.global_position = m.circle_pos
-	g.state = "ritual"
+	rs._t_grito = 0.0
+	var en_sotano: Vector3 = rs.matadero_pos
+	rs.congelar_furia = false
+	rs._silencio_ruido = 0.0
+	rs.furia = 0.0
+	var f0: float = rs.furia
+	rs.ruido(en_sotano, 12.0)
+	_check(rs.furia > f0 and g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(en_sotano) < 0.5, "ruido abajo: la madre grita y Damián acude (furia %d)" % int(rs.furia))
+	g.elena.vanish(60.0)
+	# al 100 % rompe las cadenas
+	rs.subir_furia(100.0, "")
+	rs.tick(0.016)
+	await _wait(3.5)
+	_check(rs.madre_suelta and is_instance_valid(rs.madre) and not rs.madre.es_damian, "con la furia al máximo, la madre se suelta")
+	# la linterna la frena
+	g.flash_on = true
+	g.battery = 80.0
+	g.player.global_position = g.respawn_pos
+	g.player.set_look(0.0, 0.0)
+	await _wait(0.2)
+	rs.madre.global_position = g.respawn_pos + g.player.look_dir() * 4.0
+	rs.madre.global_position.y = g.respawn_pos.y
+	rs.madre.set_state(ZarekElena.S.WANDER)
+	rs.madre.visible = true
+	rs._t_luz_madre = 0.0
+	await _wait(0.3)
+	_check(rs.madre.state == ZarekElena.S.FLEE or rs.madre.state == ZarekElena.S.DORMANT, "la linterna hace retroceder a la madre (" + rs.madre.state_name() + ")")
+	# si te toca, te muerde: sin forcejeo, te quedas donde estás y llevas su mordisco
+	var vidas_m: int = g.lives
+	if g.defensa:
+		g.defensa.arma = "cuchillo"
+	var donde: Vector3 = g.player.global_position
+	rs.madre.global_position = donde + Vector3(0.6, 0, 0)
+	rs.madre.can_catch = true
+	g._on_caught_madre()
+	await _wait(0.3)
+	var sin_forcejeo: bool = g.state == "atrapado"
+	var t2 := 0.0
+	while g.state != "juego" and t2 < 14.0:
+		await _wait(0.2)
+		t2 += 0.2
+	_check(sin_forcejeo and g.lives == vidas_m - 1 and g.elena.es_damian and rs.mordida and g.player.global_position.distance_to(donde) < 2.0, "la madre te muerde sin forcejeo")
+	# quemarla en la capilla: rociar gasolina, que esté dentro, bengala
+	g.set_meta("no_catch", true)
+	g.player.global_position = rs.capilla_pos + Vector3(0, 0.05, 0)
+	var k_rociar: String = str(g._target().get("que", ""))
+	rs.completar("rociar")
+	rs.madre.global_position = rs.capilla_pos + Vector3(2.0, 0.0, 0.0)
+	rs.madre.set_state(ZarekElena.S.WANDER)
+	g.salt = 2
+	g._throw_salt()
+	await _wait(2.5)
+	_check(k_rociar == "rociar" and rs.madre_muerta, "la madre arde en la capilla")
+	# escapar trepando el muro (la gasolina se gastó en el fuego: la camioneta ya no sirve)
+	g.elena.vanish(60.0)
+	_check(not rs.faltan("camioneta").is_empty(), "sin gasolina la camioneta no sirve")
+	g.player.global_position = rs.muro_pos + Vector3(0.5, 0.05, 0.0)
+	var k_muro: String = str(g._target().get("que", ""))
+	rs.completar("trepar")
 	t = 0.0
-	while g.state != "final" and t < 16.0:
+	while g.state != "final" and t < 8.0:
 		await _wait(0.25)
 		t += 0.25
-	_check(g.state == "final", "ritual completado: Zarek expulsado")
-	await _wait(9.0)
-	_check(g.end_box.visible, "pantalla final")
+	await _wait(8.0)
+	_check(k_muro == "trepar" and g.state == "final" and g.end_box.visible and "VERDADERO" in g.lbl_end_t.text, "final: " + g.lbl_end_t.text)
 	print("ZAREK: tiempo de juego simulado %.1f s" % g.play_time)
 	if fails == 0:
 		print("ZAREK OK")

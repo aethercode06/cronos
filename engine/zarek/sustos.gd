@@ -5,7 +5,7 @@ extends Node
 ## - en el vestíbulo: se ríe arriba y se le oye caminar por el piso de encima;
 ## - al bajar al sótano por primera vez: la madre gime muy cerca y arrastra las cadenas;
 ## - en el matadero: alguien está cortando carne… y se calla;
-## - en la capilla: la madre habla desde la oscuridad de la celda;
+## - en la capilla: la madre se arrastra hasta los barrotes y tararea (si sigue encadenada);
 ## - en el cuarto de Damián: oyes que vuelve, pasos que suben y un portazo;
 ## - al empezar cada persecución, un golpe de música (como mucho cada 30 s).
 
@@ -167,7 +167,9 @@ func _capilla(m: ZarekMansion) -> void:
 	if not is_inside_tree():
 		return
 	_golpe(0.0)
-	j.message("Desde la oscuridad de la celda, una voz de mujer:\n«Sofía… hija de Inés… acércate a los barrotes…»", 5.0)
+	if j.huida and (j.huida.madre_suelta or j.huida.madre_muerta):
+		return
+	j.message("Algo se arrastra en la oscuridad de la celda hasta los barrotes.\nUna mano gris asoma entre el hierro… y alguien tararea una nana.", 5.0)
 	j.sanity = maxf(0.0, j.sanity - 12.0)
 
 func _cuarto(m: ZarekMansion, r: int) -> void:
