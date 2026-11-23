@@ -509,6 +509,28 @@ func _physics_process(delta: float) -> void:
 		S.GHOST:
 			_animate(delta, 0.0)
 			return
+	# puerta atrancada en el camino: la aporrea hasta romper los tablones
+	var db := mansion.door_near(global_position, 1.45)
+	if not db.is_empty() and float(db.get("barricada", 0.0)) > 0.0 and not db.open and state == S.WANDER:
+		path = []  # paseando no se empeña: da media vuelta
+		set_state(S.WANDER)
+	elif not db.is_empty() and float(db.get("barricada", 0.0)) > 0.0 and not db.open and state in [S.CHASE, S.INVESTIGATE, S.SEARCH]:
+		db.barricada = float(db.barricada) - delta
+		_golpe_t -= delta
+		if _golpe_t <= 0.0:
+			_golpe_t = 0.75
+			db.snd.stream = AetherSynth.make("golpe_madera")
+			db.snd.play()
+			if player.global_position.distance_to(global_position) < 12.0:
+				player.shake(4.0)
+		if float(db.barricada) <= 0.0:
+			mansion.desatrancar(db)
+			mansion.set_door(db, true, true)
+			db.snd.stream = AetherSynth.make("portazo")
+			db.snd.play()
+			player.shake(10.0)
+		_animate(delta, 0.0)
+		return
 	_move(delta)
 	# atrapar
 	if can_catch and state in [S.CHASE, S.INVESTIGATE, S.WANDER, S.SEARCH] and not player_hidden:
@@ -528,6 +550,8 @@ func _physics_process(delta: float) -> void:
 		_creak_t = randf_range(5.0, 11.0)
 		_snd_one.stream = AetherSynth.make("crujido")
 		_snd_one.play()
+
+var _golpe_t := 0.0
 
 func _start_chase() -> void:
 	last_seen = player.global_position

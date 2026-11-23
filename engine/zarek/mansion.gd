@@ -19,6 +19,10 @@ var wardrobes: Array = []  # {pos, inside, yaw, tipo ('' armario, 'cama')}
 var cristales: Array = []  # cristales rotos en el suelo (crujen al pisar)
 var charcos: Array = []  # charcos (chapotean)
 var seals: Array = []      # {node, pos, taken}
+## Semilla de la partida: 0 = sitios fijos del plano (pruebas); otra = los objetos de la trampa, las pilas,
+## las bengalas y los tablones cambian de sitio en cada partida.
+var partida_seed := 0
+var _sello_marcas: Array[Vector3] = []
 var pickups: Array = []    # {node, pos, kind, taken, item}
 var portals: Array = []    # {pos, to, text}
 var fires: Array = []
@@ -1424,6 +1428,27 @@ func _fusionar_hijos(raiz: Node3D) -> void:
 		nm.material_override = mat
 		raiz.add_child(nm)
 
+## Atranca una puerta cerrada con tablones clavados por los dos lados: aguanta `fuerza` segundos de golpes.
+func atrancar(d: Dictionary, fuerza := 6.0) -> void:
+	if d.is_empty() or d.open:
+		return
+	d["barricada"] = fuerza
+	var n := Node3D.new()
+	n.position = d.pos
+	n.rotation.y = float(d.base)
+	_house.add_child(n)
+	for lado in [-1.0, 1.0]:
+		for k in 3:
+			var t := box(Vector3(1.45, 0.13, 0.035), Vector3(0, 0.6 + k * 0.55, lado * 0.11), _mat.madera_vieja, false, n, false)
+			t.rotation.z = (0.18 if k % 2 == 0 else -0.14) * lado
+	d["tablas"] = n
+
+func desatrancar(d: Dictionary) -> void:
+	d["barricada"] = 0.0
+	if d.has("tablas") and is_instance_valid(d.tablas):
+		(d.tablas as Node3D).queue_free()
+	d.erase("tablas")
+
 func door_near(p: Vector3, dist := 2.3) -> Dictionary:
 	var best := {}
 	var bd := dist
@@ -1437,7 +1462,7 @@ func door_near(p: Vector3, dist := 2.3) -> Dictionary:
 	return best
 
 func set_door(d: Dictionary, open: bool, force := false) -> void:
-	if d.is_empty() or (d.locked and open):
+	if d.is_empty() or (d.locked and open) or (open and float(d.get("barricada", 0.0)) > 0.0):
 		return
 	d.open = open
 	d.target = (1.6 if open else 0.0)
@@ -4661,7 +4686,7 @@ func _markers() -> void:
 					start_pos = pos + Vector3(0, 0, -2.0)
 					_car(pos + Vector3(3.0, 0, 1.0))
 				"sello":
-					_seal(pos)
+					_sello_marcas.append(pos)
 				"armario":
 					_wardrobe(pos)
 				"lampara":
@@ -4686,8 +4711,20 @@ func _markers() -> void:
 				"puerta":
 					if str(m[3]).begins_with("Entrada"):
 						front_door = pos
+	var azar := RandomNumberGenerator.new()
+	azar.seed = partida_seed
 	var spots := [["baja", 2.0, 2.6, "pila"], ["baja", 13.8, 11.4, "sal"], ["alta", 13.0, 11.0, "pila"], ["sotano", 10.5, 10.5, "pila"],
 		["exterior", 70.0, 77.5, "sal"], ["exterior", 26.5, 17.0, "pila"], ["atico", 10.0, 6.0, "sal"], ["alta", 1.5, 6.5, "sal"]]
+	if partida_seed != 0:
+		# cada partida reparte de otra forma pilas y bengalas entre los mismos sitios
+		var tipos := spots.map(func(x): return x[3])
+		for i in range(tipos.size() - 1, 0, -1):
+			var j := azar.randi_range(0, i)
+			var t0: String = tipos[i]
+			tipos[i] = tipos[j]
+			tipos[j] = t0
+		for i in spots.size():
+			spots[i][3] = tipos[i]
 	for s in spots:
 		_pickup(cell_to_world(s[0], s[1], s[2]), s[3])
 
@@ -4728,6 +4765,50 @@ func _car(p: Vector3) -> void:
 ## Los cuatro objetos para la trampa de Damián (antes los sellos): cada uno sobre un velador, con una luz tenue.
 const OBJETOS_TRAMPA := ["cepo", "gasolina", "llave", "sedante"]
 const NOMBRE_OBJETO := {"cepo": "el cepo para osos", "gasolina": "la lata de gasolina", "llave": "la llave del cuarto de Damián", "sedante": "el sedante"}
+
+## Salas donde pueden aparecer los objetos de la trampa (además de los sitios del plano) y los tablones.
+const SITIOS_OBJETOS := ["Cocina", "Biblioteca", "Estudio del padre", "Sala de calderas", "Cuarto del hermano", "Despensa",
+	"Cuarto de huéspedes", "Sala de música", "Comedor formal", "Cava de vinos", "Dormitorio de los padres", "Salón con chimenea"]
+func _repartir_objetos() -> void:
+	var azar := RandomNumberGenerator.new()
+	azar.seed = partida_seed
+	var sitios: Array[Vector3] = []
+	sitios.append_array(_sello_marcas)
+	if partida_seed != 0:
+		ZarekTerror._rng.seed = partida_seed
+		for nombre in SITIOS_OBJETOS:
+			var r := _sala_por_nombre(nombre)
+			if r.is_empty():
+				continue
+			var p := ZarekTerror._sitio_libre(self, r, 0.7)
+			if p != Vector3.INF:
+				sitios.append(p)
+		for i in range(sitios.size() - 1, 0, -1):
+			var j := azar.randi_range(0, i)
+			var t0 := sitios[i]
+			sitios[i] = sitios[j]
+			sitios[j] = t0
+	var usados: Array[int] = []
+	for p in sitios:
+		if seals.size() >= 4:
+			break
+		var rid := room_at(p)
+		if rid >= 0 and rid in usados:
+			continue
+		usados.append(rid)
+		_seal(p)
+	# tablones con clavos para atrancar puertas (los que sobran)
+	var n_tab := 0
+	for p in sitios:
+		if n_tab >= 3:
+			break
+		var libre := true
+		for sl in seals:
+			if (sl.pos as Vector3).distance_to(p) < 2.0:
+				libre = false
+		if libre:
+			_pickup(p, "tablon")
+			n_tab += 1
 
 func _seal(pos: Vector3) -> void:
 	var tipo: String = OBJETOS_TRAMPA[seals.size() % OBJETOS_TRAMPA.size()]
@@ -5437,6 +5518,12 @@ func _pickup(pos: Vector3, kind: String) -> void:
 		for k in 2:
 			var otra := cyl(0.017, 0.017, 0.06, Vector3(0.05 + k * 0.04, alto + 0.03, 0.06), m, n, 12)
 			otra.rotation.x = PI * 0.5 * float(k == 0)
+	elif kind == "tablon":
+		# tablones de madera con clavos y un martillo
+		mi = box(Vector3(0.9, 0.03, 0.14), Vector3(0, alto + 0.016, 0), _mat.madera_vieja, false, n, false)
+		box(Vector3(0.85, 0.03, 0.13), Vector3(0.02, 0.03, 0.03), _mat.madera_vieja, false, mi, false).rotation.y = 0.2
+		box(Vector3(0.03, 0.03, 0.28), Vector3(-0.2, 0.06, 0.1), _mat.madera, false, mi, false)
+		box(Vector3(0.1, 0.035, 0.035), Vector3(-0.2, 0.06, 0.24), _mat.hierro, false, mi, false)
 	else:
 		# bengalas de carretera (las que llevaban las víctimas): dos tubos rojos con capuchón
 		var rojo := _plain(Color(0.6, 0.05, 0.03), 0.5)
@@ -5603,6 +5690,7 @@ func _decorate() -> void:
 	ZarekAbandono.aplicar(self)
 	ZarekTerror.aplicar(self)
 	ZarekGore.aplicar(self)
+	_repartir_objetos()
 	for r in rooms:
 		var t: String = r.type
 		var rect: Rect2 = r.rect

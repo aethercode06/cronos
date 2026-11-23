@@ -116,6 +116,20 @@ func _ready() -> void:
 	_check(g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(m.radio_pos) < 0.5, "el fonógrafo lo atrae")
 	g._t_fono = 0.01
 	await _wait(0.1)
+	# puerta atrancada: la aporrea y la rompe
+	var pd: Dictionary = {}
+	for d in m.doors:
+		if not d.locked:
+			pd = d
+			break
+	m.set_door(pd, false)
+	m.atrancar(pd, 0.6)
+	m.set_door(pd, true)
+	var sigue_cerrada: bool = not pd.open
+	g.elena.global_position = pd.pos + Vector3(0.3, 0, 0.3)
+	g.elena.set_state(ZarekElena.S.INVESTIGATE, 10.0)
+	await _wait(1.5)
+	_check(sigue_cerrada and pd.open and float(pd.get("barricada", 0.0)) <= 0.0, "puerta atrancada: aguanta y la rompe a golpes")
 	g.elena.vanish(60.0)
 	# recoger los 4 sellos
 	for s in m.seals:

@@ -23,6 +23,9 @@ var lives := 3
 var sanity := 100.0
 var battery := 100.0
 var salt := 2
+var tablones := 0
+var _puerta_hold: Dictionary = {}
+var _t_hold := 0.0
 var seals := 0
 var flash_on := true
 var hidden_in: Dictionary = {}
@@ -126,6 +129,8 @@ func _ready() -> void:
 	var t_carga := Time.get_ticks_msec()
 	_environment()
 	mansion = ZarekMansion.new()
+	if not autotest and not shots:
+		mansion.partida_seed = randi() % 2000000000 + 1
 	add_child(mansion)
 	# en el teléfono, densidad media de bosque y objetos (la alta va a tirones)
 	await mansion.build_por_pasos(mini(Aether.quality, 1) if OS.get_name() == "Android" else Aether.quality,
@@ -708,7 +713,7 @@ func _update_hud() -> void:
 	lbl_lives.text = "♥ ".repeat(lives).strip_edges()
 	bar_san.value = sanity
 	bar_bat.value = battery
-	lbl_salt.text = "Bengalas: %d   Trampa: %d/%d" % [salt, seals, SEALS_NEEDED]
+	lbl_salt.text = "Bengalas: %d   Tablones: %d   Trampa: %d/%d" % [salt, tablones, seals, SEALS_NEEDED]
 	if not entered:
 		var dist := int(player.global_position.distance_to(mansion.front_door))
 		lbl_obj.text = "Llega a la mansión Varela (%d m)" % dist
@@ -1186,6 +1191,7 @@ func _play(delta: float) -> void:
 		_click()
 	if Input.is_action_just_pressed("sal"):
 		_throw_salt()
+	_puerta_tick(delta)
 	# ritual
 	if seals >= SEALS_NEEDED and _in_circle(pp):
 		if Input.is_action_pressed("usar") or (autotest and state == "ritual"):
@@ -1319,6 +1325,10 @@ func _target() -> Dictionary:
 	if not d.is_empty():
 		if d.locked:
 			return {"kind": "cerrada", "obj": d, "text": "Cerrada. Algo la sella desde dentro."}
+		if float(d.get("barricada", 0.0)) > 0.0:
+			return {"kind": "atrancada", "obj": d, "text": "USAR: quitar los tablones"}
+		if not d.open and tablones > 0:
+			return {"kind": "puerta", "obj": d, "text": "USAR: abrir · MANTÉN USAR: atrancar (tablones: %d)" % tablones}
 		return {"kind": "puerta", "obj": d, "text": "USAR: " + ("cerrar" if d.open else "abrir") + " la puerta"}
 	var l := mansion.lamp_near(pp, 1.8)
 	if not l.is_empty() and not l.broken:
@@ -1433,6 +1443,9 @@ func _use() -> void:
 			if k.kind == "pila":
 				battery = minf(100.0, battery + 50.0)
 				message("Pilas nuevas para la linterna.", 2.0)
+			elif k.kind == "tablon":
+				tablones += 1
+				message("Tablones y clavos. Puedo atrancar una puerta (mantén USAR en una puerta cerrada).", 3.5)
 			else:
 				salt += 1
 				message("Una bengala. Su luz lo ciega.", 2.0)
@@ -1442,10 +1455,20 @@ func _use() -> void:
 		"armario":
 			_enter_wardrobe(t.obj)
 		"puerta":
-			mansion.set_door(t.obj, not t.obj.open)
-			t.obj.snd.stream = _s("crujido")
-			t.obj.snd.play()
-			elena.hear(player.global_position, 5.0)
+			if not t.obj.open and tablones > 0:
+				# cerrada y con tablones: un toque la abre, mantener la atranca (se resuelve en _puerta_tick)
+				_puerta_hold = t.obj
+				_t_hold = 0.0
+			else:
+				mansion.set_door(t.obj, not t.obj.open)
+				t.obj.snd.stream = _s("crujido")
+				t.obj.snd.play()
+				elena.hear(player.global_position, 5.0)
+		"atrancada":
+			mansion.desatrancar(t.obj)
+			tablones += 1
+			sound_at("golpe_madera", t.obj.pos + Vector3(0, 1.2, 0), -4.0)
+			message("Quité los tablones.", 1.5)
 		"cerrada":
 			sound_at("golpes", t.obj.pos + Vector3(0, 1.4, 0), 2.0)
 		"portal":
@@ -1538,6 +1561,32 @@ func _blackout() -> void:
 	if elena.state == ZarekElena.S.DORMANT:
 		elena.wake_far()
 	elena.hear(player.global_position, 999.0)
+
+## Toque en una puerta cerrada: se abre. Mantener 1,4 s: se clava con tablones (gasta uno).
+func _puerta_tick(delta: float) -> void:
+	if _puerta_hold.is_empty():
+		return
+	var d := _puerta_hold
+	if Input.is_action_pressed("usar") and d.pos.distance_to(player.global_position) < 2.4:
+		_t_hold += delta
+		bar_rit.visible = true
+		bar_rit.value = _t_hold / 1.4 * 100.0
+		if _t_hold >= 1.4:
+			_puerta_hold = {}
+			bar_rit.visible = false
+			tablones -= 1
+			mansion.atrancar(d, 7.0)
+			sound_at("golpe_madera", d.pos + Vector3(0, 1.2, 0), 2.0)
+			elena.hear(player.global_position, 9.0)
+			message("Puerta atrancada. Aguantará un poco… no mucho.", 2.5)
+		return
+	_puerta_hold = {}
+	bar_rit.visible = false
+	if _t_hold < 0.4:
+		mansion.set_door(d, true)
+		d.snd.stream = _s("crujido")
+		d.snd.play()
+		elena.hear(player.global_position, 5.0)
 
 func _aliento_visible() -> bool:
 	return not hidden_in.is_empty() and elena.visible and elena.state != ZarekElena.S.DORMANT \
