@@ -13,3 +13,4 @@ Sonidos de La Sombra de Zarek (todos de uso libre; editados: recorte, tono y vol
 - Door Lock Sounds — Cough-E (CC0) — https://opengameart.org/content/door-lock-sounds
 - 100 CC0 metal and wood SFX — rubberduck (CC0) — https://opengameart.org/content/100-cc0-metal-and-wood-sfx
 - 4 Door Closes — StarNinjas (CC0) — https://opengameart.org/content/4-door-closes
+- Lluvia y truenos (lluvia, trueno_1..3) — Google Sound Library (CC BY 4.0) — https://developers.google.com/assistant/tools/sound-library (rain_on_roof, thunder_crack, rolling_thunder, distant_thunder)

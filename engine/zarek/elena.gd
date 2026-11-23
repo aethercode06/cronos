@@ -25,6 +25,8 @@ var seen_t := 0.0              # tiempo que lleva viéndote
 var _speed := 1.6
 ## Dificultad: 0,85 fácil, 1 normal, 1,15 pesadilla.
 var rapidez := 1.0
+## Cuánto ve (la niebla la baja).
+var vista := 1.0
 var _anim_t := 0.0
 var _twitch := 0.0
 var _twitch_t := 0.0
@@ -467,6 +469,7 @@ func _can_see_player() -> bool:
 	to.y = 0
 	var d := to.length()
 	var max_d := (20.0 if flashlight_on else 12.0) + aggro * 1.5
+	max_d *= vista
 	if mansion.is_lit(pp):
 		max_d += 6.0
 	if d > max_d:
@@ -586,7 +589,9 @@ func _physics_process(delta: float) -> void:
 			caught.emit()
 	# puertas: las abre de golpe al pasar
 	var d := mansion.door_near(global_position, 1.3)
-	if not d.is_empty() and not d.open and not d.locked:
+	# (las salas cerradas con llave también: es su casa y tiene todas las llaves)
+	if not d.is_empty() and not d.open and (not d.locked or String(d.get("llave", "")) != ""):
+		d.locked = false
 		mansion.set_door(d, true, true)
 		d.snd.stream = ZarekSonido.uno("portazo")
 		d.snd.play()

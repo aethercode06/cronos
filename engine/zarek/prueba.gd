@@ -162,6 +162,47 @@ func _ready() -> void:
 	var mx: Dictionary = g.muebles_reg.filter(func(x): return String(x.tipo) != "")[0]
 	ZarekRegistro.abrir(m, mx)
 	_check(mx.hecho, "registrar un mueble abre el cajón")
+	# la noche: salas cerradas con su llave en algún cajón, secretos repartidos
+	var con_llave := g.muebles_reg.filter(func(x): return String(x.botin).begins_with("llave:"))
+	var con_secreto := g.muebles_reg.filter(func(x): return String(x.botin).begins_with("secreto:"))
+	_check(g.salas_cerradas.size() >= 1 and con_llave.size() == g.salas_cerradas.size(), "salas cerradas con llave (%d) y sus llaves en cajones" % g.salas_cerradas.size())
+	_check(con_secreto.size() >= 3, "secretos de la familia escondidos (%d)" % con_secreto.size())
+	if not g.salas_cerradas.is_empty():
+		var sc: Dictionary = g.salas_cerradas[0]
+		var dl: Dictionary = sc.puerta
+		g.player.global_position = (dl.pos as Vector3) + Vector3(0, 0.05, 0)
+		var sin_llave: String = g._target().get("kind", "")
+		g.llaves_salas.append(String(sc.nombre))
+		var con: String = g._target().get("kind", "")
+		g._use()
+		await _wait(1.5)
+		_check(sin_llave == "cerrada" and con == "abrir_llave" and not dl.locked and dl.open, "abrir una sala con su llave")
+	var antes_sec: Array = Aether.save.get_value(ZarekSecretos.CLAVE, []).duplicate()
+	Aether.save.set_value(ZarekSecretos.CLAVE, [])
+	g._secreto("k2")
+	var guardado := ZarekSecretos.cuantos() == 1 and "k2" in g.secretos_noche
+	g._abrir_archivo()
+	_check(guardado and g.archivo_box != null, "secreto guardado en el archivo")
+	g.archivo_box.queue_free()
+	g.archivo_box = null
+	g.panel_nota.visible = false
+	Aether.save.set_value(ZarekSecretos.CLAVE, antes_sec)
+	var antes_hab = Aether.save.get_value("zarek_habitos", null)
+	var wd0: Dictionary = m.wardrobes[0]
+	for k in 4:
+		g._anotar_escondite(wd0)
+	_check(g._conoce_escondite(wd0) > 0.2, "Damián recuerda tus escondites")
+	Aether.save.set_value("zarek_habitos", antes_hab if antes_hab != null else {"esc": {}, "fono": 0})
+	g.suceso = "tormenta"
+	g._empezar_suceso()
+	g._trueno()
+	await _wait(1.6)
+	_check(g._trueno_tapa > 0.0 and g.snd_lluvia != null, "tormenta: el trueno tapa los pasos")
+	g.suceso = "normal"
+	var sucesos := {}
+	for sd in range(1, 400):
+		sucesos[ZarekNoches.elegir_suceso(sd)] = true
+	_check(sucesos.size() == ZarekNoches.SUCESOS.size(), "todas las noches posibles salen (%d)" % sucesos.size())
 	# puerta atrancada: la aporrea y la rompe
 	var pd: Dictionary = {}
 	for d in m.doors:
@@ -188,7 +229,7 @@ func _ready() -> void:
 	_check(g.seals == 4, "4 sellos recogidos")
 	var unlocked := true
 	for d in m.doors:
-		if d.locked:
+		if d.locked and String(d.get("llave", "")) == "":
 			unlocked = false
 	_check(unlocked, "la puerta del Epicentro se abre")
 	# ritual

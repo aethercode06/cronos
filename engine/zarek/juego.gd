@@ -16,6 +16,16 @@ var ghost: ZarekElena
 var sustos: ZarekSustos
 ## Muebles que se pueden registrar y cosas que hacen ruido (ZarekRegistro).
 var muebles_reg: Array = []
+## Rejugabilidad: suceso de la noche, salas cerradas con llave y secretos (ZarekNoches, ZarekSecretos).
+var suceso := "normal"
+var salas_cerradas: Array = []
+var llaves_salas: Array[String] = []
+var secretos_noche: Array[String] = []
+var luna: DirectionalLight3D
+var _t_trueno := 20.0
+var _trueno_tapa := 0.0
+var snd_lluvia: AudioStreamPlayer
+var archivo_box: Control
 var _reg_hold: Dictionary = {}
 var _t_reg := 0.0
 var _t_ruido_obj := {}
@@ -34,7 +44,7 @@ var tablones := 0
 ## no le asusta la luz y los objetos siempre cambian de sitio).
 var dif := 1
 var tiene_llaves := false
-const FINALES := {"trampa": "La trampa", "verdadero": "La verdad de los Varela", "huida": "La huida"}
+const FINALES := {"trampa": "La trampa", "verdadero": "La verdad de los Varela", "huida": "La huida", "oculto": "La hija de la roca"}
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
 var seals := 0
@@ -189,6 +199,8 @@ func _ready() -> void:
 	add_child(ghost)
 	ghost.visible = false
 	muebles_reg = ZarekRegistro.preparar(mansion)
+	suceso = ZarekNoches.elegir_suceso(mansion.partida_seed)
+	salas_cerradas = ZarekNoches.preparar(mansion, muebles_reg, mansion.partida_seed, 2, 6 if suceso == "luna_roja" else 4)
 	sustos = ZarekSustos.new()
 	add_child(sustos)
 	sustos.setup(self)
@@ -292,6 +304,7 @@ func _environment() -> void:
 	we.environment = env
 	add_child(we)
 	var moon := DirectionalLight3D.new()
+	luna = moon
 	moon.light_color = Color(0.55, 0.65, 0.95)
 	moon.light_energy = 0.45
 	moon.rotation_degrees = Vector3(-38, -55, 0)
@@ -663,7 +676,7 @@ void fragment() {
 	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(black)
 	_black_target = 1.0
-	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)]], "Usa auriculares. Juega a oscuras.")
+	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)], ["ARCHIVO", _abrir_archivo]], "Usa auriculares. Juega a oscuras.")
 	end_box = _menu_box(["", ""], [["JUGAR DE NUEVO", _restart], ["MENÚ", _to_title]], "")
 	lbl_end_t = end_box.get_meta("t")
 	lbl_end_s = end_box.get_meta("s")
@@ -754,7 +767,9 @@ func _update_hud() -> void:
 	lbl_lives.text = "♥ ".repeat(lives).strip_edges()
 	bar_san.value = sanity
 	bar_bat.value = battery
-	lbl_salt.text = "Bengalas: %d   Tablones: %d   Trampa: %d/%d" % [salt, tablones, seals, SEALS_NEEDED]
+	lbl_salt.text = "Bengalas: %d   Tablones: %d   Trampa: %d/%d   Secretos: %d/%d" % [salt, tablones, seals, SEALS_NEEDED, ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
+	if not llaves_salas.is_empty():
+		lbl_salt.text += "\nLlaves: " + ", ".join(llaves_salas)
 	if not entered:
 		var dist := int(player.global_position.distance_to(mansion.front_door))
 		lbl_obj.text = "Llega a la mansión Varela (%d m)" % dist
@@ -784,7 +799,8 @@ func _nearest_seal() -> Dictionary:
 # ---------------- flujo de la partida ----------------
 func _resumen_titulo() -> String:
 	var hechos: Array = Aether.save.get_value("zarek_finales", [])
-	var t := "Noche I · La casa Varela"
+	var t := "Noche I · La casa Varela\nEsta noche: " + String(ZarekNoches.SUCESOS[suceso][0]).capitalize()
+	t += "\nSecretos de la familia: %d/%d" % [ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
 	if not hechos.is_empty():
 		t += "\nFinales: %d/%d" % [hechos.size(), FINALES.size()]
 		var mejor: float = Aether.save.get_value("zarek_mejor", 0.0)
@@ -840,6 +856,7 @@ func start_game(quick := false) -> void:
 		player.frozen = false
 		_black_target = 0.0
 		black.color.a = 0.0
+		_empezar_suceso()
 		return
 	if not DisplayServer.is_touchscreen_available():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -858,7 +875,11 @@ func start_game(quick := false) -> void:
 	await get_tree().create_timer(1.2).timeout
 	state = "juego"
 	player.frozen = false
+	_empezar_suceso()
 	await get_tree().create_timer(0.6).timeout
+	var sc: Array = ZarekNoches.SUCESOS[suceso]
+	message(String(sc[0]) + "\n" + String(sc[1]), 4.5)
+	await get_tree().create_timer(4.8).timeout
 	message("Tengo que llegar a la mansión.", 2.6)
 
 func _restart() -> void:
@@ -1041,6 +1062,7 @@ func _process(delta: float) -> void:
 	_update_viento(delta)
 	if state in ["juego", "escondido", "ritual"]:
 		_play(delta)
+		_suceso_tick(delta)
 	_update_hud()
 	_update_audio(delta)
 
@@ -1075,6 +1097,11 @@ func _update_niebla(delta: float) -> void:
 		env.volumetric_fog_density = lerpf(0.008, 0.03, _fuera)
 		env.fog_density = lerpf(0.005, 0.022, _fuera)
 		env.fog_height_density = lerpf(0.0, 0.18, _fuera)
+	if suceso == "niebla":
+		# la niebla ha entrado en la casa: dentro casi tan espesa como fuera
+		env.fog_density = maxf(env.fog_density, lerpf(0.075, 0.05, _fuera))
+		env.fog_light_color = Color(0.12, 0.12, 0.13)
+		env.fog_height_density = maxf(env.fog_height_density, 0.2)
 	if niebla == null:
 		niebla = ZarekNiebla.new()
 		add_child(niebla)
@@ -1377,6 +1404,8 @@ func _on_step(noise: float) -> void:
 			sound_at("chapoteo", q + Vector3(0, 0.1, 0), -8.0 + noise * 4.0)
 			noise = maxf(noise * 1.6, 6.0)
 			break
+	if _trueno_tapa > 0.0:
+		noise *= 0.2
 	elena.hear(player.global_position, noise)
 	# tablones rotos: crujen fuerte al pisarlos (y Elena lo oye)
 	var pp := player.global_position
@@ -1505,6 +1534,10 @@ func _target() -> Dictionary:
 		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + ("debajo de la cama" if wd.get("tipo", "") == "cama" else "en el armario")}
 	var d := mansion.door_near(pp + player.forward() * 0.6, 1.7)
 	if not d.is_empty():
+		if d.locked and String(d.get("llave", "")) != "":
+			if String(d.llave) in llaves_salas:
+				return {"kind": "abrir_llave", "obj": d, "text": "USAR: abrir con la llave de «%s»" % d.llave}
+			return {"kind": "cerrada", "obj": d, "text": "USAR: probar el pomo (cerrada con llave)"}
 		if d.locked:
 			return {"kind": "cerrada", "obj": d, "text": "USAR: probar el pomo (cerrada)"}
 		if float(d.get("barricada", 0.0)) > 0.0:
@@ -1678,7 +1711,16 @@ func _use() -> void:
 			dd["rigidez"] = 60.0
 			dd["freno"] = 9.0
 			player.shake(0.8)
-			message("Cerrada. Algo la sella desde el otro lado.", 1.8)
+			if String(dd.get("llave", "")) != "":
+				message("Cerrada con llave. En la placa del pomo pone «%s».\nLa llave tiene que estar en algún cajón de la casa." % dd.llave, 3.0)
+			else:
+				message("Cerrada. Algo la sella desde el otro lado.", 1.8)
+		"abrir_llave":
+			var dl: Dictionary = t.obj
+			dl.locked = false
+			sound_at("llaves", dl.pos + Vector3(0, 1.1, 0), -2.0)
+			mansion.set_door(dl, true)
+			message("La llave encaja. Nadie ha entrado aquí en años…", 2.5)
 		"portal":
 			_use_portal(t.obj)
 		"lampara":
@@ -1782,7 +1824,7 @@ func _blackout() -> void:
 	Aether.flash(Color(0.6, 0, 0), 0.4)
 	sound_behind("grito", 6.0, 3.0)
 	for d in mansion.doors:
-		if d.locked:
+		if d.locked and String(d.get("llave", "")) == "":
 			d.locked = false
 			mansion.set_door(d, true, true)
 			d.snd.stream = _s("portazo")
@@ -1867,6 +1909,13 @@ func _registro_tick(delta: float) -> void:
 				"tablon":
 					tablones += 1
 					message("Clavos y un martillo. Puedo atrancar una puerta más.", 2.5)
+				var b when String(b).begins_with("llave:"):
+					var sala := String(b).trim_prefix("llave:")
+					llaves_salas.append(sala)
+					sound_at("llaves", player.global_position, -4.0)
+					message("Una llave vieja con una etiqueta: «%s»." % sala, 3.0)
+				var b when String(b).begins_with("secreto:"):
+					_secreto(String(b).trim_prefix("secreto:"))
 				"nota":
 					message("Una polaroid: yo, de niña, en brazos de mamá… delante de esta casa.\nNunca me dijo que había estado aquí.", 4.5)
 					sanity = maxf(0.0, sanity - 6.0)
@@ -2010,10 +2059,11 @@ func _respirar(delta: float, pp: Vector3) -> void:
 	if _revisando.is_empty() and elena.state in [ZarekElena.S.SEARCH, ZarekElena.S.INVESTIGATE] and ed < 9.0:
 		_t_revisar -= delta
 		if _t_revisar <= 0.0:
-			_t_revisar = randf_range(6.0, 12.0)
-			if randf() < 0.4 + 0.1 * elena.aggro:
+			var conoce := _conoce_escondite(hidden_in)
+			_t_revisar = randf_range(6.0, 12.0) * (1.0 - conoce)
+			if randf() < 0.4 + 0.1 * elena.aggro + conoce:
 				_revisando = hidden_in
-				message("Viene hacia aquí…", 1.5)
+				message("Viene directo hacia aquí… conoce este escondite." if conoce >= 0.24 else "Viene hacia aquí…", 1.8)
 	if not _revisando.is_empty():
 		var wp: Vector3 = _revisando.pos
 		elena.last_seen = wp
@@ -2040,7 +2090,14 @@ func _pillada_escondida() -> void:
 	_on_caught()
 
 ## Fonógrafo: pone un disco viejo que suena por toda la planta y lo atrae hasta él durante un rato.
+var _fono_ignora := false
 func _poner_fonografo() -> void:
+	# cuantas más veces le has engañado con el disco (en todas las noches), más fácil es que no caiga
+	var h := _habitos()
+	var usos := int(h.get("fono", 0))
+	h["fono"] = usos + 1
+	Aether.save.set_value("zarek_habitos", h)
+	_fono_ignora = randf() < clampf((usos - 2) * 0.1, 0.0, 0.55)
 	_t_fono = 25.0
 	snd_radio.stream = _s("caja_musica")
 	snd_radio.volume_db = 2.0
@@ -2054,7 +2111,12 @@ func _fonografo_tick(delta: float) -> void:
 	if _t_fono <= 0.0:
 		return
 	_t_fono -= delta
-	if elena.state != ZarekElena.S.CHASE and elena.state != ZarekElena.S.DORMANT:
+	if _fono_ignora:
+		# ya no se cree el truco: va a buscar a quien ha puesto el disco
+		if _t_fono < 19.0 and _t_fono + delta >= 19.0 and elena.state != ZarekElena.S.DORMANT:
+			elena.hear(player.global_position, 8.0)
+			message("No ha ido al fonógrafo…\nConoce el truco del disco. Viene a buscarme.", 3.0)
+	elif elena.state != ZarekElena.S.CHASE and elena.state != ZarekElena.S.DORMANT:
 		elena.player_hidden = false
 		elena.hear(mansion.radio_pos, 999.0)
 		elena.player_hidden = not hidden_in.is_empty()
@@ -2071,7 +2133,10 @@ func _enter_wardrobe(wd: Dictionary) -> void:
 	player.global_position = wd.inside
 	player.set_look(wd.yaw, 0.0)
 	aliento = 1.0
-	_t_revisar = randf_range(4.0, 9.0)
+	_t_revisar = randf_range(4.0, 9.0) * (1.0 - _conoce_escondite(wd))
+	if _conoce_escondite(wd) >= 0.36 and randf() < 0.5:
+		message("Ya me he escondido aquí muchas veces…\n¿Y si él lo sabe?", 2.5)
+	_anotar_escondite(wd)
 	var cama: bool = wd.get("tipo", "") == "cama"
 	player.altura_fija = true
 	player.head.position.y = 0.2 if cama else player.eye_height
@@ -2211,7 +2276,11 @@ func _win() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_hud_visible(false)
 	var verdad := notas_leidas >= mansion.notas.size() and mansion.notas.size() > 0
-	if verdad:
+	var oculto := ZarekSecretos.cuantos() >= ZarekSecretos.TOTAL
+	if oculto:
+		lbl_end_t.text = "FINAL OCULTO: LA HIJA DE LA ROCA"
+		lbl_end_s.text = "Tiempo: %s\nLo he visto y escuchado todo. Inés no era mi madre: nací en esta casa en octubre de 1987.\nLa trampa se cierra sobre Damián, mi hermano. Pero no huyo. Bajo a la capilla.\nElla me sonríe. Y por primera vez en mi vida… tengo hambre de verdad." % _fmt(play_time)
+	elif verdad:
 		lbl_end_t.text = "FINAL VERDADERO"
 		lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d\nLo leí todo. Mi madre no huyó de esta casa: huyó de su hermana.\nY la mujer del sótano no pide ayuda… pide comida. Continuará." % [_fmt(play_time), deaths]
 	else:
@@ -2220,7 +2289,10 @@ func _win() -> void:
 	if dif == 2:
 		lbl_end_s.text += "\n☠ PESADILLA SUPERADA"
 		Aether.save.set_value("zarek_pesadilla", true)
+	lbl_end_s.text += "\nSecretos encontrados esta noche: %d · Archivo: %d/%d" % [secretos_noche.size(), ZarekSecretos.cuantos(), ZarekSecretos.TOTAL]
 	end_box.visible = true
+	if oculto:
+		_final("oculto")
 	_final("verdadero" if verdad else "trampa")
 	if verdad:
 		_final("trampa")
@@ -2401,3 +2473,162 @@ func _update_audio(delta: float) -> void:
 		breath = 0.7
 	snd_breath.volume_db = lerpf(snd_breath.volume_db, -60.0 if breath <= 0.0 else linear_to_db(breath) - 4.0, delta * 3.0)
 	snd_drone.pitch_scale = 1.0 - low * 0.12
+
+# ---------------- la noche: suceso, secretos y archivo ----------------
+func _empezar_suceso() -> void:
+	match suceso:
+		"tormenta":
+			snd_lluvia = AudioStreamPlayer.new()
+			var lluvia := "lluvia" if ZarekSonido.hay("lluvia") else "viento"
+			snd_lluvia.stream = ZarekSonido.uno(lluvia)
+			if snd_lluvia.stream is AudioStreamOggVorbis:
+				(snd_lluvia.stream as AudioStreamOggVorbis).loop = true
+			elif snd_lluvia.stream is AudioStreamWAV:
+				(snd_lluvia.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+				(snd_lluvia.stream as AudioStreamWAV).loop_end = (snd_lluvia.stream as AudioStreamWAV).data.size() / 2
+			snd_lluvia.volume_db = -10.0
+			add_child(snd_lluvia)
+			snd_lluvia.play()
+			_t_trueno = randf_range(10.0, 20.0)
+		"niebla":
+			elena.vista = 0.6
+		"apagon":
+			if mansion.electricidad:
+				mansion.electricidad.cortar()
+		"luna_roja":
+			elena.rapidez *= 1.12
+			if luna:
+				luna.light_color = Color(0.95, 0.35, 0.28)
+				luna.light_energy *= 1.15
+
+func _suceso_tick(delta: float) -> void:
+	_trueno_tapa = maxf(0.0, _trueno_tapa - delta)
+	if suceso != "tormenta":
+		return
+	var dentro := mansion.inside_house(player.global_position)
+	if snd_lluvia:
+		snd_lluvia.volume_db = lerpf(snd_lluvia.volume_db, -16.0 if dentro else -6.0, minf(1.0, delta * 2.0))
+	_t_trueno -= delta
+	if _t_trueno <= 0.0:
+		_t_trueno = randf_range(14.0, 35.0)
+		_trueno()
+
+## Un rayo: destello (más fuerte fuera o junto a una ventana), trueno un momento después, y durante unos
+## segundos el ruido tapa los pasos de Sofía.
+func _trueno() -> void:
+	var dentro := mansion.inside_house(player.global_position)
+	Aether.flash(Color(0.8, 0.85, 1.0), 0.18 if dentro else 0.35)
+	if luna:
+		var e := luna.light_energy
+		luna.light_energy = e * 6.0
+		var tw := create_tween()
+		tw.tween_property(luna, "light_energy", e, 0.5)
+	await get_tree().create_timer(randf_range(0.3, 1.2)).timeout
+	snd_ui.stream = ZarekSonido.uno("trueno") if ZarekSonido.hay("trueno") else AetherSynth.make("golpe_madera")
+	snd_ui.volume_db = -2.0 if dentro else 2.0
+	snd_ui.play()
+	player.shake(2.5)
+	_trueno_tapa = 3.5
+	# a veces la tormenta hace saltar los plomos
+	if randf() < 0.12:
+		_corte_luz(0.4)
+
+## Un secreto de la familia encontrado: se guarda al momento (aunque luego te atrapen).
+func _secreto(id: String) -> void:
+	var s := ZarekSecretos.dato(id)
+	if s.is_empty():
+		return
+	var nuevo := ZarekSecretos.guardar(id)
+	if not id in secretos_noche:
+		secretos_noche.append(id)
+	sound_at("pagina" if ZarekSonido.hay("pagina") else "recoger", player.global_position, -4.0)
+	_leer_nota({"titulo": s[2], "texto": s[3], "leida": true})
+	var n := ZarekSecretos.cuantos()
+	if nuevo:
+		message("SECRETO %d/%d · %s guardado en el archivo" % [n, ZarekSecretos.TOTAL, ZarekSecretos.ICONO[s[1]]], 3.5)
+	else:
+		message("Esto ya lo había visto en otra noche…", 2.0)
+	sanity = maxf(0.0, sanity - 4.0)
+
+## Archivo: los secretos encontrados en todas las noches, para volver a leerlos.
+func _abrir_archivo() -> void:
+	if archivo_box:
+		archivo_box.queue_free()
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.process_mode = Node.PROCESS_MODE_ALWAYS
+	var bg := ColorRect.new()
+	bg.color = Color(0.02, 0.01, 0.01, 0.95)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(bg)
+	var hb := HBoxContainer.new()
+	hb.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hb.offset_left = 40
+	hb.offset_right = -40
+	hb.offset_top = 30
+	hb.offset_bottom = -30
+	hb.add_theme_constant_override("separation", 30)
+	root.add_child(hb)
+	var izq := VBoxContainer.new()
+	izq.custom_minimum_size = Vector2(380, 0)
+	izq.add_theme_constant_override("separation", 8)
+	hb.add_child(izq)
+	var tit := _label("ARCHIVO · %d/%d" % [ZarekSecretos.cuantos(), ZarekSecretos.TOTAL], 32, Color(0.82, 0.12, 0.12))
+	izq.add_child(tit)
+	var sc := ScrollContainer.new()
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	izq.add_child(sc)
+	var lista := VBoxContainer.new()
+	lista.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(lista)
+	var texto := _label("Fotos, cartas y cintas escondidas en los cajones de la casa. Cada noche aparecen unas pocas, primero las que te faltan.\n\nLo que encuentras se guarda aunque te atrapen.", 22, Color(0.85, 0.8, 0.7))
+	texto.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	texto.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	texto.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	texto.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hb.add_child(texto)
+	var tengo := ZarekSecretos.encontrados()
+	for s in ZarekSecretos.LISTA:
+		var b := Button.new()
+		var ok: bool = s[0] in tengo
+		b.text = String(s[2]) if ok else "%s · ???" % ZarekSecretos.ICONO[s[1]]
+		b.disabled = not ok
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.add_theme_font_size_override("font_size", 18)
+		b.custom_minimum_size = Vector2(360, 44)
+		b.clip_text = true
+		if ok:
+			b.pressed.connect(func(): texto.text = String(s[2]).to_upper() + "\n\n" + String(s[3]))
+		lista.add_child(b)
+	var volver := Button.new()
+	volver.text = "VOLVER"
+	volver.custom_minimum_size = Vector2(200, 56)
+	volver.add_theme_font_size_override("font_size", 24)
+	volver.pressed.connect(func():
+		root.queue_free()
+		archivo_box = null)
+	izq.add_child(volver)
+	ui.add_child(root)
+	archivo_box = root
+
+## Lo que Damián recuerda de otras noches: dónde te escondes y si le engañas con el fonógrafo.
+static func _clave_escondite(wd: Dictionary) -> String:
+	var p: Vector3 = wd.pos
+	return "%d_%d_%d" % [roundi(p.x), roundi(p.y), roundi(p.z)]
+
+func _habitos() -> Dictionary:
+	return Aether.save.get_value("zarek_habitos", {"esc": {}, "fono": 0})
+
+func _anotar_escondite(wd: Dictionary) -> void:
+	var h := _habitos()
+	var esc: Dictionary = h.get("esc", {})
+	var k := _clave_escondite(wd)
+	esc[k] = int(esc.get(k, 0)) + 1
+	h["esc"] = esc
+	Aether.save.set_value("zarek_habitos", h)
+
+## Cuánto conoce un escondite (0-1): sube con cada vez que te has escondido ahí, en esta noche y en otras.
+func _conoce_escondite(wd: Dictionary) -> float:
+	var veces := int((_habitos().get("esc", {}) as Dictionary).get(_clave_escondite(wd), 0))
+	return clampf((veces - 1) * 0.12, 0.0, 0.5)
