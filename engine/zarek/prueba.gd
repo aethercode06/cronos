@@ -116,6 +116,8 @@ func _ready() -> void:
 	_check(g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(m.radio_pos) < 0.5, "el fonógrafo lo atrae")
 	g._t_fono = 0.01
 	await _wait(0.1)
+	_check(m.pickups.any(func(k): return k.kind == "llaves") and m.car_pos != Vector3.ZERO, "las llaves del coche están en la casa (final de huida)")
+	_check(m.pickups.filter(func(k): return k.kind == "tablon").size() >= 1, "tablones para atrancar puertas")
 	# puerta atrancada: la aporrea y la rompe
 	var pd: Dictionary = {}
 	for d in m.doors:

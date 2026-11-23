@@ -23,6 +23,8 @@ var can_catch := true
 var sees_player := false
 var seen_t := 0.0              # tiempo que lleva viéndote
 var _speed := 1.6
+## Dificultad: 0,85 fácil, 1 normal, 1,15 pesadilla.
+var rapidez := 1.0
 var _anim_t := 0.0
 var _twitch := 0.0
 var _twitch_t := 0.0
@@ -586,7 +588,7 @@ func _move(delta: float) -> void:
 			if state == S.CHASE:
 				_burst += delta * 3.2
 				k = 0.55 + 0.9 * absf(sin(_burst))
-			var step := to.normalized() * _speed * k * delta
+			var step := to.normalized() * _speed * rapidez * k * delta
 			if step.length() > to.length():
 				step = to
 			global_position += step

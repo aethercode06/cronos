@@ -24,6 +24,11 @@ var sanity := 100.0
 var battery := 100.0
 var salt := 2
 var tablones := 0
+## Dificultad: 0 fácil (5 vidas, más bengalas, él más lento), 1 normal, 2 pesadilla (1 vida, más rápido,
+## no le asusta la luz y los objetos siempre cambian de sitio).
+var dif := 1
+var tiene_llaves := false
+const FINALES := {"trampa": "La trampa", "verdadero": "La verdad de los Varela", "huida": "La huida"}
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
 var seals := 0
@@ -622,7 +627,7 @@ void fragment() {
 	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(black)
 	_black_target = 1.0
-	title_box = _menu_box(["LA SOMBRA DE ZAREK", "Noche I · La casa Varela"], [["JUGAR", start_game.bind(false)]], "Usa auriculares. Juega a oscuras.")
+	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)]], "Usa auriculares. Juega a oscuras.")
 	end_box = _menu_box(["", ""], [["JUGAR DE NUEVO", _restart], ["MENÚ", _to_title]], "")
 	lbl_end_t = end_box.get_meta("t")
 	lbl_end_s = end_box.get_meta("s")
@@ -741,6 +746,53 @@ func _nearest_seal() -> Dictionary:
 	return best
 
 # ---------------- flujo de la partida ----------------
+func _resumen_titulo() -> String:
+	var hechos: Array = Aether.save.get_value("zarek_finales", [])
+	var t := "Noche I · La casa Varela"
+	if not hechos.is_empty():
+		t += "\nFinales: %d/%d" % [hechos.size(), FINALES.size()]
+		var mejor: float = Aether.save.get_value("zarek_mejor", 0.0)
+		if mejor > 0.0:
+			t += " · Mejor tiempo: " + _fmt(mejor)
+	return t
+
+func _jugar(d: int) -> void:
+	dif = d
+	lives = [5, 3, 1][d]
+	salt = [3, 2, 1][d]
+	elena.rapidez = [0.85, 1.0, 1.15][d]
+	if d == 2:
+		elena.aggro = 2
+	start_game(false)
+
+func _final(clave: String) -> void:
+	var hechos: Array = Aether.save.get_value("zarek_finales", [])
+	if not clave in hechos:
+		hechos.append(clave)
+		Aether.save.set_value("zarek_finales", hechos)
+	if clave != "huida":
+		var mejor: float = Aether.save.get_value("zarek_mejor", 0.0)
+		if mejor <= 0.0 or play_time < mejor:
+			Aether.save.set_value("zarek_mejor", play_time)
+
+## Final de la huida: con las llaves, al coche. Sofía se salva… y deja a todos los demás atrás.
+func _huida() -> void:
+	state = "final"
+	player.frozen = true
+	elena.can_catch = false
+	elena.vanish(999.0)
+	sound_at("golpe_madera", mansion.car_pos + Vector3(0, 1, 0), 0.0)
+	_black_target = 1.0
+	await get_tree().create_timer(1.4).timeout
+	message("El motor tosió… y arrancó.\nNo miré atrás. Ni siquiera cuando la oí gritar mi nombre desde el sótano.", 5.0)
+	await get_tree().create_timer(5.2).timeout
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_hud_visible(false)
+	lbl_end_t.text = "FINAL: LA HUIDA"
+	lbl_end_s.text = "Tiempo: %s\nUna semana después, otra carta salió de la mansión Varela.\nIba dirigida a alguien que no sabe nada. (Final %d/%d)" % [_fmt(play_time), Aether.save.get_value("zarek_finales", []).size() + (0 if "huida" in Aether.save.get_value("zarek_finales", []) else 1), FINALES.size()]
+	end_box.visible = true
+	_final("huida")
+
 func start_game(quick := false) -> void:
 	title_box.visible = false
 	_hud_visible(true)
@@ -1306,9 +1358,13 @@ func _target() -> Dictionary:
 		return {"kind": "nota", "obj": nota, "text": "USAR: leer «" + String(nota.titulo).get_slice(" · ", 0) + "»"}
 	for k in mansion.pickups:
 		if not k.taken and Vector2(pp.x - k.pos.x, pp.z - k.pos.z).length() < 1.6:
-			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + ("las pilas" if k.kind == "pila" else "las bengalas")}
+			return {"kind": "pick", "obj": k, "text": "USAR: tomar " + {"pila": "las pilas", "tablon": "los tablones", "llaves": "las llaves del coche"}.get(k.kind, "las bengalas")}
 	if seals >= SEALS_NEEDED and _in_circle(pp):
 		return {"kind": "ritual", "text": "MANTÉN USAR: preparar la trampa"}
+	if entered and mansion.car_pos != Vector3.ZERO and Vector2(pp.x - mansion.car_pos.x, pp.z - mansion.car_pos.z).length() < 3.0:
+		if tiene_llaves:
+			return {"kind": "huir", "text": "USAR: huir en el coche (final)"}
+		return {"kind": "nada", "text": "El coche no arranca sin las llaves. ¿Dónde las dejé…?"}
 	var pt := mansion.portal_near(pp, 1.7)
 	if not pt.is_empty():
 		return {"kind": "portal", "obj": pt, "text": "USAR: " + str(pt.text)}
@@ -1426,6 +1482,8 @@ func _use() -> void:
 			_exit_wardrobe(true)
 		"fonografo":
 			_poner_fonografo()
+		"huir":
+			_huida()
 		"nota":
 			_leer_nota(t.obj)
 		"gato":
@@ -1443,6 +1501,9 @@ func _use() -> void:
 			if k.kind == "pila":
 				battery = minf(100.0, battery + 50.0)
 				message("Pilas nuevas para la linterna.", 2.0)
+			elif k.kind == "llaves":
+				tiene_llaves = true
+				message("Las llaves de mi coche… las tenía él. Podría huir.\n(Pero si me voy, Damián seguirá cazando.)", 4.0)
 			elif k.kind == "tablon":
 				tablones += 1
 				message("Tablones y clavos. Puedo atrancar una puerta (mantén USAR en una puerta cerrada).", 3.5)
@@ -1511,7 +1572,7 @@ func _take_seal(s: Dictionary) -> void:
 	s.taken = true
 	s.node.visible = false
 	seals += 1
-	elena.aggro = seals
+	elena.aggro = seals + (2 if dif == 2 else 0)
 	snd_ui.stream = _s("campana")
 	snd_ui.volume_db = -6.0
 	snd_ui.play()
@@ -1834,9 +1895,20 @@ func _win() -> void:
 	await get_tree().create_timer(5.2).timeout
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	_hud_visible(false)
-	lbl_end_t.text = "NOCHE I SUPERADA"
-	lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d\nLa carta no la escribió ningún abogado. Te estaban esperando… Continuará." % [_fmt(play_time), deaths]
+	var verdad := notas_leidas >= mansion.notas.size() and mansion.notas.size() > 0
+	if verdad:
+		lbl_end_t.text = "FINAL VERDADERO"
+		lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d\nLo leí todo. Mi madre no huyó de esta casa: huyó de su hermana.\nY la mujer del sótano no pide ayuda… pide comida. Continuará." % [_fmt(play_time), deaths]
+	else:
+		lbl_end_t.text = "NOCHE I SUPERADA"
+		lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d · Notas: %d/%d\nLa carta no la escribió ningún abogado. Te estaban esperando… Continuará.\n(Lee todas las notas para el final verdadero)" % [_fmt(play_time), deaths, notas_leidas, mansion.notas.size()]
+	if dif == 2:
+		lbl_end_s.text += "\n☠ PESADILLA SUPERADA"
+		Aether.save.set_value("zarek_pesadilla", true)
 	end_box.visible = true
+	_final("verdadero" if verdad else "trampa")
+	if verdad:
+		_final("trampa")
 	Aether.save.set_value("zarek_noche1", true)
 
 func _fmt(t: float) -> String:

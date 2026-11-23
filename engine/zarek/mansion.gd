@@ -4728,7 +4728,9 @@ func _markers() -> void:
 	for s in spots:
 		_pickup(cell_to_world(s[0], s[1], s[2]), s[3])
 
+var car_pos := Vector3.ZERO
 func _car(p: Vector3) -> void:
+	car_pos = p
 	var n := Node3D.new()
 	n.set_meta("dyn", true)
 	n.position = p
@@ -4774,15 +4776,15 @@ func _repartir_objetos() -> void:
 	azar.seed = partida_seed
 	var sitios: Array[Vector3] = []
 	sitios.append_array(_sello_marcas)
+	ZarekTerror._rng.seed = partida_seed + 5
+	for nombre in SITIOS_OBJETOS:
+		var r := _sala_por_nombre(nombre)
+		if r.is_empty():
+			continue
+		var p := ZarekTerror._sitio_libre(self, r, 0.7)
+		if p != Vector3.INF:
+			sitios.append(p)
 	if partida_seed != 0:
-		ZarekTerror._rng.seed = partida_seed
-		for nombre in SITIOS_OBJETOS:
-			var r := _sala_por_nombre(nombre)
-			if r.is_empty():
-				continue
-			var p := ZarekTerror._sitio_libre(self, r, 0.7)
-			if p != Vector3.INF:
-				sitios.append(p)
 		for i in range(sitios.size() - 1, 0, -1):
 			var j := azar.randi_range(0, i)
 			var t0 := sitios[i]
@@ -4797,6 +4799,13 @@ func _repartir_objetos() -> void:
 			continue
 		usados.append(rid)
 		_seal(p)
+	# las llaves del coche de Sofía: Damián las dejó en su cuarto, entre los trofeos
+	var rd := _sala_por_nombre("Cuarto de Damián")
+	if not rd.is_empty():
+		ZarekTerror._rng.seed = partida_seed + 77
+		var pl := ZarekTerror._sitio_libre(self, rd, 0.6)
+		if pl != Vector3.INF and pl.distance_to(circle_pos) > 2.2:
+			_pickup(pl, "llaves")
 	# tablones con clavos para atrancar puertas (los que sobran)
 	var n_tab := 0
 	for p in sitios:
@@ -5518,6 +5527,11 @@ func _pickup(pos: Vector3, kind: String) -> void:
 		for k in 2:
 			var otra := cyl(0.017, 0.017, 0.06, Vector3(0.05 + k * 0.04, alto + 0.03, 0.06), m, n, 12)
 			otra.rotation.x = PI * 0.5 * float(k == 0)
+	elif kind == "llaves":
+		# llavero del coche alquilado con su etiqueta
+		mi = box(Vector3(0.05, 0.008, 0.025), Vector3(0, alto + 0.005, 0), _mat.metal, false, n, false)
+		cyl(0.018, 0.018, 0.006, Vector3(0.04, 0.0, 0.0), _mat.laton_viejo, mi, 12)
+		box(Vector3(0.07, 0.004, 0.035), Vector3(0.09, 0.0, 0.01), _plain(Color(0.75, 0.7, 0.55), 0.8), false, mi, false)
 	elif kind == "tablon":
 		# tablones de madera con clavos y un martillo
 		mi = box(Vector3(0.9, 0.03, 0.14), Vector3(0, alto + 0.016, 0), _mat.madera_vieja, false, n, false)
