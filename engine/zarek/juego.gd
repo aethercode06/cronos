@@ -26,6 +26,15 @@ var salt := 2
 var seals := 0
 var flash_on := true
 var hidden_in: Dictionary = {}
+var slit_cama: ColorRect
+var barra_aliento: ProgressBar
+## Aguantar la respiración escondida: aliento 1 = lleno. Si se acaba, Sofía jadea y él la oye.
+var aliento := 1.0
+var _aguantando := false
+var _t_revisar := 0.0
+var _t_oir_resp := 0.0
+var _t_fono := 0.0
+var _revisando: Dictionary = {}
 var ritual := 0.0
 var play_time := 0.0
 var deaths := 0
@@ -535,6 +544,28 @@ void fragment() {
 	slit_r.anchor_bottom = 1.0
 	slit_r.visible = false
 	ui.add_child(slit_r)
+	# debajo de la cama: el somier tapa la parte de arriba; solo se ve una franja a ras de suelo
+	slit_cama = ColorRect.new()
+	slit_cama.color = Color(0.02, 0.015, 0.01, 0.98)
+	slit_cama.anchor_right = 1.0
+	slit_cama.anchor_bottom = 0.58
+	slit_cama.visible = false
+	ui.add_child(slit_cama)
+	barra_aliento = ProgressBar.new()
+	barra_aliento.show_percentage = false
+	barra_aliento.max_value = 1.0
+	barra_aliento.anchor_left = 0.35
+	barra_aliento.anchor_right = 0.65
+	barra_aliento.anchor_top = 0.82
+	barra_aliento.anchor_bottom = 0.84
+	var fg := StyleBoxFlat.new()
+	fg.bg_color = Color(0.75, 0.82, 0.9, 0.85)
+	var bgs := StyleBoxFlat.new()
+	bgs.bg_color = Color(0, 0, 0, 0.5)
+	barra_aliento.add_theme_stylebox_override("fill", fg)
+	barra_aliento.add_theme_stylebox_override("background", bgs)
+	barra_aliento.visible = false
+	ui.add_child(barra_aliento)
 	top = VBoxContainer.new()
 	top.position = Vector2(26, 18)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1136,14 +1167,8 @@ func _play(delta: float) -> void:
 		post_mat.set_shader_parameter("miedo", clampf((100.0 - sanity) / 100.0 * 0.7 + _danger * 0.6, 0.0, 1.0))
 	# Elena: escondite
 	elena.player_hidden = not hidden_in.is_empty()
-	if not hidden_in.is_empty() and _hide_seen and elena.state == ZarekElena.S.CHASE:
-		# te vio entrar: va al armario y lo abre
-		var wp: Vector3 = hidden_in.pos
-		elena.path = mansion.path(elena.global_position, wp)
-		if Vector2(elena.global_position.x - wp.x, elena.global_position.z - wp.z).length() < 1.3:
-			_exit_wardrobe(false)
-			_on_caught()
-			return
+	_respirar(delta, pp)
+	_fonografo_tick(delta)
 	_events(pp)
 	# vistazo de guion al principio
 	if _intro_glimpse > 0.0 and state == "juego":
@@ -1156,7 +1181,7 @@ func _play(delta: float) -> void:
 	_interact_prompt()
 	if Input.is_action_just_pressed("usar"):
 		_use()
-	if Input.is_action_just_pressed("linterna") and hidden_in.is_empty():
+	if Input.is_action_just_pressed("linterna") and hidden_in.is_empty() and state == "juego":
 		flash_on = not flash_on
 		_click()
 	if Input.is_action_just_pressed("sal"):
@@ -1227,6 +1252,17 @@ var _t_crujido := 0
 func _on_step(noise: float) -> void:
 	if state != "juego" and state != "ritual":
 		return
+	var pp0 := player.global_position
+	for q in mansion.cristales:
+		if absf((q as Vector3).y - pp0.y) < 1.2 and Vector2(q.x - pp0.x, q.z - pp0.z).length() < 0.75:
+			sound_at("vidrio", q + Vector3(0, 0.1, 0), -6.0 + noise * 6.0)
+			noise = maxf(noise * 2.2, 9.0)
+			break
+	for q in mansion.charcos:
+		if absf((q as Vector3).y - pp0.y) < 1.2 and Vector2(q.x - pp0.x, q.z - pp0.z).length() < 0.8:
+			sound_at("chapoteo", q + Vector3(0, 0.1, 0), -8.0 + noise * 4.0)
+			noise = maxf(noise * 1.6, 6.0)
+			break
 	elena.hear(player.global_position, noise)
 	# tablones rotos: crujen fuerte al pisarlos (y Elena lo oye)
 	var pp := player.global_position
@@ -1248,7 +1284,9 @@ func _click() -> void:
 func _target() -> Dictionary:
 	var pp := player.global_position
 	if not hidden_in.is_empty():
-		return {"kind": "salir", "text": "USAR: salir del armario"}
+		if _aliento_visible():
+			return {"kind": "salir", "text": "¡ESTÁ CERCA! Mantén LUZ para contener la respiración · USAR: salir"}
+		return {"kind": "salir", "text": "USAR: salir" + (" de debajo de la cama" if hidden_in.get("tipo", "") == "cama" else " del armario")}
 	if is_instance_valid(llevado):
 		return {"kind": "lanzar", "text": "USAR: lanzar"}
 	for s in mansion.seals:
@@ -1268,9 +1306,15 @@ func _target() -> Dictionary:
 	var pt := mansion.portal_near(pp, 1.7)
 	if not pt.is_empty():
 		return {"kind": "portal", "obj": pt, "text": "USAR: " + str(pt.text)}
-	var wd := mansion.wardrobe_near(pp, 1.5)
+	var wd := mansion.wardrobe_near(pp, 1.2)
+	if Vector2(pp.x - mansion.radio_pos.x, pp.z - mansion.radio_pos.z).length() < 1.6 and absf(pp.y - mansion.radio_pos.y) < 2.0:
+		if _t_fono > 0.0:
+			return {"kind": "nada", "text": "El fonógrafo está sonando…"}
+		if _t_fono < 0.0:
+			return {"kind": "nada", "text": "La manivela está floja. Tengo que esperar."}
+		return {"kind": "fonografo", "text": "USAR: poner el disco (lo atraerá aquí)"}
 	if not wd.is_empty():
-		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse en el armario"}
+		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + ("debajo de la cama" if wd.get("tipo", "") == "cama" else "en el armario")}
 	var d := mansion.door_near(pp + player.forward() * 0.6, 1.7)
 	if not d.is_empty():
 		if d.locked:
@@ -1370,6 +1414,8 @@ func _use() -> void:
 	match str(t.get("kind", "")):
 		"salir":
 			_exit_wardrobe(true)
+		"fonografo":
+			_poner_fonografo()
 		"nota":
 			_leer_nota(t.obj)
 		"gato":
@@ -1493,18 +1539,126 @@ func _blackout() -> void:
 		elena.wake_far()
 	elena.hear(player.global_position, 999.0)
 
+func _aliento_visible() -> bool:
+	return not hidden_in.is_empty() and elena.visible and elena.state != ZarekElena.S.DORMANT \
+		and elena.global_position.distance_to(player.global_position) < 7.0
+
+## Escondida: con él cerca hay que contener la respiración (LUZ mantenido). Si respira cerca, la oye; si
+## aguanta demasiado, jadea. Mientras busca, a veces revisa el escondite más cercano: si la pilla
+## respirando, la saca; si aguanta, se va.
+func _respirar(delta: float, pp: Vector3) -> void:
+	if hidden_in.is_empty():
+		barra_aliento.visible = false
+		_revisando = {}
+		return
+	var cerca := _aliento_visible()
+	var ed := elena.global_position.distance_to(pp)
+	_aguantando = cerca and Input.is_action_pressed("linterna")
+	if _aguantando:
+		aliento -= delta / 7.5
+		if aliento <= 0.0:
+			aliento = 0.35
+			_aguantando = false
+			sound_at("aliento", pp + Vector3(0, 0.5, 0), 4.0)
+			message("No pude más… jadeé.", 2.0)
+			if ed < 8.0:
+				_pillada_escondida()
+				return
+	else:
+		aliento = minf(1.0, aliento + delta / 3.5)
+		if cerca and ed < 3.2:
+			_t_oir_resp += delta
+			if _t_oir_resp > 1.2:
+				_t_oir_resp = 0.0
+				if randf() < 0.45:
+					sound_at("aliento", pp + Vector3(0, 0.5, 0), -2.0)
+					_pillada_escondida()
+					return
+		else:
+			_t_oir_resp = 0.0
+	barra_aliento.visible = cerca or aliento < 1.0
+	barra_aliento.value = aliento
+	if _aguantando and aliento < 0.3:
+		player.shake(1.5)
+	# te vio entrar: va directo al escondite
+	if _hide_seen and elena.state == ZarekElena.S.CHASE:
+		_revisando = hidden_in
+	# buscando cerca: a veces revisa el escondite
+	if _revisando.is_empty() and elena.state in [ZarekElena.S.SEARCH, ZarekElena.S.INVESTIGATE] and ed < 9.0:
+		_t_revisar -= delta
+		if _t_revisar <= 0.0:
+			_t_revisar = randf_range(6.0, 12.0)
+			if randf() < 0.4 + 0.1 * elena.aggro:
+				_revisando = hidden_in
+				message("Viene hacia aquí…", 1.5)
+	if not _revisando.is_empty():
+		var wp: Vector3 = _revisando.pos
+		elena.last_seen = wp
+		if elena.path.is_empty() or elena.state == ZarekElena.S.WANDER:
+			if elena.state != ZarekElena.S.CHASE:
+				elena.set_state(ZarekElena.S.INVESTIGATE, 12.0)
+			elena.path = mansion.path(elena.global_position, wp)
+		if Vector2(elena.global_position.x - wp.x, elena.global_position.z - wp.z).length() < 1.3:
+			if _hide_seen or not _aguantando:
+				_pillada_escondida()
+			else:
+				# aguantó: abre, mira y se va
+				sound_at("crujido", wp + Vector3(0, 1, 0), 0.0)
+				_revisando = {}
+				_hide_seen = false
+				elena.set_state(ZarekElena.S.WANDER)
+				elena.path = []
+				sanity = maxf(0.0, sanity - 10.0)
+				message("Se quedó mirando… y se fue.", 2.5)
+
+func _pillada_escondida() -> void:
+	_revisando = {}
+	_exit_wardrobe(false)
+	_on_caught()
+
+## Fonógrafo: pone un disco viejo que suena por toda la planta y lo atrae hasta él durante un rato.
+func _poner_fonografo() -> void:
+	_t_fono = 25.0
+	snd_radio.stream = _s("caja_musica")
+	snd_radio.volume_db = 2.0
+	snd_radio.max_distance = 40.0
+	snd_radio.play()
+	message("El disco empieza a sonar. Vendrá a ver qué es… escóndete.", 3.0)
+
+func _fonografo_tick(delta: float) -> void:
+	if _t_fono < 0.0:
+		_t_fono = minf(0.0, _t_fono + delta)
+	if _t_fono <= 0.0:
+		return
+	_t_fono -= delta
+	if elena.state != ZarekElena.S.CHASE and elena.state != ZarekElena.S.DORMANT:
+		elena.player_hidden = false
+		elena.hear(mansion.radio_pos, 999.0)
+		elena.player_hidden = not hidden_in.is_empty()
+	if _t_fono <= 0.0:
+		snd_radio.stop()
+		snd_radio.stream = _s("estatica")
+		snd_radio.volume_db = -4.0
+		snd_radio.max_distance = 22.0
+		_t_fono = -60.0  # no se puede volver a poner en un minuto
+
 func _enter_wardrobe(wd: Dictionary) -> void:
 	hidden_in = wd
 	_hide_seen = elena.state == ZarekElena.S.CHASE and elena.sees_player and elena.global_position.distance_to(player.global_position) < 9.0
 	player.global_position = wd.inside
 	player.set_look(wd.yaw, 0.0)
+	aliento = 1.0
+	_t_revisar = randf_range(4.0, 9.0)
+	var cama: bool = wd.get("tipo", "") == "cama"
+	player.head.position.y = 0.2 if cama else player.eye_height
 	player.speed_mult = 0.0
 	player.velocity = Vector3.ZERO
 	for c in player.get_children():
 		if c is CollisionShape3D:
 			c.disabled = true
-	slit_l.visible = true
-	slit_r.visible = true
+	slit_l.visible = not cama
+	slit_r.visible = not cama
+	slit_cama.visible = cama
 	state = "escondido"
 	sound_at("crujido", wd.inside + Vector3(0, 1, 0), -4.0)
 
@@ -1518,6 +1672,9 @@ func _exit_wardrobe(normal: bool) -> void:
 	hidden_in = {}
 	slit_l.visible = false
 	slit_r.visible = false
+	slit_cama.visible = false
+	player.head.position.y = player.eye_height
+	_aguantando = false
 	player.speed_mult = 1.0
 	state = "juego"
 	if normal:

@@ -15,7 +15,9 @@ var quality := 2
 var rooms: Array = []      # {name, type, level, rect(Rect2 en metros, xz), y, id}
 var lamps: Array = []      # {node, light, bulb, pos, room, on, broken, base, flicker}
 var doors: Array = []      # {pivot, shape, pos, open, locked, ang, target, base, snd}
-var wardrobes: Array = []  # {pos, inside, yaw}
+var wardrobes: Array = []  # {pos, inside, yaw, tipo ('' armario, 'cama')}
+var cristales: Array = []  # cristales rotos en el suelo (crujen al pisar)
+var charcos: Array = []  # charcos (chapotean)
 var seals: Array = []      # {node, pos, taken}
 var pickups: Array = []    # {node, pos, kind, taken, item}
 var portals: Array = []    # {pos, to, text}
@@ -5595,6 +5597,7 @@ func _decorate() -> void:
 	var deco := ZarekDecorado.new(self)
 	for r in rooms:
 		deco.vestir(r)
+	ZarekEscondites.aplicar(self, deco)
 	_pinturas_distintas()
 	_identidad_salas()
 	ZarekAbandono.aplicar(self)

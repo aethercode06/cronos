@@ -98,6 +98,24 @@ func _ready() -> void:
 	_check(g.state == "escondido" and not g.elena._can_see_player(), "escondido en el armario no te ve")
 	g._exit_wardrobe(true)
 	_check(g.state == "juego", "sales del armario")
+	# debajo de la cama: la vista baja a ras de suelo y vuelve al salir
+	var camas := m.wardrobes.filter(func(w): return w.get("tipo", "") == "cama")
+	_check(camas.size() >= 5, "escondites bajo las camas (%d)" % camas.size())
+	if not camas.is_empty():
+		g.player.global_position = camas[0].pos
+		g._enter_wardrobe(camas[0])
+		await _wait(0.2)
+		var bajo: bool = g.player.head.position.y < 0.5 and g.slit_cama.visible
+		g._exit_wardrobe(true)
+		_check(bajo and g.player.head.position.y > 1.0, "esconderse debajo de la cama")
+	# el fonógrafo lo atrae
+	g.elena.global_position = m.radio_pos + Vector3(6, -1.0, 0)
+	g.elena.set_state(ZarekElena.S.WANDER)
+	g._poner_fonografo()
+	await _wait(0.3)
+	_check(g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(m.radio_pos) < 0.5, "el fonógrafo lo atrae")
+	g._t_fono = 0.01
+	await _wait(0.1)
 	g.elena.vanish(60.0)
 	# recoger los 4 sellos
 	for s in m.seals:
