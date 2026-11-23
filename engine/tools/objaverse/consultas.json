@@ -1,19 +1,14 @@
 {
- "m_mano": {
+ "w_atizador": {
   "k": [
-   "first person arms",
-   "fps arms",
-   "hand holding flashlight",
-   "first person hand",
-   "fps hands",
-   "arms rig",
-   "female hand",
-   "realistic hand",
-   "hand rigged",
-   "flashlight hand"
+   "fire poker",
+   "fireplace poker",
+   "iron poker",
+   "fireplace tools",
+   "poker tool"
   ],
-  "n": 30,
-  "max_caras": 60000,
+  "n": 25,
+  "max_caras": 30000,
   "no": [
    "cartoon",
    "toon",
@@ -26,9 +21,6 @@
    "toy",
    "sex",
    "nsfw",
-   "nude",
-   "naked",
-   "porn",
    "pokemon",
    "fortnite",
    "roblox",
@@ -36,21 +28,20 @@
    "scifi",
    "futuristic",
    "robot",
-   "gun",
-   "rifle",
-   "pistol",
-   "weapon"
+   "lego",
+   "fantasy"
   ]
  },
- "m_linterna": {
+ "w_cuchillo": {
   "k": [
-   "flashlight",
-   "torch flashlight",
-   "old flashlight",
-   "vintage flashlight",
-   "maglite"
+   "kitchen knife",
+   "butcher knife",
+   "chef knife",
+   "old knife",
+   "rusty knife",
+   "carving knife"
   ],
-  "n": 18,
+  "n": 25,
   "max_caras": 20000,
   "no": [
    "cartoon",
@@ -64,9 +55,6 @@
    "toy",
    "sex",
    "nsfw",
-   "nude",
-   "naked",
-   "porn",
    "pokemon",
    "fortnite",
    "roblox",
@@ -74,24 +62,21 @@
    "scifi",
    "futuristic",
    "robot",
-   "gun",
-   "rifle",
-   "pistol",
-   "weapon"
+   "lego",
+   "fantasy",
+   "sword",
+   "dagger fantasy"
   ]
  },
- "m_cajon": {
+ "w_escopeta": {
   "k": [
-   "dresser",
-   "chest of drawers",
-   "nightstand",
-   "bedside table",
-   "drawer",
-   "vintage dresser",
-   "antique dresser",
-   "commode"
+   "double barrel shotgun",
+   "old shotgun",
+   "hunting shotgun",
+   "sawed off shotgun",
+   "break action shotgun"
   ],
-  "n": 30,
+  "n": 25,
   "max_caras": 40000,
   "no": [
    "cartoon",
@@ -105,9 +90,6 @@
    "toy",
    "sex",
    "nsfw",
-   "nude",
-   "naked",
-   "porn",
    "pokemon",
    "fortnite",
    "roblox",
@@ -115,25 +97,19 @@
    "scifi",
    "futuristic",
    "robot",
-   "gun",
-   "rifle",
-   "pistol",
-   "weapon"
+   "lego",
+   "fantasy"
   ]
  },
- "m_grifo": {
+ "w_cartucho": {
   "k": [
-   "old faucet",
-   "vintage tap",
-   "bathroom sink vintage",
-   "toilet old",
-   "old toilet",
-   "clawfoot bathtub",
-   "rotary phone",
-   "old telephone"
+   "shotgun shell",
+   "shotgun shells",
+   "12 gauge shell",
+   "shotgun cartridge"
   ],
-  "n": 30,
-  "max_caras": 40000,
+  "n": 20,
+  "max_caras": 10000,
   "no": [
    "cartoon",
    "toon",
@@ -146,9 +122,6 @@
    "toy",
    "sex",
    "nsfw",
-   "nude",
-   "naked",
-   "porn",
    "pokemon",
    "fortnite",
    "roblox",
@@ -156,10 +129,73 @@
    "scifi",
    "futuristic",
    "robot",
-   "gun",
-   "rifle",
-   "pistol",
-   "weapon"
+   "lego",
+   "fantasy"
+  ]
+ },
+ "w_cepo": {
+  "k": [
+   "bear trap",
+   "hunting trap",
+   "leg hold trap",
+   "animal trap",
+   "steel trap"
+  ],
+  "n": 25,
+  "max_caras": 30000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "anime",
+   "minecraft",
+   "toy",
+   "sex",
+   "nsfw",
+   "pokemon",
+   "fortnite",
+   "roblox",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "robot",
+   "lego",
+   "fantasy"
+  ]
+ },
+ "w_martillo": {
+  "k": [
+   "old hammer",
+   "claw hammer",
+   "rusty hammer",
+   "wooden hammer"
+  ],
+  "n": 20,
+  "max_caras": 20000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "anime",
+   "minecraft",
+   "toy",
+   "sex",
+   "nsfw",
+   "pokemon",
+   "fortnite",
+   "roblox",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "robot",
+   "lego",
+   "fantasy"
   ]
  }
 }
