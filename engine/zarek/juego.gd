@@ -14,6 +14,11 @@ var player: AetherPlayerFP
 var elena: ZarekElena
 var ghost: ZarekElena
 var sustos: ZarekSustos
+## Muebles que se pueden registrar y cosas que hacen ruido (ZarekRegistro).
+var muebles_reg: Array = []
+var _reg_hold: Dictionary = {}
+var _t_reg := 0.0
+var _t_ruido_obj := {}
 var touch: AetherTouchFP
 var flash_node: Node3D
 var flash: SpotLight3D
@@ -183,6 +188,7 @@ func _ready() -> void:
 	ghost.only_visual = true
 	add_child(ghost)
 	ghost.visible = false
+	muebles_reg = ZarekRegistro.preparar(mansion)
 	sustos = ZarekSustos.new()
 	add_child(sustos)
 	sustos.setup(self)
@@ -1259,6 +1265,7 @@ func _play(delta: float) -> void:
 		_throw_salt()
 	_puerta_tick(delta)
 	_electricidad(delta)
+	_registro_tick(delta)
 	# ritual
 	if seals >= SEALS_NEEDED and _in_circle(pp):
 		if Input.is_action_pressed("usar") or (autotest and state == "ritual"):
@@ -1345,7 +1352,7 @@ func _on_step(noise: float) -> void:
 		if absf(q.y - pp.y) < 1.2 and Vector2(q.x - pp.x, q.z - pp.z).length() < 0.75:
 			if Time.get_ticks_msec() - _t_crujido > 900:
 				_t_crujido = Time.get_ticks_msec()
-				sound_at("crujido", q + Vector3(0, 0.2, 0), 2.0)
+				sound_at("tablon", q + Vector3(0, 0.2, 0), 2.0)
 				elena.hear(q, maxf(noise, 0.7))
 			break
 
@@ -1466,17 +1473,25 @@ func _target() -> Dictionary:
 	var d := mansion.door_near(pp + player.forward() * 0.6, 1.7)
 	if not d.is_empty():
 		if d.locked:
-			return {"kind": "cerrada", "obj": d, "text": "Cerrada. Algo la sella desde dentro."}
+			return {"kind": "cerrada", "obj": d, "text": "USAR: probar el pomo (cerrada)"}
 		if float(d.get("barricada", 0.0)) > 0.0:
 			return {"kind": "atrancada", "obj": d, "text": "USAR: quitar los tablones"}
 		if not d.open and tablones > 0:
 			return {"kind": "puerta", "obj": d, "text": "USAR: abrir · MANTÉN USAR: atrancar (tablones: %d)" % tablones}
-		return {"kind": "puerta", "obj": d, "text": "USAR: " + ("cerrar" if d.open else "abrir") + " la puerta"}
+		if d.get("entre", false):
+			return {"kind": "puerta", "obj": d, "text": "USAR: abrir del todo (entreabierta)"}
+		return {"kind": "puerta", "obj": d, "text": "USAR: " + ("cerrar la puerta" if d.open else "entreabrir la puerta")}
 	var el: ZarekElectricidad = mansion.electricidad
 	if el and el.cuadro_cerca(pp):
 		if not el.corriente:
 			return {"kind": "cuadro", "text": "MANTÉN USAR: subir la palanca general del cuadro eléctrico"}
 		return {"kind": "nada", "text": "El cuadro eléctrico de la casa. Zumba y huele a quemado."}
+	var mr := ZarekRegistro.cerca(muebles_reg, pp, player.look_dir())
+	if not mr.is_empty():
+		if String(mr.tipo) != "" and not mr.hecho:
+			return {"kind": "registrar", "obj": mr, "text": "MANTÉN USAR: registrar " + {"cajon": "los cajones", "puerta": "el armario", "tapa": "el baúl"}.get(String(mr.tipo), "")}
+		if String(mr.ruido) != "":
+			return {"kind": "ruido_obj", "obj": mr, "text": "USAR: " + {"grifo": "abrir el grifo", "cisterna": "tirar de la cadena", "piano": "tocar una tecla del piano"}.get(String(mr.ruido), "") + " (hace ruido)"}
 	if el:
 		var it := el.interruptor_cerca(pp)
 		if not it.is_empty():
@@ -1616,17 +1631,21 @@ func _use() -> void:
 				_puerta_hold = t.obj
 				_t_hold = 0.0
 			else:
-				mansion.set_door(t.obj, not t.obj.open)
-				t.obj.snd.stream = _s("crujido")
-				t.obj.snd.play()
-				elena.hear(player.global_position, 5.0)
+				_mover_puerta(t.obj)
 		"atrancada":
 			mansion.desatrancar(t.obj)
 			tablones += 1
 			sound_at("golpe_madera", t.obj.pos + Vector3(0, 1.2, 0), -4.0)
 			message("Quité los tablones.", 1.5)
 		"cerrada":
-			sound_at("golpes", t.obj.pos + Vector3(0, 1.4, 0), 2.0)
+			# el pomo gira y la puerta traquetea contra el cerrojo
+			sound_at("pomo_cerrado", t.obj.pos + Vector3(0, 1.1, 0), -2.0)
+			var dd: Dictionary = t.obj
+			dd["vel"] = 0.6
+			dd["rigidez"] = 60.0
+			dd["freno"] = 9.0
+			player.shake(0.8)
+			message("Cerrada. Algo la sella desde el otro lado.", 1.8)
 		"portal":
 			_use_portal(t.obj)
 		"lampara":
@@ -1644,6 +1663,19 @@ func _use() -> void:
 		"cuadro":
 			_cuadro_hold = true
 			_t_cuadro = 0.0
+		"registrar":
+			_reg_hold = t.obj
+			_t_reg = 0.0
+			sound_at("cajon_abrir", (t.obj.pos as Vector3) + Vector3(0, 0.6, 0), -10.0)
+		"ruido_obj":
+			var ro: Dictionary = t.obj
+			var k := str(ro.pos)
+			if Time.get_ticks_msec() - int(_t_ruido_obj.get(k, -99999)) > 15000:
+				_t_ruido_obj[k] = Time.get_ticks_msec()
+				var rp: Vector3 = (ro.pos as Vector3) + Vector3(0, 0.8, 0)
+				sound_at(String(ro.ruido), rp, 0.0)
+				elena.hear(rp, 8.0)
+				message({"grifo": "El grifo escupe agua marrón con un golpe de tuberías…", "cisterna": "La cisterna ruge por toda la casa.", "piano": "La tecla suena desafinada… y el eco recorre la casa."}.get(String(ro.ruido), ""), 2.5)
 		"coger":
 			llevado = t.obj
 			llevado.sleeping = false
@@ -1747,10 +1779,7 @@ func _puerta_tick(delta: float) -> void:
 	_puerta_hold = {}
 	bar_rit.visible = false
 	if _t_hold < 0.4:
-		mansion.set_door(d, true)
-		d.snd.stream = _s("crujido")
-		d.snd.play()
-		elena.hear(player.global_position, 5.0)
+		_mover_puerta(d)
 
 ## ---------------- electricidad: cortes de luz, el cuadro del sótano y Damián apagando salas ----------------
 var _cuadro_hold := false
@@ -1775,6 +1804,44 @@ func _corte_luz(espera := 0.0) -> void:
 	sound_behind("zumbido", 1.0, -6.0)
 	message("Se fue la luz en toda la casa.\nHan bajado la palanca del cuadro eléctrico… está en el sótano.", 4.0)
 	sanity = maxf(0.0, sanity - 8.0)
+
+const NADA_CAJON := ["Nada. Polillas muertas.", "Cartas viejas de pésame, de 1987.", "Un puñado de dientes. Dientes humanos.", "Recortes de periódico: «DESAPARECE OTRO EXCURSIONISTA».",
+	"Una muñeca sin ojos.", "Pelo. Mechones de pelo de distintos colores, atados con cuerda.", "Cubiertos de plata, todos doblados.", "Carteras vacías. Muchas.",
+	"Una caja de cerillas húmedas.", "Rosarios rotos.", "Fotos de familia con una cara arrancada en todas."]
+func _registro_tick(delta: float) -> void:
+	if _reg_hold.is_empty():
+		return
+	var x := _reg_hold
+	if Input.is_action_pressed("usar") and (x.pos as Vector3).distance_to(player.global_position) < 2.6:
+		_t_reg += delta
+		bar_rit.visible = true
+		bar_rit.value = _t_reg / 1.1 * 100.0
+		if _t_reg >= 1.1:
+			_reg_hold = {}
+			bar_rit.visible = false
+			ZarekRegistro.abrir(mansion, x)
+			sound_at("cajon_abrir" if String(x.tipo) == "cajon" else "puerta_rendija", (x.pos as Vector3) + Vector3(0, 0.6, 0), -4.0)
+			elena.hear(player.global_position, 3.0)
+			match String(x.botin):
+				"pila":
+					battery = minf(100.0, battery + 50.0)
+					message("Pilas. Todavía funcionan.", 2.0)
+					sound_at("recoger", player.global_position, -6.0)
+				"bengala":
+					salt += 1
+					message("Una bengala de carretera.", 2.0)
+					sound_at("recoger", player.global_position, -6.0)
+				"tablon":
+					tablones += 1
+					message("Clavos y un martillo. Puedo atrancar una puerta más.", 2.5)
+				"nota":
+					message("Una polaroid: yo, de niña, en brazos de mamá… delante de esta casa.\nNunca me dijo que había estado aquí.", 4.5)
+					sanity = maxf(0.0, sanity - 6.0)
+				_:
+					message(NADA_CAJON[randi() % NADA_CAJON.size()], 2.5)
+		return
+	_reg_hold = {}
+	bar_rit.visible = false
 
 func _electricidad(delta: float) -> void:
 	var el: ZarekElectricidad = mansion.electricidad
@@ -1839,6 +1906,28 @@ func fx_chispas(p: Vector3) -> void:
 	add_child(c)
 	c.global_position = p
 	get_tree().create_timer(1.5).timeout.connect(c.queue_free)
+
+## Cerrada → el pomo hace clic y se entreabre despacio (rendija para mirar). Entreabierta → se abre del todo.
+## Abierta → se cierra con cuidado y encaja el pestillo. Cada paso suena distinto y hace menos ruido que un portazo.
+func _mover_puerta(d: Dictionary) -> void:
+	var cerca: Vector3 = d.pos + Vector3(0, 1.1, 0)
+	if d.open:
+		mansion.set_door(d, false)
+		d["rigidez"] = 6.0
+		sound_at("puerta_cerrar", cerca, -6.0)
+		elena.hear(player.global_position, 3.0)
+	elif d.get("entre", false):
+		mansion.set_door(d, true)
+		d["rigidez"] = 5.0
+		d["freno"] = 4.4
+		sound_at("puerta_crujido", cerca, -4.0)
+		elena.hear(player.global_position, 4.0)
+	else:
+		sound_at("pomo", cerca, -6.0)
+		mansion.entreabrir(d)
+		sound_at("puerta_rendija", cerca, -8.0)
+		elena.hear(player.global_position, 2.0)
+		player.shake(0.6)
 
 func _aliento_visible() -> bool:
 	return not hidden_in.is_empty() and elena.visible and elena.state != ZarekElena.S.DORMANT \

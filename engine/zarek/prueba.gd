@@ -142,6 +142,26 @@ func _ready() -> void:
 	var sigue_negro := lamparas_sala.all(func(lz): return not lz.on)
 	el.devolver()
 	_check(el.interruptores.size() >= 20 and not el.cuadro.is_empty() and apagada and encendida and todo_negro and sigue_negro and lamparas_sala.any(func(lz): return lz.on), "electricidad: interruptores, corte de luz y cuadro eléctrico")
+	# puertas con peso: primero una rendija (sigue cerrando el paso), luego del todo
+	var pz: Dictionary = {}
+	for d in m.doors:
+		if not d.locked and not d.has("pivot2"):
+			pz = d
+			break
+	m.set_door(pz, false)
+	pz.ang = 0.0
+	pz["vel"] = 0.0
+	m.entreabrir(pz)
+	await _wait(2.5)
+	var rendija: bool = absf(float(pz.ang) - ZarekMansion.PUERTA_RENDIJA) < 0.08 and not pz.open and not pz.shape.disabled
+	m.set_door(pz, true)
+	await _wait(2.5)
+	_check(rendija and absf(float(pz.ang) - 1.6) < 0.08, "puerta: rendija y luego abierta del todo")
+	# registrar un mueble
+	_check(g.muebles_reg.size() >= 20, "muebles para registrar (%d)" % g.muebles_reg.size())
+	var mx: Dictionary = g.muebles_reg.filter(func(x): return String(x.tipo) != "")[0]
+	ZarekRegistro.abrir(m, mx)
+	_check(mx.hecho, "registrar un mueble abre el cajón")
 	# puerta atrancada: la aporrea y la rompe
 	var pd: Dictionary = {}
 	for d in m.doors:

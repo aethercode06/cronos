@@ -1461,13 +1461,33 @@ func door_near(p: Vector3, dist := 2.3) -> Dictionary:
 			best = d
 	return best
 
+## Puertas con peso: no giran a velocidad fija, se mueven como un muelle amortiguado (arrancan despacio,
+## llegan con un leve rebote y se asientan). `force` = de una patada: muy rápida y rebota contra la pared.
+## Entreabierta (0,45 rad) sigue teniendo colisión: deja una rendija para asomarse, no para pasar.
+const PUERTA_RENDIJA := 0.45
 func set_door(d: Dictionary, open: bool, force := false) -> void:
 	if d.is_empty() or (d.locked and open) or (open and float(d.get("barricada", 0.0)) > 0.0):
 		return
 	d.open = open
+	d["entre"] = false
 	d.target = (1.6 if open else 0.0)
 	d.shape.disabled = open
 	d["speed"] = 9.0 if force else 3.2
+	d["rigidez"] = 70.0 if force else 9.0
+	d["freno"] = 7.0 if force else 5.2
+	if force:
+		d["vel"] = 7.0
+
+## Abre una rendija (despacio, con el crujido de las bisagras).
+func entreabrir(d: Dictionary) -> void:
+	if d.is_empty() or d.locked or float(d.get("barricada", 0.0)) > 0.0:
+		return
+	d.open = false
+	d["entre"] = true
+	d.target = PUERTA_RENDIJA
+	d.shape.disabled = false
+	d["rigidez"] = 4.5
+	d["freno"] = 4.2
 
 ## Detalles que hacen que la casa parezca una mansión: esquinas con sillares alternos (cadenas de esquina),
 ## cornisa grande con ménsulas bajo el tejado e impostas entre pisos, todo en piedra clara.
@@ -6965,8 +6985,19 @@ func _process(delta: float) -> void:
 		var tf := Time.get_ticks_msec() / 1000.0
 		_luz_farola.light_energy = 1.0 + 0.25 * sin(tf * 11.0) * sin(tf * 3.7) - (0.9 if fmod(tf, 6.3) < 0.12 else 0.0)
 	for d in doors:
-		if absf(d.ang - d.target) > 0.001:
-			d.ang = move_toward(d.ang, d.target, delta * float(d.get("speed", 3.0)))
+		if absf(d.ang - d.target) > 0.001 or absf(float(d.get("vel", 0.0))) > 0.001:
+			# muelle amortiguado: la hoja pesa, arranca despacio y se asienta con un leve vaivén
+			var k: float = float(d.get("rigidez", 9.0))
+			var fr: float = float(d.get("freno", 5.2))
+			var v: float = float(d.get("vel", 0.0))
+			v += ((d.target - d.ang) * k - v * fr) * delta
+			v = clampf(v, -8.0, 8.0)
+			d["vel"] = v
+			d.ang += v * delta
+			d.ang = clampf(d.ang, -0.05, 1.75)
+			if absf(d.ang - d.target) < 0.002 and absf(v) < 0.01:
+				d.ang = d.target
+				d["vel"] = 0.0
 			d.pivot.rotation.y = d.base + d.ang
 			if d.has("pivot2"):
 				d.pivot2.rotation.y = d.base2 - d.ang
