@@ -1,0 +1,69 @@
+starting download of 34 objects with 4 processes
+Downloaded 1 / 34 objects
+Downloaded 5 / 34 objects
+Downloaded 10 / 34 objects
+Downloaded 15 / 34 objects
+Downloaded 20 / 34 objects
+Downloaded 24 / 34 objects
+Downloaded 27 / 34 objects
+Downloaded 2 / 34 objects
+Downloaded 6 / 34 objects
+Downloaded 11 / 34 objects
+Downloaded 14 / 34 objects
+Downloaded 18 / 34 objects
+Downloaded 22 / 34 objects
+Downloaded 26 / 34 objects
+Downloaded 30 / 34 objects
+Downloaded 32 / 34 objects
+Downloaded 3 / 34 objects
+Downloaded 7 / 34 objects
+Downloaded 9 / 34 objects
+Downloaded 13 / 34 objects
+Downloaded 17 / 34 objects
+Downloaded 21 / 34 objects
+Downloaded 25 / 34 objects
+Downloaded 31 / 34 objects
+Downloaded 33 / 34 objects
+Downloaded 4 / 34 objects
+Downloaded 8 / 34 objects
+Downloaded 12 / 34 objects
+Downloaded 16 / 34 objects
+Downloaded 19 / 34 objects
+Downloaded 23 / 34 objects
+Downloaded 28 / 34 objects
+Downloaded 29 / 34 objects
+Downloaded 34 / 34 objects
+OK s_inodoro 3717232
+OK s_inodoro2 3661756
+OK s_fregadero_vic 4851656
+OK s_deposito 3725152
+OK s_jamon 1415164
+OK s_gancho 2077012
+OK s_orinal 369372
+OK s_aguamanil 6685264
+OK s_toallas 1542848
+OK s_toallero 2465856
+OK s_cazo_cobre 1804540
+OK s_sarten_cobre 583448
+OK s_olla_vieja 3355600
+OK s_baul_viaje 5070024
+OK s_maleta_vieja 3561412
+OK s_paraguero 4153176
+OK s_estufa 11216008
+OK s_estufa2 7244704
+OK s_escritorio 3723548
+OK s_secreter 2343240
+OK s_tocador 2796992
+OK s_armario_alto 2517424
+OK s_cabeza_ciervo 657480
+OK s_craneo_ciervo 4920060
+OK s_cesto_ropa 9603476
+OK s_cestos 13439428
+OK s_paloma 885600
+OK s_pajaro_muerto 3829076
+OK s_biombo 403912
+OK s_comoda 1952764
+OK s_comoda2 3690144
+OK s_mosquete 2157732
+OK s_mosquete2 631220
+OK s_fregadero_piedra 2015652
