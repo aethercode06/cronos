@@ -1,1 +1,27 @@
-{}
+{
+ "inodoro": {"k": ["victorian toilet", "old toilet", "toilet", "water closet"], "no": ["paper", "sign", "public", "portable", "urinal"], "n": 16, "max_caras": 60000},
+ "sombrerera": {"k": ["hat box", "hatbox"], "n": 12, "max_caras": 40000},
+ "escurridor": {"k": ["mangle", "wringer", "washboard", "wash tub", "washtub"], "n": 16, "max_caras": 60000},
+ "fregadero": {"k": ["stone sink", "butler sink", "farmhouse sink", "old sink", "kitchen sink"], "no": ["modern"], "n": 16, "max_caras": 60000},
+ "campanas_servicio": {"k": ["servant bell", "bell board", "service bell"], "n": 12, "max_caras": 60000},
+ "armero": {"k": ["gun rack", "rifle rack", "antique rifle", "hunting rifle", "musket"], "no": ["modern", "ak", "sniper", "scope"], "n": 20, "max_caras": 60000},
+ "paraguero": {"k": ["umbrella stand", "coat stand", "hall stand", "hallstand"], "n": 16, "max_caras": 60000},
+ "cesto_ropa": {"k": ["laundry basket", "wicker basket", "hamper"], "n": 12, "max_caras": 40000},
+ "plancha": {"k": ["flat iron", "sad iron", "antique iron", "ironing board"], "no": ["golf", "steam"], "n": 16, "max_caras": 40000},
+ "deposito": {"k": ["water tank", "cistern", "rusty tank", "boiler tank"], "no": ["military", "tank t", "panzer"], "n": 16, "max_caras": 60000},
+ "palomas": {"k": ["pigeon", "dove", "bird nest", "dead bird"], "n": 16, "max_caras": 40000},
+ "biombo": {"k": ["folding screen", "dressing screen", "room divider", "paravent"], "n": 12, "max_caras": 60000},
+ "orinal": {"k": ["chamber pot", "wash basin pitcher", "pitcher and basin", "washstand", "jug and bowl"], "n": 16, "max_caras": 40000},
+ "toallero": {"k": ["towel", "bath towel", "folded towels"], "no": ["paper"], "n": 12, "max_caras": 40000},
+ "zapatero": {"k": ["shoe rack", "shoes", "boot"], "no": ["sneaker", "nike", "adidas", "modern"], "n": 12, "max_caras": 40000},
+ "baul_viaje": {"k": ["steamer trunk", "travel trunk", "old trunk", "suitcase vintage"], "n": 16, "max_caras": 60000},
+ "gancho_carne": {"k": ["meat hook", "butcher hook", "hanging meat", "ham"], "no": ["sandwich", "burger"], "n": 16, "max_caras": 60000},
+ "estante_tarros": {"k": ["pantry shelf", "jars shelf", "preserves", "mason jar", "pickle jar"], "n": 16, "max_caras": 60000},
+ "cazos_pared": {"k": ["copper pot", "copper pan", "pot rack", "cooking pot"], "no": ["modern"], "n": 16, "max_caras": 40000},
+ "maquina_coser": {"k": ["dress form", "mannequin torso", "sewing basket", "thread spool"], "n": 12, "max_caras": 40000},
+ "cajonera_hotel": {"k": ["chest of drawers", "dresser", "commode"], "no": ["modern", "ikea"], "n": 16, "max_caras": 60000},
+ "lavamanos_antiguo": {"k": ["pedestal sink", "vintage sink", "antique sink", "victorian sink"], "n": 12, "max_caras": 60000},
+ "secretaire": {"k": ["writing desk", "secretary desk", "bureau", "roll top desk"], "no": ["modern", "office chair"], "n": 16, "max_caras": 60000},
+ "jaula_trofeos": {"k": ["antlers", "deer skull", "animal skull", "mounted head", "taxidermy"], "n": 16, "max_caras": 60000},
+ "chimenea_hierro": {"k": ["cast iron stove", "wood stove", "pot belly stove", "potbelly"], "n": 12, "max_caras": 60000}
+}
