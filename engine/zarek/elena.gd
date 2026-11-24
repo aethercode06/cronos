@@ -493,7 +493,7 @@ func _can_see_player() -> bool:
 	var d := to.length()
 	var max_d := (20.0 if flashlight_on else 12.0) + aggro * 1.5
 	max_d *= vista
-	if mansion.is_lit(pp):
+	if mansion.is_lit(pp) or player.get_meta("vela", false):
 		max_d += 6.0
 	if d > max_d:
 		return false

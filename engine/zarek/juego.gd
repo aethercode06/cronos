@@ -48,6 +48,7 @@ var tiene_llaves := false
 const FINALES := {"escapar": "Escapé", "verdadero": "El fuego", "oculto": "Hambre"}
 var huida: ZarekHuida
 var inter: ZarekInteraccion
+var sup: ZarekSupervivencia
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
 var seals := 0
@@ -221,6 +222,10 @@ func _ready() -> void:
 	inter.j = self
 	add_child(inter)
 	inter.preparar(mansion)
+	sup = ZarekSupervivencia.new()
+	sup.j = self
+	add_child(sup)
+	sup.preparar(mansion)
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -972,6 +977,7 @@ func start_game(quick := false) -> void:
 		_black_target = 0.0
 		black.color.a = 0.0
 		_empezar_suceso()
+		sup.foto_inicial()
 		return
 	if not DisplayServer.is_touchscreen_available():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -992,6 +998,7 @@ func start_game(quick := false) -> void:
 	state = "juego"
 	player.frozen = false
 	_empezar_suceso()
+	sup.foto_inicial()
 	await get_tree().create_timer(0.6).timeout
 	var sc: Array = ZarekNoches.SUCESOS[suceso]
 	message(String(sc[0]) + "\n" + String(sc[1]), 4.5)
@@ -1443,8 +1450,14 @@ func _play(delta: float) -> void:
 	if Input.is_action_just_pressed("usar"):
 		_use()
 	if Input.is_action_just_pressed("linterna") and hidden_in.is_empty() and state == "juego":
-		flash_on = not flash_on
-		_click()
+		# sin pilas (o con la vela ya encendida), el botón LUZ es la vela
+		if (battery <= 0.0 or sup.vela_encendida > 0.0) and sup.encender_vela():
+			pass
+		else:
+			flash_on = not flash_on
+			_click()
+			if battery <= 0.0 and sup.velas > 0 and sup.cerillas <= 0:
+				message("Tengo una vela, pero nada con qué encenderla.", 2.0)
 	if Input.is_action_just_pressed("sal"):
 		_throw_salt()
 	if Input.is_action_just_pressed("disparar") and hidden_in.is_empty():
@@ -1470,6 +1483,7 @@ func _play(delta: float) -> void:
 	huida.tick(delta)
 	inter.tick(delta)
 	player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
+	sup.tick(delta)
 
 func _events(pp: Vector3) -> void:
 	if not entered and mansion.inside_house(pp):
@@ -1647,6 +1661,9 @@ func _target() -> Dictionary:
 	var ri := inter.objetivo(pp)
 	if not ri.is_empty() and not ri.get("debil", false):
 		return ri
+	var rsup := sup.objetivo(pp)
+	if not rsup.is_empty() and not rsup.get("debil", false):
+		return rsup
 	if fauna and is_instance_valid(fauna.gato) and fauna.gato.process_mode != Node.PROCESS_MODE_DISABLED \
 			and fauna.gato.global_position.distance_to(pp + player.forward() * 0.6) < 1.1 and fauna.gato.estado != ZarekAnimal.E.HUYE:
 		return {"kind": "gato", "text": "USAR: acariciar al gato"}
@@ -1717,6 +1734,9 @@ func _target() -> Dictionary:
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty() and hit.collider is RigidBody3D and (hit.collider as RigidBody3D).mass < 14.0:
 		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger (y lanzárselo)"}
+	var debil2 := sup.objetivo(pp)
+	if not debil2.is_empty():
+		return debil2
 	var debil := inter.objetivo(pp)
 	if not debil.is_empty():
 		return debil
@@ -1863,7 +1883,13 @@ func _use() -> void:
 		"celda":
 			huida.completar(String(t.que))
 		"inter":
+			if String(t.que) == "coger" and not sup.cabe():
+				return
 			inter.usar(t)
+		"sup":
+			sup.usar(t)
+		"hold_sup":
+			sup.empezar_hold(t)
 		"hold_inter":
 			inter.empezar_hold(t)
 		"salida":
@@ -1877,9 +1903,12 @@ func _use() -> void:
 			else:
 				message("El gato todavía no se fía de ti.", 2.0)
 		"sello":
-			_take_seal(t.obj)
+			if sup.cabe(2 if String(t.obj.get("tipo", "")) == "rueda" else 1):
+				_take_seal(t.obj)
 		"pick":
 			var k: Dictionary = t.obj
+			if k.kind == "llaves" and not sup.cabe():
+				return
 			k.taken = true
 			_a_la_mano(k.item)
 			if k.kind == "pila":
@@ -1911,8 +1940,10 @@ func _use() -> void:
 			else:
 				_mover_puerta(t.obj)
 		"atrancada":
+			var tenia_tablas: bool = not t.obj.has("mueble")
 			mansion.desatrancar(t.obj)
-			tablones += 1
+			if tenia_tablas:
+				tablones += 1
 			sound_at("golpe_madera", t.obj.pos + Vector3(0, 1.2, 0), -4.0)
 			message("Quité los tablones.", 1.5)
 		"arma_suelo":
@@ -1944,6 +1975,9 @@ func _use() -> void:
 					dd2.locked = false
 			sound_at("llaves", (t.obj.pos as Vector3) + Vector3(0, 1.1, 0), -2.0)
 			mansion.set_door(t.obj, true)
+			for sl in mansion.seals:
+				if String(sl.tipo) == "llave":
+					sl["gastado"] = true  # deja hueco en los bolsillos
 			message("Su cuarto. Huele a sangre seca y a sudor.", 2.5)
 		"abrir_llave":
 			var dl: Dictionary = t.obj

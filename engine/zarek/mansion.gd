@@ -1445,6 +1445,13 @@ func atrancar(d: Dictionary, fuerza := 6.0) -> void:
 
 func desatrancar(d: Dictionary) -> void:
 	d["barricada"] = 0.0
+	if d.has("mueble"):
+		# el mueble que Sofía empujó contra la puerta sale despedido
+		var rb := d.mueble as RigidBody3D
+		if is_instance_valid(rb):
+			rb.freeze = false
+			rb.apply_central_impulse(Vector3(randf_range(-1, 1), 1.0, randf_range(-1, 1)) * rb.mass * 2.0)
+		d.erase("mueble")
 	if d.has("tablas") and is_instance_valid(d.tablas):
 		(d.tablas as Node3D).queue_free()
 	d.erase("tablas")

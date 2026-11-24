@@ -19,6 +19,7 @@ const REVELAR := 180.0  # segundos sin encontrar nada hasta que el diario apunta
 var j: Node  # ZarekJuego
 var _texto: RichTextLabel
 var _mapa: Mapa
+var _bolsas: VBoxContainer
 var _pestana := "objetivos"
 var _planta := 0
 var _botones_planta: HBoxContainer
@@ -43,7 +44,7 @@ func _ready() -> void:
 	var arriba := HBoxContainer.new()
 	arriba.add_theme_constant_override("separation", 14)
 	raiz.add_child(arriba)
-	for p in [["OBJETIVOS", "objetivos"], ["MAPA", "mapa"]]:
+	for p in [["OBJETIVOS", "objetivos"], ["MAPA", "mapa"], ["BOLSILLOS", "bolsillos"]]:
 		var b := _boton(p[0], 210)
 		b.pressed.connect(func(): _pestana = p[1]; refrescar())
 		arriba.add_child(b)
@@ -68,6 +69,10 @@ func _ready() -> void:
 	_texto.add_theme_color_override("default_color", Color(0.9, 0.85, 0.74))
 	_texto.scroll_active = true
 	raiz.add_child(_texto)
+	_bolsas = VBoxContainer.new()
+	_bolsas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_bolsas.add_theme_constant_override("separation", 10)
+	raiz.add_child(_bolsas)
 	_mapa = Mapa.new()
 	_mapa.d = self
 	_mapa.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -111,13 +116,50 @@ func cerrar_diario() -> void:
 
 func refrescar() -> void:
 	var es_mapa := _pestana == "mapa"
-	_texto.visible = not es_mapa
+	var es_bolsas := _pestana == "bolsillos"
+	_texto.visible = not es_mapa and not es_bolsas
 	_mapa.visible = es_mapa
+	_bolsas.visible = es_bolsas
 	_botones_planta.visible = es_mapa
 	if es_mapa:
 		_mapa.queue_redraw()
+	elif es_bolsas:
+		_llenar_bolsillos()
 	else:
 		_texto.text = texto_objetivos()
+
+## Lo que llevo encima (4 huecos; la rueda ocupa 2) y un botón para dejar cada cosa en el suelo.
+func _llenar_bolsillos() -> void:
+	for c in _bolsas.get_children():
+		c.queue_free()
+	var sp: ZarekSupervivencia = j.sup
+	var tit := Label.new()
+	tit.text = "BOLSILLOS: %d de %d huecos ocupados. Lo que dejes aquí se queda en el suelo, donde estás." % [sp.ocupado(), sp.huecos]
+	tit.add_theme_font_size_override("font_size", 22)
+	_bolsas.add_child(tit)
+	var lista := sp.bolsillos()
+	if lista.is_empty():
+		var v := Label.new()
+		v.text = "No llevo nada."
+		v.add_theme_font_size_override("font_size", 20)
+		_bolsas.add_child(v)
+	for x in lista:
+		var fila := HBoxContainer.new()
+		fila.add_theme_constant_override("separation", 16)
+		var lb := Label.new()
+		lb.text = "• %s%s" % [String(x.nombre), "  (ocupa 2)" if int(x.peso) == 2 and String(x.id) == "sello" else ""]
+		lb.add_theme_font_size_override("font_size", 21)
+		lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		fila.add_child(lb)
+		var b := _boton("DEJAR AQUÍ", 200)
+		var xx: Dictionary = x
+		b.pressed.connect(func(): sp.dejar(xx); refrescar())
+		fila.add_child(b)
+		_bolsas.add_child(fila)
+	var nota := Label.new()
+	nota.text = "Las bengalas, las pilas y los tablones no ocupan hueco."
+	nota.add_theme_font_size_override("font_size", 18)
+	_bolsas.add_child(nota)
 
 ## Avance del tiempo sin encontrar objetos (lo llama el juego cada fotograma).
 func tick(delta: float, encontrado: bool) -> void:
@@ -181,6 +223,13 @@ func texto_objetivos() -> String:
 	t += "%s La nana de la madre al piano (hay que leer la partitura): la calma, pero Damián lo oye.\n" % _check(it.nana_leida)
 	t += "Fabricar: botella + trapo + gasolina = cóctel incendiario (se lanza con BENGALA). Latas con cordel en una puerta abierta: suenan si alguien la cruza. Palanca: arranca las tablas de una ventana tapiada de abajo.\n"
 	t += "Sigilo: quieta junto a una puerta cerrada, escucho. Agachada + USAR, miro por la cerradura. Un grifo abierto tapa mis pasos un rato.\n"
+	t += "Bolsillos: caben 4 cosas (la rueda ocupa 2). Si no me cabe algo, DIARIO → BOLSILLOS y dejo otra cosa en el suelo.\n"
+	t += "Damián conoce su casa: si dejo puertas abiertas, luces encendidas o cajones revueltos, lo nota y viene a mirar.\n"
+	t += "Puedo empujar un mueble pesado contra una puerta cerrada (MANTÉN USAR): lo frena, pero acaba tirándolo.\n"
+	t += "Velas y cerillas: sin pilas, LUZ enciende una vela. A la madre le asusta el fuego, pero a Damián le dice dónde estoy.\n"
+	t += "El tobillo herido: si corro, sangro y dejo gotas que él sigue. Con un trapo me vendo (MANTÉN USAR).\n"
+	t += "Ventanas: USAR para asomarme y ver si está fuera.\n"
+	if j.sup.herida: t += "[color=#e06060]Tengo el tobillo sangrando.[/color]\n"
 	var llevo: Array[String] = []
 	if it.botellas > 0: llevo.append("Botellas: %d" % it.botellas)
 	if it.trapos > 0: llevo.append("Trapos: %d" % it.trapos)

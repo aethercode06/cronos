@@ -851,6 +851,9 @@ func completar(que: String) -> void:
 			j.message("La capilla apesta a gasolina. Ahora necesito que ella esté dentro…\ny lanzar una bengala (botón BENGALA).", 4.5)
 		"porton":
 			abrir_porton()
+			for sl in m.seals:
+				if String(sl.tipo) == "cizalla":
+					sl["gastado"] = true
 			j.message("¡La cadena cede! El portón está abierto. Mi coche está ahí fuera.", 3.0)
 			j.elena.hear(j.player.global_position, 999.0)
 		"rueda":

@@ -337,6 +337,11 @@ func _ready() -> void:
 	var puertas_cerradas: bool = hu.celda_puertas.size() > 0 and hu.celda_puertas.all(func(d): return d.locked)
 	hu.completar("cerradura")
 	_check(sujeta and k_clavo == "clavo" and hu.tiene_clavo and k_arg == "argolla" and not hu.encadenada and puertas_cerradas and not hu.en_celda and hu.celda_puertas.all(func(d): return not d.locked), "celda: encadenada, clavo, argolla y cerradura")
+	# bolsillos: 4 huecos; se puede dejar algo en el suelo
+	var sp: ZarekSupervivencia = g.sup
+	var lleno: bool = sp.cabe(4) and not sp.cabe(5)
+	sp.huecos = 12
+	_check(lleno, "bolsillos: caben 4 cosas")
 	# recoger los objetos de la noche
 	var rs: ZarekHuida = g.huida
 	for so in m.seals:
@@ -449,6 +454,45 @@ func _ready() -> void:
 		it.completar("ventana", ven[0])
 		_check(m.portals.size() == np + 2, "palanca: la ventana tapiada se abre al jardín")
 	_check(it.items.size() >= 5, "objetos para fabricar repartidos (%d)" % it.items.size())
+	# supervivencia: dejar algo, vela, vendar, empujar un mueble, Damián nota una puerta abierta
+	var antes_b := sp.bolsillos().size()
+	var primero: Dictionary = sp.bolsillos()[0]
+	sp.dejar(primero)
+	_check(sp.bolsillos().size() == antes_b - 1, "dejar algo en el suelo desde los bolsillos")
+	sp.velas = 1
+	sp.cerillas = 2
+	_check(sp.encender_vela() and sp.vela_encendida > 0.0 and g.player.get_meta("vela", false), "vela encendida con una cerilla")
+	sp.encender_vela()
+	g.inter.trapos = 1
+	sp.herida = true
+	sp.completar("vendar")
+	_check(not sp.herida, "vendarse el tobillo")
+	var dm: Dictionary = {}
+	for d in m.doors:
+		if not d.locked and not d.has("pivot2") and not d.has("celda") and float(d.get("barricada", 0.0)) <= 0.0:
+			dm = d
+			break
+	m.set_door(dm, false, true)
+	var rb_m: RigidBody3D = null
+	for n in g.huida.fisicos:
+		if is_instance_valid(n) and (n as RigidBody3D).mass >= 5.5:
+			rb_m = n
+			break
+	if rb_m:
+		g.player.global_position = (dm.pos as Vector3) + Vector3(0.8, 0.05, 0.8)
+		sp.completar("empujar", [dm, rb_m])
+		await _wait(0.7)
+		_check(float(dm.get("barricada", 0.0)) > 0.0 and rb_m.freeze, "empujar un mueble contra la puerta")
+		m.desatrancar(dm)
+	sp.foto_inicial()
+	m.set_door(dm, true, true)
+	g.elena.visible = true
+	g.elena.set_state(ZarekElena.S.WANDER)
+	g.elena.global_position = (dm.pos as Vector3) + Vector3(4.0, 0.0, 0.0)
+	sp._notados.clear()
+	sp._cambios()
+	_check(g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(dm.pos) < 0.5, "Damián nota la puerta que has dejado abierta")
+	g.elena.vanish(60.0)
 	# escapar trepando el muro (la gasolina se gastó en el fuego: la camioneta ya no sirve)
 	g.elena.vanish(60.0)
 	_check(not rs.faltan("camioneta").is_empty(), "sin gasolina la camioneta no sirve")
