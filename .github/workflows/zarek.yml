@@ -2,7 +2,9 @@ name: La Sombra de Zarek (Aether Engine)
 on:
   push:
     branches: [ main ]
-    paths: [ 'engine/zarek/**', 'engine/addons/aether/three_d/aether_player_fp.gd', 'engine/addons/aether/ui/aether_touch_fp.gd', 'engine/addons/aether/core/aether_synth.gd', 'engine/export_presets.cfg', 'engine/project.godot', '.github/workflows/zarek.yml' ]
+    # El APK solo se rehace cuando cambia algo que un parche no puede llevar (ajustes del proyecto, del APK o el
+    # arranque). El resto de cambios llega con parches (engine/tools/parche.py → release zarek-parche) al abrir el juego.
+    paths: [ 'engine/export_presets.cfg', 'engine/project.godot', 'engine/zarek/arranque.gd', '.github/workflows/zarek.yml' ]
   workflow_dispatch:
     inputs:
       sin_emulador:
@@ -76,6 +78,10 @@ jobs:
         run: |
           mkdir -p build
           sed -i "s/^version\/code=.*/version\/code=${{ github.run_number }}/; s/^version\/name=.*/version\/name=\"1.0.${{ github.run_number }}\"/" engine/export_presets.cfg
+          # n.º de APK para los parches (zarek/arranque.gd solo aplica parches hechos para este APK)
+          sed -i "s/^\[application\]$/[application]\n\nconfig\/version=\"${{ github.run_number }}\"/" engine/project.godot
+          grep -n "config/version" engine/project.godot
+          printf '{"base": "%s", "commit": "%s"}' "${{ github.run_number }}" "${{ github.sha }}" > build/base.json
           godot --headless --path engine --export-release "Android Zarek" ../build/LaSombraDeZarek.apk > export.log 2>&1 || true
           tail -30 export.log
           test -s build/LaSombraDeZarek.apk
@@ -106,7 +112,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: apks
-          path: build/*.apk
+          path: |
+            build/*.apk
+            build/base.json
           retention-days: 3
       - name: Guardar registros y capturas en la rama zarek-logs
         if: always()
@@ -218,7 +226,7 @@ jobs:
           TAG=${{ inputs.sin_emulador && 'zarek-prueba' || 'zarek' }}
           EXTRA="${{ inputs.sin_emulador && ' · VERSIÓN DE PRUEBA' || '' }}"
           gh release delete $TAG -y --cleanup-tag -R ${{ github.repository }} || true
-          gh release create $TAG build/LaSombraDeZarek.apk -R ${{ github.repository }} \
+          gh release create $TAG build/LaSombraDeZarek.apk build/base.json -R ${{ github.repository }} \
             --title "La Sombra de Zarek · Noche I (1.0.${{ github.run_number }})$EXTRA" \
             --notes "**La Sombra de Zarek — Noche I**, hecho con Aether Engine. Toca **LaSombraDeZarek.apk** para instalarlo. Usa auriculares." \
             --latest=false
