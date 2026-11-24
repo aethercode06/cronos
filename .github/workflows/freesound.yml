@@ -9,12 +9,12 @@ permissions:
 jobs:
   bajar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
         with: { sparse-checkout: engine/tools/sonidos }
       - name: Bajar
-        run: python3 engine/tools/sonidos/freesound_buscar.py engine/tools/sonidos/freesound.txt out/freesound
+        run: python3 -u engine/tools/sonidos/freesound_buscar.py engine/tools/sonidos/freesound.txt out/freesound
       - name: Guardar en la rama aether-freesound
         run: |
           cd out && git init -q && git checkout -q -b aether-freesound
