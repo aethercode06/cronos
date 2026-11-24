@@ -36,5 +36,30 @@
    "bell pepper",
    "taco"
   ]
+ },
+ "cepo": {
+  "k": [
+   "bear trap",
+   "beartrap",
+   "leg trap",
+   "hunting trap",
+   "steel trap",
+   "animal trap"
+  ],
+  "n": 18,
+  "max_caras": 80000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "toy",
+   "lego",
+   "sci-fi",
+   "fantasy",
+   "mouse trap",
+   "mousetrap"
+  ]
  }
 }
