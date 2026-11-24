@@ -41,6 +41,11 @@ EXACTO.update({'x_cadaver_body_bag_v1': ('m', 1.9), 'x_cadaver_dead_body': ('m',
     'x_restos_formaldehyde_jar_asset_p': ('m', 0.4), 'x_restos_severed_hand': ('m', 0.2), 'x_restos_skeleton_gore_model': ('h', 1.75), 'x_restos_turmoil_chest': ('m', 0.8),
     'x_tortura_hanging_wall_chains': ('h', 1.8), 'x_tortura_head_crusher': ('h', 1.6), 'x_tortura_horror_bed': ('m', 2.1), 'x_tortura_iron_shackles': ('m', 0.5),
     'x_tortura_medieval_asset_19__cage': ('h', 2.0), 'x_tortura_rusted_chain_shackles': ('m', 0.6), 'x_tortura_rusty_chains': ('m', 1.5), 'x_tortura_witch_s_chair': ('h', 1.4)})
+EXACTO.update({'s_cizalla': ('m', 0.6), 's_rueda': ('m', 0.66), 's_rueda2': ('m', 0.62), 's_gasolina': ('h', 0.47), 's_gasolina2': ('h', 0.47), 's_bateria': ('m', 0.28),
+    's_gato': ('h', 0.26), 's_cuerda': ('m', 0.4), 's_cuerda2': ('m', 0.6), 's_garfio': ('m', 0.3), 's_palanca': ('m', 0.75), 's_palanca2': ('m', 0.75),
+    's_botella': ('h', 0.3), 's_trapo': ('m', 0.4), 's_latas': ('h', 0.12), 's_latas2': ('m', 0.1), 's_vela': ('h', 0.22), 's_cerillas': ('m', 0.055),
+    's_caja_fuerte': ('h', 0.85), 's_colchon': ('m', 1.9), 's_cadena': ('m', 1.5), 's_clavo': ('m', 0.1), 's_molotov': ('h', 0.32), 's_fusible': ('h', 0.32),
+    's_telefono': ('h', 0.2), 's_polaroid': ('m', 0.15), 's_mechero': ('h', 0.055)})
 GRANDE = ("piano", "wardrobe", "bookcase", "bookshel", "fireplace", "fire_place", "sofa", "lounge", "bathtub", "tree", "pine", "spruce", "fir", "stove", "cabinet", "clock", "desk", "table", "safe", "armchair", "chair", "mirror")
 os.makedirs(OUT, exist_ok=True)
 info = {}

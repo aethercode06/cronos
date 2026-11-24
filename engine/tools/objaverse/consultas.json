@@ -1,11 +1,12 @@
 {
- "cizalla": {
+ "pila": {
   "k": [
-   "bolt cutter",
-   "bolt cutters",
-   "boltcutter",
-   "boltcutters",
-   "bolt cropper"
+   "d battery",
+   "aa battery",
+   "batteries",
+   "battery cell",
+   "duracell",
+   "energizer"
   ],
   "n": 18,
   "max_caras": 120000,
@@ -18,7 +19,92 @@
    "chibi",
    "toy",
    "lego",
-   "game ready low",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "fantasy",
+   "nsfw",
+   "car",
+   "phone",
+   "lithium",
+   "power bank"
+  ]
+ },
+ "llaves_coche": {
+  "k": [
+   "car key",
+   "car keys",
+   "keychain",
+   "key chain",
+   "key ring",
+   "keyring",
+   "bunch of keys"
+  ],
+  "n": 18,
+  "max_caras": 120000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "toy",
+   "lego",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "fantasy",
+   "nsfw",
+   "keyboard",
+   "piano",
+   "house"
+  ]
+ },
+ "bengala": {
+  "k": [
+   "road flare",
+   "flare",
+   "emergency flare",
+   "signal flare"
+  ],
+  "n": 18,
+  "max_caras": 120000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "toy",
+   "lego",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "fantasy",
+   "nsfw",
+   "gun",
+   "lens"
+  ]
+ },
+ "venda": {
+  "k": [
+   "bandage",
+   "bandage roll",
+   "gauze"
+  ],
+  "n": 18,
+  "max_caras": 120000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "toy",
+   "lego",
    "sci-fi",
    "scifi",
    "futuristic",
@@ -26,15 +112,11 @@
    "nsfw"
   ]
  },
- "rueda": {
+ "martillo_clavos": {
   "k": [
-   "car tire",
-   "car tyre",
-   "car wheel",
-   "old tire",
-   "spare tire",
-   "spare wheel",
-   "wheel tire"
+   "hammer and nails",
+   "claw hammer",
+   "hammer"
   ],
   "n": 18,
   "max_caras": 120000,
@@ -47,565 +129,15 @@
    "chibi",
    "toy",
    "lego",
-   "game ready low",
    "sci-fi",
    "scifi",
    "futuristic",
    "fantasy",
    "nsfw",
-   "rim only",
-   "f1",
-   "racing",
-   "truck tire stack"
-  ]
- },
- "gasolina": {
-  "k": [
-   "jerry can",
-   "jerrycan",
-   "gas can",
-   "gasoline can",
-   "fuel can",
-   "petrol can"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "bateria": {
-  "k": [
-   "car battery",
-   "12v battery",
-   "automotive battery",
-   "lead acid battery"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "gato": {
-  "k": [
-   "car jack",
-   "scissor jack",
-   "bottle jack",
-   "hydraulic jack",
-   "floor jack"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "cuerda": {
-  "k": [
-   "rope coil",
-   "coiled rope",
-   "rope",
-   "rope bundle"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "bridge",
-   "ladder"
-  ]
- },
- "garfio": {
-  "k": [
-   "grappling hook",
-   "grapnel",
-   "grappling"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "palanca": {
-  "k": [
-   "crowbar",
-   "crow bar",
-   "pry bar",
-   "wrecking bar"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "botella": {
-  "k": [
-   "glass bottle",
-   "empty bottle",
-   "wine bottle",
-   "old bottle",
-   "dirty bottle"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "label brand",
-   "coca",
-   "beer brand"
-  ]
- },
- "trapo": {
-  "k": [
-   "rag",
-   "dirty cloth",
-   "cloth rag",
-   "towel crumpled",
-   "old cloth"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "latas": {
-  "k": [
-   "tin can",
-   "rusty can",
-   "old can",
-   "food can",
-   "empty can"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "soda",
-   "coke",
-   "spray"
-  ]
- },
- "vela": {
-  "k": [
-   "candle",
-   "candlestick",
-   "candle holder",
-   "melted candle"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "birthday"
-  ]
- },
- "cerillas": {
-  "k": [
-   "matchbox",
-   "match box",
-   "matches",
-   "matchstick"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "caja_fuerte": {
-  "k": [
-   "safe",
-   "vault safe",
-   "old safe",
-   "antique safe",
-   "strongbox"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "safety",
-   "safe zone"
-  ]
- },
- "colchon": {
-  "k": [
-   "old mattress",
-   "dirty mattress",
-   "mattress"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "cadena": {
-  "k": [
-   "chain",
-   "shackle",
-   "manacle",
-   "ankle chain",
-   "chains"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "necklace",
-   "bike",
-   "chainsaw",
-   "blockchain",
-   "jewelry"
-  ]
- },
- "clavo": {
-  "k": [
-   "nail",
-   "rusty nail",
-   "nails"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "finger",
-   "nail polish",
-   "manicure",
-   "toenail"
-  ]
- },
- "molotov": {
-  "k": [
-   "molotov",
-   "molotov cocktail"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "fusible": {
-  "k": [
-   "fuse",
-   "ceramic fuse",
-   "old fuse",
-   "fuse box",
-   "glass fuse"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "fusion"
-  ]
- },
- "telefono": {
-  "k": [
-   "rotary phone",
-   "old telephone",
-   "vintage telephone",
-   "antique telephone",
-   "telephone"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "mobile",
-   "smartphone",
-   "iphone",
-   "cell"
-  ]
- },
- "polaroid": {
-  "k": [
-   "polaroid",
-   "instant camera",
-   "polaroid camera"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw"
-  ]
- },
- "mechero": {
-  "k": [
-   "zippo",
-   "lighter",
-   "old lighter"
-  ],
-  "n": 18,
-  "max_caras": 120000,
-  "no": [
-   "cartoon",
-   "toon",
-   "stylized",
-   "low poly",
-   "lowpoly",
-   "chibi",
-   "toy",
-   "lego",
-   "game ready low",
-   "sci-fi",
-   "scifi",
-   "futuristic",
-   "fantasy",
-   "nsfw",
-   "cigarette lighter car"
+   "sledge",
+   "war",
+   "thor",
+   "mjolnir"
   ]
  }
 }
