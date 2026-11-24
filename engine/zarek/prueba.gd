@@ -44,6 +44,14 @@ func _ready() -> void:
 	print("ZAREK: navegación lista en %.1f s" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	print("ZAREK: habitaciones %d, sellos %d, armarios %d, lámparas %d, puertas %d, pasos %d" % [m.rooms.size(), m.seals.size(), m.wardrobes.size(), m.lamps.size(), m.doors.size(), m.portals.size()])
 	_check(m.nav_ready, "navegación de Elena horneada")
+	_check(m.gateras.size() == 8, "8 gateras (agachada pasas, Damián no)")
+	var echados := m.doors.filter(func(d): return d.get("echado", false))
+	_check(echados.size() == 5, "5 atajos con cerrojo")
+	if echados.size() > 0:
+		var dc: Dictionary = echados[0]
+		var n: Vector3 = dc.cerrojo
+		_check(m.lado_cerrojo(dc, dc.pos + n) and not m.lado_cerrojo(dc, dc.pos - n), "el cerrojo solo se descorre desde su lado")
+	_check(m.portals.any(func(pt): return pt.get("conducto", false)), "conducto de la ropa (solo de bajada)")
 	g.huida.congelar_furia = true
 	_check(m.seals.size() == ZarekHuida.objetos(0).size(), "objetos de la noche (%d)" % m.seals.size())
 	var con_sentido := true

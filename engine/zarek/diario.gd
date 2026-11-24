@@ -217,6 +217,10 @@ func texto_objetivos() -> String:
 			t += "      %s %s — %s\n" % [_check(false), nombre_objeto(s), pista(s)]
 	var it: ZarekInteraccion = j.inter
 	t += "\n[b]LA CASA (lo que puedo usar)[/b]\n"
+	t += "• Caminos: casi todas las salas tienen dos salidas. Si me persigue, puedo dar la vuelta por otra puerta.\n"
+	t += "• Gateras (azul en el mapa): huecos bajos en la pared. AGACHADA paso yo; Damián no cabe y tiene que dar la vuelta.\n"
+	t += "• Cerrojos (rojo en el mapa): puertas cerradas por un lado. Desde ese lado se descorren y quedan como atajo.\n"
+	t += "• El conducto de la ropa, en el cuarto de la ropa blanca de arriba, baja al cuarto de servicio. Solo de bajada: él no puede seguirme.\n"
 	t += "%s La caja fuerte del padre, en su estudio: 4 cifras, día y mes. Las notas dicen qué fecha.\n" % _check(it.caja_abierta)
 	t += "%s El reloj de pie del vestíbulo: alguien movió las agujas. «A las tres se abre».\n" % _check(it.reloj_abierto)
 	t += "%s Los fusibles del sótano: él los quitó. Con ellos en el cuadro, el sótano tiene luz.\n" % _check(it.fusibles_puestos)
@@ -336,6 +340,39 @@ class Mapa extends Control:
 				draw_string(fuente, pr.get_center() - Vector2(5, -6), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.5, 0.42, 0.32))
 			if cerradas.has(r.id):
 				draw_string(fuente, pr.end - Vector2(46, 8), "LLAVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.8, 0.3))
+		# puertas, cerrojos y gateras de las salas que ya conoces (así se ven los caminos para dar la vuelta)
+		for dd in m.doors:
+			if int(dd.get("level", -9)) != lv:
+				continue
+			var conocida := false
+			for id in dd.get("ids", []):
+				if j._salas_vistas.has(id):
+					conocida = true
+			if not conocida:
+				continue
+			var dp: Vector3 = dd.pos
+			var qd: Vector2 = a_pantalla.call(Vector2(dp.x, dp.z))
+			var largo := 1.4 * esc * 0.5
+			var eje := Vector2(1, 0) if dd.get("horiz", true) else Vector2(0, 1)
+			var cd := Color(0.95, 0.75, 0.45)
+			if dd.get("echado", false):
+				cd = Color(0.95, 0.3, 0.25)
+			elif dd.get("locked", false):
+				cd = Color(0.55, 0.5, 0.45)
+			draw_line(qd - eje * largo, qd + eje * largo, cd, 5.0)
+		for g in m.gateras:
+			if int(g.level) != lv:
+				continue
+			var gp: Vector3 = g.pos
+			var conocida2 := false
+			for off2 in [Vector3(0.8, 0, 0), Vector3(-0.8, 0, 0), Vector3(0, 0, 0.8), Vector3(0, 0, -0.8)]:
+				if j._salas_vistas.has(m.room_at(gp + off2 + Vector3(0, 0.5, 0))):
+					conocida2 = true
+			if not conocida2:
+				continue
+			var qg: Vector2 = a_pantalla.call(Vector2(gp.x, gp.z))
+			var eje2 := Vector2(1, 0) if g.horiz else Vector2(0, 1)
+			draw_line(qg - eje2 * 0.4 * esc, qg + eje2 * 0.4 * esc, Color(0.35, 0.8, 1.0), 6.0)
 		# objetos de la trampa vistos o presentidos
 		for s in m.seals:
 			var sp: Vector3 = s.pos
@@ -361,4 +398,4 @@ class Mapa extends Control:
 		for p in ZarekDiario.PLANTAS:
 			if p[0] == lv:
 				titulo = p[1]
-		draw_string(fuente, Vector2(10, size.y - 8), titulo + "   ·   ⇅ escaleras   ☠ cuarto de Damián   ● objeto visto   ⚡ cuadro eléctrico   LLAVE sala cerrada", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.75, 0.68, 0.55))
+		draw_string(fuente, Vector2(10, size.y - 8), titulo + "   ·   ⇅ escaleras   ☠ Damián   ● objeto   ⚡ cuadro   ▬ puerta   ▬ rojo: cerrojo   ▬ azul: gatera", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.75, 0.68, 0.55))

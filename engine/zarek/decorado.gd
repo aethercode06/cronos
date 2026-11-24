@@ -186,7 +186,7 @@ func _libre(c: Vector3, t: Vector3, rect: Rect2) -> bool:
 		if o.intersects(a):
 			return false
 	var rad := maxf(t.x, t.z) * 0.5
-	if not m.door_near(c, rad + 1.1).is_empty() or not m.portal_near(c, rad + 1.2).is_empty() or not m.wardrobe_near(c, rad + 0.8).is_empty():
+	if not m.door_near(c, rad + 1.1).is_empty() or not m.portal_near(c, rad + 1.2).is_empty() or not m.wardrobe_near(c, rad + 0.8).is_empty() or m.despejado_cerca(c, rad + 1.1):
 		return false
 	return true
 
@@ -259,6 +259,11 @@ func _reservar_pasos(r: Dictionary) -> void:
 	var rect: Rect2 = r.rect
 	var cen := rect.get_center()
 	var grande := rect.size.x > 8.0 and rect.size.y > 8.0
+	# delante de las gateras y donde cae el conducto, también libre
+	for q in m.despejar:
+		if absf(q.y - float(r.y)) < 1.0 and rect.grow(0.3).has_point(Vector2(q.x, q.z)):
+			_ocupado.append(Rect2(q.x - 1.0, q.z - 1.0, 2.0, 2.0).intersection(rect))
+	var entradas: Array[Vector2] = []
 	for d in m.doors:
 		var dp: Vector3 = d.pos
 		if absf(dp.y - float(r.y)) > 1.0 or not rect.grow(0.3).has_point(Vector2(dp.x, dp.z)):
@@ -273,10 +278,32 @@ func _reservar_pasos(r: Dictionary) -> void:
 		var mn := Vector2(minf(a.x, fin.x), minf(a.y, fin.y))
 		var mx := Vector2(maxf(a.x, fin.x), maxf(a.y, fin.y))
 		_ocupado.append(Rect2(mn, mx - mn).grow(0.55).intersection(rect))
+		entradas.append(a + dentro * 0.8)
 		if grande:
 			mn = Vector2(minf(a.x, cen.x), minf(a.y, cen.y))
 			mx = Vector2(maxf(a.x, cen.x), maxf(a.y, cen.y))
 			_ocupado.append(Rect2(mn, mx - mn).grow(0.6).intersection(rect))
+	for q in m.despejar:
+		if absf(q.y - float(r.y)) < 1.0 and rect.grow(0.3).has_point(Vector2(q.x, q.z)):
+			entradas.append(Vector2(q.x, q.z).lerp(cen, 0.15))
+	# siempre queda un camino de 1,2 m entre todas las entradas de la sala (Damián y Sofía tienen que poder
+	# cruzarla para dar la vuelta): en L, de una entrada a la siguiente
+	for i in range(1, entradas.size()):
+		var a2: Vector2 = entradas[i - 1]
+		var b2: Vector2 = entradas[i]
+		var esquina := Vector2(a2.x, b2.y)
+		if not rect.grow(-0.4).has_point(esquina):
+			esquina = Vector2(b2.x, a2.y)
+		for tramo in [[a2, esquina], [esquina, b2]]:
+			var p0: Vector2 = tramo[0]
+			var p1: Vector2 = tramo[1]
+			_ocupado.append(Rect2(Vector2(minf(p0.x, p1.x), minf(p0.y, p1.y)), (p1 - p0).abs()).grow(0.6).intersection(rect))
+	# en los pasillos, además, un carril central a lo largo
+	if String(r.type) == "pasillo" or String(r.name).begins_with("Pasillo") or String(r.name).begins_with("Rellano"):
+		if rect.size.x >= rect.size.y:
+			_ocupado.append(Rect2(rect.position.x, cen.y - 0.6, rect.size.x, 1.2))
+		else:
+			_ocupado.append(Rect2(cen.x - 0.6, rect.position.y, 1.2, rect.size.y))
 
 ## Coloca un objeto en coordenadas locales de la sala (x hacia el este, z hacia el sur, en metros desde la esquina NO).
 func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala := 1.0, alto := 0.0, choca := true) -> Node3D:
@@ -313,7 +340,7 @@ func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala :
 			if ob.size.x > 0.1 and ob.size.y > 0.1 and ob.grow(-0.04).intersects(a):
 				if (DBG_CAMA and nombre in ["old_bed_frame", "GothicBed_01", "bano_classic_bathtub"]) or DBG_SALA == String(r.name): print("  CAMA_NO ocupado ", nombre, " ", r.name, " ", a, " ", ob)
 				return null
-		if not m.door_near(p, maxf(ext.x, ext.z) * 0.5 + 0.75).is_empty() or not m.portal_near(p, maxf(ext.x, ext.z) * 0.5 + 0.9).is_empty():
+		if not m.door_near(p, maxf(ext.x, ext.z) * 0.5 + 0.75).is_empty() or not m.portal_near(p, maxf(ext.x, ext.z) * 0.5 + 0.9).is_empty() or m.despejado_cerca(p, maxf(ext.x, ext.z) * 0.5 + 0.9):
 			if (DBG_CAMA and nombre in ["old_bed_frame", "GothicBed_01", "bano_classic_bathtub"]) or DBG_SALA == String(r.name): print("  CAMA_NO puerta ", nombre, " ", r.name, " ", a)
 			return null
 	# lo que va encima de un mueble necesita el mueble debajo

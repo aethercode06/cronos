@@ -15,11 +15,16 @@ func _ready() -> void:
 		if r.type == "jardin":
 			continue
 		var rc: Rect2 = r.rect
-		var c := Vector3(rc.get_center().x, float(r.y), rc.get_center().y)
+		var c0 := Vector3(rc.get_center().x, float(r.y), rc.get_center().y)
+		# el punto andable de la sala más cercano al centro (el centro puede tener un mueble)
+		var c := NavigationServer3D.map_get_closest_point(m.get_world_3d().navigation_map, c0)
+		if absf(c.y - c0.y) > 1.0 or not rc.grow(0.2).has_point(Vector2(c.x, c.z)):
+			malas.append("%s (nivel %d): no hay suelo andable en la sala" % [r.name, r.level])
+			continue
 		var p := m.path(g.respawn_pos, c)
 		var fin: Vector3 = p[p.size() - 1] if p.size() > 0 else g.respawn_pos
-		if fin.distance_to(c) > 4.0:
-			malas.append("%s (nivel %d, se queda a %.0f m)" % [r.name, r.level, fin.distance_to(c)])
+		if fin.distance_to(c) > 1.5:
+			malas.append("%s (nivel %d, se queda a %.0f m) fin=%s en %s, objetivo %s" % [r.name, r.level, fin.distance_to(c), str(fin.snapped(Vector3(0.1,0.1,0.1))), m.room_name(fin + Vector3(0, 0.5, 0)), str(c.snapped(Vector3(0.1,0.1,0.1)))])
 	print("NAV salas sin camino: %d de %d" % [malas.size(), m.rooms.size()])
 	for x in malas:
 		print("NAV   " + x)

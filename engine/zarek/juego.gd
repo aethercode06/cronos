@@ -1780,6 +1780,10 @@ func _target() -> Dictionary:
 	var puerta_delante: bool = not d.is_empty() and Vector2(pp.x - (d.pos as Vector3).x, pp.z - (d.pos as Vector3).z).length() < 1.1
 	if not wd.is_empty() and not puerta_delante:
 		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + String(ESCONDITE_TXT.get(String(wd.get("tipo", "")), "en el armario"))}
+	if not d.is_empty() and d.get("echado", false) and not d.open:
+		if mansion.lado_cerrojo(d, pp):
+			return {"kind": "cerrojo", "obj": d, "text": "USAR: descorrer el cerrojo (quedará un atajo)"}
+		return {"kind": "cerrojo_no", "obj": d, "text": "USAR: probar la puerta"}
 	if not d.is_empty():
 		if d.locked and String(d.get("llave", "")) != "":
 			if String(d.llave) in llaves_salas:
@@ -1836,6 +1840,8 @@ func _target() -> Dictionary:
 	var debil := inter.objetivo(pp)
 	if not debil.is_empty():
 		return debil
+	if not player.crouching and not mansion.gatera_near(pp, 1.5).is_empty():
+		return {"kind": "nada", "text": "Una gatera: AGACHADA cabes tú. Damián no cabe."}
 	if defensa and defensa.cepos > 0 and state == "juego" and mansion.inside_house(pp):
 		return {"kind": "poner_cepo", "text": "USAR: poner una trampa de caza aquí (%d)" % defensa.cepos}
 	return {}
@@ -1962,6 +1968,8 @@ func _consejos_tick(delta: float) -> void:
 		return
 	_consejo("diario", "Pulsa DIARIO (arriba a la derecha) para ver qué tienes que hacer, las pistas de los objetos y el mapa de la casa.")
 	_consejo("agachar", "AGACHAR: vas más lenta pero casi no haces ruido. Damián te oye antes de verte.")
+	if not mansion.gatera_near(player.global_position, 3.0).is_empty():
+		_consejo("gatera", "Gateras: huecos bajos en la pared. Agachada pasas; Damián es demasiado grande y tiene que dar la vuelta. Úsalas para despistarle.")
 	if elena.visible and elena.state == ZarekElena.S.CHASE:
 		_consejo("persecucion", "¡CORRE! Cierra puertas detrás de ti, rómpele la línea de visión y escóndete cuando no te vea.")
 	elif salt > 0 and elena.visible and elena.global_position.distance_to(player.global_position) < 7.0:
@@ -2085,6 +2093,23 @@ func _use() -> void:
 				if String(sl.tipo) == "llave":
 					sl["gastado"] = true  # deja hueco en los bolsillos
 			message("Su cuarto. Huele a sangre seca y a sudor.", 2.5)
+		"cerrojo":
+			var dc: Dictionary = t.obj
+			mansion.descorrer(dc)
+			sound_at("llaves", dc.pos + Vector3(0, 1.3, 0), -4.0)
+			sound_at("pomo", dc.pos + Vector3(0, 1.1, 0), -2.0)
+			mansion.set_door(dc, true)
+			oir_ruido(dc.pos, 4.0)
+			message("Cerrojo descorrido. Ahora esta puerta es un atajo.", 2.2)
+			_consejo("cerrojo", "Atajos: algunas puertas tienen el cerrojo echado por un lado. Si llegas por ese lado, descórrelo y tendrás un camino más para escapar.")
+		"cerrojo_no":
+			var dn: Dictionary = t.obj
+			sound_at("pomo_cerrado", dn.pos + Vector3(0, 1.1, 0), -2.0)
+			dn["vel"] = 0.6
+			dn["rigidez"] = 60.0
+			dn["freno"] = 9.0
+			player.shake(0.6)
+			message("Tiene el cerrojo echado por el otro lado.\nSi llego por allí, podré abrirla: sería un atajo.", 3.0)
 		"abrir_llave":
 			var dl: Dictionary = t.obj
 			dl.locked = false
@@ -2149,7 +2174,10 @@ func _use_portal(pt: Dictionary) -> void:
 	sound_at("crujido", player.global_position + Vector3(0, 1, 0), -2.0)
 	await get_tree().create_timer(0.45).timeout
 	var to: Vector3 = pt.to
-	player.global_position = to + Vector3(0.9, 0.05, 0.9)
+	if pt.get("conducto", false):
+		sound_at("impacto_tela", to + Vector3(0, 0.5, 0), 0.0)
+		player.shake(1.2)
+	player.global_position = to + (Vector3(0.0, 0.05, 0.0) if pt.get("conducto", false) else Vector3(0.9, 0.05, 0.9))
 	player.velocity = Vector3.ZERO
 	await get_tree().create_timer(0.25).timeout
 	_black_target = 0.0

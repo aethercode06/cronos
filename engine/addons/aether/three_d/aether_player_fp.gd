@@ -189,6 +189,9 @@ func _physics_process(delta: float) -> void:
 		_bob = lerpf(_bob, round(_bob / PI) * PI, delta * 4.0)
 	var amp := 0.055 if running else (0.018 if crouching else 0.03)
 	# altura de los ojos y de la cápsula al agacharse (no mientras está escondido: lo controla el juego)
+	# bajo un techo bajo (una gatera) no se puede poner de pie
+	if not crouching and _shape and (_shape.shape as CapsuleShape3D).height < 1.6 and _techo_bajo():
+		crouching = true
 	if not frozen and not altura_fija:
 		var ojo := crouch_eye if crouching else eye_height
 		head.position.y = lerpf(head.position.y, ojo, minf(1.0, delta * 9.0))
@@ -213,3 +216,10 @@ func _physics_process(delta: float) -> void:
 		_shake = maxf(0.0, _shake - delta * 0.12)
 	camera.position = Vector3(cos(_bob * 0.5) * amp * 0.6, absf(sin(_bob)) * amp - amp * 0.5 + resp, 0) + sh
 	camera.rotation.z = sin(_bob * 0.5) * (0.012 if running else 0.006) + _roll
+
+
+## ¿Hay algo encima de la cabeza a menos de 1,8 m (no cabe de pie)?
+func _techo_bajo() -> bool:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 0.6, 0), global_position + Vector3(0, 1.85, 0), collision_mask)
+	q.exclude = [get_rid()]
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()

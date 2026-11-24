@@ -217,6 +217,17 @@ PLANTAS = {
 # zonas añadidas después (al final, para no cambiar el orden de las salas)
 PLANTAS["exterior"]["zonas"].append(("Cementerio familiar", "cementerio", 21, 29, 7, 5))
 PLANTAS["sotano"]["puertas"].append(("h", 22, 14))
+
+# ---- circuitos (nov 2026): puertas entre salas vecinas para poder dar vueltas, gateras (agachada pasas tú,
+# Damián no cabe), atajos con cerrojo (se descorre solo desde el lado de la letra: N, S, E, O) y el conducto de la ropa
+PLANTAS["baja"]["puertas"] += [("v", 3, 0, "E"), ("v", 11, 1, "E"), ("v", 15, 2), ("v", 3, 9), ("v", 15, 3)]
+PLANTAS["baja"]["gateras"] = [("v", 7, 9), ("v", 16, 11)]
+PLANTAS["alta"]["puertas"] += [("h", 4, 2), ("h", 3, 4), ("v", 3, 0), ("v", 10, 2, "E"), ("v", 16, 1), ("v", 3, 10), ("v", 14, 6), ("v", 14, 10, "E"), ("h", 17, 9)]
+PLANTAS["alta"]["gateras"] = [("v", 6, 7), ("v", 6, 10), ("v", 15, 8)]
+PLANTAS["atico"]["puertas"] += [("v", 8, 2), ("v", 13, 3), ("v", 11, 7), ("v", 15, 6, "E"), ("v", 15, 10), ("v", 7, 10)]
+PLANTAS["atico"]["gateras"] = [("v", 15, 3), ("v", 13, 8), ("v", 7, 6)]
+PLANTAS["alta"]["marcas"].append(("conducto", 16.5, 0.5, "Conducto de la ropa ↓"))
+PLANTAS["baja"]["marcas"].append(("conducto", 16.5, 0.5, "Sale el conducto"))
 PLANTAS["baja"]["origen"] = [35, 30]; PLANTAS["baja"]["nivel"] = 0
 PLANTAS["alta"]["origen"] = [35, 30]; PLANTAS["alta"]["nivel"] = 1
 PLANTAS["atico"]["origen"] = [35, 30]; PLANTAS["atico"]["nivel"] = 2
@@ -227,7 +238,7 @@ F = "/usr/share/fonts/truetype/dejavu/"
 def font(sz, bold=False):
     return ImageFont.truetype(F + ("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"), sz)
 
-ICON = {"inicio": (80, 220, 120), "sello": (255, 200, 60), "armario": (150, 110, 70), "escalera": (230, 230, 230),
+ICON = {"conducto": (90, 200, 230), "inicio": (80, 220, 120), "sello": (255, 200, 60), "armario": (150, 110, 70), "escalera": (230, 230, 230),
         "lampara": (255, 220, 140), "pasadizo": (180, 120, 255), "circulo": (240, 240, 230), "tunel": (120, 170, 255),
         "susto": (220, 60, 60), "puerta": (210, 170, 110), "radio": (200, 200, 200), "piano": (200, 200, 200),
         "espejo": (170, 200, 230), "caja": (230, 180, 200), "nota": (230, 220, 180), "roca": (230, 70, 70), "chimenea": (230, 110, 50)}
@@ -279,7 +290,20 @@ def draw(key, C):
             tw = d.textlength(ln, font=font(fs, True))
             d.text((cx - tw / 2, ty), ln, fill=(235, 225, 210), font=font(fs, True))
             ty += fs + 2
-    for (k, x, y) in p.get("puertas", []):
+    for pu in p.get("gateras", []):
+        k, x, y = pu[:3]
+        if k == "h":
+            d.rectangle([ox + x * C + 12, oy + y * C - 4, ox + (x + 1) * C - 12, oy + y * C + 4], fill=(90, 200, 230))
+        else:
+            d.rectangle([ox + x * C - 4, oy + y * C + 12, ox + x * C + 4, oy + (y + 1) * C - 12], fill=(90, 200, 230))
+    for pu in p.get("puertas", []):
+        k, x, y = pu[:3]
+        if len(pu) > 3:
+            if k == "h":
+                d.rectangle([ox + x * C + 4, oy + y * C - 5, ox + (x + 1) * C - 4, oy + y * C + 5], fill=(220, 70, 60))
+            else:
+                d.rectangle([ox + x * C - 5, oy + y * C + 4, ox + x * C + 5, oy + (y + 1) * C - 4], fill=(220, 70, 60))
+            continue
         if k == "h":
             d.rectangle([ox + x * C + 4, oy + y * C - 5, ox + (x + 1) * C - 4, oy + y * C + 5], fill=(190, 140, 80))
         else:

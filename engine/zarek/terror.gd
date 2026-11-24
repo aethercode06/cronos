@@ -177,7 +177,7 @@ static func _sitio_libre(m: ZarekMansion, r: Dictionary, radio: float) -> Vector
 		var p := Vector3(_rng.randf_range(rc.position.x + radio + 0.4, rc.end.x - radio - 0.4), float(r.y), _rng.randf_range(rc.position.y + radio + 0.4, rc.end.y - radio - 0.4))
 		if rc.size.x < radio * 2.0 + 0.8 or rc.size.y < radio * 2.0 + 0.8:
 			p = Vector3(rc.get_center().x, float(r.y), rc.get_center().y)
-		if not m.door_near(p, radio + 1.0).is_empty() or m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0):
+		if not m.door_near(p, radio + 1.0).is_empty() or m.despejado_cerca(p, radio + 1.0) or m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0):
 			continue
 		# nada de muebles (ni colisión ni solo malla) dentro de la huella, con 15 cm de aire alrededor
 		var huella := Rect2(p.x - radio * 0.5 - 0.15, p.z - radio * 0.5 - 0.15, radio + 0.3, radio + 0.3)
@@ -226,7 +226,7 @@ static func _sitio_pared(m: ZarekMansion, r: Dictionary, radio: float) -> Array:
 			_:
 				p = Vector3(rc.end.x - sep, float(r.y), lerpf(rc.position.y + 0.5, rc.end.y - 0.5, t))
 				yaw = -PI * 0.5
-		if not m.door_near(p, radio + 1.0).is_empty() or m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0):
+		if not m.door_near(p, radio + 1.0).is_empty() or m.despejado_cerca(p, radio + 1.0) or m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0):
 			continue
 		var huella := Rect2(p.x - radio * 0.5 - 0.05, p.z - radio * 0.5 - 0.05, radio + 0.1, radio + 0.1)
 		var libre := true

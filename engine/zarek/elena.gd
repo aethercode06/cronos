@@ -715,7 +715,7 @@ func _physics_process(delta: float) -> void:
 	# atrapar
 	if can_catch and state in [S.CHASE, S.INVESTIGATE, S.WANDER, S.SEARCH] and not player_hidden:
 		var dd := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z).length()
-		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2:
+		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2 and not _muro_entre():
 			if state != S.CHASE and not sees_player:
 				# si se tropieza contigo sin haberte visto, primero se sobresalta (rugido) y luego va a por ti:
 				# te deja un instante para huir en vez de atraparte sin aviso
@@ -898,7 +898,7 @@ func _abrir_puerta(delta: float) -> bool:
 	# atrapar mientras abre (si te tiene justo al lado)
 	if can_catch and state == S.CHASE and not player_hidden and _gracia <= 0.0:
 		var dd := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z).length()
-		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2:
+		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2 and not _muro_entre():
 			caught.emit()
 	return true
 
@@ -983,3 +983,12 @@ func _animate(delta: float, spd: float) -> void:
 	for i in hair.size():
 		hair[i].rotation.x = sin(_anim_t * 2.0 + i) * 0.04 - (0.15 if chase else 0.0)
 	eye_mat.emission_energy_multiplier = 2.5 if chase else 0.6
+
+
+## ¿Hay un muro entre él y Sofía a la altura del pecho? (por una gatera ella cabe y él no: no la alcanza a través)
+func _muro_entre() -> bool:
+	var a := global_position + Vector3(0, 1.5, 0)
+	var b := player.global_position + Vector3(0, 1.5, 0)
+	var q := PhysicsRayQueryParameters3D.create(a, b, 1)
+	q.exclude = [(player as CollisionObject3D).get_rid()]
+	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()

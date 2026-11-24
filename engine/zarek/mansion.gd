@@ -858,8 +858,14 @@ func _level(key: String) -> void:
 				var k := "v:%d:%d" % [int(z[2]) + side, int(z[3]) + j]
 				edges[k] = edges.get(k, []) + [id]
 	var door_set := {}
+	var cerrojo_de := {}
 	for d in p.get("puertas", []):
 		door_set["%s:%d:%d" % [d[0], int(d[1]), int(d[2])]] = true
+		if (d as Array).size() > 3:
+			cerrojo_de["%s:%d:%d" % [d[0], int(d[1]), int(d[2])]] = String(d[3])
+	var gatera_set := {}
+	for d in p.get("gateras", []):
+		gatera_set["%s:%d:%d" % [d[0], int(d[1]), int(d[2])]] = true
 	# las celdas de balcón también abren hueco
 	var wall_h := WALL_H if level < 2 else 3.3
 	# ventanas: hueco cada cuatro celdas de muro exterior (antes cada dos); las salas que se quedarían sin
@@ -892,8 +898,11 @@ func _level(key: String) -> void:
 		var exterior := _unique(ids).size() == 1
 		var room_a: Dictionary = rooms[ids[0]]
 		var is_door := door_set.has(k)
-		var window: bool = ventana_ok.has(k)
-		_wall_unit(a, horiz, wall_h, _mat[room_a.paper], exterior, is_door, window, level, _unique(ids))
+		var window: bool = ventana_ok.has(k) and not gatera_set.has(k)
+		var nd := doors.size()
+		_wall_unit(a, horiz, wall_h, _mat[room_a.paper], exterior, is_door, window, level, _unique(ids), gatera_set.has(k) and not is_door)
+		if is_door and cerrojo_de.has(k) and doors.size() > nd:
+			_cerrojo(doors[doors.size() - 1], String(cerrojo_de[k]))
 
 func _unique(a: Array) -> Array:
 	var out: Array = []
@@ -924,7 +933,7 @@ func _split_holes(r: Rect2, holes: Array) -> Array:
 		out = nxt
 	return out
 
-func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool, is_door: bool, window: bool, level: int, ids: Array) -> void:
+func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool, is_door: bool, window: bool, level: int, ids: Array, gatera := false) -> void:
 	var len := CELL
 	var center := a + (Vector3(len * 0.5, 0, 0) if horiz else Vector3(0, 0, len * 0.5))
 	var along := Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
@@ -937,6 +946,9 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 			gap = 2.1
 			dintel = h
 		pieces = [[0.0, (len - gap) * 0.5, 0.0, h], [(len + gap) * 0.5, len, 0.0, h], [(len - gap) * 0.5, (len + gap) * 0.5, dintel, h]]
+	elif gatera:
+		# gatera: hueco bajo de 0,8 × 1,25 m (agachada pasa Sofía; Damián, de 1,9 m, no cabe)
+		pieces = [[0.0, (len - GATERA_W) * 0.5, 0.0, h], [(len + GATERA_W) * 0.5, len, 0.0, h], [(len - GATERA_W) * 0.5, (len + GATERA_W) * 0.5, GATERA_H, h]]
 	elif window:
 		# hueco de 1,6 × 2,0 m: exactamente el del cristal y el marco (sin franjas de muro dentro del recerco)
 		pieces = [[0.0, 0.4, 0.0, h], [len - 0.4, len, 0.0, h], [0.4, len - 0.4, 0.0, 0.9], [0.4, len - 0.4, 2.9, h]]
@@ -977,7 +989,9 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 			box(half, pos - n0 * thick * 0.25, _mat[r1.paper], false)
 		else:
 			box(Vector3(l, hh, thick) if horiz else Vector3(thick, hh, l), pos, mat, true)
-	if level >= 0 and level < 2 and not is_door:
+	if gatera:
+		_gatera(center, horiz, thick, level)
+	if level >= 0 and level < 2 and not is_door and not gatera:
 		# revestimiento interior: en los muros exteriores solo por la cara de dentro (antes atravesaba el muro y
 		# asomaba por la fachada como una barandilla y una cornisa claras)
 		var grosor := func(e: float) -> float: return (thick * 0.5 + e * 0.5) if exterior else thick + e
@@ -1003,6 +1017,84 @@ func _wall_unit(a: Vector3, horiz: bool, h: float, mat: Material, exterior: bool
 		_door(center, horiz, level, ids)
 	if window:
 		_window(center, horiz, thick, inward)
+
+const GATERA_W := 0.8
+const GATERA_H := 1.25
+var gateras: Array = []   # {pos, horiz}
+
+## Marco de tablas rotas alrededor del hueco de una gatera y unos ladrillos sueltos en el suelo.
+func _gatera(c: Vector3, horiz: bool, thick: float, level: int) -> void:
+	var along := Vector3(1, 0, 0) if horiz else Vector3(0, 0, 1)
+	var t := thick + 0.06
+	for sg in [-1.0, 1.0]:
+		var jamba := Vector3(0.07, GATERA_H, t) if horiz else Vector3(t, GATERA_H, 0.07)
+		box(jamba, c + along * sg * (GATERA_W * 0.5 + 0.035) + Vector3(0, GATERA_H * 0.5, 0), _mat.madera, false, null, false)
+	var din := Vector3(GATERA_W + 0.14, 0.08, t) if horiz else Vector3(t, 0.08, GATERA_W + 0.14)
+	box(din, c + Vector3(0, GATERA_H + 0.04, 0), _mat.madera, false, null, false)
+	# cascotes a los lados (sin choque: no estorban al pasar)
+	var fuera := Vector3(0, 0, 1) if horiz else Vector3(1, 0, 0)
+	for k in 3:
+		var q := c + along * _rng.randf_range(-0.9, 0.9) + fuera * (_rng.randf_range(0.25, 0.6) * (1.0 if k % 2 == 0 else -1.0))
+		if absf((q - c).dot(along)) < GATERA_W * 0.5 + 0.1:
+			q += along * signf((q - c).dot(along) + 0.01) * 0.5
+		var lad := box(Vector3(0.2, 0.06, 0.1), q + Vector3(0, 0.03, 0), _mat.piedra_clara, false, null, false)
+		lad.rotation.y = _rng.randf() * TAU
+	gateras.append({"pos": c, "horiz": horiz, "level": level})
+	despejar.append(c)
+
+var despejar: Array[Vector3] = []   # sitios que tienen que quedar libres de muebles (gateras, caída del conducto)
+
+## ¿Hay a menos de dist algún sitio que debe quedar libre (gatera, caída del conducto)?
+func despejado_cerca(p: Vector3, dist := 1.3) -> bool:
+	for q in despejar:
+		if absf(p.y - q.y) < 1.6 and Vector2(p.x - q.x, p.z - q.z).length() < dist:
+			return true
+	return false
+
+func gatera_near(p: Vector3, dist := 1.3) -> Dictionary:
+	for g in gateras:
+		if absf(p.y - (g.pos as Vector3).y) < 1.6 and Vector2(p.x - g.pos.x, p.z - g.pos.z).length() < dist:
+			return g
+	return {}
+
+## Puerta con cerrojo echado por un lado (N, S, E, O): desde ese lado se descorre y queda un atajo para siempre;
+## desde el otro no se abre. Damián la revienta si llega por el lado malo.
+func _cerrojo(d: Dictionary, lado: String) -> void:
+	var n := Vector3.ZERO
+	match lado:
+		"N": n = Vector3(0, 0, -1)
+		"S": n = Vector3(0, 0, 1)
+		"E": n = Vector3(1, 0, 0)
+		_: n = Vector3(-1, 0, 0)
+	d["cerrojo"] = n
+	d["echado"] = true
+	if d.open:
+		d.open = false
+		d.ang = 0.0
+		d.target = 0.0
+		(d.shape as CollisionShape3D).disabled = false
+		(d.pivot as Node3D).rotation.y = d.base
+	# el cerrojo de hierro, en la cara del lado bueno, junto al tirador
+	var gap: float = d.gap
+	var cara := 1.0
+	var local_n: Vector3 = (d.pivot as Node3D).global_transform.basis.inverse() * n
+	if local_n.z < 0.0:
+		cara = -1.0
+	var b := box(Vector3(0.22, 0.05, 0.03), Vector3(gap - 0.2, 1.32, 0.055 * cara), _mat.metal, false, d.pivot, false)
+	b.set_meta("dyn", true)
+	var guia := box(Vector3(0.06, 0.09, 0.04), Vector3(gap - 0.05, 1.32, 0.06 * cara), _mat.metal, false, d.pivot, false)
+	guia.set_meta("dyn", true)
+	d["cerrojo_nodo"] = b
+
+## ¿Está p en el lado del cerrojo de la puerta d?
+func lado_cerrojo(d: Dictionary, p: Vector3) -> bool:
+	var n: Vector3 = d.get("cerrojo", Vector3.ZERO)
+	return (p - (d.pos as Vector3)).dot(n) > 0.0
+
+func descorrer(d: Dictionary) -> void:
+	d["echado"] = false
+	if d.has("cerrojo_nodo") and is_instance_valid(d.cerrojo_nodo):
+		(d.cerrojo_nodo as Node3D).position.x -= 0.12
 
 ## Dirección de la luz de la luna (debe coincidir con la DirectionalLight del juego: rotación -38°, -55°).
 const LUNA := Vector3(0.645, -0.616, -0.452)
@@ -1476,6 +1568,8 @@ const PUERTA_RENDIJA := 0.45
 func set_door(d: Dictionary, open: bool, force := false) -> void:
 	if d.is_empty() or (d.locked and open) or (open and float(d.get("barricada", 0.0)) > 0.0):
 		return
+	if open and d.get("echado", false):
+		descorrer(d)  # quien la abre (Damián, la madre) se lleva el cerrojo por delante
 	d.open = open
 	d["entre"] = false
 	d.target = (1.6 if open else 0.0)
@@ -5807,6 +5901,13 @@ func _portals() -> void:
 		_barandilla_hueco(Vector3(abajo.x, y_arriba, abajo.z), hacia)
 		portals.append({"pos": abajo + Vector3(0, 0, 0) - hacia * 0.0 + hacia * 1.1, "to": llegada, "text": textos[i][0]})
 		portals.append({"pos": llegada, "to": abajo + hacia * 1.3, "text": textos[i][1]})
+	# conducto de la ropa: de la ropa blanca (arriba) al cuarto de servicio (abajo); solo de bajada y solo Sofía
+	var ca := cell_to_world("alta", 16.5, 0.1)
+	var cb := cell_to_world("baja", 16.5, 1.4)
+	_conducto(ca, cb)
+	despejar.append(cb)
+	despejar.append(ca + Vector3(0, 0, 0.7))
+	portals.append({"pos": ca + Vector3(0, 0, 0.75), "to": cb, "text": "tirarte por el conducto de la ropa (solo de bajada)", "solo_sofia": true, "conducto": true})
 	var links := [
 		[["baja", 5.6, 1.5], ["sotano", 13.0, 2.5], "empujar el librero (pasadizo)", "volver por el pasadizo"],
 		[["exterior", 30.5, 36.5], ["sotano", 1.5, 6.5], "bajar por el pozo", "subir por la escalera del pozo"],
@@ -5837,6 +5938,16 @@ func _portals() -> void:
 		var ub: Vector3 = b.lerp(vis[1], 0.7)
 		portals.append({"pos": ua, "to": b, "text": l[2]})
 		portals.append({"pos": ub, "to": a, "text": l[3]})
+
+## La boca del conducto de la ropa (trampilla de madera en la pared) y donde cae, abajo, un montón de sábanas.
+func _conducto(arriba: Vector3, abajo: Vector3) -> void:
+	box(Vector3(0.75, 0.75, 0.12), arriba + Vector3(0, 0.75, -0.0), _mat.oscuro, false, null, false)
+	box(Vector3(0.85, 0.08, 0.16), arriba + Vector3(0, 1.16, 0.0), _mat.madera, false, null, false)
+	box(Vector3(0.85, 0.08, 0.16), arriba + Vector3(0, 0.34, 0.0), _mat.madera, false, null, false)
+	var tapa := box(Vector3(0.7, 0.7, 0.04), arriba + Vector3(0, 0.75, 0.32), _mat.madera, false, null, false)
+	tapa.rotation.x = -0.9
+	if _prop("ropa_frosted_sheets", abajo + Vector3(0.3, 0.0, 0.2), 0.4, 1.3, false) == null:
+		box(Vector3(1.0, 0.3, 0.8), abajo + Vector3(0, 0.15, 0), _mat.tela if _mat.has("tela") else _mat.madera, false, null, false)
 
 var _caracoles: Array[Vector3] = []
 var _mat_hueco: StandardMaterial3D
@@ -7175,6 +7286,8 @@ func bake_nav() -> void:
 	nav_region.navigation_mesh = nm
 	# escaleras de mano, trampillas y pasadizos son «pasos» para Sofía: Damián también los usa (enlaces de navegación)
 	for pt in portals:
+		if pt.get("solo_sofia", false):
+			continue
 		var lk := NavigationLink3D.new()
 		lk.bidirectional = false
 		lk.start_position = pt.pos
