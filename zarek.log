@@ -1,0 +1,161 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+ZAREK paso materiales hasta 627 ms
+ZAREK paso casa hasta 1134 ms
+ZAREK     mallas de arboles 92 ms
+ZAREK     arboles+setas+helechos listos
+ZAREK     sotobosque 78 ms
+ZAREK     jardin 49 ms
+ZAREK   bosque 439 ms
+ZAREK paso exterior hasta 4252 ms
+ERROR: Failed loading resource: res://zarek/objetos/s_bengala2.glb.
+   at: _load (core/io/resource_loader.cpp:317)
+   GDScript backtrace (most recent call first):
+       [0] _prop (res://zarek/mansion.gd:6139)
+       [1] objeto_real (res://zarek/mansion.gd:6232)
+       [2] _pickup (res://zarek/mansion.gd:5741)
+       [3] _markers (res://zarek/mansion.gd:4765)
+       [4] <anonymous lambda> (res://zarek/mansion.gd:189)
+       [5] build_por_pasos (res://zarek/mansion.gd:147)
+ZAREK escondites: 25 (camas 7), cristales 10, charcos 8
+ZAREK pinturas: 59 lienzos con 56 pinturas
+ZAREK   cortinas tapadas por muebles: 8 de 42
+ZAREK   retratos rayados: 11
+ZAREK   bañera: (124.8, 4.56741, 72.62698)
+ZAREK   ventana tapiada: (102.0, 0.0, 72.0) dentro (0.0, 0.0, 1.0)
+ZAREK   ventanas tapiadas: 10
+ZAREK   puerta tapiada: Pasillo del sótano (116.0, -4.2, 86.7) fuera (0.0, 0.0, -1.0)
+ZAREK   puerta tapiada: Galería de servicio (98.7, -4.2, 84.7) fuera (-1.0, 0.0, 0.0)
+ZAREK   tablón roto: (88.4, 0.0, 82.8)
+ZAREK   mirilla: (94.8, 2.0, 81.4) frente (0.0, 0.0, -1.0)
+ZAREK terror: 47 calcomanías, 17 tablones que crujen (217 ms)
+ZAREK gore: 444 ms
+ZAREK ruina: 335 cosas (411 ms)
+ZAREK divisiones: 148 piezas (105 ms)
+ZAREK electricidad: 40 interruptores, cuadro sí
+ZAREK paso decorado hasta 7266 ms
+ZAREK oclusores: 727
+ZAREK paso fusion hasta 7983 ms
+WARNING: Property agent_height is ceiled to cell_height voxel units and loses precision.
+     at: generator_bake_from_source_geometry_data (modules/navigation_3d/3d/nav_mesh_generator_3d.cpp:367)
+WARNING: Property agent_radius is ceiled to cell_size voxel units and loses precision.
+     at: generator_bake_from_source_geometry_data (modules/navigation_3d/3d/nav_mesh_generator_3d.cpp:373)
+ZAREK asentar: bajados 124, cuadros pegados 64, quitados 3
+ZAREK registro: 52 muebles para registrar, 8 con ruido
+ZAREK noche: 2 salas cerradas ["Baño", "Despensa"], 4 secretos
+ZAREK defensa: 2 armas a la vista, en cajones ["arma:martillo", "cepo", "cepo", "cartucho"]
+ZAREK CARGA 8484 ms (calidad 2, Linux, forward_plus)
+ZAREK: navmesh polígonos 1440
+ZAREK fauna 39
+ZAREK: navegación lista en 0.7 s
+ZAREK: habitaciones 49, sellos 5, armarios 33, lámparas 65, puertas 52, pasos 12
+  ok   navegación de Elena horneada
+  ok   objetos de la noche (5)
+  ok   cada objeto en un sitio con sentido
+  ok   cada noche se bloquea una salida distinta (3)
+  ok   el matadero existe
+  ok   armarios
+  ok   lámparas
+  ok   Damián llega al objeto en dormitorio de los padres
+  ok   Damián llega al objeto en sala de calderas
+  ok   Damián llega al objeto en salida a la cochera
+  ok   Damián llega al objeto en ático (vigas, baúles, muñecos tapados)
+  ok   Damián llega al objeto en cava de vinos
+  ok   Elena llega al Epicentro (primer piso)
+  ok   Elena baja al sótano
+  ok   empiezas en el bosque
+  ok   al entrar se cierra la puerta y el portón con cadena
+  ok   Elena despierta (INVESTIGATE)
+  ok   lámpara ilumina su habitación
+  ok   la sal la ahuyenta
+  ok   tras huir desaparece
+ZAREK FPS 133 draws 0 prims 0 mem 978 MB estado juego pos (106.0, 0.0, 99.0)
+  ok   Elena te atrapa (vidas 2)
+ZAREK tensión: respiro
+  ok   Damián te cuelga en el matadero
+  ok   escondido en el armario no te ve
+ZAREK FPS 307 draws 0 prims 0 mem 981 MB estado escondido pos (64.0, 0.0, 44.0)
+  ok   escondida no se cae atravesando el suelo
+  ok   sales del armario
+  ok   escondites bajo las camas (7)
+  ok   esconderse debajo de la cama
+  ok   el fonógrafo lo atrae
+  ok   las llaves de la camioneta están en la casa
+  ok   tablones para atrancar puertas
+  ok   sonidos reales y sustos de la historia cargados
+  ok   electricidad: interruptores, corte de luz y cuadro eléctrico
+ZAREK FPS 344 draws 0 prims 0 mem 981 MB estado juego pos (122.0, 0.0, 73.0)
+  ok   puerta: rendija y luego abierta del todo
+  ok   muebles para registrar (60)
+  ok   registrar un mueble abre el cajón
+  ok   salas cerradas con llave (2) y sus llaves en cajones
+  ok   secretos de la familia escondidos (4)
+  ok   abrir una sala con su llave
+  ok   secreto guardado en el archivo
+  ok   Damián recuerda tus escondites
+  ok   tormenta: el trueno tapa los pasos
+ZAREK tensión: calma
+ZAREK tensión: acecho
+ZAREK tensión: calma
+  ok   tensión: acecho y aparece cerca (11 m)
+ZAREK tensión: respiro
+  ok   tensión: respiro tras escapar
+ZAREK tensión: calma
+  ok   defensas repartidas (2 a la vista, 4 en cajones)
+ZAREK tensión: respiro
+ZAREK FPS 320 draws 0 prims 0 mem 984 MB estado juego pos (126.0, 4.0, 82.0)
+  ok   forcejeo: se la clava y huye
+ZAREK FPS 344 draws 0 prims 0 mem 983 MB estado juego pos (126.0, 4.0, 82.0)
+  ok   trampa de caza: lo atrapa
+  ok   escopeta: lo derriba
+ZAREK tensión: respiro
+  ok   diario: objetivos, pistas y mapa
+  ok   pistas: vaga y luego exacta
+  ok   todas las noches posibles salen (5)
+ZAREK FPS 349 draws 0 prims 0 mem 1002 MB estado juego pos (126.0, 4.0, 82.0)
+  ok   puerta atrancada: aguanta y la rompe a golpes
+  ok   celda: encadenada, clavo, argolla y cerradura
+  ok   bolsillos: caben 4 cosas
+  ok   objetos recogidos (5)
+  ok   la llave abre el cuarto de Damián
+  ok   poltergeist: una puerta se mueve sola
+  ok   ruido abajo: la madre grita y Damián acude (furia 0)
+ZAREK FPS 349 draws 0 prims 0 mem 1014 MB estado juego pos (106.0, 0.0, 99.0)
+  ok   con la furia al máximo, la madre se suelta
+  ok   la linterna hace retroceder a la madre (FLEE)
+  ok   la madre te muerde sin forcejeo
+ZAREK FPS 314 draws 0 prims 0 mem 1015 MB estado juego pos (130.0, -4.0, 112.0)
+  ok   la madre arde en la capilla
+  ok   caja fuerte: solo con la fecha del diario de la madre (3/4)
+  ok   reloj puesto a las tres: el llavero del padre
+  ok   fusibles: el sótano a oscuras hasta ponerlos (7 lámparas)
+  ok   latas: suenan cuando él cruza la puerta
+  ok   palanca: la ventana tapiada se abre al jardín
+  ok   objetos para fabricar repartidos (6)
+  ok   dejar algo en el suelo desde los bolsillos
+  ok   vela encendida con una cerilla
+  ok   vendarse el tobillo
+  ok   empujar un mueble contra la puerta
+  ok   Damián nota la puerta que has dejado abierta
+  ok   escondites nuevos: cortinas y bañera (["armario", "cama", "cortina", "montaplatos", "bañera"])
+  ok   muñecas (8), 2 teléfonos y retratos (55)
+  ok   esconderse en la bañera y salir
+  ok   el flash de la Polaroid le ciega
+  ok   llamar al otro teléfono le atrae allí
+  ok   descolgar el teléfono
+  ok   sabe que Damián está al otro lado de la puerta
+  ok   echarle la llave con él dentro
+  ok   al final revienta la cerradura
+  ok   detrás de un retrato está la fecha de la caja fuerte
+  ok   el mapa de Damián apunta dónde está todo
+  ok   trampas de Damián: 3 cables con campanillas y 3 cepos
+  ok   agachada pasa el cable; de pie suenan las campanillas y él viene
+  ok   un cepo escondido te atrapa el pie y se abre manteniendo USAR
+  ok   romper una ventana abre un paso al jardín
+ZAREK FPS 359 draws 0 prims 0 mem 1005 MB estado juego pos (113.0, -4.0, 94.0)
+  ok   tutorial: se salta lo ya hecho (paso 4) y señala los botones
+  ok   sin gasolina la camioneta no sirve
+ZAREK FPS 287 draws 0 prims 0 mem 1005 MB estado final pos (49.0, 0.0, 120.0)
+  ok   final: FINAL VERDADERO: EL FUEGO
+ZAREK: tiempo de juego simulado 40.2 s
+ZAREK OK
