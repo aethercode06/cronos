@@ -16,3 +16,5 @@ https://opengameart.org/content/rpg-sound-pack|CC0|artisticdude
 https://opengameart.org/content/50-cc0-sfx|CC0|rubberduck
 https://opengameart.org/content/glass-breaking|CC0|varios
 https://opengameart.org/content/heartbeat|CC0|varios
+https://opengameart.org/node/73696|CC0|desconocido (camera shutter, archive.org)
+https://opengameart.org/content/camerashudder|CC0|FacadeGaikan

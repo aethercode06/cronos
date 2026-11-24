@@ -130,3 +130,11 @@ transportation/wood_creak_on_old_ship_series
 transportation/car_door_open_shut
 transportation/car_door_closing
 alarms/mechanical_clock_ring
+household/telephone_ring
+household/phone_ringing
+foley/lighter_flick
+household/shower_curtain_pulled_series
+foley/smoothing_cloth_on_table
+foley/rope_creaking_holding_weight
+transportation/twisting_dial_clicks
+cartoon/wind_up_toy
