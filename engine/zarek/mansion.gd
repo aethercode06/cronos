@@ -1096,6 +1096,7 @@ func ventana_cerca(p: Vector3, radio: float) -> bool:
 
 var crujidos: Array = []      # tablones rotos que crujen al pisarlos (ZarekTerror)
 var montaplatos: Array = []
+var munecas: Array = []        # muñecas de porcelana (ZarekAstucia: los ojos de la madre)
 var velas_capilla: Array = []
 var ventanas_info: Array = []  # {c, horiz, inward}: para tapiar algunas con tablas
 func _window(c: Vector3, horiz: bool, thick: float, inward: Vector3) -> void:

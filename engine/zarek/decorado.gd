@@ -195,6 +195,7 @@ func _en(r: Dictionary, nombre: String, x: float, z: float, yaw := 0.0, escala :
 	var n := m._prop(_real(nombre), p, yaw, escala, choca)
 	if n and nombre == "t_mu_polly":
 		_ensuciar(n, Color(0.78, 0.72, 0.62))
+		m.munecas.append(n)
 	if n and choca:
 		_ocupar(p, ext)
 		var real := _real(nombre)

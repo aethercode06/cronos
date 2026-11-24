@@ -49,6 +49,8 @@ const FINALES := {"escapar": "Escapé", "verdadero": "El fuego", "oculto": "Hamb
 var huida: ZarekHuida
 var inter: ZarekInteraccion
 var sup: ZarekSupervivencia
+var ast: ZarekAstucia
+const ESCONDITE_TXT := {"cama": "debajo de la cama", "cortina": "tras la cortina", "montaplatos": "dentro del montaplatos", "bañera": "en la bañera"}
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
 var seals := 0
@@ -226,6 +228,10 @@ func _ready() -> void:
 	sup.j = self
 	add_child(sup)
 	sup.preparar(mansion)
+	ast = ZarekAstucia.new()
+	ast.j = self
+	add_child(ast)
+	ast.preparar(mansion)
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -1484,6 +1490,7 @@ func _play(delta: float) -> void:
 	inter.tick(delta)
 	player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
 	sup.tick(delta)
+	ast.tick(delta)
 
 func _events(pp: Vector3) -> void:
 	if not entered and mansion.inside_house(pp):
@@ -1649,7 +1656,7 @@ func _target() -> Dictionary:
 	if not hidden_in.is_empty():
 		if _aliento_visible():
 			return {"kind": "salir", "text": "¡ESTÁ CERCA! Mantén LUZ para contener la respiración · USAR: salir"}
-		return {"kind": "salir", "text": "USAR: salir" + (" de debajo de la cama" if hidden_in.get("tipo", "") == "cama" else " del armario")}
+		return {"kind": "salir", "text": "USAR: salir" + {"cama": " de debajo de la cama", "cortina": " de detrás de la cortina", "montaplatos": " del montaplatos", "bañera": " de la bañera"}.get(String(hidden_in.get("tipo", "")), " del armario")}
 	if is_instance_valid(llevado):
 		return {"kind": "lanzar", "text": "USAR: lanzar"}
 	for s in mansion.seals:
@@ -1664,6 +1671,9 @@ func _target() -> Dictionary:
 	var rsup := sup.objetivo(pp)
 	if not rsup.is_empty() and not rsup.get("debil", false):
 		return rsup
+	var rast := ast.objetivo(pp)
+	if not rast.is_empty() and not rast.get("debil", false):
+		return rast
 	if fauna and is_instance_valid(fauna.gato) and fauna.gato.process_mode != Node.PROCESS_MODE_DISABLED \
 			and fauna.gato.global_position.distance_to(pp + player.forward() * 0.6) < 1.1 and fauna.gato.estado != ZarekAnimal.E.HUYE:
 		return {"kind": "gato", "text": "USAR: acariciar al gato"}
@@ -1687,7 +1697,7 @@ func _target() -> Dictionary:
 			return {"kind": "nada", "text": "La manivela está floja. Tengo que esperar."}
 		return {"kind": "fonografo", "text": "USAR: poner el disco (lo atraerá aquí)"}
 	if not wd.is_empty():
-		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + ("debajo de la cama" if wd.get("tipo", "") == "cama" else "en el armario")}
+		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + String(ESCONDITE_TXT.get(String(wd.get("tipo", "")), "en el armario"))}
 	var d := mansion.door_near(pp + player.forward() * 0.6, 1.7)
 	if not d.is_empty():
 		if d.locked and String(d.get("llave", "")) != "":
@@ -1698,6 +1708,8 @@ func _target() -> Dictionary:
 			return {"kind": "abrir_cuarto", "obj": d, "text": "USAR: abrir con la llave del cuarto de Damián"}
 		if d.locked:
 			return {"kind": "cerrada", "obj": d, "text": "USAR: probar el pomo (cerrada)"}
+		if d.get("encerrado", false):
+			return {"kind": "nada", "text": "Le he encerrado ahí dentro. Ni se me ocurre abrir."}
 		if float(d.get("barricada", 0.0)) > 0.0:
 			return {"kind": "atrancada", "obj": d, "text": "USAR: quitar los tablones"}
 		if not d.open and tablones > 0:
@@ -1734,6 +1746,9 @@ func _target() -> Dictionary:
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty() and hit.collider is RigidBody3D and (hit.collider as RigidBody3D).mass < 14.0:
 		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger (y lanzárselo)"}
+	var debil3 := ast.objetivo(pp)
+	if not debil3.is_empty():
+		return debil3
 	var debil2 := sup.objetivo(pp)
 	if not debil2.is_empty():
 		return debil2
@@ -1888,6 +1903,8 @@ func _use() -> void:
 			inter.usar(t)
 		"sup":
 			sup.usar(t)
+		"ast":
+			ast.usar(t)
 		"hold_sup":
 			sup.empezar_hold(t)
 		"hold_inter":
@@ -2411,13 +2428,14 @@ func _enter_wardrobe(wd: Dictionary) -> void:
 	player.global_position = wd.inside
 	player.set_look(wd.yaw, 0.0)
 	aliento = 1.0
-	_t_revisar = randf_range(4.0, 9.0) * (1.0 - _conoce_escondite(wd))
+	_t_revisar = randf_range(4.0, 9.0) * (1.0 - _conoce_escondite(wd)) * float({"cortina": 0.6, "montaplatos": 2.0, "bañera": 1.4}.get(String(wd.get("tipo", "")), 1.0))
 	if _conoce_escondite(wd) >= 0.36 and randf() < 0.5:
 		message("Ya me he escondido aquí muchas veces…\n¿Y si él lo sabe?", 2.5)
 	_anotar_escondite(wd)
-	var cama: bool = wd.get("tipo", "") == "cama"
+	var tipo_e := String(wd.get("tipo", ""))
+	var cama: bool = tipo_e in ["cama", "bañera"]
 	player.altura_fija = true
-	player.head.position.y = 0.2 if cama else player.eye_height
+	player.head.position.y = {"cama": 0.2, "bañera": 0.32, "montaplatos": 0.55}.get(tipo_e, player.eye_height)
 	player.speed_mult = 0.0
 	player.velocity = Vector3.ZERO
 	for c in player.get_children():
@@ -2427,7 +2445,11 @@ func _enter_wardrobe(wd: Dictionary) -> void:
 	slit_r.visible = not cama
 	slit_cama.visible = cama
 	state = "escondido"
-	sound_at("crujido", wd.inside + Vector3(0, 1, 0), -4.0)
+	sound_at({"cortina": "cortina", "bañera": "chapoteo", "montaplatos": "crujido"}.get(tipo_e, "crujido"), wd.inside + Vector3(0, 1, 0), -4.0)
+	if tipo_e != "" and tipo_e != "cama":
+		_consejo("escondite_" + tipo_e, {"cortina": "Tras las cortinas largas de las ventanas también te puedes esconder. Es rápido, pero si él entra con la luz encendida… se te ven los pies.",
+			"montaplatos": "El montaplatos: un hueco diminuto en la pared de la despensa y del cuarto de plancha. Él casi nunca mira ahí, pero cruje.",
+			"bañera": "La bañera de agua sucia: hundida hasta la nariz no te ve ni te huele. Al meterte y al salir, el agua suena."}.get(tipo_e, ""))
 
 func _exit_wardrobe(normal: bool) -> void:
 	if hidden_in.is_empty():
@@ -2449,6 +2471,8 @@ func _exit_wardrobe(normal: bool) -> void:
 		sound_at("crujido", player.global_position + Vector3(0, 1, 0), -4.0)
 
 func _throw_salt() -> void:
+	if ast and ast.disparar_foto():
+		return
 	if salt <= 0:
 		message("No me quedan bengalas.", 1.5)
 		return

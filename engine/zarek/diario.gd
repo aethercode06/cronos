@@ -229,6 +229,15 @@ func texto_objetivos() -> String:
 	t += "Velas y cerillas: sin pilas, LUZ enciende una vela. A la madre le asusta el fuego, pero a Damián le dice dónde estoy.\n"
 	t += "El tobillo herido: si corro, sangro y dejo gotas que él sigue. Con un trapo me vendo (MANTÉN USAR).\n"
 	t += "Ventanas: USAR para asomarme y ver si está fuera.\n"
+	t += "Encerrarle: con el llavero del padre, si él está al otro lado de una puerta cerrada, le echo la llave. La revienta, pero tarda.\n"
+	t += "Los dos teléfonos de la casa: desde uno hago sonar el otro y él va a ver. Si suena el que tengo cerca, descuelgo.\n"
+	t += "Escondites: armarios, bajo las camas, tras las cortinas largas, el montaplatos y la bañera.\n"
+	t += "Las muñecas tienen los ojos de la madre: si una me mira, su furia sube. Les doy la vuelta.\n"
+	t += "Detrás de los espejos tapados y de algunos retratos hay cosas escritas.\n"
+	var ast: ZarekAstucia = j.ast
+	if ast.polaroid: t += "Llevo su Polaroid: %d fotos. El flash, de cerca y de frente, le ciega (botón BENGALA).\n" % ast.fotos
+	if ast.mechero: t += "Llevo su mechero: enciendo velas sin cerillas.\n"
+	if ast.mapa: t += "Tengo su mapa: sé dónde está cada cosa.\n"
 	if j.sup.herida: t += "[color=#e06060]Tengo el tobillo sangrando.[/color]\n"
 	var llevo: Array[String] = []
 	if it.botellas > 0: llevo.append("Botellas: %d" % it.botellas)

@@ -497,6 +497,66 @@ func _ready() -> void:
 	sp._cambios()
 	_check(g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(dm.pos) < 0.5, "Damián nota la puerta que has dejado abierta")
 	g.elena.vanish(60.0)
+	# tanda 3: Polaroid, teléfonos, encerrarle, escondites nuevos, muñecas, retratos, mapa
+	var ast: ZarekAstucia = g.ast
+	var tipos := {}
+	for w in m.wardrobes:
+		tipos[String(w.get("tipo", "armario"))] = true
+	_check(tipos.has("cortina") and tipos.has("bañera"), "escondites nuevos: cortinas y bañera (%s)" % str(tipos.keys()))
+	_check(ast.munecas.size() > 0 and ast.telefonos.size() == 2 and ast.retratos.size() > 0, "muñecas (%d), 2 teléfonos y retratos (%d)" % [ast.munecas.size(), ast.retratos.size()])
+	var bn: Dictionary = {}
+	for w in m.wardrobes:
+		if String(w.get("tipo", "")) == "bañera":
+			bn = w
+	if not bn.is_empty():
+		g._enter_wardrobe(bn)
+		await _wait(0.3)
+		var dentro_ok: bool = g.state == "escondido" and g.player.global_position.distance_to(bn.inside) < 0.5
+		g._exit_wardrobe(true)
+		_check(dentro_ok and g.state == "juego", "esconderse en la bañera y salir")
+	g.elena.visible = true
+	g.elena.set_state(ZarekElena.S.WANDER)
+	g.elena.aturdido = 0.0
+	g.player.global_position = Vector3(g.player.global_position.x, g.player.global_position.y, g.player.global_position.z)
+	g.elena.global_position = g.player.global_position + g.player.look_dir() * Vector3(4, 0, 4)
+	ast.polaroid = true
+	ast.fotos = 3
+	_check(ast.disparar_foto() and g.elena.aturdido > 2.0 and ast.fotos == 2, "el flash de la Polaroid le ciega")
+	g.elena.aturdido = 0.0
+	g.elena.set_state(ZarekElena.S.WANDER)
+	ast.usar({"que": "llamar", "obj": ast.telefonos[0]})
+	_check(float(ast.telefonos[1].sonando) > 0.0 and g.elena.state == ZarekElena.S.INVESTIGATE and g.elena.last_seen.distance_to(ast.telefonos[1].pos) < 0.5, "llamar al otro teléfono le atrae allí")
+	ast.usar({"que": "descolgar", "obj": ast.telefonos[1]})
+	_check(float(ast.telefonos[1].sonando) <= 0.0, "descolgar el teléfono")
+	var de: Dictionary = {}
+	for d in m.doors:
+		if not d.open and not d.locked and (d.get("ids", []) as Array).size() == 2 and float(d.get("barricada", 0.0)) <= 0.0 and m.level_of((d.pos as Vector3).y + 0.5) >= 0:
+			de = d
+			break
+	if not de.is_empty():
+		var ra: Dictionary = m.rooms[int(de.ids[0])]
+		var rb2: Dictionary = m.rooms[int(de.ids[1])]
+		g.player.global_position = Vector3((ra.rect as Rect2).get_center().x, float(ra.y) + 0.05, (ra.rect as Rect2).get_center().y)
+		g.elena.global_position = Vector3((rb2.rect as Rect2).get_center().x, float(rb2.y), (rb2.rect as Rect2).get_center().y)
+		_check(ast._damian_al_otro_lado(de, g.player.global_position), "sabe que Damián está al otro lado de la puerta")
+		ast.usar({"que": "encerrar", "obj": de})
+		_check(float(de.get("barricada", 0.0)) > 0.0 and de.get("encerrado", false), "echarle la llave con él dentro")
+		ast.tick(46.0)
+		_check(de.open and not de.has("encerrado"), "al final revienta la cerradura")
+	g.elena.vanish(60.0)
+	var hay_fecha := false
+	for rt in ast.retratos:
+		if String(rt.nota) == "fecha":
+			hay_fecha = true
+	_check(hay_fecha, "detrás de un retrato está la fecha de la caja fuerte")
+	for it3 in ast.items:
+		if it3.kind == "mapa" and not it3.taken:
+			ast.usar({"que": "coger", "obj": it3})
+	var revelados := 0
+	for sl in m.seals:
+		if sl.get("revelado", false) or sl.taken:
+			revelados += 1
+	_check(not ast.mapa or revelados == m.seals.size(), "el mapa de Damián apunta dónde está todo")
 	# escapar trepando el muro (la gasolina se gastó en el fuego: la camioneta ya no sirve)
 	g.elena.vanish(60.0)
 	_check(not rs.faltan("camioneta").is_empty(), "sin gasolina la camioneta no sirve")

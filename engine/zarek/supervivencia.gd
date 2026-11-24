@@ -208,10 +208,12 @@ func encender_vela() -> bool:
 		j.player.set_meta("vela", false)
 		j.message("Apago la vela de un soplo.", 1.5)
 		return true
-	if velas <= 0 or cerillas <= 0:
+	var con_mechero: bool = j.ast != null and j.ast.mechero
+	if velas <= 0 or (cerillas <= 0 and not con_mechero):
 		return false
 	velas -= 1
-	cerillas -= 1
+	if not con_mechero:
+		cerillas -= 1
 	vela_encendida = 120.0
 	j.player.set_meta("vela", true)
 	j.sound_at("cerilla", j.player.global_position + Vector3(0, 1.2, 0), -6.0)
@@ -275,7 +277,7 @@ func _cambios() -> void:
 		for l in m.lamps:
 			var k := str(l.pos)
 			var lp: Vector3 = l.pos
-			if lp.distance_to(ep) < 9.0 and absf(lp.y - ep.y) < 3.0 and l.on and _ini_luces.has(k) and not bool(_ini_luces[k]) and _t - float(_notados.get(k, -99.0)) > 40.0:
+			if lp.distance_to(ep) < 18.0 and absf(lp.y - ep.y) < 3.0 and l.on and _ini_luces.has(k) and not bool(_ini_luces[k]) and _t - float(_notados.get(k, -99.0)) > 40.0:
 				_notados[k] = _t
 				pista = lp - Vector3(0, 2.0, 0)
 				que = "una luz encendida"
@@ -296,6 +298,8 @@ func _cambios() -> void:
 	ZarekSonido.en(m, "damian_gruñe", ep + Vector3(0, 1.6, 0), 0.0, 30.0, 0.85)
 	if j.player.global_position.distance_to(ep) < 25.0:
 		j.message("Damián se ha parado: ha visto %s. Sabe que alguien ha pasado por aquí." % que, 3.0)
+	if que == "una luz encendida":
+		j._consejo("luz_cebo", "Las luces son un cebo: si enciendes una sala lejos de ti, Damián la ve desde lejos y va a mirar. Apágala después o sabrá que alguien anda por ahí.")
 	j._consejo("cambios", "Damián conoce su casa: si deja una puerta cerrada y la encuentra abierta, ve una luz encendida o un cajón abierto, viene a buscar por ahí. Deja las cosas como estaban.")
 
 # ---------------- qué se puede hacer aquí ----------------
