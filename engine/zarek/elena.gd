@@ -521,6 +521,7 @@ func set_state(s: S, t := 0.0) -> void:
 	state = s
 	timer = t
 	path.clear()
+	_puerta = {}
 	repath = 0.0
 	if s == S.CHASE and player:
 		# al lanzarse a por ti sabe dónde estás (no sigue un rastro viejo)
@@ -590,6 +591,10 @@ func _can_see_player() -> bool:
 	return hit.is_empty()
 
 func _physics_process(delta: float) -> void:
+	if not global_position.is_finite():
+		push_error("ELENA_NAN %s estado=%s madre=%s" % [str(global_position), state_name(), str(not es_damian)])
+		global_position = mansion.random_floor() if mansion else Vector3.ZERO
+		_vel = Vector3.ZERO
 	if only_visual or mansion == null:
 		return
 	if aturdido > 0.0:
@@ -603,8 +608,7 @@ func _physics_process(delta: float) -> void:
 		var hacia := player.global_position
 		hacia.y = global_position.y
 		if hacia.distance_to(global_position) > 0.3:
-			var tr := global_transform.looking_at(hacia, Vector3.UP)
-			global_transform.basis = global_transform.basis.slerp(tr.basis, minf(1.0, delta * 4.0)).orthonormalized()
+			rotation.y = lerp_angle(rotation.y, atan2(-(hacia.x - global_position.x), -(hacia.z - global_position.z)), minf(1.0, delta * 4.0))
 		if es_damian and model:
 			play_anim("idle")
 		return
@@ -705,6 +709,8 @@ func _physics_process(delta: float) -> void:
 		if not es_damian:
 			_animate(delta, 0.0)
 		return
+	if _abrir_puerta(delta):
+		return
 	_move(delta)
 	# atrapar
 	if can_catch and state in [S.CHASE, S.INVESTIGATE, S.WANDER, S.SEARCH] and not player_hidden:
@@ -719,16 +725,6 @@ func _physics_process(delta: float) -> void:
 				_gracia = 1.6
 			elif _gracia <= 0.0:
 				caught.emit()
-	# puertas: las abre de golpe al pasar
-	var d := mansion.door_near(global_position, 1.3)
-	# (las salas cerradas con llave también: es su casa y tiene todas las llaves)
-	if not d.is_empty() and not d.open and (not d.locked or String(d.get("llave", "")) != ""):
-		d.locked = false
-		mansion.set_door(d, true, true)
-		d.snd.stream = ZarekSonido.uno("portazo")
-		d.snd.play()
-		if player.global_position.distance_to(global_position) < 14.0:
-			player.shake(6.0)
 	_creak_t -= delta
 	if _creak_t <= 0.0:
 		_creak_t = randf_range(5.0, 11.0)
@@ -793,6 +789,118 @@ func _safe_path(target: Vector3) -> Array[Vector3]:
 			if mansion.is_lit(wp):
 				return [] as Array[Vector3]
 	return p
+
+## Puertas: nunca las atraviesa. Al llegar a una cerrada se para delante y la abre según lo que hace:
+## rondando, gira el pomo y la empuja despacio; buscándote, la abre rápido; persiguiéndote, de una patada.
+## Las cerradas con llave las abre con su llavero (es su casa). Solo pasa cuando la hoja ya está abierta.
+var _puerta := {}
+var _puerta_t := 0.0
+var _puerta_fase := 0
+var _puerta_modo := ""
+func _puerta_delante() -> Dictionary:
+	var dir := Vector3.ZERO
+	if not path.is_empty():
+		dir = (path[0] as Vector3) - global_position
+	elif state == S.CHASE:
+		dir = player.global_position - global_position
+	dir.y = 0
+	if dir.length() < 0.05 or not dir.is_finite():
+		return {}
+	dir = dir.normalized()
+	for d in mansion.doors:
+		if d.open and float(d.ang) > 1.0:
+			continue
+		var dp: Vector3 = d.pos
+		if absf(dp.y - global_position.y) > 1.6:
+			continue
+		var to := Vector3(dp.x - global_position.x, 0, dp.z - global_position.z)
+		var dist := to.length()
+		if dist > 1.5 or dist < 0.05:
+			continue
+		if to.normalized().dot(dir) > 0.35:
+			return d
+	return {}
+
+func _abrir_puerta(delta: float) -> bool:
+	if _puerta.is_empty():
+		if state in [S.DORMANT, S.FLEE, S.GHOST]:
+			return false
+		var d := _puerta_delante()
+		if d.is_empty() or float(d.get("barricada", 0.0)) > 0.0:
+			return false
+		_puerta = d
+		_puerta_fase = 0
+		_puerta_t = 0.0
+		if bool(d.locked):
+			_puerta_modo = "llave"
+		elif state == S.CHASE:
+			_puerta_modo = "patada"
+		elif state in [S.INVESTIGATE, S.SEARCH]:
+			_puerta_modo = "rapido"
+		else:
+			_puerta_modo = "suave"
+	var d := _puerta
+	_puerta_t += delta
+	# de cara a la puerta, quieto
+	var dp: Vector3 = d.pos
+	var hacia := Vector3(dp.x, global_position.y, dp.z)
+	if hacia.distance_to(global_position) > 0.2:
+		rotation.y = lerp_angle(rotation.y, atan2(-(hacia.x - global_position.x), -(hacia.z - global_position.z)), minf(1.0, delta * 8.0))
+	if _puerta_fase == 0:
+		var espera: float = {"llave": 1.5, "patada": 0.3, "rapido": 0.25, "suave": 0.7}[_puerta_modo]
+		if _puerta_t == delta:
+			d.snd.volume_db = 0.0
+			match _puerta_modo:
+				"llave":
+					d.snd.stream = ZarekSonido.uno("llaves")
+					d.snd.play()
+				"patada":
+					if es_damian:
+						_cur_anim = ""
+						play_anim("golpe", 1.6)
+				"suave":
+					d.snd.stream = ZarekSonido.uno("pomo")
+					d.snd.play()
+				"rapido":
+					d.snd.stream = ZarekSonido.uno("pomo")
+					d.snd.pitch_scale = 1.15
+					d.snd.play()
+		if _puerta_t >= espera:
+			d.locked = false
+			_puerta_fase = 1
+			_puerta_t = 0.0
+			var fuerte := _puerta_modo == "patada"
+			mansion.set_door(d, true, fuerte)
+			if _puerta_modo == "suave":
+				# se abre sola, despacio, con su crujido
+				d["rigidez"] = 3.2
+				d["freno"] = 3.6
+			elif _puerta_modo == "rapido":
+				d["rigidez"] = 16.0
+				d["freno"] = 6.0
+			d.snd.pitch_scale = 1.0
+			d.snd.stream = ZarekSonido.uno("portazo" if fuerte else "puerta_crujido")
+			d.snd.volume_db = 4.0 if fuerte else -2.0
+			d.snd.play()
+			if fuerte and player.global_position.distance_to(global_position) < 14.0:
+				player.shake(7.0)
+			elif _puerta_modo == "rapido" and player.global_position.distance_to(global_position) < 10.0:
+				player.shake(2.0)
+	else:
+		# pasa cuando la hoja ya está abierta (o si algo la frena demasiado rato)
+		if float(d.ang) > 1.05 or _puerta_t > 2.5 or not d.open:
+			_puerta = {}
+			return false
+	if not es_damian:
+		_animate(delta, 0.0)
+	elif _puerta_modo != "patada" or _puerta_fase == 1:
+		play_anim("idle")
+	# atrapar mientras abre (si te tiene justo al lado)
+	if can_catch and state == S.CHASE and not player_hidden and _gracia <= 0.0:
+		var dd := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z).length()
+		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2:
+			caught.emit()
+	return true
 
 func _move(delta: float) -> void:
 	var moving := 0.0

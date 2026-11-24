@@ -175,7 +175,10 @@ func _ready() -> void:
 	# con la física ya en marcha, los objetos que quedaron en el aire bajan a su sitio
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	mansion.asentar()
+	mansion.asentar(1)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	mansion.asentar(2)
 	await mansion.crear_impostores()
 	for l in mansion.lamps:
 		mansion.set_lamp(l, true)
@@ -1772,9 +1775,11 @@ func _target() -> Dictionary:
 		if _t_fono < 0.0:
 			return {"kind": "nada", "text": "La manivela está floja. Tengo que esperar."}
 		return {"kind": "fonografo", "text": "USAR: poner el disco (lo atraerá aquí)"}
-	if not wd.is_empty():
-		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + String(ESCONDITE_TXT.get(String(wd.get("tipo", "")), "en el armario"))}
 	var d := mansion.door_near(pp + player.forward() * 0.6, 1.7)
+	# en una sala pequeña el armario puede quedar junto a la puerta: si tienes la puerta delante, manda la puerta
+	var puerta_delante: bool = not d.is_empty() and Vector2(pp.x - (d.pos as Vector3).x, pp.z - (d.pos as Vector3).z).length() < 1.1
+	if not wd.is_empty() and not puerta_delante:
+		return {"kind": "armario", "obj": wd, "text": "USAR: esconderse " + String(ESCONDITE_TXT.get(String(wd.get("tipo", "")), "en el armario"))}
 	if not d.is_empty():
 		if d.locked and String(d.get("llave", "")) != "":
 			if String(d.llave) in llaves_salas:

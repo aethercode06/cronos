@@ -195,6 +195,11 @@ static func _sitio_libre(m: ZarekMansion, r: Dictionary, radio: float) -> Vector
 			# reservar el sitio para los que vengan después
 			cajas.append(AABB(Vector3(p.x - radio * 0.5, p.y, p.z - radio * 0.5), Vector3(radio, 0.9, radio)))
 			return p
+	# sala llena: el sitio menos malo (sin puertas ni escaleras), mejor algo apretado que nada
+	for intento in 30:
+		var p := Vector3(_rng.randf_range(rc.position.x + 0.6, rc.end.x - 0.6), float(r.y), _rng.randf_range(rc.position.y + 0.6, rc.end.y - 0.6))
+		if m.door_near(p, radio + 0.9).is_empty() and not m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0) and not _choca_caja(m, p, radio * 0.6):
+			return p
 	return Vector3.INF
 
 ## ¿Hay colisión (muros, tabiques, muebles con cuerpo) en la huella de un objeto de `radio` puesto en el suelo en p?

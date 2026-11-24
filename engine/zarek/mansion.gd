@@ -4884,12 +4884,21 @@ func _repartir_objetos() -> void:
 					_seal(p, tipo)
 					break
 	# las llaves de su camioneta: en su cuarto, entre los trofeos (si esa salida está abierta esta noche)
-	var rd := _sala_por_nombre("Cuarto de Damián")
+	var rd := _sala_por_nombre("Trofeos de Damián")
+	if rd.is_empty():
+		rd = _sala_por_nombre("Cuarto de Damián")
 	if not rd.is_empty() and ZarekHuida.salida_bloqueada(partida_seed) != "camioneta":
 		ZarekTerror._rng.seed = partida_seed + 77
-		var pl := ZarekTerror._sitio_libre(self, rd, 0.6)
-		if pl != Vector3.INF and pl.distance_to(circle_pos) > 2.2:
-			_pickup(pl, "llaves")
+		var pl := Vector3.INF
+		for intento in 12:
+			var q := ZarekTerror._sitio_libre(self, rd, 0.5)
+			if q != Vector3.INF and q.distance_to(circle_pos) > 2.2:
+				pl = q
+				break
+		if pl == Vector3.INF:
+			var rc: Rect2 = rd.rect
+			pl = Vector3(rc.position.x + 0.8, float(rd.y), rc.position.y + 0.8)
+		_pickup(pl, "llaves")
 	# tablones con clavos para atrancar puertas (los que sobran)
 	var n_tab := 0
 	for p in sitios:
@@ -5799,7 +5808,7 @@ func _portals() -> void:
 		portals.append({"pos": abajo + Vector3(0, 0, 0) - hacia * 0.0 + hacia * 1.1, "to": llegada, "text": textos[i][0]})
 		portals.append({"pos": llegada, "to": abajo + hacia * 1.3, "text": textos[i][1]})
 	var links := [
-		[["baja", 5.0, 3.2], ["sotano", 13.0, 2.5], "empujar el librero (pasadizo)", "volver por el pasadizo"],
+		[["baja", 5.6, 1.5], ["sotano", 13.0, 2.5], "empujar el librero (pasadizo)", "volver por el pasadizo"],
 		[["exterior", 30.5, 36.5], ["sotano", 1.5, 6.5], "bajar por el pozo", "subir por la escalera del pozo"],
 		[["exterior", 58.0, 47.0], ["sotano", 29.0, 17.0], "bajar al túnel", "subir a la superficie"],
 	]
@@ -5938,7 +5947,7 @@ func _decorate() -> void:
 	_repartir_objetos()
 	if OS.get_environment("SIN_RUINA") == "":
 		ZarekRuina.aplicar(self)
-	if OS.get_environment("SIN_DIVISIONES") == "":
+	if OS.get_environment("CON_DIVISIONES") != "":  # las divisiones se quitaron: la casa tiene ya salas de tamaño real
 		ZarekDivisiones.aplicar(self)
 	electricidad = ZarekElectricidad.new()
 	electricidad.instalar(self)
@@ -5955,8 +5964,8 @@ func _decorate() -> void:
 			continue
 		if name == "Salón con chimenea":
 			# sala de muestra: alfombra bajo los sofás y retratos; el resto lo pone ZarekDecorado
-			_alfombra(Vector3(rect.position.x + 3.5, y, rect.position.y + 3.6), 4.0, 5.2, 0.0)
-			_alfombra(Vector3(rect.position.x + 9.2, y, rect.position.y + 2.9), 2.4, 3.2, PI * 0.5)
+			_alfombra(Vector3(rect.position.x + 3.6, y, rect.position.y + 3.6), 3.4, 4.4, 0.0)
+			pass  # el rincón del piano ya no cabe en el salón de tamaño real
 			_artesonado(r)
 			_polvo(r)
 			_oclusion(r)
@@ -5977,7 +5986,8 @@ func _decorate() -> void:
 			if t == "sala" and rect.size.x >= 9 and rect.size.y >= 9 and not ("vestíbulo" in name.to_lower()) and level_of(y) < 2:
 				_artesonado(r)
 		var lname := name.to_lower()
-		if name in SALAS_A_MANO:
+		# dentro de la casa amuebla ZarekDecorado (también las salas nuevas del plano de medidas reales)
+		if name in SALAS_A_MANO or int(r.level) >= 0:
 			pass
 		elif "baile" in lname:
 			for k in 6:
@@ -6028,7 +6038,7 @@ func _decorate() -> void:
 				for k in 6:
 					var sp := Vector3(_rng.randf_range(rect.position.x + 2, rect.end.x - 2), y, _rng.randf_range(rect.position.y + 2, rect.end.y - 2))
 					box(Vector3(0.8, 1.6, 0.8), sp + Vector3(0, 0.8, 0), _mat.sabana, true)
-		if t == "sala" and not ("baile" in lname or "comedor" in lname or "biblioteca" in lname or "billar" in lname) and rect.size.x > 7 and rect.size.y > 7 and not (name in SALAS_A_MANO):
+		if t == "sala" and not ("baile" in lname or "comedor" in lname or "biblioteca" in lname or "billar" in lname) and rect.size.x > 7 and rect.size.y > 7 and not (name in SALAS_A_MANO) and int(r.level) < 0:
 			var cc := c + Vector3(0, 0, 1.0)
 			if _prop("Sofa_01", cc + Vector3(0, 0, 1.6), PI) != null:
 				_prop("ArmChair_01", cc + Vector3(-1.9, 0, 0), PI * 0.5)
@@ -7073,7 +7083,7 @@ func recolocar_mesitas() -> void:
 
 ## Baja hasta su apoyo los objetos que quedaron flotando (p. ej. cosas de una mesa que no se pudo poner) y pega a la
 ## pared los cuadros y espejos separados; quita los cuadros que no tienen pared detrás. Devuelve cuántos tocó.
-func asentar() -> Dictionary:
+func asentar(fase := 0) -> Dictionary:
 	var esp := get_world_3d().direct_space_state
 	var hr := house_rect.grow(1.0)
 	var bajados := 0
@@ -7086,6 +7096,9 @@ func asentar() -> Dictionary:
 		var es_glb := n.scene_file_path != ""
 		var es_rb := n is RigidBody3D
 		if not (es_glb or es_rb) or (es_glb and n.get_parent() is RigidBody3D):
+			continue
+		# fase 1: primero los muebles con física; fase 2: lo de encima, ya con la física al día
+		if (fase == 1 and not es_rb) or (fase == 2 and es_rb):
 			continue
 		if not hr.has_point(Vector2(n.global_position.x, n.global_position.z)):
 			continue
@@ -7169,9 +7182,11 @@ func bake_nav() -> void:
 		add_child(lk)
 	nav_region.bake_finished.connect(func():
 		nav_ready = true
+		NavigationServer3D.map_force_update(get_world_3d().navigation_map)
 		print("ZAREK: navmesh polígonos ", nav_region.navigation_mesh.get_polygon_count()))
 	nav_region.bake_navigation_mesh(true)
 
+var _nav_forzado := false
 func path(from: Vector3, to: Vector3) -> Array[Vector3]:
 	var out: Array[Vector3] = []
 	if not nav_ready:
@@ -7179,6 +7194,11 @@ func path(from: Vector3, to: Vector3) -> Array[Vector3]:
 		return out
 	var map := get_world_3d().navigation_map
 	var pts := NavigationServer3D.map_get_path(map, from, to, true)
+	if pts.is_empty() and not _nav_forzado:
+		# el mapa aún no tenía los polígonos (se montan en otro hilo): se fuerza una vez
+		_nav_forzado = true
+		NavigationServer3D.map_force_update(map)
+		pts = NavigationServer3D.map_get_path(map, from, to, true)
 	for p in pts:
 		out.append(p)
 	if out.size() > 0:

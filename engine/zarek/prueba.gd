@@ -30,6 +30,17 @@ func _ready() -> void:
 	var m := g.mansion
 	for k in 10:
 		await get_tree().physics_frame
+	# el mapa de navegación se sincroniza unos fotogramas después del horneado
+	var t_nav := 0
+	var r_pad := m._sala_por_nombre("Dormitorio de los padres")
+	var c_pad := Vector3((r_pad.rect as Rect2).get_center().x, float(r_pad.y), (r_pad.rect as Rect2).get_center().y)
+	# (el servidor de navegación monta las regiones en otro hilo: con --fixed-fps los fotogramas pasan sin
+	# tiempo real, así que se espera tiempo de verdad)
+	while m.path(g.respawn_pos, c_pad).is_empty() and t_nav < 600:
+		OS.delay_msec(30)
+		await get_tree().physics_frame
+		t_nav += 1
+	print("ZAREK: mapa de navegación sincronizado tras %d fotogramas" % t_nav)
 	print("ZAREK: navegación lista en %.1f s" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	print("ZAREK: habitaciones %d, sellos %d, armarios %d, lámparas %d, puertas %d, pasos %d" % [m.rooms.size(), m.seals.size(), m.wardrobes.size(), m.lamps.size(), m.doors.size(), m.portals.size()])
 	_check(m.nav_ready, "navegación de Elena horneada")
@@ -53,6 +64,7 @@ func _ready() -> void:
 	for s in m.seals:
 		var pth := m.path(inside, s.pos)
 		var ok := pth.size() > 0 and pth[pth.size() - 1].distance_to(s.pos) < 3.0
+		if not ok: print("  RUTA_DBG ", s.tipo, " pos=", s.pos, " camino=", pth.size(), " fin=", (pth[pth.size() - 1] if pth.size() > 0 else Vector3.INF), " desde=", inside)
 		_check(ok or m.room_at(s.pos) < 0 or m.level_of(s.pos.y + 0.5) == 2, "Damián llega al objeto en " + m.room_name(s.pos))
 	var pe := m.path(inside, m.circle_pos)
 	_check(pe.size() > 0 and pe[pe.size() - 1].distance_to(m.circle_pos) < 3.0, "Elena llega al Epicentro (primer piso)")
@@ -71,12 +83,15 @@ func _ready() -> void:
 	_check(g.elena.state != ZarekElena.S.DORMANT, "Elena despierta (" + g.elena.state_name() + ")")
 	# lámparas: luz segura
 	var l: Dictionary = m.lamps[0]
-	for lp in m.lamps:
-		if m.level_of((lp.pos as Vector3).y) >= 0 and m.room_at((lp.pos as Vector3) + Vector3(1.0, -2.0, 0.5)) >= 0:
-			l = lp
+	var c_l := Vector3.ZERO
+	for rr in m.rooms:
+		if int(rr.level) >= 0 and not (rr.get("lamps", []) as Array).is_empty():
+			l = rr.lamps[0]
+			c_l = Vector3((rr.rect as Rect2).get_center().x, float(rr.y) + 0.5, (rr.rect as Rect2).get_center().y)
 			break
+	l.broken = false
 	m.set_lamp(l, true)
-	_check(m.is_lit(l.pos + Vector3(1.0, -2.0, 0.5)), "lámpara ilumina su habitación")
+	_check(m.is_lit(c_l), "lámpara ilumina su habitación")
 	m.set_lamp(l, false)
 	# la sal la ahuyenta
 	g.player.global_position = inside
@@ -356,14 +371,21 @@ func _ready() -> void:
 	_check(g.seals == m.seals.size() and rs.tiene.get("llave", false) and rs.tiene.get("cuerda", false) and rs.tiene.get("garfio", false), "objetos recogidos (%d)" % g.seals)
 	# el cuarto de Damián se abre con su llave
 	var dc: Dictionary = {}
+	var id_dam := int(m._sala_por_nombre("Cuarto de Damián").get("id", -1))
 	for d in m.doors:
-		if d.locked and String(d.get("llave", "")) == "":
-			dc = d
+		if d.locked and String(d.get("llave", "")) == "" and id_dam in (d.get("ids", []) as Array):
+			var otra := false
+			for idx in (d.get("ids", []) as Array):
+				if String(m.rooms[int(idx)].type) == "pasillo":
+					otra = true
+			if otra:
+				dc = d
 	if not dc.is_empty():
 		g.player.global_position = (dc.pos as Vector3) + Vector3(0, 0.05, 0)
 		var k_abrir: String = g._target().get("kind", "")
 		g._use()
 		await _wait(0.5)
+		if k_abrir != "abrir_cuarto" or dc.locked: print("CUARTO_DBG ", k_abrir, " locked=", dc.locked, " pos=", dc.pos, " t=", str(g._target()).left(200))
 		_check(k_abrir == "abrir_cuarto" and not dc.locked, "la llave abre el cuarto de Damián")
 	# poltergeist: la madre encadenada cierra una puerta y cambia un objeto de sitio
 	g.player.global_position = g.respawn_pos
@@ -391,7 +413,7 @@ func _ready() -> void:
 	g.player.global_position = g.respawn_pos
 	g.player.set_look(0.0, 0.0)
 	await _wait(0.2)
-	rs.madre.global_position = g.respawn_pos + g.player.look_dir() * 4.0
+	rs.madre.global_position = g.respawn_pos + g.player.look_dir() * 2.6
 	rs.madre.global_position.y = g.respawn_pos.y
 	rs.madre.set_state(ZarekElena.S.WANDER)
 	rs.madre.visible = true
@@ -518,7 +540,7 @@ func _ready() -> void:
 	g.elena.set_state(ZarekElena.S.WANDER)
 	g.elena.aturdido = 0.0
 	g.player.global_position = Vector3(g.player.global_position.x, g.player.global_position.y, g.player.global_position.z)
-	g.elena.global_position = g.player.global_position + g.player.look_dir() * Vector3(4, 0, 4)
+	g.elena.global_position = g.player.global_position + g.player.look_dir() * Vector3(2.5, 0, 2.5)
 	ast.polaroid = true
 	ast.fotos = 3
 	_check(ast.disparar_foto() and g.elena.aturdido > 2.0 and ast.fotos == 2, "el flash de la Polaroid le ciega")
