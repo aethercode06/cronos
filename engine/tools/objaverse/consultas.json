@@ -1,1 +1,40 @@
-{}
+{
+ "campanillas": {
+  "k": [
+   "small bell",
+   "sleigh bell",
+   "jingle bell",
+   "cow bell",
+   "cowbell",
+   "brass bell",
+   "hand bell",
+   "bell"
+  ],
+  "n": 24,
+  "max_caras": 60000,
+  "no": [
+   "cartoon",
+   "toon",
+   "stylized",
+   "low poly",
+   "lowpoly",
+   "chibi",
+   "toy",
+   "lego",
+   "sci-fi",
+   "scifi",
+   "futuristic",
+   "fantasy",
+   "nsfw",
+   "christmas tree",
+   "church",
+   "tower",
+   "temple",
+   "bell tower",
+   "belltower",
+   "dumbbell",
+   "bell pepper",
+   "taco"
+  ]
+ }
+}
