@@ -1,0 +1,1 @@
+OK | avisos: no terminó de cargar (el emulador también cierra la escena mínima de control), se cerró justo al cargar (como la escena de control), cierre en el emulador (también le pasa a la escena de control)
