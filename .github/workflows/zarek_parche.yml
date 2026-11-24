@@ -1,0 +1,31 @@
+name: Zarek · publicar actualización
+# La sesión de trabajo sube el parche (troceado) a la rama zarek-parche-datos; esto lo junta y lo publica en la
+# release zarek-parche, de donde lo baja el juego al abrirse (zarek/arranque.gd). Primero el .pck y al final
+# parche.json, para que el juego nunca vea una ficha que apunte a un archivo a medio subir.
+on:
+  push:
+    branches: [ zarek-parche-datos ]
+permissions:
+  contents: write
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(python3 -c "import json;print(json.load(open('parche.json'))['version'])")
+          TAM=$(python3 -c "import json;print(json.load(open('parche.json'))['tam'])")
+          cat $(ls partes/* | sort) > parche_$V.pck
+          test "$(stat -c %s parche_$V.pck)" = "$TAM"
+          gh release view zarek-parche -R ${{ github.repository }} > /dev/null 2>&1 || \
+            gh release create zarek-parche -R ${{ github.repository }} --title "La Sombra de Zarek · actualizaciones" \
+              --notes "Actualizaciones que el juego descarga solo al abrirse. No hace falta bajar nada de aquí." --latest=false
+          gh release upload zarek-parche parche_$V.pck -R ${{ github.repository }} --clobber
+          gh release upload zarek-parche parche.json -R ${{ github.repository }} --clobber
+          for n in $(gh api repos/${{ github.repository }}/releases/tags/zarek-parche --jq '.assets[].name'); do
+            case "$n" in parche_*.pck) [ "$n" != "parche_$V.pck" ] && gh release delete-asset zarek-parche "$n" -R ${{ github.repository }} -y ;; esac
+          done
+          echo "Publicada la actualización $V"
