@@ -193,14 +193,20 @@ func _preparar_celda() -> void:
 	n.position = ancla
 	m._house.add_child(n)
 	# colchón manchado
-	m.box(Vector3(0.9, 0.16, 1.9), Vector3(0, 0.08, 0), m._plain(Color(0.42, 0.36, 0.28), 0.95), false, n, false)
-	m.box(Vector3(0.5, 0.1, 0.35), Vector3(0, 0.2, -0.7), m._plain(Color(0.5, 0.45, 0.38), 0.95), false, n, false)
+	if m.objeto_real("s_colchon", n, Vector3.ZERO, PI * 0.5 if rc2.size.x > rc2.size.y else 0.0) == null:
+		m.box(Vector3(0.9, 0.16, 1.9), Vector3(0, 0.08, 0), m._plain(Color(0.42, 0.36, 0.28), 0.95), false, n, false)
+		m.box(Vector3(0.5, 0.1, 0.35), Vector3(0, 0.2, -0.7), m._plain(Color(0.5, 0.45, 0.38), 0.95), false, n, false)
 	ZarekGore._charco(m, ancla + Vector3(0.25, 0, 0.2), 0.5)
 	# argolla en el suelo y la cadena hasta el colchón
 	m.cyl(0.08, 0.1, 0.05, Vector3(0.7, 0.025, 0.8), m._mat.hierro, n, 10)
 	_cadena_vis = Node3D.new()
 	n.add_child(_cadena_vis)
-	for k in 9:
+	# cadena oxidada de verdad desde la argolla, con el grillete del tobillo al final
+	var cad := m.objeto_real("s_cadena", _cadena_vis, Vector3.ZERO, atan2(-0.48, 0.6) + PI * 0.5, Vector3(0.35, 0, 0.55))
+	if cad:
+		cad.scale = Vector3.ONE * 0.55
+		m.objeto_real("x_tortura_rusted_chain_shackles", _cadena_vis, Vector3.ZERO, 0.6, Vector3(0.0, 0, 0.25))
+	for k in (0 if cad else 9):
 		var e := m.cyl(0.014, 0.014, 0.07, Vector3(0.7 - k * 0.075, 0.03, 0.8 - k * 0.06), m._mat.hierro, _cadena_vis, 5)
 		e.rotation = Vector3(PI * 0.5, 0.0, (k % 2) * PI * 0.5)
 	# el clavo, en el suelo junto al rodapié
@@ -210,9 +216,12 @@ func _preparar_celda() -> void:
 	_clavo = Node3D.new()
 	_clavo.position = clavo_pos
 	m._house.add_child(_clavo)
-	var cl := m.cyl(0.004, 0.004, 0.11, Vector3(0, 0.006, 0), m._mat.hierro, _clavo, 5)
-	cl.rotation.z = PI * 0.5
-	m.cyl(0.009, 0.009, 0.004, Vector3(0.055, 0.006, 0), m._mat.hierro, _clavo, 6).rotation.z = PI * 0.5
+	if m.objeto_real("s_clavo", _clavo, Vector3(0, 0, PI * 0.5), randf() * TAU) != null:
+		pass
+	else:
+		var cl := m.cyl(0.004, 0.004, 0.11, Vector3(0, 0.006, 0), m._mat.hierro, _clavo, 5)
+		cl.rotation.z = PI * 0.5
+		m.cyl(0.009, 0.009, 0.004, Vector3(0.055, 0.006, 0), m._mat.hierro, _clavo, 6).rotation.z = PI * 0.5
 	for d in m.doors:
 		if int(r.id) in (d.get("ids", []) as Array):
 			celda_puertas.append(d)

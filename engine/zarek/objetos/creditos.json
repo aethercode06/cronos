@@ -4004,5 +4004,266 @@
   "licencia": "by",
   "url": "https://sketchfab.com/3d-models/62c2a500aec647f8a7255651da259bf2",
   "cat": "defensa"
+ },
+ {
+  "clave": "s_cizalla",
+  "uid": "05d56c163626466389abb23d27d5089a",
+  "nombre": "Bolt Cutter (rigged)",
+  "autor": "janovich3D",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/05d56c163626466389abb23d27d5089a",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_rueda",
+  "uid": "187ec95da53843cb83b0412bcd97e836",
+  "nombre": "Off-road Tires",
+  "autor": "roy.gearloft.in",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/187ec95da53843cb83b0412bcd97e836",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_gasolina",
+  "uid": "7094fd7efebf4d3cb60f9bbc6cc5e2ee",
+  "nombre": "Old Jerry Can",
+  "autor": "FinleySearle",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/7094fd7efebf4d3cb60f9bbc6cc5e2ee",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_gasolina2",
+  "uid": "fb06aacd6a1d41e99dc0418b80098883",
+  "nombre": "Rusted jerrycan",
+  "autor": "r.m.kowalewski",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/fb06aacd6a1d41e99dc0418b80098883",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_bateria",
+  "uid": "5b60936580ab43eb9f0a21164a2ac40e",
+  "nombre": "Car Battery",
+  "autor": "amt16",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5b60936580ab43eb9f0a21164a2ac40e",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_gato",
+  "uid": "f5e69416bddc40fb8a152f05888bfe94",
+  "nombre": "Hydraulic Jack",
+  "autor": "benmilette",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/f5e69416bddc40fb8a152f05888bfe94",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_cuerda",
+  "uid": "aa6380f3e5d442b1a1971d4cb1c88ccb",
+  "nombre": "Rope Knots",
+  "autor": "aneeqayounas",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/aa6380f3e5d442b1a1971d4cb1c88ccb",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_garfio",
+  "uid": "b687edb6ec2e4a6a8ed52e41d19f1c25",
+  "nombre": "Grappling Hook Head Piece",
+  "autor": "MaxwellWalton",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/b687edb6ec2e4a6a8ed52e41d19f1c25",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_palanca",
+  "uid": "7be0661092ae444882d19814e5de2853",
+  "nombre": "PBR Crowbar Game Ready",
+  "autor": "Ericwallbank",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/7be0661092ae444882d19814e5de2853",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_botella",
+  "uid": "5aa5eb5ffad8437eadf331c098d08296",
+  "nombre": "Old wine bottle",
+  "autor": "krolzuzannapl",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5aa5eb5ffad8437eadf331c098d08296",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_trapo",
+  "uid": "a59361f304354c52a0d2af6d98023869",
+  "nombre": "Bloody Rag",
+  "autor": "angellisedionne",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a59361f304354c52a0d2af6d98023869",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_latas",
+  "uid": "3c59065fb82f4afb83ff0b756b25547c",
+  "nombre": "tin can",
+  "autor": "sinya",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/3c59065fb82f4afb83ff0b756b25547c",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_latas2",
+  "uid": "6f429979e45441e195432729e2c15a8c",
+  "nombre": "Rusty can",
+  "autor": "Z_Kir",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/6f429979e45441e195432729e2c15a8c",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_vela",
+  "uid": "d9ad0d79305c4171b1ca07e603acd154",
+  "nombre": "CandleA",
+  "autor": "bosch00",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/d9ad0d79305c4171b1ca07e603acd154",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_cerillas",
+  "uid": "31c7b661c6ec443682b792a2891c4380",
+  "nombre": "Matchbox",
+  "autor": "NFeldman00",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/31c7b661c6ec443682b792a2891c4380",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_caja_fuerte",
+  "uid": "196cf0d3d5094b50874dbf51064a7d3e",
+  "nombre": "Antique Iron Safe",
+  "autor": "pixelgrapher",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/196cf0d3d5094b50874dbf51064a7d3e",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_colchon",
+  "uid": "a05e9f20e45b4a74a51160bfbd245a8c",
+  "nombre": "NOMFst Mattress",
+  "autor": "Rubies",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a05e9f20e45b4a74a51160bfbd245a8c",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_cadena",
+  "uid": "be9648f8e0324bbd967c10b44007bee1",
+  "nombre": "Rusty Chains",
+  "autor": "amanda_98",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/be9648f8e0324bbd967c10b44007bee1",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_clavo",
+  "uid": "90ac83c4440b4cd180626745f6f47657",
+  "nombre": "Nail",
+  "autor": "mnardia1996mor",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/90ac83c4440b4cd180626745f6f47657",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_molotov",
+  "uid": "d78c0bfaf7e2448cbd98a485ab079ad2",
+  "nombre": "Molotov Cocktail",
+  "autor": "thisisruslan",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/d78c0bfaf7e2448cbd98a485ab079ad2",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_fusible",
+  "uid": "2d9ab2513cd945cba86c076d51c69d4d",
+  "nombre": "Fuse Box 01",
+  "autor": "RandomScan",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/2d9ab2513cd945cba86c076d51c69d4d",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_telefono",
+  "uid": "5b5d2f1ece3745279f2129fff13933d5",
+  "nombre": "Vintage Telephone",
+  "autor": "mvrc.art",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/5b5d2f1ece3745279f2129fff13933d5",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_polaroid",
+  "uid": "63cf2db47fd34531afd28ff0b93640f4",
+  "nombre": "Polaroid",
+  "autor": "Whostea",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/63cf2db47fd34531afd28ff0b93640f4",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_mechero",
+  "uid": "26517aa3be4441e290b40e57173cae71",
+  "nombre": "Lighter",
+  "autor": "laharudro",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/26517aa3be4441e290b40e57173cae71",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_pila",
+  "uid": "6f6f9f38181e412a9d475f69b9ece73b",
+  "nombre": "08 Household Batteries",
+  "autor": "Peter_Sawyer",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/6f6f9f38181e412a9d475f69b9ece73b",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_llaves_coche",
+  "uid": "38166e32286b4749a2af5274ea97506e",
+  "nombre": "Lost Car Keys (TLOU inspired)",
+  "autor": "dcknights",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/38166e32286b4749a2af5274ea97506e",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_bengala",
+  "uid": "3b85d4d0368242f0a0deb15182e434eb",
+  "nombre": "Flare",
+  "autor": "FrodoUndead",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/3b85d4d0368242f0a0deb15182e434eb",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_bengala2",
+  "uid": "6f922fd8297b465b8054ac8a6c839666",
+  "nombre": "Flare",
+  "autor": "lionclaw0612",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/6f922fd8297b465b8054ac8a6c839666",
+  "cat": "supervivencia"
+ },
+ {
+  "clave": "s_martillo_clavos",
+  "uid": "a3d7bc18e2004488a1ae4b89e35d4212",
+  "nombre": "Old Hammer (free - photobashed - gameready)",
+  "autor": "FrenchBaguette",
+  "licencia": "by",
+  "url": "https://sketchfab.com/3d-models/a3d7bc18e2004488a1ae4b89e35d4212",
+  "cat": "supervivencia"
  }
 ]

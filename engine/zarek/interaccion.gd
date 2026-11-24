@@ -134,6 +134,16 @@ func _modelo(kind: String, p: Vector3) -> Node3D:
 	var n := Node3D.new()
 	n.position = p
 	m._house.add_child(n)
+	var real := {"botella": ["s_botella", Vector3(0, 0, PI * 0.5)], "trapo": ["s_trapo", Vector3(PI * 0.5, 0, 0)],
+		"latas": ["s_latas", Vector3.ZERO], "palanca": ["s_palanca", Vector3.ZERO], "fusibles": ["s_fusible", Vector3(PI * 0.5, 0, 0)]}
+	if real.has(kind):
+		var r: Array = real[kind]
+		if m.objeto_real(String(r[0]), n, r[1], randf() * TAU) != null:
+			if kind == "latas":
+				# un puñado de latas oxidadas atadas con cordel
+				m.objeto_real("s_latas2", n, Vector3(PI * 0.5, 0, 0), randf() * TAU, Vector3(0.13, 0, 0.04))
+				m.objeto_real("s_latas", n, Vector3(0, 0, PI * 0.5), randf() * TAU, Vector3(-0.12, 0, 0.06))
+			return n
 	var vidrio := m._plain(Color(0.2, 0.3, 0.22, 0.8), 0.1, 0.1)
 	match kind:
 		"botella":
@@ -170,7 +180,10 @@ func _caja_fuerte() -> void:
 	n.position = p
 	m._house.add_child(n)
 	var acero := m._plain(Color(0.12, 0.13, 0.12), 0.45, 0.7)
-	m.box(Vector3(0.6, 0.8, 0.55), Vector3(0, 0.4, 0), acero, true, n)
+	var cuerpo := m.box(Vector3(0.6, 0.8, 0.55), Vector3(0, 0.4, 0), acero, true, n)
+	if m.objeto_real("s_caja_fuerte", n, Vector3.ZERO, 0.0) != null:
+		cuerpo.visible = false  # solo queda el choque: se ve la caja fuerte antigua de verdad
+		return
 	for s in [-1.0, 1.0]:
 		var dial := m.cyl(0.06, 0.06, 0.03, Vector3(s * 0.0, 0.5, 0.29 * s), m._mat.laton_viejo, n, 16)
 		dial.rotation.x = PI * 0.5

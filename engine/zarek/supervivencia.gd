@@ -78,6 +78,8 @@ func _modelo(kind: String, p: Vector3) -> Node3D:
 	var n := Node3D.new()
 	n.position = p
 	m._house.add_child(n)
+	if m.objeto_real("s_vela" if kind == "vela" else "s_cerillas", n, Vector3.ZERO, randf() * TAU) != null:
+		return n
 	if kind == "vela":
 		m.cyl(0.025, 0.025, 0.16, Vector3(0, 0.08, 0), m._plain(Color(0.9, 0.86, 0.75), 0.6), n, 10)
 		m.cyl(0.05, 0.06, 0.02, Vector3(0, 0.01, 0), m._mat.laton_viejo, n, 12)

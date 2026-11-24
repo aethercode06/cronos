@@ -4902,17 +4902,36 @@ func _repartir_objetos() -> void:
 			_pickup(p, "tablon")
 			n_tab += 1
 
+# giro para tumbar cada objeto de la huida tal como estaría dejado en la realidad
+const REAL_HUIDA := {"cizalla": Vector3(PI * 0.5, 0, 0), "rueda": Vector3(0, 0, PI * 0.5), "cuerda": Vector3(PI * 0.5, 0, 0),
+	"garfio": Vector3.ZERO, "bateria": Vector3.ZERO, "gato": Vector3.ZERO, "gasolina": Vector3.ZERO}
+# los objetos grandes y pesados están en el suelo, no encima de una mesita
+const EN_EL_SUELO := ["rueda", "gasolina", "bateria", "gato"]
+
 func _seal(pos: Vector3, tipo: String) -> void:
-	var alto := 0.9
-	var mesa := _prop("side_table_tall_01", pos, 0.4, 1.15)
-	if mesa:
-		alto = 0.761 * 1.15
-	else:
-		box(Vector3(0.8, 0.9, 0.6), pos + Vector3(0, 0.45, 0), _mat.madera)
+	var alto := 0.0
+	if not (tipo in EN_EL_SUELO and REAL_HUIDA.has(tipo) and ResourceLoader.exists("res://zarek/objetos/s_%s.glb" % tipo)):
+		alto = 0.9
+		var mesa := _prop("side_table_tall_01", pos, 0.4, 1.15)
+		if mesa:
+			alto = 0.761 * 1.15
+		else:
+			box(Vector3(0.8, 0.9, 0.6), pos + Vector3(0, 0.45, 0), _mat.madera)
 	var n := Node3D.new()
 	n.set_meta("dyn", true)
 	n.position = pos + Vector3(-0.05, alto, 0)
 	add_child(n)
+	var real: Node3D = null
+	if REAL_HUIDA.has(tipo):
+		var nom := "s_" + tipo
+		if tipo == "gasolina" and _rng.randf() < 0.5:
+			nom = "s_gasolina2"
+		real = objeto_real(nom, n, REAL_HUIDA[tipo], _rng.randf() * TAU)
+	if real == null:
+		_seal_codigo(n, tipo, alto)
+	seals.append({"node": n, "pos": pos, "taken": false, "tipo": tipo})
+
+func _seal_codigo(n: Node3D, tipo: String, alto: float) -> void:
 	match tipo:
 		"cizalla":
 			# cizalla grande: dos mangos largos de hierro con puños de goma y las mandíbulas cortas
@@ -4993,7 +5012,6 @@ func _seal(pos: Vector3, tipo: String) -> void:
 				box(Vector3(0.14, 0.01, 0.03), Vector3(0, 0.01, 0), _mat.oro, false, n, false)
 			# etiqueta de cartón atada con cordel: «CUARTO D.»
 			box(Vector3(0.06, 0.003, 0.04), Vector3(0.1, 0.005, 0.03), _mat.sabana, false, n, false)
-	seals.append({"node": n, "pos": pos, "taken": false, "tipo": tipo})
 
 func _wall_dir(pos: Vector3) -> Vector3:
 	var best := Vector3(0, 0, -1)
@@ -5707,7 +5725,23 @@ func _pickup(pos: Vector3, kind: String) -> void:
 		alto = 0.551
 	else:
 		box(Vector3(0.6, 0.8, 0.45), Vector3(0, 0.4, 0), _mat.madera, true, n)
-	var mi: MeshInstance3D
+	var mi: Node3D
+	# objetos reales (Objaverse) encima de la mesita; si falta el modelo, la pieza hecha por código
+	var real := {"pila": [["s_pila", Vector3.ZERO, Vector3.ZERO]],
+		"llaves": [["s_llaves_coche", Vector3.ZERO, Vector3.ZERO]],
+		"tablon": [["t_tablas_6", Vector3.ZERO, Vector3.ZERO], ["s_martillo_clavos", Vector3(PI * 0.5, 0, 0), Vector3(-0.12, 0.0, 0.12)]],
+		"bengala": [["s_bengala", Vector3.ZERO, Vector3.ZERO], ["s_bengala2", Vector3.ZERO, Vector3(0.02, 0.0, 0.06)]]}
+	var clave := kind if real.has(kind) else "bengala"
+	if ResourceLoader.exists("res://zarek/objetos/%s.glb" % String(real[clave][0][0])):
+		mi = Node3D.new()
+		mi.position = Vector3(0, alto, 0)
+		n.add_child(mi)
+		for r in real[clave]:
+			var o := objeto_real(String(r[0]), mi, r[1], _rng.randf() * TAU, r[2])
+			if o and String(r[0]) == "t_tablas_6":
+				o.scale = Vector3.ONE * 0.5
+		pickups.append({"node": n, "pos": pos, "kind": kind, "taken": false, "item": mi})
+		return
 	if kind == "pila":
 		# pila de la linterna del jugador: cuerpo negro con etiqueta verde apagada y polo de cobre
 		var m := _plain(Color(0.06, 0.07, 0.06), 0.35, 0.3)
@@ -6188,6 +6222,36 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 		sb.add_child(cs)
 		n.add_child(sb)
 	return n
+
+## Objeto real (modelo de Objaverse, s_*) apoyado en el suelo del padre: se gira con «rot», se baja/sube para que la
+## base quede en y=0 y se centra. Devuelve null si el modelo no está (entonces se usa la pieza hecha por código).
+func objeto_real(nombre: String, parent: Node3D, rot := Vector3.ZERO, yaw := 0.0, desp := Vector3.ZERO) -> Node3D:
+	var w := Node3D.new()
+	parent.add_child(w)
+	var n := _prop(nombre, Vector3.ZERO, 0.0, 1.0, false, w)
+	if n == null:
+		w.queue_free()
+		return null
+	n.rotation = rot
+	var caja := AABB()
+	var primera := true
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		var t := Transform3D.IDENTITY
+		var x: Node = m3
+		while x != null and x != w:
+			t = (x as Node3D).transform * t
+			x = x.get_parent()
+		var b := t * m3.get_aabb()
+		caja = b if primera else caja.merge(b)
+		primera = false
+		m3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if not primera:
+		n.position -= Vector3(caja.get_center().x, caja.position.y, caja.get_center().z)
+	w.rotation.y = yaw
+	w.position = desp
+	w.set_meta("dyn", true)
+	return w
 
 func _load_props_info() -> void:
 	if not _props_info.is_empty():

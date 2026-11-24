@@ -71,6 +71,10 @@ func _ready() -> void:
 	_check(g.elena.state != ZarekElena.S.DORMANT, "Elena despierta (" + g.elena.state_name() + ")")
 	# lámparas: luz segura
 	var l: Dictionary = m.lamps[0]
+	for lp in m.lamps:
+		if m.level_of((lp.pos as Vector3).y) >= 0 and m.room_at((lp.pos as Vector3) + Vector3(1.0, -2.0, 0.5)) >= 0:
+			l = lp
+			break
 	m.set_lamp(l, true)
 	_check(m.is_lit(l.pos + Vector3(1.0, -2.0, 0.5)), "lámpara ilumina su habitación")
 	m.set_lamp(l, false)
