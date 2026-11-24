@@ -47,6 +47,7 @@ EXACTO.update({'s_cizalla': ('m', 0.6), 's_rueda': ('m', 0.66), 's_rueda2': ('m'
     's_caja_fuerte': ('h', 0.85), 's_colchon': ('m', 1.9), 's_cadena': ('m', 1.5), 's_clavo': ('m', 0.1), 's_molotov': ('h', 0.32), 's_fusible': ('h', 0.32),
     's_telefono': ('h', 0.2), 's_polaroid': ('m', 0.15), 's_mechero': ('h', 0.055)})
 EXACTO.update({'s_pila': ('h', 0.06), 's_llaves_coche': ('m', 0.12), 's_bengala': ('m', 0.3), 's_bengala2': ('m', 0.3), 's_venda': ('m', 0.1), 's_martillo_clavos': ('m', 0.33)})
+EXACTO.update({'s_campanilla': ('h', 0.05), 's_campanilla2': ('h', 0.05), 's_cepo': ('m', 0.42), 's_cepo2': ('m', 0.42), 's_cepo3': ('m', 0.42)})
 GRANDE = ("piano", "wardrobe", "bookcase", "bookshel", "fireplace", "fire_place", "sofa", "lounge", "bathtub", "tree", "pine", "spruce", "fir", "stove", "cabinet", "clock", "desk", "table", "safe", "armchair", "chair", "mirror")
 os.makedirs(OUT, exist_ok=True)
 info = {}
