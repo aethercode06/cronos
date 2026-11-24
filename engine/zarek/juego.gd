@@ -768,7 +768,7 @@ void fragment() {
 	_black_target = 1.0
 	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)], ["ARCHIVO", _abrir_archivo], ["CÓMO SE JUEGA", func():
 		Aether.save.set_value("zarek_tutorial_hecho", false)
-		_jugar(1)]], "Usa auriculares. Juega a oscuras.")
+		_jugar(1)]], "Usa auriculares. Juega a oscuras." + _version_txt())
 	# en el título se ve la mansión detrás: fondo más claro y botones más compactos
 	(title_box.get_child(0) as ColorRect).color = Color(0, 0, 0, 0.5)
 	var vbt := title_box.get_child(1) as VBoxContainer
@@ -814,6 +814,18 @@ void fragment() {
 	btn_diario.pressed.connect(func(): diario.abrir())
 	ui.add_child(btn_diario)
 	ui.move_child(pb, title_box.get_index())
+
+## Versión instalada (APK + actualización) en el pie del título, para saber si llegó la última.
+func _version_txt() -> String:
+	var base := str(ProjectSettings.get_setting("application/config/version", ""))
+	if base == "":
+		return ""
+	var v := 0
+	if FileAccess.file_exists("user://parche_info.json"):
+		var d = JSON.parse_string(FileAccess.get_file_as_string("user://parche_info.json"))
+		if d is Dictionary and str(d.get("base", "")) == base:
+			v = int(d.get("version", 0))
+	return "\nVersión %s%s" % [base, (" · actualización %d" % v) if v > 0 else ""]
 
 const SENS := [0.6, 0.8, 1.0, 1.25, 1.55, 1.9]
 func _txt_sens() -> String:
