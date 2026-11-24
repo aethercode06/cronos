@@ -1,0 +1,683 @@
+  out/oga/bear-trap-sound/licencia.txt
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_close_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_breaking_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_sheet_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_07.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_spring_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_cracking_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hammer_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_slam_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_15.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_open_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_hit_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_12.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_falling_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_07.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_cracking_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_07.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_11.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_falling_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hammer_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_hit_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_07.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_close_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_slam_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_10.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_08.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_cracking_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_09.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_falling_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_sheet_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_14.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/hammer_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_12.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_09.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_09.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_sheet_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_falling_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_squeak_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_07.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_09.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_13.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_falling_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_sheet_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_16.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_11.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_hit_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_slam_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_slam_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_08.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/keys_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_hit_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_cracking_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_breaking_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/hammer_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_sheet_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_misc_08.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/lock_open_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/door_open_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_falling_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_02.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_hit_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_slam_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_squeak_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_falling_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_close_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_hit_08.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_17.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/hammer_04.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/tools_10.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/misc_05.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_spring_01.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/hammer_03.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/metal_sheet_06.ogg
+  out/oga/85875/100-CC0-wood-metal-SFX/wood_falling_03.ogg
+  out/oga/85875/licencia.txt
+  out/oga/85875/metal_wood_prev.ogg
+  out/oga/4-door-closes/licencia.txt
+  out/oga/4-door-closes/door_close_-_starninjas/door.4.ogg
+  out/oga/4-door-closes/door_close_-_starninjas/door.1.ogg
+  out/oga/4-door-closes/door_close_-_starninjas/door.2.ogg
+  out/oga/4-door-closes/door_close_-_starninjas/door.3.ogg
+  out/oga/4-door-closes/door_preview.ogg
+  out/oga/shotgun-sound-effects/licencia.txt
+  out/oga/rpg-sound-pack/montageAudio-20120206%40223055.mp3
+  out/oga/rpg-sound-pack/licencia.txt
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/random2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/burp.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/random1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/random5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/random3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/random6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/misc/random4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/misc/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/misc/wolfman.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr13.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr14.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr15.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr10.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr12.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr9.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr8.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr7.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/gutteral beast/mnstr11.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime8.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime10.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime9.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime7.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/slime/slime3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/giant/giant2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/giant/giant1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/giant/giant4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/giant/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/giant/giant3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/giant/giant5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade15.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade9.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade7.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade10.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade14.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade11.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade8.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade12.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade13.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/shade/shade1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/ogre/ogre2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/ogre/ogre5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/ogre/ogre3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/ogre/ogre1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/ogre/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/ogre/ogre4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/beetle/bite-small2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/beetle/bite-small3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/beetle/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/NPC/beetle/bite-small.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/interface1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/interface5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/interface2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/interface4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/interface3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/interface/interface6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/magic1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/swing3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/swing.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/swing2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/spell.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/battle/sword-unsheathe3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/metal-ringing.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/coin2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/armor-light.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/cloth.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/bottle.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/cloth-heavy.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/bubble.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/coin3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/coin.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/chainmail1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/metal-small1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/metal-small2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/bubble3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/beads.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/bubble2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/metal-small3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/chainmail2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/inventory/wood-small.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/world/.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/RPG Sound Pack/world/door.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._burp.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._random5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._random4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._random1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._random2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._random6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/misc/._random3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/misc/._wolfman.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/misc/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr13.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr11.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr8.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr10.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr15.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr7.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr12.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr9.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr14.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/gutteral beast/._mnstr1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime7.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime8.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime9.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime10.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/slime/._slime6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/giant/._giant3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/giant/._giant1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/giant/._giant2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/giant/._giant4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/giant/._giant5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/giant/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade9.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade12.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade10.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade7.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade8.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade15.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade13.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade11.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/shade/._shade14.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/ogre/._ogre4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/ogre/._ogre3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/ogre/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/ogre/._ogre2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/ogre/._ogre1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/ogre/._ogre5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/beetle/._bite-small2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/beetle/._bite-small.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/beetle/._bite-small3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/NPC/beetle/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._interface1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._interface2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._interface6.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._interface5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._interface3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/interface/._interface4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._sword-unsheathe4.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._spell.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._sword-unsheathe5.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._swing.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._swing2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._sword-unsheathe3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._sword-unsheathe.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._swing3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._sword-unsheathe2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/battle/._magic1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._metal-ringing.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._beads.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._chainmail1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._cloth-heavy.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._wood-small.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._coin2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._bottle.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._bubble.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._armor-light.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._bubble3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._metal-small2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._cloth.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._coin.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._coin3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._metal-small1.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._chainmail2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._metal-small3.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/inventory/._bubble2.wav
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/world/._.DS_Store
+  out/oga/rpg-sound-pack/rpg_sound_pack/__MACOSX/RPG Sound Pack/world/._door.wav
+  out/oga/glass-breaking/licencia.txt
+  out/oga/creaky-door-hinge-spooky/licencia.txt
+  out/oga/creaky-door-hinge-spooky/creaky-door-hinge.ogg
+  out/oga/creaky-door-hinge-spooky/creaky_door_hinge.wav
+  out/oga/50-cc0-sfx/licencia.txt
+  out/oga/door-lock-sounds/licencia.txt
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/LockedDoorHandleJiggle.ogg
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/UnlockDoor.wav
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/DoorOpen.ogg
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/DoorLock.wav
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/UnlockDoor.ogg
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/DoorLock.ogg
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/LockedDoorHandleJiggle.wav
+  out/oga/door-lock-sounds/DoorLockSounds/DoorLockSounds/DoorOpen.wav
+  out/oga/door-lock-sounds/PreviewDoorLock.mp3
+  out/oga/opening-lock-and-door/licencia.txt
+  out/oga/opening-lock-and-door/door_open_1.mp3
+  out/oga/opening-lock-and-door/door_open_0.mp3
+  out/oga/door-open-door-close-set/licencia.txt
+  out/oga/door-open-door-close-set/montage-sfx-20121116%40113925.ogg
+  out/oga/door-open-door-close-set/qubodup-DoorSet.7z
+  out/oga/73696/licencia.txt
+  out/oga/73696/photo.ogg
+  out/oga/camerashudder/camera_0.ogg
+  out/oga/camerashudder/licencia.txt
+  out/oga/camerashudder/camera.ogg
+  out/oga/q009s-weapon-sounds/licencia.txt
+  out/oga/q009s-weapon-sounds/q009preview.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/readme.txt
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/rifle.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/glauncher.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/weapswitch.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/minigun.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/minigun3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/glauncher2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/pistol3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/quaddamage_out.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/jumppad.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/grenade2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/rlauncher.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/jumppad2.wav
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/rlauncher3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/glauncher3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/ren2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/pistol.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/ren.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/rifle2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/shotgun2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/minigun2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/rifle3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/shotgun3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/teleport.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/ren3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/rlauncher2.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/outofammo.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/shotgun.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/grenade3.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/quaddamage_shoot.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/license.txt
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/explosion.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/grenade.ogg
+  out/oga/q009s-weapon-sounds/q009-sounds/q009/pistol2.ogg
+  out/oga/heartbeat/licencia.txt
+  out/oga/heartbeat/heartbeat_2.mp3
+  out/oga/heartbeat/heartbeat_0.wav
+  out/oga/heartbeat/heartbeat_1.mp3
+  out/oga/door-open-sfx/door_open.wav
+  out/oga/door-open-sfx/licencia.txt
+  out/oga/door-open-sfx/door_open.mp3
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_close_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_breaking_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_sheet_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_07.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_spring_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_cracking_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hammer_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_slam_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_15.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_open_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_hit_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_12.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_falling_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_07.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_cracking_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_07.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_11.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_falling_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hammer_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_hit_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_07.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_close_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_slam_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_10.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_08.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_cracking_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_09.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_falling_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_sheet_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_14.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/hammer_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_12.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_09.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_09.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_sheet_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_falling_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_squeak_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_07.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_09.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_13.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_falling_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_sheet_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_16.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_11.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_hit_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_slam_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_slam_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_08.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/keys_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_hit_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_cracking_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_breaking_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/hammer_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_sheet_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_misc_08.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/lock_open_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/door_open_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_falling_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_02.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_hit_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_slam_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_squeak_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_falling_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_close_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_hit_08.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_17.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/hammer_04.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/tools_10.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/misc_05.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_spring_01.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/hammer_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/metal_sheet_06.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/100-CC0-wood-metal-SFX/wood_falling_03.ogg
+  out/oga/100-cc0-metal-and-wood-sfx/licencia.txt
+  out/oga/100-cc0-metal-and-wood-sfx/metal_wood_prev.ogg
+  out/oga/various-sound-effects/licencia.txt
+  out/oga/various-sound-effects/sounds_8/floor_creak3.wav
+  out/oga/various-sound-effects/sounds_8/pickup_keys.wav
+  out/oga/various-sound-effects/sounds_8/pickup_coins.wav
+  out/oga/various-sound-effects/sounds_8/door_open.wav
+  out/oga/various-sound-effects/sounds_8/microwave.wav
+  out/oga/various-sound-effects/sounds_8/grind_stone.wav
+  out/oga/various-sound-effects/sounds_8/door_creak_close.wav
+  out/oga/various-sound-effects/sounds_8/match.wav
+  out/oga/various-sound-effects/sounds_8/tap_water.wav
+  out/oga/various-sound-effects/sounds_8/clang_glass.wav
+  out/oga/various-sound-effects/sounds_8/door_creak_open.wav
+  out/oga/various-sound-effects/sounds_8/switch_on.wav
+  out/oga/various-sound-effects/sounds_8/drawer_open.wav
+  out/oga/various-sound-effects/sounds_8/door_close.wav
+  out/oga/various-sound-effects/sounds_8/floor_creak2.wav
+  out/oga/various-sound-effects/sounds_8/lock_pick.wav
+  out/oga/various-sound-effects/sounds_8/clang_metal.wav
+  out/oga/various-sound-effects/sounds_8/floor_creak1.wav
+  out/oga/various-sound-effects/sounds_8/bell.wav
+  out/oga/various-sound-effects/sounds_8/toilet_flush.wav
+  out/oga/various-sound-effects/sounds_8/manhole_open.wav
+  out/oga/various-sound-effects/sounds_8/turn_page.wav
+  out/oga/various-sound-effects/sounds_8/lock.wav
+  out/oga/various-sound-effects/sounds_8/cant_open.wav
+  out/oga/various-sound-effects/sounds_8/drawer_close.wav
+  out/oga/various-sound-effects/sounds_8/grind_metal.wav
+  out/oga/various-sound-effects/sounds_8/switch_off.wav
+  out/oga/various-sound-effects/preview_54.ogg
+  out/oga/impact-sounds/licencia.txt
+  out/google/hollow_wood_door.ogg
+  out/google/wood_rattle.ogg
+  out/google/opening_door_with_key.ogg
+  out/google/forest_wood_snapping.ogg
+  out/google/latch_opening_closing.ogg
+  out/google/door_hitting_backstop_close.ogg
+  out/google/wine_glass_shatter.ogg
+  out/google/small_crashes.ogg
+  out/google/wooden_sticks.ogg
+  out/google/chain_on_metal_post.ogg
+  out/google/stick_break.ogg
+  out/google/human_breathing_nose.ogg
+  out/google/pots_bang.ogg
+  out/google/room_tone_wind_blowing_long.ogg
+  out/google/stone_drop.ogg
+  out/google/walk_up_stairs_wood.ogg
+  out/google/human_breathing_mouth.ogg
+  out/google/wood_creak_on_old_ship_series.ogg
+  out/google/hallow_wind.ogg
+  out/google/hit_with_club.ogg
+  out/google/walking_tile_to_carpet.ogg
+  out/google/reverberating_slam.ogg
+  out/google/object_toss_and_smash_glass.ogg
+  out/google/short_breath_series.ogg
+  out/google/walking_in_forest.ogg
+  out/google/finger_nails_scratch_wood.ogg
+  out/google/debris_hits.ogg
+  out/google/pans_clash.ogg
+  out/google/wind_quiet_creaks.ogg
+  out/google/loose_change_on_wood.ogg
+  out/google/crawl_and_rattle.ogg
+  out/google/human_breathing.ogg
+  out/google/house_windy_day.ogg
+  out/google/human_nose_sniffing.ogg
+  out/google/paper_crunching.ogg
+  out/google/shower_curtain_pulled_series.ogg
+  out/google/flipping_newspaper_pages.ogg
+  out/google/footsteps_concrete.ogg
+  out/google/full_glass_on_wood_table.ogg
+  out/google/male_chuckling.ogg
+  out/google/telephone_ring.ogg
+  out/google/junk_crash.ogg
+  out/google/knock_on_wooden_door.ogg
+  out/google/stumble_on_solid_wood.ogg
+  out/google/metal_thud.ogg
+  out/google/cupboard_door.ogg
+  out/google/leg_bone_break_and_twist.ogg
+  out/google/wood_door_close_and_rattle.ogg
+  out/google/walk_on_hollow_wood_series.ogg
+  out/google/ambient_hum_pitched.ogg
+  out/google/walking_on_gravel.ogg
+  out/google/walking_on_concrete_series.ogg
+  out/google/twisting_dial_clicks.ogg
+  out/google/glass_drop_and_roll.ogg
+  out/google/mechanical_clock_ring.ogg
+  out/google/wind_up_toy.ogg
+  out/google/rain_water_dripping_softly.ogg
+  out/google/door_knob.ogg
+  out/google/wood_door_open_close_soft.ogg
+  out/google/knife_drop.ogg
+  out/google/death_impact_yell_single.ogg
+  out/google/soggy_steps.ogg
+  out/google/twist_and_break_spine.ogg
+  out/google/cup_on_saucer.ogg
+  out/google/glass_shatters_into_debris.ogg
+  out/google/doorknob_opening.ogg
+  out/google/drawer_open_close.ogg
+  out/google/leg_bone_break.ogg
+  out/google/wood_door_close_hard.ogg
+  out/google/walk_down_solid_wood_stairs.ogg
+  out/google/stress_creak.ogg
+  out/google/small_drawer_open_close.ogg
+  out/google/run_on_solid_wood.ogg
+  out/google/porcelain_bowl_drop_short_series.ogg
+  out/google/wood_rolling_short.ogg
+  out/google/heavy_door_close.ogg
+  out/google/wood_door_close_medium.ogg
+  out/google/wood_door_open_and_close_series.ogg
+  out/google/dress_shoe_walk_solid_wood.ogg
+  out/google/wind_through_window.ogg
+  out/google/hit_and_rattle.ogg
+  out/google/walking_in_shallow_water.ogg
+  out/google/rain_heavy_quiet_interior.ogg
+  out/google/metal_container_on_wood_table.ogg
+  out/google/walk_on_grass_series.ogg
+  out/google/breathing_deep_fast.ogg
+  out/google/eating_and_slurping.ogg
+  out/google/rope_creaking_holding_weight.ogg
+  out/google/man_laugh_and_knee_slap.ogg
+  out/google/walking_fast_on_tile.ogg
+  out/google/small_glass_pane_shatter.ogg
+  out/google/bottles_empty_close.ogg
+  out/google/locked_doorknob_jiggle.ogg
+  out/google/walking_wood_floor_house.ogg
+  out/google/death_rattle_breath.ogg
+  out/google/male_sick_breathing.ogg
+  out/google/opening_closing_heavy_door.ogg
+  out/google/glosing_old_window.ogg
+  out/google/clock_ticking.ogg
+  out/google/feeling_paper.ogg
+  out/google/death_impact_yell_multiple.ogg
+  out/google/meat_stick_hit.ogg
+  out/google/smoothing_cloth_on_table.ogg
+  out/google/car_door_open_shut.ogg
+  out/google/drawer_rolling_in_out.ogg
+  out/google/phone_ringing.ogg
+  out/google/medicine_cabinet_latch.ogg
+  out/google/hollow_hitting.ogg
+  out/google/dirt_on_coffin_lid.ogg
+  out/google/chain_jingle.ogg
+  out/google/wood_door_open.ogg
+  out/google/carving_wet_scrape.ogg
+  out/google/broken_plates.ogg
+  out/google/metal_strike_on_wood.ogg
+  out/google/kitchen_drawer.ogg
+  out/google/drop_object_on_floor.ogg
+  out/google/open_and_close_window.ogg
+  out/google/soft_walking_on_wood.ogg
+  out/google/door_slams_fast_four_times.ogg
+  out/google/creaking_wooden_door.ogg
+  out/google/fireplace_tools.ogg
+  out/google/dragging_over_wood_floor_series.ogg
+  out/google/car_door_closing.ogg
+  out/google/cassette_tape_rewind.ogg
+  out/google/tossing_wood_series.ogg
+  out/google/spring_attic_door.ogg
+  out/google/walk_on_tile_series.ogg
+  out/google/wood_door_open_close.ogg
+  out/google/pace_quickly_on_wood.ogg
+  out/google/wood_door_close_soft.ogg
+  out/google/door_cabinet.ogg
+  out/google/punch_cloth_series.ogg
+  out/google/lid_close_wood.ogg
+  out/google/spice_jar_on_tile_floor.ogg
+  out/google/male_clearing_throat.ogg
+  out/google/small_crash_series.ogg
+  out/google/wine_bottles_clinking.ogg
+  out/google/metal_hits.ogg
+  out/google/radio_static.ogg
+  out/google/plate_ceramic.ogg
+  out/google/key_in_lock.ogg
+  out/google/run_on_wood.ogg
+  out/google/distant_footsteps_on_wood.ogg
+  out/google/lighter_flick.ogg
+  out/google/turning_door_knob.ogg
+  out/google/walking_on_wood_floor.ogg
+  out/google/drop_meat.ogg
+  out/google/paper_folding.ogg
+  out/gbib/catalogo.json
+  out/lista.txt
