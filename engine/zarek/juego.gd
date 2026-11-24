@@ -51,6 +51,7 @@ var inter: ZarekInteraccion
 var sup: ZarekSupervivencia
 var ast: ZarekAstucia
 var sig: ZarekSigilo
+var tut: ZarekTutorial
 var _puerta_modo := ""
 const ESCONDITE_TXT := {"cama": "debajo de la cama", "cortina": "tras la cortina", "montaplatos": "dentro del montaplatos", "bañera": "en la bañera"}
 var _puerta_hold: Dictionary = {}
@@ -75,6 +76,7 @@ var _halluc_t := 20.0
 var _ghost_t := 0.0
 var _ghost_move := Vector3.ZERO
 var _intro_glimpse := -1.0
+var _saltar_intro := false
 var _msg_t := 0.0
 var _catch_t := 0.0
 var _hide_seen := false
@@ -257,6 +259,9 @@ func _ready() -> void:
 		["disparar", "DISPARAR", Vector2(-470, -150), 60.0],
 	]
 	add_child(touch)
+	tut = ZarekTutorial.new()
+	tut.j = self
+	add_child(tut)
 	carga.queue_free()
 	print("ZAREK CARGA %d ms (calidad %d, %s, %s)" % [Time.get_ticks_msec() - t_carga, Aether.quality, OS.get_name(), RenderingServer.get_current_rendering_method()])
 	set_process(true)
@@ -750,7 +755,9 @@ void fragment() {
 	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(black)
 	_black_target = 1.0
-	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)], ["ARCHIVO", _abrir_archivo]], "Usa auriculares. Juega a oscuras.")
+	title_box = _menu_box(["LA SOMBRA DE ZAREK", _resumen_titulo()], [["JUGAR", _jugar.bind(1)], ["FÁCIL", _jugar.bind(0)], ["PESADILLA", _jugar.bind(2)], ["ARCHIVO", _abrir_archivo], ["CÓMO SE JUEGA", func():
+		Aether.save.set_value("zarek_tutorial_hecho", false)
+		_jugar(1)]], "Usa auriculares. Juega a oscuras.")
 	# en el título se ve la mansión detrás: fondo más claro y botones más compactos
 	(title_box.get_child(0) as ColorRect).color = Color(0, 0, 0, 0.5)
 	var vbt := title_box.get_child(1) as VBoxContainer
@@ -1003,7 +1010,14 @@ func start_game(quick := false) -> void:
 	]
 	for l in lines:
 		message(l, 3.6)
-		await get_tree().create_timer(3.9).timeout
+		# tocar USAR salta la intro
+		var fin_l := Time.get_ticks_msec() + 3900
+		while Time.get_ticks_msec() < fin_l and not _saltar_intro:
+			await get_tree().process_frame
+			if Input.is_action_just_pressed("usar") or Input.is_action_just_pressed("ui_accept"):
+				_saltar_intro = true
+		if _saltar_intro:
+			break
 	_black_target = 0.0
 	message("", 0.1)
 	await get_tree().create_timer(1.2).timeout
@@ -1011,11 +1025,15 @@ func start_game(quick := false) -> void:
 	player.frozen = false
 	_empezar_suceso()
 	sup.foto_inicial()
+	var con_tutorial := ZarekTutorial.toca(self) and not autotest and not shots and not has_meta("bot")
+	if con_tutorial:
+		tut.empezar()
 	await get_tree().create_timer(0.6).timeout
 	var sc: Array = ZarekNoches.SUCESOS[suceso]
 	message(String(sc[0]) + "\n" + String(sc[1]), 4.5)
 	await get_tree().create_timer(4.8).timeout
-	message("Tengo el tobillo encadenado al suelo. Tengo que soltarme… sin hacer ruido.", 3.5)
+	if not con_tutorial:
+		message("Tengo el tobillo encadenado al suelo. Tengo que soltarme… sin hacer ruido.", 3.5)
 
 func _restart() -> void:
 	get_tree().paused = false

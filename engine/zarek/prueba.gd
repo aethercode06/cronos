@@ -589,6 +589,17 @@ func _ready() -> void:
 		var n_port := m.portals.size()
 		sg.completar("romper", wr)
 		_check(wr.get("rota", false) and m.portals.size() == n_port + 2, "romper una ventana abre un paso al jardín")
+	# tutorial de los primeros minutos: los pasos ya hechos se saltan solos y el aro señala botones reales
+	var tt: ZarekTutorial = g.tut
+	tt.empezar()
+	await _wait(3.5)
+	var paso_tt := tt.paso
+	var sitio_ok: bool = tt._sitio("usar") != Vector2.INF and tt._sitio("@mirar") != Vector2.INF
+	tt.paso = -1
+	tt.visible = false
+	tt._quitar_marca()
+	Aether.save.set_value("zarek_tutorial_hecho", false)
+	_check(paso_tt >= 4 and sitio_ok, "tutorial: se salta lo ya hecho (paso %d) y señala los botones" % paso_tt)
 	# escapar trepando el muro (la gasolina se gastó en el fuego: la camioneta ya no sirve)
 	g.elena.vanish(60.0)
 	_check(not rs.faltan("camioneta").is_empty(), "sin gasolina la camioneta no sirve")
