@@ -1,0 +1,15 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+AETHER: Creados res://publicar/ficha_google_play.txt y privacidad.html.
+AETHER: Creados res://publicar/google_play.yml y COMO_PUBLICAR.txt. Léelo: explica cómo subir el proyecto a GitHub y obtener el AAB.
+AETHER: comprobación ✖ Nombre del juego: Aether Engine · Chronos (prueba)
+AETHER: comprobación ✔ Escena de inicio: res://chronos/titulo.tscn
+AETHER: comprobación ✖ Icono propio
+AETHER: comprobación ✔ Ajustes de Android
+AETHER: comprobación ✖ Paquete: com.aethercode.aetherengine.chronos
+AETHER: comprobación ✔ Ajuste AAB para Google Play
+AETHER: comprobación ✔ Ficha y privacidad creadas
+AETHER: comprobación ✔ Archivo de GitHub creado
+AETHER: idiomas = ["es", "de", "en", "fr", "it", "ja", "ko", "pt", "zh"]
+AETHER: frances = JOUER
+AETHER: PUBLICAR OK
