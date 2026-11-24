@@ -61,7 +61,7 @@ const VEG_VIENTO := {"veg_3d_fern_01": [0.15, 0.02], "veg_cattail": [0.25, 0.01]
 const GIRO := {"obj_pendulum_clock": -PI * 0.5, "obj_withered_wooden_crucifix": -PI * 0.5, "obj_wooden_cuckoo_clock": -PI * 0.5,
 	"obj_teddy_bear_2": -PI * 0.5, "obj_old_violin": -PI * 0.5, "obj_biblical_scene_from_nurember": PI * 0.5, "obj_candle_wall_lamp": PI * 0.5, "ropa_towel_rail": -PI * 0.5}
 ## Objetos de pared o fijos: nunca sueltos con física.
-const FIJOS := ["ropa_hanger", "ropa_towel", "ropa_frosted", "ropa_wooden_tool", "frame", "crucifix", "cross", "deerhead", "cuckoo", "wall_lamp", "portrait", "biblical", "torment", "painting"]
+const FIJOS := ["telescope", "floor_globe", "harp", "bible_on_stand", "brass_oil_lamp", "coat_rack", "pendulum", "note_stand", "ropa_hanger", "ropa_towel", "ropa_frosted", "ropa_wooden_tool", "frame", "crucifix", "cross", "deerhead", "cuckoo", "wall_lamp", "portrait", "biblical", "torment", "painting"]
 const METAL_PAL := ["lamp", "candle", "kettle", "teapot", "anvil", "goblet", "lantern", "watch", "candelabra", "pickaxe", "shovel", "cleaver", "grinder", "samovar", "cutlery", "scoop", "pens", "inkwell", "hourglass", "hour_glass", "sphere"]
 
 ## Masa (kg) si el objeto va suelto con física; 0 si es fijo. Los objetos pequeños nuevos (obj_*) se calculan por tamaño.
@@ -6242,7 +6242,7 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 ## base quede en y=0 y se centra. Devuelve null si el modelo no está (entonces se usa la pieza hecha por código).
 # muebles de madera clara que desentonan en la casa: se oscurecen como madera vieja barnizada
 const TINTE_MUEBLE := {"side_table_01": Color(0.42, 0.3, 0.22), "side_table_tall_01": Color(0.42, 0.3, 0.22),
-	"small_wooden_table_01": Color(0.5, 0.36, 0.26)}
+	"small_wooden_table_01": Color(0.5, 0.36, 0.26), "wooden_display_shelves_01": Color(0.38, 0.27, 0.2), "WoodenTable_02": Color(0.5, 0.38, 0.3), "WoodenTable_03": Color(0.5, 0.38, 0.3)}
 func objeto_real(nombre: String, parent: Node3D, rot := Vector3.ZERO, yaw := 0.0, desp := Vector3.ZERO) -> Node3D:
 	var w := Node3D.new()
 	parent.add_child(w)

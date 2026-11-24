@@ -172,12 +172,21 @@ func _caja_fuerte() -> void:
 	if r.is_empty():
 		return
 	ZarekTerror._rng.seed = m.partida_seed + 31
-	var p := ZarekTerror._sitio_libre(m, r, 0.6)
+	# contra una pared, de cara a la sala (una caja fuerte de 300 kg no está en medio del estudio)
+	var sp := ZarekTerror._sitio_pared(m, r, 0.6)
+	var p := Vector3.INF
+	var giro := 0.0
+	if sp.is_empty():
+		p = ZarekTerror._sitio_libre(m, r, 0.6)
+	else:
+		p = sp[0]
+		giro = sp[1]
 	if p == Vector3.INF:
 		return
 	caja_pos = p
 	var n := Node3D.new()
 	n.position = p
+	n.rotation.y = giro
 	m._house.add_child(n)
 	var acero := m._plain(Color(0.12, 0.13, 0.12), 0.45, 0.7)
 	var cuerpo := m.box(Vector3(0.6, 0.8, 0.55), Vector3(0, 0.4, 0), acero, true, n)

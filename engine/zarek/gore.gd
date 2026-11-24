@@ -396,23 +396,31 @@ static func _cuerpos(m: ZarekMansion) -> void:
 
 ## Despensa: carne colgada de ganchos en una barra del techo.
 static func _despensa(m: ZarekMansion) -> void:
-	var r := m._sala_por_nombre("Despensa")
-	if r.is_empty():
-		return
-	var rc: Rect2 = r.rect
-	var y := float(r.y) + 3.4
-	var a := Vector3(rc.position.x + 1.2, y, rc.get_center().y)
-	var b := Vector3(rc.end.x - 1.2, y, rc.get_center().y)
-	var barra := m.box(Vector3(a.distance_to(b), 0.06, 0.06), (a + b) * 0.5, m._mat.hierro, false)
-	barra.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	for k in 4:
-		var p := a.lerp(b, (k + 0.5) / 4.0)
-		var punta := _gancho(m, p, y, 0.2)
-		if k % 2 == 0:
-			_colgado(m, "cerdo_lamb_in_carcass", punta + Vector3(0, 0.1, 0), 1.2, _rng.randf_range(-0.4, 0.4))
-		else:
-			_colgado(m, "cerdo_pig_carcass", punta + Vector3(0, 0.15, 0), 1.6, _rng.randf_range(-0.4, 0.4))
-		_charco(m, Vector3(p.x, float(r.y), p.z), 0.9)
+	for nombre in ["Despensa", "Despensa de la carne"]:
+		var r := m._sala_por_nombre(nombre)
+		if r.is_empty():
+			continue
+		var rc: Rect2 = r.rect
+		var y := float(r.y) + 3.4
+		# la barra va a lo largo de la sala, por el centro
+		var a := Vector3(rc.position.x + 1.2, y, rc.get_center().y)
+		var b := Vector3(rc.end.x - 1.2, y, rc.get_center().y)
+		if rc.size.y > rc.size.x:
+			a = Vector3(rc.get_center().x, y, rc.position.y + 1.2)
+			b = Vector3(rc.get_center().x, y, rc.end.y - 1.2)
+		var barra := m.box(Vector3(a.distance_to(b), 0.06, 0.06), (a + b) * 0.5, m._mat.hierro, false)
+		barra.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if rc.size.y > rc.size.x:
+			barra.rotation.y = PI * 0.5
+		var n := 4 if nombre == "Despensa" else 3
+		for k in n:
+			var p := a.lerp(b, (k + 0.5) / float(n))
+			var punta := _gancho(m, p, y, 0.2)
+			if k % 2 == 0:
+				_colgado(m, "cerdo_lamb_in_carcass", punta + Vector3(0, 0.1, 0), 1.2, _rng.randf_range(-0.4, 0.4))
+			else:
+				_colgado(m, "cerdo_pig_carcass", punta + Vector3(0, 0.15, 0), 1.6, _rng.randf_range(-0.4, 0.4))
+			_charco(m, Vector3(p.x, float(r.y), p.z), 0.9)
 
 ## Capilla: huesos roídos alrededor de donde comía la madre.
 static func _capilla(m: ZarekMansion) -> void:

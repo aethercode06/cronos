@@ -202,6 +202,50 @@ static func _sitio_libre(m: ZarekMansion, r: Dictionary, radio: float) -> Vector
 			return p
 	return Vector3.INF
 
+## Un sitio libre pegado a una pared (para cosas que no se dejan en medio: cajas fuertes, baúles…).
+## Devuelve [posición, yaw] con el frente (+Z local) mirando hacia dentro de la sala, o [] si no cabe.
+static func _sitio_pared(m: ZarekMansion, r: Dictionary, radio: float) -> Array:
+	var rc: Rect2 = r.rect
+	var cajas := _cajas_muebles(m)
+	var sep := radio * 0.5 + 0.1
+	for intento in 80:
+		var lado := _rng.randi() % 4
+		var t := _rng.randf_range(0.15, 0.85)
+		var p := Vector3.ZERO
+		var yaw := 0.0
+		match lado:
+			0:
+				p = Vector3(lerpf(rc.position.x + 0.5, rc.end.x - 0.5, t), float(r.y), rc.position.y + sep)
+				yaw = 0.0
+			1:
+				p = Vector3(lerpf(rc.position.x + 0.5, rc.end.x - 0.5, t), float(r.y), rc.end.y - sep)
+				yaw = PI
+			2:
+				p = Vector3(rc.position.x + sep, float(r.y), lerpf(rc.position.y + 0.5, rc.end.y - 0.5, t))
+				yaw = PI * 0.5
+			_:
+				p = Vector3(rc.end.x - sep, float(r.y), lerpf(rc.position.y + 0.5, rc.end.y - 0.5, t))
+				yaw = -PI * 0.5
+		if not m.door_near(p, radio + 1.0).is_empty() or m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0):
+			continue
+		var huella := Rect2(p.x - radio * 0.5 - 0.05, p.z - radio * 0.5 - 0.05, radio + 0.1, radio + 0.1)
+		var libre := true
+		for c in cajas:
+			var b: AABB = c
+			if b.end.y < p.y + 0.06 or b.position.y > p.y + 1.3:
+				continue
+			if huella.intersects(Rect2(b.position.x, b.position.z, b.size.x, b.size.z)):
+				libre = false
+				break
+		# el muro no cuenta: la prueba de choque se hace un poco separada de él
+		var dentro := p + Vector3(sin(yaw), 0, cos(yaw)) * 0.06
+		if libre and _choca_caja(m, dentro, radio * 0.85):
+			libre = false
+		if libre:
+			cajas.append(AABB(Vector3(p.x - radio * 0.5, p.y, p.z - radio * 0.5), Vector3(radio, 0.9, radio)))
+			return [p, yaw]
+	return []
+
 ## ¿Hay colisión (muros, tabiques, muebles con cuerpo) en la huella de un objeto de `radio` puesto en el suelo en p?
 static func _choca_caja(m: ZarekMansion, p: Vector3, radio: float, excluir: Array[RID] = []) -> bool:
 	var q := PhysicsShapeQueryParameters3D.new()
