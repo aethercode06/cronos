@@ -108,17 +108,29 @@ def main():
     info = {"base": str(base["base"]), "version": v, "url": url, "tam": tam, "commit": sh("git", "rev-parse", "HEAD", cwd=RAIZ).strip()}
     pj_path = os.path.join(RAIZ, "build", "parche.json")
     json.dump(info, open(pj_path, "w"))
-    if subprocess.run(["gh", "release", "view", "zarek-parche", "-R", REPO], capture_output=True).returncode != 0:
-        sh("gh", "release", "create", "zarek-parche", "-R", REPO, "--title", "La Sombra de Zarek · actualizaciones",
-           "--notes", "Actualizaciones pequeñas que el juego descarga solo al abrirse. No hace falta bajar nada de aquí.",
-           "--latest=false")
-    sh("gh", "release", "upload", "zarek-parche", salida, "-R", REPO, "--clobber")
-    sh("gh", "release", "upload", "zarek-parche", pj_path, "-R", REPO, "--clobber")  # al final: así nunca apunta a un .pck a medio subir
-    # borrar parches viejos
-    for nombre in sh("gh", "api", f"repos/{REPO}/releases/tags/zarek-parche", "--jq", ".assets[].name").split():
-        if nombre.startswith("parche_") and nombre != f"parche_{v}.pck":
-            subprocess.run(["gh", "release", "delete-asset", "zarek-parche", nombre, "-R", REPO, "-y"], capture_output=True)
-    print(f"Subido: parche {v} para el APK {base['base']}. Basta con cerrar y abrir el juego.")
+    # la sesión no puede publicar releases: sube el parche troceado (<95 MB por archivo, límite de git) a la rama
+    # zarek-parche-datos y el flujo zarek_parche.yml lo junta y lo publica en la release zarek-parche
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, "partes"))
+        os.makedirs(os.path.join(tmp, ".github", "workflows"))
+        with open(salida, "rb") as f:
+            k2 = 0
+            while True:
+                trozo = f.read(95 * 1024 * 1024)
+                if not trozo:
+                    break
+                open(os.path.join(tmp, "partes", f"{k2:03d}"), "wb").write(trozo)
+                k2 += 1
+        json.dump(info, open(os.path.join(tmp, "parche.json"), "w"))
+        flujo = os.path.join(RAIZ, ".github", "workflows", "zarek_parche.yml")
+        open(os.path.join(tmp, ".github", "workflows", "zarek_parche.yml"), "w").write(open(flujo).read())
+        url_remoto = sh("git", "remote", "get-url", "origin", cwd=RAIZ).strip()
+        for c in (["git", "init", "-q"], ["git", "checkout", "-q", "-b", "zarek-parche-datos"],
+                  ["git", "-c", "user.name=aether", "-c", "user.email=aether@local", "add", "-A"],
+                  ["git", "-c", "user.name=aether", "-c", "user.email=aether@local", "commit", "-qm", f"Actualización {v} para el APK {base['base']}"],
+                  ["git", "push", "-qf", url_remoto, "zarek-parche-datos"]):
+            subprocess.run(c, cwd=tmp, check=True)
+    print(f"Subido: parche {v} para el APK {base['base']}. En ~1 min GitHub lo publica; luego basta con cerrar y abrir el juego.")
 
 
 if __name__ == "__main__":
