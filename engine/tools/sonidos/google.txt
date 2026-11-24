@@ -138,3 +138,15 @@ foley/smoothing_cloth_on_table
 foley/rope_creaking_holding_weight
 transportation/twisting_dial_clicks
 cartoon/wind_up_toy
+human_voices/male_chuckling
+human_voices/man_laugh_and_knee_slap
+human_voices/human_breathing_mouth
+human_voices/human_breathing_nose
+human_voices/breathing_deep_fast
+human_voices/male_sick_breathing
+human_voices/human_nose_sniffing
+human_voices/death_impact_yell_single
+human_voices/death_impact_yell_multiple
+human_voices/male_clearing_throat
+human_voices/short_breath_series
+human_voices/eating_and_slurping

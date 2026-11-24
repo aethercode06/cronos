@@ -3,13 +3,13 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["engine/tools/sonidos/*.txt", ".github/workflows/sonidos.yml"]
+    paths: ["engine/tools/sonidos/*.txt", "engine/tools/sonidos/*.py", ".github/workflows/sonidos.yml"]
 permissions:
   contents: write
 jobs:
   bajar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with: { sparse-checkout: engine/tools/sonidos }
@@ -33,6 +33,7 @@ jobs:
             [ -z "$s" ] && continue; curl -sL "https://actions.google.com/sounds/v1/$s.ogg" -o "out/google/$(basename $s).ogg"
           done
           python3 engine/tools/sonidos/google_buscar.py engine/tools/sonidos/palabras_google.txt out/gbib || true
+          python3 engine/tools/sonidos/freesound_buscar.py engine/tools/sonidos/freesound.txt out/freesound || true
           find out -type f | sed 's/^/  /' > out/lista.txt; du -sh out
       - name: Guardar en la rama aether-sonidos
         run: |

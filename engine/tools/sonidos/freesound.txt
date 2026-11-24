@@ -1,0 +1,15 @@
+# búsquedas en Freesound (solo CC0): consulta|cuántos   — se bajan las vistas previas HQ (mp3) y la ficha
+male evil laugh|10
+creepy man laugh low|8
+man chuckle sinister|8
+psycho laugh male|8
+male grunt angry|10
+male effort grunt|8
+man growl human voice|8
+man heavy breathing|10
+male breathing angry|8
+man sniffing smelling|6
+male scream angry yell|10
+male roar human voice|8
+man humming creepy|6
+male groan|6
