@@ -7171,7 +7171,7 @@ func bake_nav() -> void:
 	nm.geometry_collision_mask = 1
 	nm.agent_max_slope = 45.0
 	nm.filter_baking_aabb = AABB(Vector3(house_rect.position.x - 32, lvl_y(-1) - 1.0, house_rect.position.y - 6),
-		Vector3(house_rect.size.x + 64, lvl_y(3), house_rect.size.y + 34))
+		Vector3(house_rect.size.x + 64, lvl_y(2) + 4.0 - (lvl_y(-1) - 1.0), house_rect.size.y + 34))  # hasta el ático incluido
 	nav_region.navigation_mesh = nm
 	# escaleras de mano, trampillas y pasadizos son «pasos» para Sofía: Damián también los usa (enlaces de navegación)
 	for pt in portals:
@@ -7215,6 +7215,12 @@ func random_floor(far_from := Vector3(-9999, 0, -9999), min_dist := 0.0, exclude
 		var rect: Rect2 = r.rect
 		var p := Vector3(_rng.randf_range(rect.position.x + 1.0, rect.end.x - 1.0), r.y, _rng.randf_range(rect.position.y + 1.0, rect.end.y - 1.0))
 		if p.distance_to(far_from) >= min_dist:
+			if nav_ready and i < 250:
+				# que sea suelo pisable de esa planta (no el hueco de dentro de un mueble: el camino acabaría en otra)
+				var q := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, p + Vector3(0, 0.3, 0))
+				if q == Vector3.ZERO or absf(q.y - p.y) > 0.8 or Vector2(q.x - p.x, q.z - p.z).length() > 1.2:
+					continue
+				return Vector3(q.x, p.y, q.z)
 			return p
 	return front_door + Vector3(0, 0, -4)
 

@@ -73,6 +73,24 @@ const SALA := {
 	"ninos": {"pared": ["jugu_dollhouse", "vict_antique_wardrobe"], "centro": ["jugu_rocking_horse", "vict_antique_chair"], "encima": ["jugu_music_box_prop", "vict_old_books___free_download"], "suelo": ["jugu_rocking_horse", "coti_shabby_books"]},
 	"costura": {"pared": ["vict_singer_15___old_sewing_ma", "coti_willoughsby_sewing_machin", "vict_antique_wardrobe__free"], "centro": ["vict_antique_chair", "vict_table"], "encima": ["coti_three_candles_and_a_golde", "coti_bread_in_basket"]},
 	"bano": {"pared": ["bano_classic_bathtub", "bano_washbasin_model", "vict_ornate_mirror"], "encima": ["coti_small_bottle", "coti_glass_bottle"]},
+	# --- salas del plano de medidas reales: cada una con lo que tendría de verdad ---
+	"aseo": {"primero": ["bano_washbasin_model"], "pared": ["painted_wooden_shelves", "vict_ornate_mirror"], "encima": ["coti_small_bottle", "jug_01", "coti_glass_bottle"], "suelo": ["wooden_bucket_01"]},
+	"vestidor": {"primero": ["vict_antique_wardrobe", "vict_antique_wardrobe_free"], "pared": ["GothicCommode_01", "vict_dusty_antique_mirror__free", "obj_coat_rack", "vintage_wooden_drawer_01"], "centro": ["ropa_1900_dress_form"], "encima": ["obj_jewelry_box_2", "obj_perfume_bottle", "ropa_sunday_hat", "ropa_bowler_hat", "obj_oriental_perfume_bottle"], "suelo": ["ropa_old_shoes", "ropa_boots", "vintage_suitcase"]},
+	"ropero": {"primero": ["obj_coat_rack_bowler_hat"], "pared": ["vict_antique_wardrobe", "painted_wooden_shelves", "obj_coat_rack_2"], "encima": ["ropa_bowler_hat", "ropa_worn_leather_glove", "ropa_umbrella"], "suelo": ["ropa_old_dirty_boots", "ropa_umbrella", "vintage_suitcase"]},
+	"lamparas": {"primero": ["WoodenTable_03"], "pared": ["painted_wooden_shelves", "wooden_display_shelves_01", "coci_old_kitchen_shelf"], "encima": ["obj_kerosene_lamp", "obj_kerosene_lamp_2", "obj_old_lantern", "wooden_lantern_01", "Lantern_01", "obj_miners_oil_lamp", "obj_oil_lamp", "metal_jug"], "suelo": ["wooden_bucket_02", "obj_dry_firewood"]},
+	"mayordomo": {"primero": ["vict_antique_desk"], "pared": ["vict_antique_iron_safe", "wooden_display_shelves_01", "wall_clock"], "centro": ["vict_antique_chair"], "encima": ["obj_victorian_typewriter", "obj_inkwell_from_bell_rock_light", "obj_quill", "obj_seal_and_letter", "obj_old_book_2", "vict_key", "obj_pocket_watch"], "suelo": ["coti_shabby_books"]},
+	"armas": {"primero": ["GothicCabinet_01"], "pared": ["vict_antique_iron_safe", "wooden_display_shelves_01"], "centro": ["WoodenTable_02"], "encima": ["obj_old_map_3d_model", "obj_military_telescope", "obj_hour_glass", "hatchet", "obj_candlestick"], "suelo": ["wooden_crate_01", "obj_dry_firewood"]},
+	"fregadero": {"primero": ["bano_washbasin"], "pared": ["coci_old_kitchen_shelf", "painted_wooden_cabinet", "coci_vintage_wooden_cabinets"], "centro": ["WoodenTable_01"], "encima": ["coci_basic_bowl", "obj_wooden_plate", "metal_jug", "pot_enamel_01", "brass_pan_01", "coci_old_spoon", "obj_jar"], "suelo": ["wooden_bucket_01", "wooden_bucket_02", "wooden_broom"]},
+	"carne": {"primero": ["WoodenTable_03"], "pared": ["coci_old_kitchen_shelf", "wooden_barrels_01"], "encima": ["x_carne_meat", "x_carne_cote_de_boeuf", "obj_meat_cleaver", "x_carnicero_knife_collection", "obj_jar"], "suelo": ["wooden_bucket_02", "wine_barrel_01"]},
+	"trofeos": {"primero": ["GothicCabinet_01"], "pared": ["painted_wooden_shelves", "wooden_display_shelves_01"], "encima": ["x_huesos_human_skull", "x_restos_formaldehyde_jar_asset_p", "ropa_ladies_handbag_vol_1", "ropa_leather_belt", "obj_pocket_watch", "round_spectacles", "x_huesos_skeleton_hand"], "suelo": ["vintage_suitcase", "ropa_leather_bag", "obj_sack_v1", "ropa_boots", "ropa_old_shoes", "ropa_party_shoe_for_girls"]},
+	"criados": {"pared": ["painted_wooden_nightstand", "vict_antique_wardrobe", "painted_wooden_cabinet", "obj_coat_rack"], "centro": ["painted_wooden_chair_02"], "encima": ["obj_candlestick", "jug_01", "obj_old_bible", "round_spectacles"], "suelo": ["vintage_suitcase", "ropa_old_shoes", "wooden_bucket_01"]},
+	"ropa_blanca": {"primero": ["painted_wooden_shelves"], "pared": ["painted_wooden_shelves", "vict_antique_wardrobe", "painted_wooden_cabinet_02"], "encima": ["ropa_towel", "ropa_frosted_sheets", "ropa_towel"], "suelo": ["wicker_basket_01", "wicker_basket_02"]},
+	"plancha2": {"primero": ["painted_wooden_table"], "pared": ["painted_wooden_shelves", "pian_small_stove"], "encima": ["ropa_towel", "ropa_frosted_sheets"], "suelo": ["wicker_basket_01", "wooden_bucket_02"]},
+	"bajada": {"pared": ["wooden_barrels_01", "coci_old_kitchen_shelf", "terr_old_and_dusty_multi_crate_st"], "encima": ["obj_kerosene_lamp", "obj_jar", "coti_glass_bottle"], "suelo": ["obj_sack_v2", "wooden_crate_02", "obj_dry_firewood"]},
+	"antecomedor": {"primero": ["coci_vintage_wooden_cabinets"], "pared": ["painted_wooden_cabinet_02", "ClassicConsole_01"], "encima": ["tea_set_01", "obj_elegant_victorian_porcelan_t", "brass_goblets", "obj_antique_silver_goblets_type__2", "carved_wooden_plate"], "suelo": []},
+	"recibidor": {"primero": ["vict_grandfather_clock"], "pared": ["ClassicConsole_01", "obj_coat_rack_bowler_hat", "vict_victorian_lounge_sofa"], "techo": ["pian_medieval_chandelier"], "encima": ["obj_letter_box", "obj_flower_vase", "pian_candelabra", "postcard_set_01"], "suelo": ["ropa_umbrella"]},
+	"deposito": {"pared": ["wooden_barrels_01", "terr_old_and_dusty_multi_crate_st"], "centro": ["wine_barrel_01"], "suelo": ["wooden_bucket_01", "wooden_bucket_02", "watering_can_metal_01"]},
+	"palomar": {"pared": ["wooden_crate_02", "terr_old_and_dusty_multi_crate_st"], "suelo": ["obj_sack_v1", "obj_grain_scoop", "obj_birdcage_3", "obj_birdcage"]},
 	"pasillo": {"pared": ["ClassicConsole_01", "vict_victorian_lounge_sofa", "pian_candelabra", "vict_grandfather_clock"], "encima": ["coti_three_candles_and_a_golde", "vict_torsion_pendulum_clock___ani"]},
 	"atico": {"pared": ["terr_old_and_dusty_multi_crat", "vict_antique_wardrobe", "pian_dusty_old_piano"], "centro": ["treasure_chest", "vintage_suitcase", "terr_creepy_lady_bust_statue_s", "terr_old_and_dusty_multi_crat"], "suelo": ["coti_12_old_books", "coti_shabby_books"]},
 	"sotano": {"pared": ["terr_old_and_dusty_multi_crat", "coci_old_kitchen_shelf"], "centro": ["terr_old_and_dusty_multi_crat"], "suelo": ["coti_wine_bottle", "coti_glass_bottle"]},
@@ -130,7 +148,13 @@ func _eje(v: float, antes: float, ahora: float) -> float:
 
 func _tipo(r: Dictionary) -> String:
 	var n: String = String(r.name).to_lower()
-	for k in [["dormitorio de los criados", "dormitorio"], ["mozo", "dormitorio"], ["criada vieja", "dormitorio"], ["aseo", "bano"], ["vestidor", "tocador"], ["ropa blanca", "costura"], ["recibidor", "vestibulo"], ["galería del vestíbulo", "pasillo"],
+	for k in [["dormitorio de los criados", "criados"], ["mozo", "criados"], ["criada vieja", "criados"], ["cocinera", "criados"],
+			["habitación del mayordomo", "criados"], ["cuarto de las criadas", "criados"], ["cuarto de la doncella", "criados"],
+			["aseo", "aseo"], ["vestidor", "vestidor"], ["ropero", "ropero"], ["maletas", "ropero"], ["limpieza", "ropero"],
+			["armario de servicio", "ropa_blanca"], ["ropa blanca", "ropa_blanca"], ["lámparas", "lamparas"],
+			["despacho del mayordomo", "mayordomo"], ["sala de armas", "armas"], ["fregadero", "fregadero"], ["carne", "carne"],
+			["trofeos", "trofeos"], ["bajada", "bajada"], ["antecomedor", "antecomedor"], ["recibidor", "recibidor"],
+			["depósito", "deposito"], ["palomar", "palomar"], ["vestidor", "tocador"], ["ropa blanca", "costura"], ["recibidor", "vestibulo"], ["galería del vestíbulo", "pasillo"],
 			["sala de armas", "estudio"], ["despacho del mayordomo", "estudio"], ["salita", "salon"], ["antecomedor", "despensa"], ["fregadero", "cocina"],
 			["carne", "despensa"], ["lámparas", "servicio"], ["ropero", "servicio"], ["maletas", "servicio"], ["limpieza", "servicio"],
 			["armario de servicio", "servicio"], ["bajada", "servicio"], ["trofeos", "servicio"],
@@ -2707,11 +2731,20 @@ func _vestir_base(r: Dictionary) -> void:
 	if tipo == "" or not SALA.has(tipo):
 		return
 	_reservar_pasos(r)
-	if tipo == "dormitorio":
+	if tipo in ["dormitorio", "criados"]:
 		_cama_donde_quepa(r)
 	if tipo == "bano" and not String(r.name).begins_with("Aseo"):
 		_banera_donde_quepa(r)
 	var c: Dictionary = SALA[tipo]
+	# lo que define la sala va primero, contra la pared donde quepa (fregadero, armario, mesa de trabajo...)
+	var superficies0: Array = []
+	for nombre0 in c.get("primero", []):
+		var real0 := _real(nombre0)
+		var t0 := m._prop_size(real0)
+		var n0 := _donde_quepa(r, real0, t0.z * 0.5 + 0.06)
+		if n0:
+			var e0 := t0 if absf(sin(n0.rotation.y)) < 0.7 else Vector3(t0.z, t0.y, t0.x)
+			superficies0.append([n0, n0.global_position, e0])
 	var rect: Rect2 = r.rect
 	var area := rect.size.x * rect.size.y
 	var superficies: Array = []
@@ -2727,6 +2760,7 @@ func _vestir_base(r: Dictionary) -> void:
 			if v > 0 and rng.randf() < 0.5:
 				continue
 			superficies.append(_en_el_centro(nombre, r))
+	superficies.append_array(superficies0)
 	for s in superficies:
 		_encima(s, c.get("encima", []), rng.randi_range(2, 4))
 	for nombre in c.get("suelo", []):
