@@ -86,6 +86,7 @@ func _partida(i: int) -> void:
 	r.secretos = g.secretos_noche.size()
 	r.t_escondida = snappedf(r.t_escondida, 1.0)
 	r.furia_max = snappedf(r.furia_max, 1.0)
+	r["furia_por"] = hu.furia_por
 	r.sin_avance_max = snappedf(r.sin_avance_max, 1.0)
 	print("BOT " + JSON.stringify(r))
 	await _esperar(2.0)

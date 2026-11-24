@@ -348,9 +348,9 @@ func _furia_tick(delta: float, pp: Vector3) -> void:
 	var en_capilla: bool = not cap.is_empty() and m.room_at(pp) == int(cap.id)
 	if en_capilla:
 		# en su capilla te ve: con la linterna encendida, mucho más
-		subir_furia(delta * (4.0 if j.flash_on and j.battery > 0.0 else 1.2), "")
+		subir_furia(delta * (4.0 if j.flash_on and j.battery > 0.0 else 1.2), "capilla")
 	elif m.level_of(pp.y + 0.5) == -1:
-		subir_furia(delta * 0.15, "")
+		subir_furia(delta * 0.15, "lento")
 	elif j.hidden_in.is_empty() and not j.player.running:
 		furia = maxf(0.0, furia - delta * 0.3)
 	if furia >= 100.0:
@@ -359,11 +359,14 @@ func _furia_tick(delta: float, pp: Vector3) -> void:
 ## Un error de Sofía enfurece a la madre. Avisa al cruzar el 50 % y el 80 %.
 ## Solo para la prueba automática: la furia no cambia (para probar cada cosa por separado).
 var congelar_furia := false
+var furia_por := {}  # para el bot de pruebas: de dónde viene la furia
 func subir_furia(cuanto: float, motivo: String) -> void:
 	if madre_suelta or madre_muerta or congelar_furia:
 		return
 	var antes := furia
 	furia = clampf(furia + cuanto, 0.0, 100.0)
+	var clave_f := motivo.substr(0, 24) if motivo != "" else "?"
+	furia_por[clave_f] = snappedf(float(furia_por.get(clave_f, 0.0)) + cuanto, 0.1)
 	if furia >= 100.0:
 		soltar_madre()
 		return
@@ -391,14 +394,14 @@ func ruido(pos: Vector3, fuerza: float) -> void:
 	if madre_muerta or _silencio_ruido > 0.0:
 		return
 	if fuerza >= 13.0:
-		subir_furia(5.0, "")  # algo roto, un portazo, un disparo: lo oye toda la casa
+		subir_furia(5.0, "ruido fuerte")  # algo roto, un portazo, un disparo: lo oye toda la casa
 	if m.level_of(pos.y + 0.5) != -1:
-		subir_furia(fuerza * 0.025, "")
+		subir_furia(fuerza * 0.025, "ruido")
 		return
 	var d := pos.distance_to(capilla_pos) if capilla_pos != Vector3.INF else 20.0
 	# con los fusibles puestos el sótano tiene luz: a ella le molesta menos lo que oye
 	var luz_abajo := 0.5 if j.inter and j.inter.fusibles_puestos else 1.0
-	subir_furia(fuerza * 0.12 * clampf(1.6 - d / 25.0, 0.3, 1.6) * luz_abajo, "")
+	subir_furia(fuerza * 0.12 * clampf(1.6 - d / 25.0, 0.3, 1.6) * luz_abajo, "ruido sotano")
 	if fuerza >= 7.0 and _t_grito <= 0.0:
 		_t_grito = 25.0
 		grito(pos)

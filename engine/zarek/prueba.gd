@@ -557,6 +557,38 @@ func _ready() -> void:
 		if sl.get("revelado", false) or sl.taken:
 			revelados += 1
 	_check(not ast.mapa or revelados == m.seals.size(), "el mapa de Damián apunta dónde está todo")
+	# tanda 4: trampas de Damián (campanillas y cepos) y romper una ventana
+	var sg: ZarekSigilo = g.sig
+	_check(sg.campanas.size() > 0 and sg.cepos.size() > 0, "trampas de Damián: %d cables con campanillas y %d cepos" % [sg.campanas.size(), sg.cepos.size()])
+	if sg.campanas.size() > 0:
+		g.elena.visible = true
+		g.elena.set_state(ZarekElena.S.WANDER)
+		var cb: Dictionary = sg.campanas[0]
+		var medio: Vector3 = ((cb.a as Vector3) + (cb.b as Vector3)) * 0.5
+		g.player.crouching = true
+		g.player.global_position = Vector3(medio.x, medio.y - 0.16, medio.z)
+		sg.tick(0.05)
+		var agachada_ok: bool = not cb.sonada
+		g.player.crouching = false
+		sg.tick(0.05)
+		_check(agachada_ok and cb.sonada and g.elena.state == ZarekElena.S.INVESTIGATE, "agachada pasa el cable; de pie suenan las campanillas y él viene")
+	if sg.cepos.size() > 0:
+		var cp0: Dictionary = sg.cepos[0]
+		g.player.global_position = cp0.pos
+		sg.tick(0.05)
+		var pillada: bool = sg.atrapada and g.player.frozen
+		sg.completar("abrir_cepo")
+		_check(pillada and not sg.atrapada and not g.player.frozen, "un cepo escondido te atrapa el pie y se abre manteniendo USAR")
+	g.elena.vanish(60.0)
+	var wr: Dictionary = {}
+	for w in m.ventanas_info:
+		if not w.get("tapiada", false) and not w.get("abierta", false) and m.level_of((w.c as Vector3).y + 0.3) == 0 and (w.inward as Vector3) != Vector3.ZERO:
+			wr = w
+			break
+	if not wr.is_empty():
+		var n_port := m.portals.size()
+		sg.completar("romper", wr)
+		_check(wr.get("rota", false) and m.portals.size() == n_port + 2, "romper una ventana abre un paso al jardín")
 	# escapar trepando el muro (la gasolina se gastó en el fuego: la camioneta ya no sirve)
 	g.elena.vanish(60.0)
 	_check(not rs.faltan("camioneta").is_empty(), "sin gasolina la camioneta no sirve")

@@ -50,6 +50,8 @@ var huida: ZarekHuida
 var inter: ZarekInteraccion
 var sup: ZarekSupervivencia
 var ast: ZarekAstucia
+var sig: ZarekSigilo
+var _puerta_modo := ""
 const ESCONDITE_TXT := {"cama": "debajo de la cama", "cortina": "tras la cortina", "montaplatos": "dentro del montaplatos", "bañera": "en la bañera"}
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
@@ -232,6 +234,10 @@ func _ready() -> void:
 	ast.j = self
 	add_child(ast)
 	ast.preparar(mansion)
+	sig = ZarekSigilo.new()
+	sig.j = self
+	add_child(sig)
+	sig.preparar(mansion, dif)
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -1423,7 +1429,7 @@ func _play(delta: float) -> void:
 		_sanity_zero_cd = 30.0
 		sanity = 25.0
 		message("El miedo me ha hecho gritar. Ahora sabe dónde estoy.\nY abajo, la madre también me ha oído.", 3.0)
-		huida.subir_furia(20.0, "")
+		huida.subir_furia(20.0, "grito")
 		sound_behind("risa", 2.0, 2.0)
 		if elena.state == ZarekElena.S.DORMANT:
 			elena.wake_far()
@@ -1491,6 +1497,7 @@ func _play(delta: float) -> void:
 	player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
 	sup.tick(delta)
 	ast.tick(delta)
+	sig.tick(delta)
 
 func _events(pp: Vector3) -> void:
 	if not entered and mansion.inside_house(pp):
@@ -1556,6 +1563,14 @@ func _on_step(noise: float) -> void:
 	huida.ruido(player.global_position, noise)
 	# tablones rotos: crujen fuerte al pisarlos (y Elena lo oye)
 	var pp := player.global_position
+	# escaleras viejas: crujen al subir o bajar corriendo (y a veces andando); agachada, nunca
+	if mansion._sobre_escalera(pp, 0.1) and not player.crouching:
+		var cruje: bool = player.running or randf() < 0.3
+		if cruje and Time.get_ticks_msec() - _t_crujido > 700:
+			_t_crujido = Time.get_ticks_msec()
+			sound_at("crujido", pp + Vector3(0, 0.2, 0), 0.0 if player.running else -6.0)
+			elena.hear(pp, 12.0 if player.running else 6.0)
+			_consejo("escalera", "Los escalones de esta casa crujen. Corriendo los oye seguro; andando, a veces. Agachada no suenan.")
 	for c in mansion.crujidos:
 		var q := c as Vector3
 		if absf(q.y - pp.y) < 1.2 and Vector2(q.x - pp.x, q.z - pp.z).length() < 0.75:
@@ -1668,6 +1683,9 @@ func _target() -> Dictionary:
 	var ri := inter.objetivo(pp)
 	if not ri.is_empty() and not ri.get("debil", false):
 		return ri
+	var rsig := sig.objetivo(pp)
+	if not rsig.is_empty():
+		return rsig
 	var rsup := sup.objetivo(pp)
 	if not rsup.is_empty() and not rsup.get("debil", false):
 		return rsup
@@ -1715,7 +1733,7 @@ func _target() -> Dictionary:
 		if not d.open and tablones > 0:
 			return {"kind": "puerta", "obj": d, "text": "USAR: abrir · MANTÉN USAR: atrancar (tablones: %d)" % tablones}
 		if d.get("entre", false):
-			return {"kind": "puerta", "obj": d, "text": "USAR: abrir del todo (entreabierta)"}
+			return {"kind": "puerta", "obj": d, "text": "USAR: abrir de golpe (cruje) · MANTÉN USAR: abrir despacio, sin ruido"}
 		if d.open and inter.latas > 0:
 			return {"kind": "puerta", "obj": d, "text": "USAR: cerrar la puerta · MANTÉN USAR: colgar latas (%d)" % inter.latas}
 		return {"kind": "puerta", "obj": d, "text": "USAR: " + ("cerrar la puerta" if d.open else "entreabrir la puerta")}
@@ -1905,6 +1923,8 @@ func _use() -> void:
 			sup.usar(t)
 		"ast":
 			ast.usar(t)
+		"hold_sig":
+			sig.empezar_hold(t)
 		"hold_sup":
 			sup.empezar_hold(t)
 		"hold_inter":
@@ -1950,9 +1970,15 @@ func _use() -> void:
 			if t.obj.open and inter.latas > 0:
 				# toque: cerrar; mantener: colgar las latas (lo resuelve ZarekInteraccion)
 				inter.empezar_hold({"que": "latas", "obj": t.obj})
+			elif not t.obj.open and t.obj.get("entre", false):
+				# entreabierta: un toque la abre de golpe, mantener la abre despacio sin ruido
+				_puerta_hold = t.obj
+				_puerta_modo = "despacio"
+				_t_hold = 0.0
 			elif not t.obj.open and tablones > 0:
 				# cerrada y con tablones: un toque la abre, mantener la atranca (se resuelve en _puerta_tick)
 				_puerta_hold = t.obj
+				_puerta_modo = "atrancar"
 				_t_hold = 0.0
 			else:
 				_mover_puerta(t.obj)
@@ -2124,6 +2150,20 @@ func _puerta_tick(delta: float) -> void:
 	if _puerta_hold.is_empty():
 		return
 	var d := _puerta_hold
+	if _puerta_modo == "despacio" and Input.is_action_pressed("usar") and d.pos.distance_to(player.global_position) < 2.4:
+		_t_hold += delta
+		if _t_hold > 0.4:
+			bar_rit.visible = true
+			bar_rit.value = (_t_hold - 0.4) / 1.8 * 100.0
+		if _t_hold >= 2.2:
+			_puerta_hold = {}
+			bar_rit.visible = false
+			mansion.set_door(d, true)
+			d["rigidez"] = 1.2
+			d["freno"] = 2.0
+			sound_at("puerta_crujido", d.pos + Vector3(0, 1.1, 0), -24.0)
+			_consejo("despacio", "Mantener USAR en una puerta entreabierta la abre despacio, sin hacer ruido. De un toque cruje y él lo oye.")
+		return
 	if Input.is_action_pressed("usar") and d.pos.distance_to(player.global_position) < 2.4:
 		_t_hold += delta
 		bar_rit.visible = true
@@ -2297,8 +2337,8 @@ func _mover_puerta(d: Dictionary) -> void:
 		mansion.set_door(d, true)
 		d["rigidez"] = 5.0
 		d["freno"] = 4.4
-		sound_at("puerta_crujido", cerca, -4.0)
-		elena.hear(player.global_position, 4.0)
+		sound_at("puerta_crujido", cerca, -2.0)
+		elena.hear(player.global_position, 8.0)
 	else:
 		sound_at("pomo", cerca, -6.0)
 		mansion.entreabrir(d)
@@ -2459,6 +2499,7 @@ func _exit_wardrobe(normal: bool) -> void:
 		if c is CollisionShape3D:
 			c.disabled = false
 	hidden_in = {}
+	elena.player_hidden = false
 	slit_l.visible = false
 	slit_r.visible = false
 	slit_cama.visible = false
@@ -2540,7 +2581,7 @@ func _morir_atrapada(quien: ZarekElena = null) -> void:
 	if es_madre:
 		quien.can_catch = false
 	else:
-		huida.subir_furia(15.0, "")
+		huida.subir_furia(15.0, "atrapada")
 	var _real := elena
 	elena = quien
 	elena.set_state(ZarekElena.S.GHOST)
