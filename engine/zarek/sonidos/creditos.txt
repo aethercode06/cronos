@@ -21,3 +21,5 @@ Sonidos de La Sombra de Zarek (todos de uso libre; editados: recorte, tono y vol
 - Cinta 7 (cinta_k7): mezcla de latido y caja_musica.
 - Teléfono que suena (telefono_1..3: phone_ringing, telephone_ring) y cortina (cortina_1..3: shower_curtain_pulled_series) — Biblioteca de sonidos de Google (CC BY 4.0).
 - Polaroid (camara) — «camerashudder», FacadeGaikan (CC0) — https://opengameart.org/content/camerashudder
+- Voces de Damián (damian_risa, damian_gruñe, damian_rugido; tono bajado y eco de sala) — Freesound, CC0: «Male Dark/Evil Chuckle» de cacti225 (405613), «Chuckles_man_grinning» de sqeeeek (380101), «male grunt» de lipalearning (427972), «Male Angry Growl» de usamah (464993), «Guy - frustrated» de marlonnnnnn (238820), «Male Grunt 3» de WelvynZPorte (621370), «ShoutingPunches_Male» de BaggoNotes (718967) — https://freesound.org
+- Respiración y risa de Damián (damian_resp_1..3, damian_risa_8..9) — Google Sound Library (CC BY 4.0): human_breathing_mouth, breathing_deep_fast, male_sick_breathing, male_chuckling

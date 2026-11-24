@@ -2678,6 +2678,9 @@ func _morir_atrapada(quien: ZarekElena = null) -> void:
 	cae.tween_property(player.head, "rotation:z", 1.35, 0.45)
 	cae.tween_property(player.head, "rotation:x", 0.35, 0.45)
 	await get_tree().create_timer(0.45).timeout
+	if not es_madre and ZarekSonido.hay("damian_risa"):
+		# ya en el suelo, medio inconsciente: se le oye reír por lo bajo
+		sound_at("damian_risa", elena.global_position + Vector3(0, 1.7, 0), -2.0)
 	player.shake(10.0)
 	await get_tree().create_timer(0.3).timeout
 	_black_target = 1.0

@@ -742,7 +742,7 @@ func _physics_process(delta: float) -> void:
 				elif r < 0.55 and ZarekSonido.hay("damian_olfatea"):
 					que = "damian_olfatea"
 				elif r < 0.7:
-					que = "risa"
+					que = "damian_risa" if ZarekSonido.hay("damian_risa") else "risa"
 			_snd_one.stream = ZarekSonido.uno(que)
 			_snd_one.volume_db = 2.0 if que == "damian_voz" else -2.0
 		elif state != S.DORMANT and ZarekSonido.hay("madre_gime"):
