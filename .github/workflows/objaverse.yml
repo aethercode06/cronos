@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["engine/tools/objaverse/pedidos.json", "engine/tools/objaverse/bajar.py", ".github/workflows/objaverse.yml"]
+    paths: ["engine/tools/objaverse/consultas.json", "engine/tools/objaverse/pedidos.json", "engine/tools/objaverse/bajar.py", ".github/workflows/objaverse.yml"]
 permissions:
   contents: write
 jobs:
