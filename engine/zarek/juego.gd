@@ -47,6 +47,7 @@ var dif := 1
 var tiene_llaves := false
 const FINALES := {"escapar": "Escapé", "verdadero": "El fuego", "oculto": "Hambre"}
 var huida: ZarekHuida
+var inter: ZarekInteraccion
 var _puerta_hold: Dictionary = {}
 var _t_hold := 0.0
 var seals := 0
@@ -216,6 +217,10 @@ func _ready() -> void:
 	huida.j = self
 	add_child(huida)
 	huida.preparar(mansion)
+	inter = ZarekInteraccion.new()
+	inter.j = self
+	add_child(inter)
+	inter.preparar(mansion)
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -1463,6 +1468,7 @@ func _play(delta: float) -> void:
 	_registro_tick(delta)
 	# la noche: la madre (furia y poltergeist), las salidas (las acciones mantenidas llevan su propia barra)
 	huida.tick(delta)
+	inter.tick(delta)
 	player.speed_mult = 1.0 if hidden_in.is_empty() else 0.0
 
 func _events(pp: Vector3) -> void:
@@ -1524,6 +1530,7 @@ func _on_step(noise: float) -> void:
 			break
 	if _trueno_tapa > 0.0:
 		noise *= 0.2
+	noise *= inter.mascara(pp0)
 	elena.hear(player.global_position, noise)
 	huida.ruido(player.global_position, noise)
 	# tablones rotos: crujen fuerte al pisarlos (y Elena lo oye)
@@ -1637,6 +1644,9 @@ func _target() -> Dictionary:
 	var rs := huida.objetivo(pp)
 	if not rs.is_empty():
 		return rs
+	var ri := inter.objetivo(pp)
+	if not ri.is_empty() and not ri.get("debil", false):
+		return ri
 	if fauna and is_instance_valid(fauna.gato) and fauna.gato.process_mode != Node.PROCESS_MODE_DISABLED \
 			and fauna.gato.global_position.distance_to(pp + player.forward() * 0.6) < 1.1 and fauna.gato.estado != ZarekAnimal.E.HUYE:
 		return {"kind": "gato", "text": "USAR: acariciar al gato"}
@@ -1677,6 +1687,8 @@ func _target() -> Dictionary:
 			return {"kind": "puerta", "obj": d, "text": "USAR: abrir · MANTÉN USAR: atrancar (tablones: %d)" % tablones}
 		if d.get("entre", false):
 			return {"kind": "puerta", "obj": d, "text": "USAR: abrir del todo (entreabierta)"}
+		if d.open and inter.latas > 0:
+			return {"kind": "puerta", "obj": d, "text": "USAR: cerrar la puerta · MANTÉN USAR: colgar latas (%d)" % inter.latas}
 		return {"kind": "puerta", "obj": d, "text": "USAR: " + ("cerrar la puerta" if d.open else "entreabrir la puerta")}
 	var el: ZarekElectricidad = mansion.electricidad
 	if el and el.cuadro_cerca(pp):
@@ -1705,6 +1717,9 @@ func _target() -> Dictionary:
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if not hit.is_empty() and hit.collider is RigidBody3D and (hit.collider as RigidBody3D).mass < 14.0:
 		return {"kind": "coger", "obj": hit.collider, "text": "USAR: coger (y lanzárselo)"}
+	var debil := inter.objetivo(pp)
+	if not debil.is_empty():
+		return debil
 	if defensa and defensa.cepos > 0 and state == "juego" and mansion.inside_house(pp):
 		return {"kind": "poner_cepo", "text": "USAR: poner una trampa de caza aquí (%d)" % defensa.cepos}
 	return {}
@@ -1748,6 +1763,8 @@ func _leer_nota(n: Dictionary) -> void:
 	if not n.leida:
 		n.leida = true
 		notas_leidas += 1
+		if n.get("nana", false):
+			inter.nana_leida = true
 		var pista_nota := huida.pista_de_nota()
 		message("Nota %d de %d" % [notas_leidas, mansion.notas.size()] + ("\n" + pista_nota if pista_nota != "" else ""), 4.5 if pista_nota != "" else 2.0)
 	snd_ui.stream = _s("crujido")
@@ -1845,6 +1862,10 @@ func _use() -> void:
 			huida.empezar_hold(String(t.que))
 		"celda":
 			huida.completar(String(t.que))
+		"inter":
+			inter.usar(t)
+		"hold_inter":
+			inter.empezar_hold(t)
 		"salida":
 			_escapar(String(t.que))
 		"nota":
@@ -1880,7 +1901,10 @@ func _use() -> void:
 		"armario":
 			_enter_wardrobe(t.obj)
 		"puerta":
-			if not t.obj.open and tablones > 0:
+			if t.obj.open and inter.latas > 0:
+				# toque: cerrar; mantener: colgar las latas (lo resuelve ZarekInteraccion)
+				inter.empezar_hold({"que": "latas", "obj": t.obj})
+			elif not t.obj.open and tablones > 0:
 				# cerrada y con tablones: un toque la abre, mantener la atranca (se resuelve en _puerta_tick)
 				_puerta_hold = t.obj
 				_t_hold = 0.0
@@ -1930,7 +1954,9 @@ func _use() -> void:
 		"portal":
 			_use_portal(t.obj)
 		"lampara":
-			if mansion.electricidad and not mansion.electricidad.corriente:
+			if inter.sin_luz_sotano(t.obj):
+				message("No enciende. Faltan los fusibles del sótano:\nalguien los ha quitado del cuadro eléctrico.", 2.5)
+			elif mansion.electricidad and not mansion.electricidad.corriente:
 				message("No hay corriente en toda la casa.\nEl cuadro eléctrico está en el sótano.", 2.5)
 			else:
 				mansion.set_lamp(t.obj, not t.obj.on)
@@ -1956,7 +1982,9 @@ func _use() -> void:
 				var rp: Vector3 = (ro.pos as Vector3) + Vector3(0, 0.8, 0)
 				sound_at(String(ro.ruido), rp, 0.0)
 				elena.hear(rp, 8.0)
-				message({"grifo": "El grifo escupe agua marrón con un golpe de tuberías…", "cisterna": "La cisterna ruge por toda la casa.", "piano": "La tecla suena desafinada… y el eco recorre la casa."}.get(String(ro.ruido), ""), 2.5)
+				if String(ro.ruido) == "grifo":
+					inter.grifo(rp)
+				message({"grifo": "El grifo escupe agua marrón con un golpe de tuberías…\nEl ruido del agua tapará mis pasos por aquí un rato.", "cisterna": "La cisterna ruge por toda la casa.", "piano": "La tecla suena desafinada… y el eco recorre la casa."}.get(String(ro.ruido), ""), 2.5)
 		"coger":
 			llevado = t.obj
 			llevado.sleeping = false
@@ -2394,6 +2422,9 @@ func _throw_salt() -> void:
 	Aether.flash(Color(0.9, 0.9, 0.85), 0.25)
 	if huida.bengala(player.global_position):
 		return
+	if inter.lanzar_coctel():
+		salt += 1  # el cóctel no gasta bengala
+		return
 	var md := huida.madre if huida.madre_suelta and is_instance_valid(huida.madre) else null
 	if md and md.visible and md.global_position.distance_to(player.global_position) < 9.0:
 		md.repel(player.global_position)
@@ -2584,7 +2615,7 @@ func _escapar(ruta: String) -> void:
 		lbl_end_s.text = "Salí viva. Al amanecer volví con ayuda: la mansión estaba vacía.\nPero bajo la tierra algo seguía latiendo. (Pista: «solo el fuego lo devuelve a la piedra».)"
 	lbl_end_s.text = "Tiempo: %s · Veces atrapada: %d · Salida: %s\n" % [_fmt(play_time), deaths, {"camioneta": "la camioneta", "coche": "tu coche", "muro": "el muro"}.get(ruta, ruta)] + lbl_end_s.text
 	if archivo:
-		lbl_end_s.text += "\nEPÍLOGO — Lo sé todo de los Varela. Aurelio no construyó la casa para vivir en ella: la construyó encima de la roca para que nadie la encontrara. Y la roca tiene más hijos. NOCHE II: próximamente."
+		lbl_end_s.text += "\nEPÍLOGO — Lo sé todo de los Varela. El fundador no construyó la casa para vivir en ella: la construyó encima de la roca para que nadie la encontrara. Y la roca tiene más hijos. NOCHE II: próximamente."
 	if not huida.madre_suelta and not huida.madre_muerta:
 		lbl_end_s.text += "\n★ Ella nunca rompió las cadenas"
 	if dif == 2:

@@ -173,6 +173,24 @@ func texto_objetivos() -> String:
 			t += "      %s %s\n" % [_check(true), nombre_objeto(s)]
 		else:
 			t += "      %s %s — %s\n" % [_check(false), nombre_objeto(s), pista(s)]
+	var it: ZarekInteraccion = j.inter
+	t += "\n[b]LA CASA (lo que puedo usar)[/b]\n"
+	t += "%s La caja fuerte del padre, en su estudio: 4 cifras, día y mes. Las notas dicen qué fecha.\n" % _check(it.caja_abierta)
+	t += "%s El reloj de pie del vestíbulo: alguien movió las agujas. «A las tres se abre».\n" % _check(it.reloj_abierto)
+	t += "%s Los fusibles del sótano: él los quitó. Con ellos en el cuadro, el sótano tiene luz.\n" % _check(it.fusibles_puestos)
+	t += "%s La nana de la madre al piano (hay que leer la partitura): la calma, pero Damián lo oye.\n" % _check(it.nana_leida)
+	t += "Fabricar: botella + trapo + gasolina = cóctel incendiario (se lanza con BENGALA). Latas con cordel en una puerta abierta: suenan si alguien la cruza. Palanca: arranca las tablas de una ventana tapiada de abajo.\n"
+	t += "Sigilo: quieta junto a una puerta cerrada, escucho. Agachada + USAR, miro por la cerradura. Un grifo abierto tapa mis pasos un rato.\n"
+	var llevo: Array[String] = []
+	if it.botellas > 0: llevo.append("Botellas: %d" % it.botellas)
+	if it.trapos > 0: llevo.append("Trapos: %d" % it.trapos)
+	if it.cocteles > 0: llevo.append("Cócteles: %d" % it.cocteles)
+	if it.latas > 0: llevo.append("Latas: %d" % it.latas)
+	if it.palanca: llevo.append("Palanca")
+	if it.fusibles: llevo.append("Fusibles")
+	if it.llavero: llevo.append("Llavero del padre")
+	if not llevo.is_empty():
+		t += "Llevo: " + " · ".join(llevo) + "\n"
 	t += "\n[b]LA MADRE (furia: %d %%)[/b]\n" % int(rs.furia)
 	if rs.madre_muerta:
 		t += "%s Ardió en la capilla. Zarek ha muerto con ella.\n\n" % _check(true)

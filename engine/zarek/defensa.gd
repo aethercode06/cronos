@@ -69,8 +69,9 @@ func preparar(m: ZarekMansion, muebles: Array, seed: int) -> void:
 		vacios[i] = vacios[k]
 		vacios[k] = t0
 	var botin: Array = ["arma:" + ["cuchillo", "martillo", "atizador"][rng.randi_range(0, 2)], "cepo", "cepo"]
-	if seed == 0 or rng.randf() < 0.4:
-		botin.append_array(["escopeta", "cartucho"])
+	# la escopeta del padre está en su caja fuerte (ZarekInteraccion); en los cajones, algún cartucho suelto
+	if seed == 0 or rng.randf() < 0.5:
+		botin.append("cartucho")
 	for i in mini(botin.size(), vacios.size()):
 		vacios[i].botin = botin[i]
 	print("ZAREK defensa: %d armas a la vista, en cajones %s" % [suelo.size(), str(botin)])
@@ -177,7 +178,7 @@ func botin(b: String) -> String:
 		"escopeta":
 			escopeta = true
 			cartuchos += 1
-			return "La escopeta de Julián… con un cartucho dentro.\nNo lo matará. Pero lo tirará al suelo."
+			return "La escopeta del padre… con un cartucho dentro.\nNo lo matará. Pero lo tirará al suelo."
 		"cartucho":
 			cartuchos += 1
 			return "Un cartucho de escopeta." + ("" if escopeta else " ¿Dónde estará el arma?")

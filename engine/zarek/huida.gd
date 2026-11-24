@@ -387,7 +387,9 @@ func ruido(pos: Vector3, fuerza: float) -> void:
 		subir_furia(fuerza * 0.025, "")
 		return
 	var d := pos.distance_to(capilla_pos) if capilla_pos != Vector3.INF else 20.0
-	subir_furia(fuerza * 0.12 * clampf(1.6 - d / 25.0, 0.3, 1.6), "")
+	# con los fusibles puestos el sótano tiene luz: a ella le molesta menos lo que oye
+	var luz_abajo := 0.5 if j.inter and j.inter.fusibles_puestos else 1.0
+	subir_furia(fuerza * 0.12 * clampf(1.6 - d / 25.0, 0.3, 1.6) * luz_abajo, "")
 	if fuerza >= 7.0 and _t_grito <= 0.0:
 		_t_grito = 25.0
 		grito(pos)
@@ -611,6 +613,36 @@ func bengala(pp: Vector3) -> bool:
 		return true
 	_quemar(cap)
 	return true
+
+## Un fuego en el suelo (cóctel): ilumina y quema un rato.
+func fuego_en(pos: Vector3, seg: float) -> void:
+	var fl := OmniLight3D.new()
+	fl.light_color = Color(1.0, 0.5, 0.15)
+	fl.light_energy = 2.5
+	fl.omni_range = 7.0
+	m.add_child(fl)
+	fl.global_position = pos + Vector3(0, 0.5, 0)
+	ZarekSonido.en(m, "cerilla", pos, 4.0, 30.0)
+	get_tree().create_timer(seg).timeout.connect(func(): if is_instance_valid(fl): fl.queue_free())
+
+## El cóctel la alcanza donde esté: arde, y Zarek con ella.
+func quemar_madre_en(pos: Vector3) -> void:
+	if madre_muerta:
+		return
+	madre_muerta = true
+	fuego_en(pos, 30.0)
+	ZarekSonido.en(m, "grito", pos + Vector3(0, 1.5, 0), 10.0, 90.0, 0.55)
+	j.player.shake(16.0)
+	Aether.flash(Color(1.0, 0.5, 0.1), 0.7)
+	if is_instance_valid(madre):
+		madre.can_catch = false
+		madre.set_state(ZarekElena.S.FLEE, 2.0)
+		var mm := madre
+		get_tree().create_timer(2.5).timeout.connect(func(): if is_instance_valid(mm): mm.queue_free())
+	j.message("¡El cóctel la alcanza! Arde entera, chillando… y bajo la casa, el latido se para.\nZarek ha muerto con ella. Ahora Damián no tiene nada que perder.", 5.5)
+	j.elena.aggro += 2
+	j.elena.wake_far()
+	j.elena.hear(j.player.global_position, 999.0)
 
 func _quemar(cap: Dictionary) -> void:
 	madre_muerta = true

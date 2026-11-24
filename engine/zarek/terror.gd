@@ -371,6 +371,8 @@ static func _ventanas_tapiadas(m: ZarekMansion) -> void:
 		var along := Vector3(1, 0, 0) if w.horiz else Vector3(0, 0, 1)
 		var yaw := atan2(along.x, along.z) - PI * 0.5
 		var cuantas := _rng.randi_range(3, 5)
+		w["tapiada"] = true
+		w["tablas"] = []
 		for k in cuantas:
 			var hy := lerpf(1.1, 2.7, (k + _rng.randf_range(-0.2, 0.2)) / maxf(1.0, cuantas - 1))
 			var largo := _rng.randf_range(2.0, 2.3)
@@ -382,6 +384,7 @@ static func _ventanas_tapiadas(m: ZarekMansion) -> void:
 			var p := c + dentro * (float(w.get("thick", 0.45)) * 0.5 + 0.03 + k * 0.006) + Vector3(0, hy, 0) + along * _rng.randf_range(-0.12, 0.12)
 			tabla.transform = Transform3D(Basis(Vector3.UP, yaw).rotated(dentro, _rng.randf_range(-0.22, 0.22)), p)
 			m._house.add_child(tabla)
+			(w["tablas"] as Array).append(tabla)
 			# clavos
 			for s in [-1.0, 1.0]:
 				var cl := MeshInstance3D.new()
@@ -647,7 +650,7 @@ static func _cementerio(m: ZarekMansion) -> void:
 		_lapida(m, Vector3(x, y, z), TUMBAS[k], false)
 	# la de Elena, aparte: sin fecha de muerte y abierta, la tierra apartada
 	_lapida(m, Vector3(r.end.x - 4.2, y, r.get_center().y), "lap_elena", true)
-	var nota := {"pos": Vector3(r.end.x - 3.3, y, r.get_center().y), "titulo": "Tumba de Elena Varela", "texto": "La lápida no tiene fecha de muerte. Alguien excavó la tumba hace poco… o algo salió de ella. El ataúd está vacío y la tapa, arañada por dentro.", "nodo": Node3D.new(), "leida": false, "sala": "Cementerio familiar"}
+	var nota := {"pos": Vector3(r.end.x - 3.3, y, r.get_center().y), "titulo": "Tumba del padre", "texto": "«Aquí descansa el padre. 1987.» La tierra está removida y hay flores frescas, mordisqueadas. Alguien viene a verle… o a vigilar que no salga.", "nodo": Node3D.new(), "leida": false, "sala": "Cementerio familiar"}
 	m.add_child(nota.nodo)
 	m.notas.append(nota)
 	var l := OmniLight3D.new()

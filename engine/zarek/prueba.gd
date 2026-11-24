@@ -143,7 +143,7 @@ func _ready() -> void:
 		for lm in m.rooms[int(it.room)].get("lamps", []):
 			if not lm.broken:
 				hay_buena = true
-		if hay_buena and it.on:
+		if hay_buena and it.on and int(m.rooms[int(it.room)].level) != -1:
 			sw = it
 			break
 	var lamparas_sala: Array = m.rooms[int(sw.room)].lamps
@@ -415,6 +415,40 @@ func _ready() -> void:
 	g._throw_salt()
 	await _wait(2.5)
 	_check(k_rociar == "rociar" and rs.madre_muerta, "la madre arde en la capilla")
+	# la casa: caja fuerte, reloj, fusibles, latas, palanca y cóctel
+	var it: ZarekInteraccion = g.inter
+	var falla: bool = not it.probar((it.fecha_dia + 1) % 28 + 1, it.fecha_mes)
+	var abre: bool = it.probar(it.fecha_dia, it.fecha_mes)
+	_check(falla and abre and g.defensa.escopeta and it.caja_abierta, "caja fuerte: solo con la fecha del diario de la madre (%d/%d)" % [it.fecha_dia, it.fecha_mes])
+	for k in 13:
+		if it.reloj_abierto:
+			break
+		it.usar({"que": "reloj"})
+	_check(it.reloj_abierto and it.llavero, "reloj puesto a las tres: el llavero del padre")
+	var lamp_sot: Array = m.lamps.filter(func(l): return m.level_of((l.pos as Vector3).y - 1.0) == -1 and not l.broken)
+	var sotano_oscuro: bool = lamp_sot.all(func(l): return not l.on)
+	it.fusibles = true
+	it.completar("fusibles")
+	_check(sotano_oscuro and lamp_sot.any(func(l): return l.on), "fusibles: el sótano a oscuras hasta ponerlos (%d lámparas)" % lamp_sot.size())
+	var pl: Dictionary = {}
+	for d in m.doors:
+		if not d.locked and not d.has("pivot2") and not d.has("celda"):
+			pl = d
+			break
+	it.latas = 1
+	it.completar("latas", pl)
+	g.elena.visible = true
+	g.elena.set_state(ZarekElena.S.WANDER)
+	g.elena.global_position = (pl.pos as Vector3) + Vector3(0.3, 0, 0)
+	it.tick(0.016)
+	_check(it._latas_puertas.is_empty(), "latas: suenan cuando él cruza la puerta")
+	g.elena.vanish(60.0)
+	var ven: Array = m.ventanas_info.filter(func(w): return w.get("tapiada", false) and m.level_of((w.c as Vector3).y + 0.3) == 0)
+	if not ven.is_empty():
+		var np := m.portals.size()
+		it.completar("ventana", ven[0])
+		_check(m.portals.size() == np + 2, "palanca: la ventana tapiada se abre al jardín")
+	_check(it.items.size() >= 5, "objetos para fabricar repartidos (%d)" % it.items.size())
 	# escapar trepando el muro (la gasolina se gastó en el fuego: la camioneta ya no sirve)
 	g.elena.vanish(60.0)
 	_check(not rs.faltan("camioneta").is_empty(), "sin gasolina la camioneta no sirve")

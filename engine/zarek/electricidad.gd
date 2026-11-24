@@ -8,6 +8,8 @@ extends RefCounted
 
 var m: ZarekMansion
 var corriente := true
+## Damián quitó los fusibles del sótano: sus lámparas no encienden hasta que se pongan (ZarekInteraccion).
+var sin_fusibles := false
 var interruptores: Array = []   # {pos, room, nodo, palanca, on}
 var cuadro := {}                # {pos, nodo, palanca, puerta}
 var _rng := RandomNumberGenerator.new()
@@ -146,7 +148,7 @@ func sala_encendida(rid: int) -> bool:
 	return true
 
 func _aplicar_sala(rid: int) -> void:
-	var on := corriente and sala_encendida(rid)
+	var on := corriente and sala_encendida(rid) and not (sin_fusibles and int(m.rooms[rid].level) == -1)
 	for l in m.rooms[rid].get("lamps", []):
 		m.set_lamp(l, on)
 
