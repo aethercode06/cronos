@@ -89,6 +89,8 @@ const SALA := {
 	"bajada": {"pared": ["wooden_barrels_01", "coci_old_kitchen_shelf", "terr_old_and_dusty_multi_crate_st"], "encima": ["obj_kerosene_lamp", "obj_jar", "coti_glass_bottle"], "suelo": ["obj_sack_v2", "wooden_crate_02", "obj_dry_firewood"]},
 	"antecomedor": {"primero": ["coci_vintage_wooden_cabinets"], "colgado": ["obj_ornate_picture_frame", "obj_wooden_cuckoo_clock"], "pared": ["painted_wooden_cabinet_02", "ClassicConsole_01"], "encima": ["tea_set_01", "obj_elegant_victorian_porcelan_t", "brass_goblets", "obj_antique_silver_goblets_type__2", "carved_wooden_plate"], "suelo": []},
 	"recibidor": {"primero": ["vict_grandfather_clock"], "pared": ["ClassicConsole_01", "obj_coat_rack_bowler_hat", "vict_victorian_lounge_sofa", "s_paraguero"], "techo": ["pian_medieval_chandelier"], "encima": ["obj_letter_box", "obj_flower_vase", "pian_candelabra", "postcard_set_01"], "suelo": []},
+	"maletas": {"primero": ["s_baul_viaje"], "pared": ["painted_wooden_shelves", "s_armario_alto"], "encima": ["ropa_leather_bag", "ropa_sunday_hat", "ropa_bowler_hat"], "suelo": ["s_maleta_vieja", "vintage_suitcase", "s_baul_viaje", "treasure_chest"]},
+	"limpieza": {"primero": ["painted_wooden_shelves"], "pared": ["painted_wooden_cabinet", "coci_old_kitchen_shelf"], "encima": ["obj_jar", "coti_glass_bottle", "metal_jug", "ropa_towel"], "suelo": ["wooden_bucket_01", "wooden_bucket_02", "wooden_broom", "s_cestos", "watering_can_metal_01"]},
 	"deposito": {"primero": ["s_deposito"], "pared": ["wooden_barrels_01", "terr_old_and_dusty_multi_crate_st"], "suelo": ["wooden_bucket_01", "wooden_bucket_02", "watering_can_metal_01"]},
 	"palomar": {"pared": ["wooden_crate_02", "terr_old_and_dusty_multi_crate_st"], "suelo": ["obj_sack_v1", "obj_grain_scoop", "obj_birdcage_3", "s_paloma", "s_paloma", "s_pajaro_muerto"]},
 	"pasillo": {"pared": ["ClassicConsole_01", "vict_victorian_lounge_sofa", "pian_candelabra", "vict_grandfather_clock"], "encima": ["coti_three_candles_and_a_golde", "vict_torsion_pendulum_clock___ani"]},
@@ -150,8 +152,8 @@ func _tipo(r: Dictionary) -> String:
 	var n: String = String(r.name).to_lower()
 	for k in [["dormitorio de los criados", "criados"], ["mozo", "criados"], ["criada vieja", "criados"], ["cocinera", "criados"],
 			["habitación del mayordomo", "criados"], ["cuarto de las criadas", "criados"], ["cuarto de la doncella", "criados"],
-			["aseo", "aseo"], ["vestidor", "vestidor"], ["ropero", "ropero"], ["guardarropa", "ropero"], ["antecocina", "antecomedor"], ["maletas", "ropero"], ["limpieza", "ropero"],
-			["armario de servicio", "ropa_blanca"], ["ropa blanca", "ropa_blanca"], ["lámparas", "lamparas"],
+			["aseo", "aseo"], ["vestidor", "vestidor"], ["ropero", "ropero"], ["guardarropa", "ropero"], ["antecocina", "antecomedor"], ["maletas", "maletas"], ["limpieza", "limpieza"],
+			["armario de servicio", "ropa_blanca"], ["ropa blanca", "ropa_blanca"], ["sábanas", "ropa_blanca"], ["lámparas", "lamparas"],
 			["despacho del mayordomo", "mayordomo"], ["sala de armas", "armas"], ["fregadero", "fregadero"], ["carne", "carne"],
 			["trofeos", "trofeos"], ["bajada", "bajada"], ["antecomedor", "antecomedor"], ["recibidor", "recibidor"],
 			["depósito", "deposito"], ["palomar", "palomar"], ["vestidor", "tocador"], ["ropa blanca", "costura"], ["recibidor", "vestibulo"], ["galería del vestíbulo", "recibidor"],
@@ -2734,7 +2736,7 @@ func _vestir_base(r: Dictionary) -> void:
 	var area: float = (r.rect as Rect2).get_area()
 	var piezas := _n_puestos - antes
 	var tipo := _tipo(r)
-	if tipo != "" and SALA.has(tipo) and piezas < int(area / 9.0) and int(r.level) >= 0 \
+	if tipo != "" and SALA.has(tipo) and piezas < int(area / 6.0) and int(r.level) >= 0 \
 			and not (String(r.name) in ["Cuarto de Damián", "Cuarto de huéspedes", "Torre", "Mirador de la torre", "Escondite de Damián niño"]):
 		_generico(r, tipo)
 
