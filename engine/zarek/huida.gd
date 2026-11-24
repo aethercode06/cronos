@@ -193,7 +193,22 @@ func _preparar_celda() -> void:
 	n.position = ancla
 	m._house.add_child(n)
 	# colchón manchado
-	if m.objeto_real("s_colchon", n, Vector3.ZERO, PI * 0.5 if rc2.size.x > rc2.size.y else 0.0) == null:
+	var colchon := m.objeto_real("s_colchon", n, Vector3.ZERO, PI * 0.5 if rc2.size.x > rc2.size.y else 0.0)
+	if colchon:
+		# colchón viejo de lana: mate, más fino y algo hundido (no un cojín brillante)
+		colchon.scale = Vector3(0.62, 0.55, 1.0)
+		for mi in colchon.find_children("*", "MeshInstance3D", true, false):
+			var m3 := mi as MeshInstance3D
+			for si in m3.mesh.get_surface_count():
+				var bm := m3.get_active_material(si) as BaseMaterial3D
+				if bm:
+					var d := bm.duplicate() as BaseMaterial3D
+					d.roughness = 1.0
+					d.metallic = 0.0
+					d.metallic_specular = 0.2
+					d.albedo_color = d.albedo_color * Color(0.78, 0.72, 0.62)
+					m3.set_surface_override_material(si, d)
+	else:
 		m.box(Vector3(0.9, 0.16, 1.9), Vector3(0, 0.08, 0), m._plain(Color(0.42, 0.36, 0.28), 0.95), false, n, false)
 		m.box(Vector3(0.5, 0.1, 0.35), Vector3(0, 0.2, -0.7), m._plain(Color(0.5, 0.45, 0.38), 0.95), false, n, false)
 	ZarekGore._charco(m, ancla + Vector3(0.25, 0, 0.2), 0.5)

@@ -16,7 +16,7 @@ var _t_puerta := 0.0    # espera entre sustos de puerta
 var hechos := {}        # para el diagnóstico
 
 func _ready() -> void:
-	_t = randf_range(55.0, 80.0)
+	_t = randf_range(20.0, 35.0)  # al salir de la celda, enseguida se le ve: el jugador tiene que saber quién es
 
 func conectar() -> void:
 	var e: ZarekElena = j.elena
@@ -57,7 +57,7 @@ func tick(delta: float) -> void:
 		hecho = _cruce()
 	if not hecho and randf() < 0.5:
 		hecho = _empezar_detras()
-	_t = randf_range(60.0, 100.0) if hecho else 12.0
+	_t = randf_range(45.0, 75.0) if hecho else 8.0
 
 # ---------------- cruce ----------------
 func _cruce() -> bool:
@@ -75,9 +75,9 @@ func _cruce() -> bool:
 	q.exclude = [j.player.get_rid()]
 	var hit := esp.intersect_ray(q)
 	var lejos: float = ojo.distance_to(hit.position) if hit.has("position") else 18.0
-	if lejos < 5.0:
+	if lejos < 4.0:
 		return false
-	var dist := clampf(lejos - 1.0, 5.0, 14.0)
+	var dist := clampf(lejos - 1.0, 4.0, 14.0)
 	var centro := Vector3(ojo.x, j.player.global_position.y, ojo.z) + fw * dist
 	var lado := Vector3(-fw.z, 0, fw.x)
 	var m: ZarekMansion = j.mansion

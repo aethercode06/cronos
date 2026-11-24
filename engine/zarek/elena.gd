@@ -300,6 +300,80 @@ func _build_damian() -> void:
 	var sk := model.find_children("*", "Skeleton3D", true, false)
 	if sk.size() > 0:
 		skel = sk[0]
+	_farol()
+
+## Damián caza de noche con un farol de aceite colgado del cinto (a su izquierda; el hacha va en la derecha):
+## su luz se ve venir por los pasillos y por debajo de las puertas, y le alumbra la cara desde abajo.
+var farol_pivote: Node3D
+var farol_luz: OmniLight3D
+var _farol_t := 0.0
+var _farol_prev := Vector3.ZERO
+func _farol() -> void:
+	if OS.get_environment("SIN_FAROL") != "":
+		return
+	farol_pivote = Node3D.new()
+	farol_pivote.position = Vector3(0.25, 0.99, 0.06)  # espacio del modelo (mira a +Z): su izquierda es +X
+	model.add_child(farol_pivote)
+	var ruta := "res://zarek/objetos/obj_old_lantern.glb"
+	if ResourceLoader.exists(ruta):
+		var f: Node3D = (load(ruta) as PackedScene).instantiate()
+		f.scale = Vector3.ONE * 0.62
+		farol_pivote.add_child(f)
+		var ab := AABB()
+		var primera := true
+		for mi in f.find_children("*", "MeshInstance3D", true, false):
+			var m3 := mi as MeshInstance3D
+			var t := Transform3D.IDENTITY
+			var x: Node = m3
+			while x != null and x != farol_pivote:
+				t = (x as Node3D).transform * t
+				x = x.get_parent()
+			var b := t * m3.get_aabb()
+			ab = b if primera else ab.merge(b)
+			primera = false
+			m3.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if not primera:
+			f.position -= Vector3(ab.get_center().x, ab.end.y, ab.get_center().z)
+		# el cristal brilla: llama dentro
+		var llama := MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 0.022
+		sm.height = 0.05
+		llama.mesh = sm
+		var lm := StandardMaterial3D.new()
+		lm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		lm.albedo_color = Color(1.0, 0.72, 0.35)
+		llama.material_override = lm
+		llama.position = Vector3(0, -ab.size.y * 0.5 if not primera else -0.12, 0)
+		farol_pivote.add_child(llama)
+	farol_luz = OmniLight3D.new()
+	farol_luz.light_color = Color(1.0, 0.6, 0.3)
+	farol_luz.light_energy = 1.5
+	farol_luz.omni_range = 7.5
+	farol_luz.omni_attenuation = 1.6
+	farol_luz.shadow_enabled = OS.get_name() != "Android"
+	farol_luz.position = Vector3(0, -0.12, 0.05)
+	farol_pivote.add_child(farol_luz)
+
+func _farol_process(delta: float) -> void:
+	if farol_pivote == null:
+		return
+	var encendido := state != S.DORMANT and is_visible_in_tree()
+	farol_luz.visible = encendido
+	if not encendido:
+		return
+	_farol_t += delta
+	# la llama tiembla y el farol se balancea al andar
+	var parpadeo := 0.86 + 0.08 * sin(_farol_t * 13.0) + 0.06 * sin(_farol_t * 31.0 + 1.3)
+	farol_luz.light_energy = 1.5 * parpadeo
+	var v := (global_position - _farol_prev) / maxf(delta, 0.001)
+	_farol_prev = global_position
+	var rapidez_h := Vector2(v.x, v.z).length()
+	if rapidez_h > 9.0:
+		rapidez_h = 0.0  # lo acaban de mover de sitio
+	var amp := clampf(rapidez_h / 5.0, 0.0, 1.0) * 0.35
+	farol_pivote.rotation.x = lerpf(farol_pivote.rotation.x, sin(_farol_t * (4.0 + rapidez_h)) * amp, minf(1.0, delta * 8.0))
+	farol_pivote.rotation.z = lerpf(farol_pivote.rotation.z, cos(_farol_t * 3.1) * amp * 0.5, minf(1.0, delta * 8.0))
 
 ## Modelo 3D real (TRELLIS + Blender) con animaciones idle/walk/run/attack.
 func _build_model() -> void:
@@ -757,6 +831,7 @@ func _move(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_cara_process(delta)
+	_farol_process(delta)
 	if only_visual:
 		_animate(delta, 0.0)
 

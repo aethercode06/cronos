@@ -5722,7 +5722,9 @@ func _pickup(pos: Vector3, kind: String) -> void:
 	n.position = pos
 	add_child(n)
 	var alto := 0.8
-	if _prop("side_table_01", Vector3.ZERO, _rng.randf() * TAU, 1.0, true, n) != null:
+	if kind == "tablon":
+		alto = 0.0  # los tablones están en el suelo, apilados, no encima de una mesita
+	elif _prop("side_table_01", Vector3.ZERO, _rng.randf() * TAU, 1.0, true, n) != null:
 		alto = 0.551
 	else:
 		box(Vector3(0.6, 0.8, 0.45), Vector3(0, 0.4, 0), _mat.madera, true, n)
@@ -5730,7 +5732,7 @@ func _pickup(pos: Vector3, kind: String) -> void:
 	# objetos reales (Objaverse) encima de la mesita; si falta el modelo, la pieza hecha por código
 	var real := {"pila": [["s_pila", Vector3.ZERO, Vector3.ZERO]],
 		"llaves": [["s_llaves_coche", Vector3.ZERO, Vector3.ZERO]],
-		"tablon": [["t_tablas_6", Vector3.ZERO, Vector3.ZERO], ["s_martillo_clavos", Vector3(PI * 0.5, 0, 0), Vector3(-0.12, 0.0, 0.12)]],
+		"tablon": [["t_tablas_podridas", Vector3.ZERO, Vector3.ZERO], ["s_martillo_clavos", Vector3(PI * 0.5, 0, 0), Vector3(0.1, 0.035, 0.05)]],
 		"bengala": [["s_bengala", Vector3.ZERO, Vector3.ZERO], ["s_bengala2", Vector3.ZERO, Vector3(0.02, 0.0, 0.06)]]}
 	var clave := kind if real.has(kind) else "bengala"
 	if ResourceLoader.exists("res://zarek/objetos/%s.glb" % String(real[clave][0][0])):
@@ -5739,8 +5741,8 @@ func _pickup(pos: Vector3, kind: String) -> void:
 		n.add_child(mi)
 		for r in real[clave]:
 			var o := objeto_real(String(r[0]), mi, r[1], _rng.randf() * TAU, r[2])
-			if o and String(r[0]) == "t_tablas_6":
-				o.scale = Vector3.ONE * 0.5
+			if o and String(r[0]) == "t_tablas_podridas":
+				o.scale = Vector3.ONE * 0.75
 		pickups.append({"node": n, "pos": pos, "kind": kind, "taken": false, "item": mi})
 		return
 	if kind == "pila":
@@ -6166,6 +6168,8 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 	n.position = p
 	n.rotation.y = yaw
 	n.scale = Vector3.ONE * escala
+	if TINTE_MUEBLE.has(nombre):
+		_tenir(n, TINTE_MUEBLE[nombre])
 	# objetos sueltos con física: se empujan, se vuelcan y suenan
 	var masa := _masa_fisica(nombre) if parent == null else 0.0
 	if masa > 0.0 and _props_info.has(nombre):
@@ -6226,6 +6230,9 @@ func _prop(nombre: String, p: Vector3, yaw := 0.0, escala := 1.0, choca := true,
 
 ## Objeto real (modelo de Objaverse, s_*) apoyado en el suelo del padre: se gira con «rot», se baja/sube para que la
 ## base quede en y=0 y se centra. Devuelve null si el modelo no está (entonces se usa la pieza hecha por código).
+# muebles de madera clara que desentonan en la casa: se oscurecen como madera vieja barnizada
+const TINTE_MUEBLE := {"side_table_01": Color(0.42, 0.3, 0.22), "side_table_tall_01": Color(0.42, 0.3, 0.22),
+	"small_wooden_table_01": Color(0.5, 0.36, 0.26)}
 func objeto_real(nombre: String, parent: Node3D, rot := Vector3.ZERO, yaw := 0.0, desp := Vector3.ZERO) -> Node3D:
 	var w := Node3D.new()
 	parent.add_child(w)
@@ -7017,6 +7024,52 @@ func _caja_mallas(n: Node3D) -> AABB:
 		ab = b if primero else ab.merge(b)
 		primero = false
 	return ab
+
+## Las mesitas con objetos que se cogen (pilas, llaves, tablones, bengalas) se eligieron antes del decorado: si
+## quedaron metidas en una cama, un escritorio o un armario, se mueven al hueco libre más cercano de la misma sala.
+func recolocar_mesitas() -> void:
+	var cajas := ZarekTerror._cajas_muebles(self)
+	var movidas := 0
+	for pk in pickups:
+		var n := pk.node as Node3D
+		if n == null or not is_instance_valid(n):
+			continue
+		var ex: Array[RID] = []
+		for co in n.find_children("*", "CollisionObject3D", true, false):
+			ex.append((co as CollisionObject3D).get_rid())
+		var p0 := n.global_position
+		var sala := room_at(p0 + Vector3(0, 0.5, 0))
+		var libre := func(p: Vector3) -> bool:
+			if room_at(p + Vector3(0, 0.5, 0)) != sala:
+				return false
+			var hu := Rect2(p.x - 0.42, p.z - 0.42, 0.84, 0.84)
+			for c in cajas:
+				var b: AABB = c
+				if b.end.y < p.y + 0.06 or b.position.y > p.y + 1.3:
+					continue
+				if hu.intersects(Rect2(b.position.x, b.position.z, b.size.x, b.size.z)):
+					return false
+			return not ZarekTerror._choca_caja(self, p, 0.6, ex)
+		if libre.call(p0):
+			cajas.append(AABB(p0 - Vector3(0.3, 0, 0.3), Vector3(0.6, 0.9, 0.6)))
+			continue
+		var nuevo := Vector3.INF
+		for paso in range(1, 13):
+			var rr := paso * 0.25
+			for k in 16:
+				var a := TAU * k / 16.0 + paso * 0.4
+				var q := p0 + Vector3(cos(a) * rr, 0, sin(a) * rr)
+				if door_near(q, 1.2).is_empty() and not _huella_en_escalera(q, Vector3(1.2, 0.2, 1.2), 0.0) and libre.call(q):
+					nuevo = q
+					break
+			if nuevo != Vector3.INF:
+				break
+		if nuevo != Vector3.INF:
+			n.global_position = nuevo
+			pk.pos = nuevo
+			cajas.append(AABB(nuevo - Vector3(0.3, 0, 0.3), Vector3(0.6, 0.9, 0.6)))
+			movidas += 1
+	print("ZAREK mesitas recolocadas: ", movidas, " de ", pickups.size())
 
 ## Baja hasta su apoyo los objetos que quedaron flotando (p. ej. cosas de una mesa que no se pudo poner) y pega a la
 ## pared los cuadros y espejos separados; quita los cuadros que no tienen pared detrás. Devuelve cuántos tocó.

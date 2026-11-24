@@ -172,22 +172,77 @@ static func _escritos(m: ZarekMansion) -> void:
 ## Un punto del suelo de la sala sin muebles cerca (se comprueba con los cuerpos de colisión ya creados).
 static func _sitio_libre(m: ZarekMansion, r: Dictionary, radio: float) -> Vector3:
 	var rc: Rect2 = r.rect
-	for intento in 40:
+	var cajas := _cajas_muebles(m)
+	for intento in 60:
 		var p := Vector3(_rng.randf_range(rc.position.x + radio + 0.4, rc.end.x - radio - 0.4), float(r.y), _rng.randf_range(rc.position.y + radio + 0.4, rc.end.y - radio - 0.4))
 		if rc.size.x < radio * 2.0 + 0.8 or rc.size.y < radio * 2.0 + 0.8:
 			p = Vector3(rc.get_center().x, float(r.y), rc.get_center().y)
 		if not m.door_near(p, radio + 1.0).is_empty() or m._huella_en_escalera(p, Vector3(radio * 2, 0.2, radio * 2), 0.0):
 			continue
+		# nada de muebles (ni colisión ni solo malla) dentro de la huella, con 15 cm de aire alrededor
+		var huella := Rect2(p.x - radio * 0.5 - 0.15, p.z - radio * 0.5 - 0.15, radio + 0.3, radio + 0.3)
 		var libre := true
-		for n in m._house.get_children():
-			if n is Node3D and ((n as Node3D).scene_file_path != "" or n is RigidBody3D):
-				var g := (n as Node3D).global_position
-				if absf(g.y - p.y) < 1.5 and Vector2(g.x - p.x, g.z - p.z).length() < radio + 0.5:
-					libre = false
-					break
+		for c in cajas:
+			var b: AABB = c
+			if b.end.y < p.y + 0.06 or b.position.y > p.y + 1.3:
+				continue
+			if huella.intersects(Rect2(b.position.x, b.position.z, b.size.x, b.size.z)):
+				libre = false
+				break
+		if libre and _choca_caja(m, p, radio):
+			libre = false
 		if libre:
+			# reservar el sitio para los que vengan después
+			cajas.append(AABB(Vector3(p.x - radio * 0.5, p.y, p.z - radio * 0.5), Vector3(radio, 0.9, radio)))
 			return p
 	return Vector3.INF
+
+## ¿Hay colisión (muros, tabiques, muebles con cuerpo) en la huella de un objeto de `radio` puesto en el suelo en p?
+static func _choca_caja(m: ZarekMansion, p: Vector3, radio: float, excluir: Array[RID] = []) -> bool:
+	var q := PhysicsShapeQueryParameters3D.new()
+	var bx := BoxShape3D.new()
+	bx.size = Vector3(radio, 0.9, radio)
+	q.shape = bx
+	q.transform = Transform3D(Basis.IDENTITY, p + Vector3(0, 0.55, 0))
+	q.collision_mask = 1 | 8
+	q.exclude = excluir
+	return not m.get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+## Cajas (en el mundo) de todo lo que hay en la casa con malla: muebles, objetos, tabiques... sin suelos, techos,
+## alfombras, calcomanías ni muros largos. Se va ampliando con lo que se añade después.
+static func _cajas_muebles(m: ZarekMansion) -> Array:
+	if not m.has_meta("cajas_muebles"):
+		m.set_meta("cajas_muebles", [])
+		m.set_meta("cajas_vistos", 0)
+	var cajas: Array = m.get_meta("cajas_muebles")
+	var vistos: int = m.get_meta("cajas_vistos")
+	var hijos := m._house.get_children()
+	if hijos.size() < vistos:
+		cajas.clear()
+		vistos = 0
+	for i in range(vistos, hijos.size()):
+		var n := hijos[i] as Node3D
+		if n == null:
+			continue
+		var mallas: Array = n.find_children("*", "MeshInstance3D", true, false)
+		if n is MeshInstance3D:
+			mallas.append(n)
+		if mallas.is_empty() or mallas.size() > 80:
+			continue
+		var ab := AABB()
+		var primera := true
+		for mi in mallas:
+			var gm := mi as MeshInstance3D
+			if gm.mesh == null:
+				continue
+			var b: AABB = gm.global_transform * gm.get_aabb()
+			ab = b if primera else ab.merge(b)
+			primera = false
+		if primera or ab.size.y < 0.08 or ab.size.x > 3.6 or ab.size.z > 3.6:
+			continue
+		cajas.append(ab)
+	m.set_meta("cajas_vistos", hijos.size())
+	return cajas
 
 # ---------------- retratos con la cara rayada ----------------
 static func _retratos_rayados(m: ZarekMansion) -> void:

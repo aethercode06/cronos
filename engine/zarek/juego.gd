@@ -170,6 +170,8 @@ func _ready() -> void:
 	mansion.bake_nav()
 	lc.text = "LA SOMBRA DE ZAREK\n\nCargando…  95 %"
 	await get_tree().process_frame
+	# las mesitas metidas en un mueble se apartan (antes de que la física tome sus nuevas posiciones)
+	mansion.recolocar_mesitas()
 	# con la física ya en marcha, los objetos que quedaron en el aire bajan a su sitio
 	await get_tree().physics_frame
 	await get_tree().physics_frame

@@ -49,6 +49,24 @@ static func _x(m: ZarekMansion, nombre: String, p: Vector3, yaw := 0.0, escala :
 			(mi as MeshInstance3D).material_override = mt
 	return n
 
+## Víscera tumbada sobre una superficie (los modelos están de pie): base apoyada en p.
+static func _organo(m: ZarekMansion, nombre: String, p: Vector3, yaw: float, escala: float) -> void:
+	var w := Node3D.new()
+	w.position = p
+	m._house.add_child(w)
+	var o := m.objeto_real("x_" + nombre, w, Vector3(-PI * 0.5, 0, 0), yaw)
+	if o == null:
+		w.queue_free()
+		_x(m, nombre, p, yaw, escala)
+		return
+	o.scale = Vector3.ONE * escala
+	var mt := StandardMaterial3D.new()
+	mt.albedo_color = Color(0.55, 0.17, 0.15) if nombre.contains("intestin") else (Color(0.3, 0.05, 0.04) if nombre.contains("liver") else Color(0.45, 0.08, 0.07))
+	mt.roughness = 0.3
+	mt.metallic_specular = 0.8
+	for mi in o.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_override = mt
+
 ## Modelo colgado de un gancho: su base queda `alto` metros por debajo de la punta.
 static func _colgado(m: ZarekMansion, nombre: String, punta: Vector3, alto: float, yaw := 0.0) -> void:
 	_x(m, nombre, punta - Vector3(0, alto, 0), yaw)
@@ -331,7 +349,10 @@ static func _comedor(m: ZarekMansion) -> void:
 		var plato := m.cyl(0.22, 0.2, 0.025, p, m._mat.marmol, m._house, 20)
 		plato.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var plato_de: String = ["carne_cote_de_boeuf", "organos_human_heart", "carne_eataly_steak_scanned_wit"][k]
-		_x(m, plato_de, p + Vector3(0, 0.015, 0), _rng.randf() * TAU)
+		if plato_de.begins_with("organos"):
+			_organo(m, plato_de, p + Vector3(0, 0.015, 0), _rng.randf() * TAU, 1.0)
+		else:
+			_x(m, plato_de, p + Vector3(0, 0.015, 0), _rng.randf() * TAU)
 	# chorro que cae por el borde y charco en el suelo
 	var borde := Vector3(c.x, float(r.y), c.z) + lado * (w * 0.5 + 0.25)
 	_charco(m, borde, 1.1)
@@ -466,7 +487,10 @@ static func celda_madre(m: ZarekMansion, r: Dictionary) -> void:
 		var pp: Vector3 = L.call(W * 0.5 + (k - 1) * 1.4, zr + 0.8)
 		m.cyl(0.2, 0.18, 0.025, pp + Vector3(0, 0.012, 0), m._mat.metal, m._house, 16)
 		if k != 1:
-			_x(m, "carne_cote_de_boeuf" if k == 0 else "organos_human_liver", pp + Vector3(0, 0.025, 0), _rng.randf() * TAU, 0.8)
+			if k == 0:
+				_x(m, "carne_cote_de_boeuf", pp + Vector3(0, 0.025, 0), _rng.randf() * TAU, 0.8)
+			else:
+				_organo(m, "organos_human_liver", pp + Vector3(0, 0.025, 0), _rng.randf() * TAU, 0.8)
 	for k in 6:
 		ZarekTerror._calco(m, "aranazos_%d" % (k % 2 + 1), L.call(1.0 + k * (W - 2.0) / 5.0, D - 0.005, 0.6 + (k % 3) * 0.35), Vector3(0, 0, -1), Vector2(0.4, 0.8))
 	ZarekTerror._calco(m, "manos_sangre", L.call(W * 0.5 - 0.3, zr - 0.03, 1.2), Vector3(0, 0, -1), Vector2(1.0, 1.0))
@@ -522,14 +546,16 @@ static func matadero(m: ZarekMansion, r: Dictionary) -> void:
 			_charco(m, Vector3(p.x, y, p.z), _rng.randf_range(0.9, 1.4))
 	# mesa de despiece: tablón manchado con vísceras, una mano cortada, cuchillas y el hacha
 	var mc: Vector3 = L.call(10.0, 7.2)
+	m.set_meta("mesa_matadero", mc)
 	m.box(Vector3(2.4, 0.12, 1.0), mc + Vector3(0, 0.88, 0), m._mat.madera_vieja, true)
 	for q in [Vector3(-1.05, 0, -0.38), Vector3(1.05, 0, -0.38), Vector3(-1.05, 0, 0.38), Vector3(1.05, 0, 0.38)]:
 		m.box(Vector3(0.12, 0.82, 0.12), mc + q + Vector3(0, 0.41, 0), m._mat.madera_vieja, false)
 	var top := mc + Vector3(0, 0.94, 0)
 	ZarekTerror._calco(m, "sangre_charco_1", top + Vector3(0, 0.005, 0), Vector3.UP, Vector2(1.7, 1.0), 0.0)
-	_x(m, "organos_small_and_large_intestin", top + Vector3(-0.55, 0, 0.05), 0.4, 1.0)
-	_x(m, "organos_human_liver", top + Vector3(-0.1, 0, -0.2), 1.1)
-	_x(m, "organos_human_heart", top + Vector3(0.15, 0, 0.18), 2.0)
+	# las vísceras vienen de pie (postura anatómica): se tumban sobre la mesa
+	_organo(m, "organos_small_and_large_intestin", top + Vector3(-0.55, 0, 0.05), 0.4, 0.8)
+	_organo(m, "organos_human_liver", top + Vector3(-0.1, 0, -0.2), 1.1, 0.9)
+	_organo(m, "organos_human_heart", top + Vector3(0.15, 0, 0.18), 2.0, 1.0)
 	_x(m, "restos_severed_hand", top + Vector3(0.5, 0, -0.1), 0.7)
 	_x(m, "carnicero_cleaver___butcher_s_best", top + Vector3(0.85, 0, 0.25), 1.6)
 	_x(m, "carnicero_knife_collection", top + Vector3(0.75, 0, -0.32), 0.1, 0.8)

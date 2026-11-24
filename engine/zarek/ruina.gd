@@ -11,7 +11,7 @@ const NO_TOCAR := ["jardin", "roca", "agua", "camino", "edificio", "exterior"]
 ## Lo que puede haber tirado en una sala: [modelo, peso, volcado (0-1), escala]
 const TIRADO := [
 	["WoodenChair_01", 3.0, 0.7, 1.0], ["vict_dining_chair", 2.0, 0.7, 1.0], ["dining_chair_02", 2.0, 0.7, 1.0],
-	["t_tablas_podridas", 3.0, 0.0, 1.0], ["t_tablas_6", 2.0, 0.0, 1.0], ["ropa_folded_newspaper", 3.0, 0.0, 1.0],
+	["t_tablas_podridas", 3.0, 0.0, 1.0], ["ropa_folded_newspaper", 3.0, 0.0, 1.0],
 	["obj_old_book", 2.0, 0.0, 1.0], ["obj_old_book_3", 1.5, 0.0, 1.0], ["obj_old_books", 1.5, 0.0, 1.0],
 	["cardboard_box_01", 2.0, 0.3, 1.0], ["obj_sack_v1", 1.0, 0.0, 1.0], ["coti_wine_bottle", 2.0, 1.0, 1.0],
 	["coti_glass_bottle", 1.5, 1.0, 1.0], ["t_velas_dos", 1.5, 0.0, 1.0], ["obj_cup_and_plate", 1.0, 0.0, 1.0],
