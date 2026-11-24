@@ -13,3 +13,10 @@ male scream angry yell|10
 male roar human voice|8
 man humming creepy|6
 male groan|6
+evil chuckle|8
+maniacal laugh|8
+man laughing creepy|8
+heavy breathing|8
+sniffing|8
+grunt|10
+angry growl man|6

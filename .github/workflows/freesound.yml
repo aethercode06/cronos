@@ -1,0 +1,23 @@
+name: Bajar voces de Freesound (CC0)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["engine/tools/sonidos/freesound.txt", "engine/tools/sonidos/freesound_buscar.py", ".github/workflows/freesound.yml"]
+permissions:
+  contents: write
+jobs:
+  bajar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: engine/tools/sonidos }
+      - name: Bajar
+        run: python3 engine/tools/sonidos/freesound_buscar.py engine/tools/sonidos/freesound.txt out/freesound
+      - name: Guardar en la rama aether-freesound
+        run: |
+          cd out && git init -q && git checkout -q -b aether-freesound
+          git config user.name "aether-ci" && git config user.email "ci@aethercode.local"
+          git add -A && git commit -qm "Freesound ${{ github.run_number }}" || true
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aether-freesound

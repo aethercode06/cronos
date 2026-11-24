@@ -18,7 +18,6 @@ for linea in open(sys.argv[1]):
     url = "https://freesound.org/search/?" + urllib.parse.urlencode({"q": q, "f": 'license:"Creative Commons 0"', "s": "Downloads (most first)"})
     h = get(url)
     slug = re.sub(r"[^a-z0-9]+", "_", q.lower())
-    open(os.path.join(out, "busqueda_%s.html" % slug), "w").write(h)
     ids = []
     for m in re.finditer(r'/people/([^/"]+)/sounds/(\d+)/', h):
         if m.group(2) not in [i[1] for i in ids]:

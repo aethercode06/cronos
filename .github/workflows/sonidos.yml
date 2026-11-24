@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["engine/tools/sonidos/*.txt", "engine/tools/sonidos/*.py", ".github/workflows/sonidos.yml"]
+    paths: ["engine/tools/sonidos/paginas.txt", "engine/tools/sonidos/google.txt", "engine/tools/sonidos/palabras_google.txt", ".github/workflows/sonidos.yml"]
 permissions:
   contents: write
 jobs:
@@ -33,7 +33,6 @@ jobs:
             [ -z "$s" ] && continue; curl -sL "https://actions.google.com/sounds/v1/$s.ogg" -o "out/google/$(basename $s).ogg"
           done
           python3 engine/tools/sonidos/google_buscar.py engine/tools/sonidos/palabras_google.txt out/gbib || true
-          python3 engine/tools/sonidos/freesound_buscar.py engine/tools/sonidos/freesound.txt out/freesound || true
           find out -type f | sed 's/^/  /' > out/lista.txt; du -sh out
       - name: Guardar en la rama aether-sonidos
         run: |
