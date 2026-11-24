@@ -42,6 +42,11 @@ var _roll := 0.0
 var _yaw_prev := 0.0
 var _t_resp := 0.0
 var base_fov := 72.0
+## Multiplicador de sensibilidad elegido por el jugador (opciones).
+var sens_mult := 1.0
+## Adrenalina (segundos): al verte el enemigo corres más y sin cansarte un momento.
+var adrenalina := 0.0
+var _look_suave := Vector2.ZERO
 
 func _ready() -> void:
 	collision_layer = 2
@@ -122,10 +127,14 @@ func _subir_escalon(antes: Vector3, quiere: Vector3, delta: float) -> void:
 			global_position = adelante.origin + col.get_travel()
 
 func _physics_process(delta: float) -> void:
-	if Aether.look_delta != Vector2.ZERO:
-		if not frozen:
-			_turn(Aether.look_delta * touch_sens)
-		Aether.look_delta = Vector2.ZERO
+	# mirar con el dedo: suavizado de un par de fotogramas y un poco de aceleración (giros rápidos llegan lejos,
+	# los pequeños son precisos); sin esto la cámara va a saltos en pantallas de 120 Hz
+	var ld := Aether.look_delta
+	Aether.look_delta = Vector2.ZERO
+	var acel := 1.0 + clampf(ld.length() / maxf(delta, 0.001) / 2600.0, 0.0, 0.8)
+	_look_suave = _look_suave.lerp(ld * acel, minf(1.0, delta * 30.0)) if ld != Vector2.ZERO else _look_suave * maxf(0.0, 1.0 - delta * 25.0)
+	if _look_suave.length() > 0.01 and not frozen:
+		_turn(_look_suave * touch_sens * sens_mult)
 	var inp := move_override
 	if inp == Vector2.ZERO:
 		inp = Vector2(Input.get_axis("left", "right"), Input.get_axis("up", "down"))
@@ -143,7 +152,10 @@ func _physics_process(delta: float) -> void:
 		stamina = minf(stamina_max, stamina + delta * (0.6 if inp.length() > 0.1 else 1.1))
 	if crouching:
 		running = false
-	var spd := (crouch_speed if crouching else (run_speed if running else walk_speed)) * speed_mult
+	adrenalina = maxf(0.0, adrenalina - delta)
+	if adrenalina > 0.0:
+		stamina = maxf(stamina, stamina_max * 0.6)
+	var spd := (crouch_speed if crouching else (run_speed if running else walk_speed)) * speed_mult * (1.18 if adrenalina > 0.0 else 1.0)
 	if inp.length() > 1.0:
 		inp = inp.normalized()
 	var dir := (global_transform.basis * Vector3(inp.x, 0, inp.y))

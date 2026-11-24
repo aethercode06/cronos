@@ -52,6 +52,7 @@ var sup: ZarekSupervivencia
 var ast: ZarekAstucia
 var sig: ZarekSigilo
 var tut: ZarekTutorial
+var enc: ZarekEncuentros
 var _puerta_modo := ""
 const ESCONDITE_TXT := {"cama": "debajo de la cama", "cortina": "tras la cortina", "montaplatos": "dentro del montaplatos", "bañera": "en la bañera"}
 var _puerta_hold: Dictionary = {}
@@ -184,6 +185,12 @@ func _ready() -> void:
 	# se veían ~116° a lo ancho, como un ojo de pez de videojuego)
 	player.camera.keep_aspect = Camera3D.KEEP_WIDTH
 	player.base_fov = 82.0
+	# paso de terror: andar despacio y con peso (correr sigue siendo más rápido que Damián persiguiendo)
+	player.walk_speed = 2.55
+	player.run_speed = 5.0
+	player.stamina_max = 9.0
+	player.stamina = 9.0
+	player.sens_mult = float(Aether.save.get_value("zarek_sens", 1.0))
 	player.camera.fov = 82.0
 	add_to_group("zarek_oyentes")
 	player.global_position = mansion.start_pos
@@ -240,6 +247,10 @@ func _ready() -> void:
 	sig.j = self
 	add_child(sig)
 	sig.preparar(mansion, dif)
+	enc = ZarekEncuentros.new()
+	enc.j = self
+	add_child(enc)
+	enc.conectar()
 	tension = ZarekTension.new()
 	tension.j = self
 	tension.activo = not autotest
@@ -770,7 +781,7 @@ void fragment() {
 	lbl_end_s = end_box.get_meta("s")
 	pause_box = _menu_box(["PAUSA", ""], [["CONTINUAR", _resume], ["DIARIO Y MAPA", func():
 		pause_box.visible = false
-		diario.abrir()], ["REINICIAR", _restart]], "")
+		diario.abrir()], ["SENSIBILIDAD: %s" % _txt_sens(), _cambiar_sens], ["REINICIAR", _restart]], "")
 	end_box.visible = false
 	pause_box.visible = false
 	var pb := Button.new()
@@ -803,6 +814,20 @@ void fragment() {
 	btn_diario.pressed.connect(func(): diario.abrir())
 	ui.add_child(btn_diario)
 	ui.move_child(pb, title_box.get_index())
+
+const SENS := [0.6, 0.8, 1.0, 1.25, 1.55, 1.9]
+func _txt_sens() -> String:
+	var i := SENS.find(float(Aether.save.get_value("zarek_sens", 1.0)))
+	return ["MUY BAJA", "BAJA", "NORMAL", "ALTA", "MUY ALTA", "MÁXIMA"][i if i >= 0 else 2]
+
+func _cambiar_sens() -> void:
+	var i := SENS.find(float(Aether.save.get_value("zarek_sens", 1.0)))
+	i = (i + 1) % SENS.size() if i >= 0 else 3
+	Aether.save.set_value("zarek_sens", SENS[i])
+	player.sens_mult = SENS[i]
+	for b in pause_box.find_children("*", "Button", true, false):
+		if (b as Button).text.begins_with("SENSIBILIDAD"):
+			(b as Button).text = "SENSIBILIDAD: " + _txt_sens()
 
 func _menu_box(titles: Array, buttons: Array, foot: String) -> Control:
 	var root := Control.new()
@@ -1516,6 +1541,7 @@ func _play(delta: float) -> void:
 	sup.tick(delta)
 	ast.tick(delta)
 	sig.tick(delta)
+	enc.tick(delta)
 
 func _events(pp: Vector3) -> void:
 	if not entered and mansion.inside_house(pp):
@@ -2180,6 +2206,7 @@ func _puerta_tick(delta: float) -> void:
 			d["rigidez"] = 1.2
 			d["freno"] = 2.0
 			sound_at("puerta_crujido", d.pos + Vector3(0, 1.1, 0), -24.0)
+			enc.al_abrir_puerta(d)
 			_consejo("despacio", "Mantener USAR en una puerta entreabierta la abre despacio, sin hacer ruido. De un toque cruje y él lo oye.")
 		return
 	if Input.is_action_pressed("usar") and d.pos.distance_to(player.global_position) < 2.4:
@@ -2357,6 +2384,7 @@ func _mover_puerta(d: Dictionary) -> void:
 		d["freno"] = 4.4
 		sound_at("puerta_crujido", cerca, -2.0)
 		elena.hear(player.global_position, 8.0)
+		enc.al_abrir_puerta(d)
 	else:
 		sound_at("pomo", cerca, -6.0)
 		mansion.entreabrir(d)
@@ -2666,7 +2694,10 @@ func _morir_atrapada(quien: ZarekElena = null) -> void:
 		player.global_position = huida.matadero_pos
 		player.set_look(randf() * TAU, 0.0)
 		sanity = maxf(sanity, 45.0)
-		elena.vanish(18.0)
+		# te deja colgada y se va a por su madre: tienes un buen rato antes de que vuelva a rondar
+		elena.vanish(50.0)
+		if tension:
+			tension._poner_fase("respiro")
 		elena.can_catch = true
 		sound_at("cadenas", player.global_position + Vector3(0, 1.8, 0), -4.0)
 		txt = "Desperté en el matadero, colgada de un gancho por las muñecas. La cuerda estaba podrida: me solté.\nMe guarda para ella. Está muy cerca: tengo que salir del sótano sin hacer ruido. %s" % quedan
@@ -2776,7 +2807,7 @@ func _director(delta: float) -> void:
 	_scare_t -= delta
 	if _scare_t > 0.0:
 		return
-	_scare_t = randf_range(26.0, 48.0) - seals * 3.0
+	_scare_t = randf_range(18.0, 32.0) - seals * 2.0
 	var pp := player.global_position
 	var pool := ["golpes", "susurro", "pasos", "portazo", "vistazo", "risa"]
 	# en el respiro la casa se calma: sustos más espaciados y suaves (el silencio también da miedo)

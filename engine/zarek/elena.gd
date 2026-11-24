@@ -31,6 +31,13 @@ var vista := 1.0
 var rondar := 1.0
 ## Segundos que queda aturdido (golpe, objeto lanzado, cepo, escopeta).
 var aturdido := 0.0
+## Unos segundos sin poder verte (los encuentros con guion: cruzar un pasillo, salir de detrás de una puerta).
+var ciego := 0.0
+## Quieto mirándote (encuentros con guion): no anda ni atrapa, pero está ahí.
+var quieto := 0.0
+## Tras tropezar contigo sin haberte visto: un instante de ventaja antes de poder atraparte.
+var _gracia := 0.0
+var _t_sting := 0.0
 ## Veces que le han herido esta noche: aprende a cubrirse (forcejeos más difíciles).
 var heridas := 0
 var _anim_aturdido := "dolor"
@@ -71,6 +78,7 @@ const DAMIAN := "res://zarek/modelos/damian.glb"
 const ANIM_DAMIAN := {"idle": "hacha_guardia", "walk": "hacha_caminar", "run": "hacha_correr", "attack": "hacha_golpe_2manos",
 	"golpe": "hacha_golpe_1mano", "buscar": "hacha_buscar", "dolor": "hacha_golpeado1"}
 var es_damian := false
+signal te_vio
 ## La madre (Elena) como segunda cazadora: usa su modelo aunque exista el de Damián.
 var forzar_elena := false
 ## Siempre evita la luz (la madre), aunque suba su agresividad.
@@ -483,7 +491,7 @@ func repel(from: Vector3) -> void:
 	_vel = away.normalized() * 7.0
 
 func _can_see_player() -> bool:
-	if player_hidden or player == null:
+	if player_hidden or player == null or ciego > 0.0:
 		return false
 	var pp := player.global_position
 	if absf(pp.y - global_position.y) > 2.5:
@@ -516,7 +524,20 @@ func _physics_process(delta: float) -> void:
 		if es_damian and model:
 			play_anim(_anim_aturdido if aturdido > 0.6 else "buscar")
 		return
+	if quieto > 0.0:
+		quieto -= delta
+		var hacia := player.global_position
+		hacia.y = global_position.y
+		if hacia.distance_to(global_position) > 0.3:
+			var tr := global_transform.looking_at(hacia, Vector3.UP)
+			global_transform.basis = global_transform.basis.slerp(tr.basis, minf(1.0, delta * 4.0)).orthonormalized()
+		if es_damian and model:
+			play_anim("idle")
+		return
 	timer -= delta
+	_gracia = maxf(0.0, _gracia - delta)
+	ciego = maxf(0.0, ciego - delta)
+	_t_sting = maxf(0.0, _t_sting - delta)
 	sees_player = state != S.DORMANT and _can_see_player()
 	seen_t = seen_t + delta if sees_player else 0.0
 	match state:
@@ -524,23 +545,23 @@ func _physics_process(delta: float) -> void:
 			if timer <= 0.0:
 				wake_far()
 		S.WANDER:
-			_speed = 1.5 + aggro * 0.18
+			_speed = (1.75 if es_damian else 1.5) + aggro * 0.18
 			if sees_player:
 				_start_chase()
 			elif path.is_empty():
 				var target: Vector3
-				var bias := (0.25 + aggro * 0.17) * rondar
+				# Damián caza: sabe más o menos por dónde andas (huele, oye, conoce su casa) y ronda tu zona.
+				# El director de tensión baja `rondar` en los respiros para que se aleje.
+				var bias := ((0.5 if es_damian else 0.25) + aggro * 0.1) * rondar
 				if randf() < bias:
-					target = player.global_position + Vector3(randf_range(-6, 6), 0, randf_range(-6, 6))
-					if mansion.room_at(target) < 0:
-						target = mansion.random_floor(Vector3(-9999, 0, -9999), 0.0, -1, mansion.level_of(player.global_position.y + 0.3))
+					target = _cerca_de_ti()
 				else:
-					target = mansion.random_floor()
+					target = mansion.random_floor(Vector3(-9999, 0, -9999), 0.0, -1, mansion.level_of(player.global_position.y + 0.3)) if (es_damian and randf() < 0.5) else mansion.random_floor()
 				path = _safe_path(target)
 				if path.is_empty():
 					path = _safe_path(mansion.random_floor())
 		S.INVESTIGATE:
-			_speed = 2.5 + aggro * 0.2
+			_speed = (2.8 if es_damian else 2.5) + aggro * 0.2
 			if sees_player:
 				_start_chase()
 			elif path.is_empty():
@@ -563,7 +584,7 @@ func _physics_process(delta: float) -> void:
 					path = [last_seen]
 				else:
 					path = mansion.path(global_position, last_seen)
-			if mansion.is_lit(player.global_position) and (aggro < 2 or teme_luz) and global_position.distance_to(player.global_position) > 2.0:
+			if mansion.is_lit(player.global_position) and _le_frena_la_luz() and global_position.distance_to(player.global_position) > 2.0:
 				# la luz la detiene: se aleja
 				set_state(S.SEARCH, 3.0)
 		S.SEARCH:
@@ -615,12 +636,14 @@ func _physics_process(delta: float) -> void:
 	if can_catch and state in [S.CHASE, S.INVESTIGATE, S.WANDER, S.SEARCH] and not player_hidden:
 		var dd := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z).length()
 		if dd < 1.05 and absf(player.global_position.y - global_position.y) < 1.2:
-			if state == S.WANDER and not sees_player:
-				# paseando, si se tropieza contigo primero se da cuenta (rugido y persecución): te deja un instante
-				# para huir en vez de atraparte sin aviso (el bot lo sufría a menudo)
+			if state != S.CHASE and not sees_player:
+				# si se tropieza contigo sin haberte visto, primero se sobresalta (rugido) y luego va a por ti:
+				# te deja un instante para huir en vez de atraparte sin aviso
 				_start_chase()
 				_vel = Vector3.ZERO
-			else:
+				quieto = 0.7
+				_gracia = 1.6
+			elif _gracia <= 0.0:
 				caught.emit()
 	# puertas: las abre de golpe al pasar
 	var d := mansion.door_near(global_position, 1.3)
@@ -664,13 +687,34 @@ func _start_chase() -> void:
 	_snd_one.stream = ZarekSonido.uno("damian_rugido" if es_damian else "grito")
 	_snd_one.volume_db = 2.0 if es_damian else -6.0
 	_snd_one.play()
+	# te ha visto: golpe de sonido, la cámara tiembla y el corazón se dispara (no más de una vez cada 20 s)
+	if _t_sting <= 0.0:
+		_t_sting = 20.0
+		emit_signal("te_vio")
 
-## Camino que evita habitaciones iluminadas (le temen a la luz).
+## Un punto de tu misma planta a 5-14 m (una sala vecina o la tuya), para rondar sin ir directo a ti.
+func _cerca_de_ti() -> Vector3:
+	var pp := player.global_position
+	var lv := mansion.level_of(pp.y + 0.3)
+	for i in 12:
+		var ang := randf() * TAU
+		var r := randf_range(5.0, 14.0)
+		var q := pp + Vector3(cos(ang) * r, 0, sin(ang) * r)
+		var id := mansion.room_at(q + Vector3(0, 0.4, 0))
+		if id >= 0 and mansion.level_of(float(mansion.rooms[id].y) + 0.3) == lv:
+			return Vector3(q.x, float(mansion.rooms[id].y), q.z)
+	return mansion.random_floor(Vector3(-9999, 0, -9999), 0.0, -1, lv)
+
+## La luz solo frena a la madre (la quema). Damián es un hombre: la luz no le para, solo le ayuda a verte.
+func _le_frena_la_luz() -> bool:
+	return teme_luz or (not es_damian and aggro < 2)
+
+## Camino que evita habitaciones iluminadas (solo si le teme a la luz).
 func _safe_path(target: Vector3) -> Array[Vector3]:
-	if (aggro < 2 or teme_luz) and mansion.is_lit(target):
+	if _le_frena_la_luz() and mansion.is_lit(target):
 		return [] as Array[Vector3]
 	var p := mansion.path(global_position, target)
-	if aggro < 2 or teme_luz:
+	if _le_frena_la_luz():
 		for wp in p:
 			if mansion.is_lit(wp):
 				return [] as Array[Vector3]

@@ -26,7 +26,7 @@ func _poner_fase(f: String) -> void:
 	_t_aviso = randf_range(2.0, 4.0)
 	_se_fue = false
 	if f == "respiro":
-		_dur_respiro = randf_range(40.0, 70.0) - j.seals * 4.0
+		_dur_respiro = randf_range(25.0, 45.0) - j.seals * 3.0
 	print("ZAREK tensión: ", f)
 
 func tick(delta: float) -> void:
@@ -35,7 +35,8 @@ func tick(delta: float) -> void:
 	var e: ZarekElena = j.elena
 	var p: Vector3 = j.player.global_position
 	var cerca := e.visible and e.state != ZarekElena.S.DORMANT
-	var d: float = e.global_position.distance_to(p) if cerca else 99.0
+	# solo cuenta si está en tu planta: a través de un techo no hay tensión que valga
+	var d: float = e.global_position.distance_to(p) if cerca and absf(e.global_position.y - p.y) < 2.5 else 99.0
 	var caza := e.state == ZarekElena.S.CHASE
 	# medidor de amenaza: sube rápido con él cerca o persiguiendo, baja despacio
 	var objetivo := 1.0 if caza else (clampf(1.0 - d / 14.0, 0.0, 1.0) * 0.8 if d < 14.0 else 0.0)
@@ -43,7 +44,7 @@ func tick(delta: float) -> void:
 		amenaza = lerpf(amenaza, objetivo, minf(1.0, delta * 1.5))
 	else:
 		amenaza = maxf(0.0, amenaza - delta * 0.025)
-	if d < 18.0:
+	if d < 12.0 or e.sees_player:
 		sin_contacto = 0.0
 	else:
 		sin_contacto += delta
@@ -56,7 +57,7 @@ func tick(delta: float) -> void:
 			_alta = _alta + delta if amenaza > 0.7 else maxf(0.0, _alta - delta * 0.5)
 			if escapo or _alta > 22.0:
 				_poner_fase("respiro")
-			elif sin_contacto > lerpf(95.0, 50.0, j.seals / 4.0):
+			elif sin_contacto > lerpf(55.0, 30.0, j.seals / 4.0):
 				_poner_fase("acecho")
 		"acecho":
 			e.rondar = 1.2
@@ -67,7 +68,7 @@ func tick(delta: float) -> void:
 			if _t_aviso <= 0.0:
 				_t_aviso = randf_range(4.0, 7.0)
 				_aviso(p, t_fase / 22.0)
-			if t_fase > 22.0:
+			if t_fase > 16.0:
 				_aparecer_cerca(e, p)
 				sin_contacto = 0.0
 				_poner_fase("calma")

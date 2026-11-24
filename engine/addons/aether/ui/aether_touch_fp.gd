@@ -20,6 +20,11 @@ var _base: Control
 var _dot: Control
 var _btns: Array[TouchScreenButton] = []
 var _labels := {}
+## Zona muerta del joystick (el dedo nunca está quieto) y correr solo si se mantiene al borde un instante.
+@export var dead_zone := 0.14
+@export var run_hold := 0.22
+var _t_borde := 0.0
+var _v_joy := Vector2.ZERO
 
 func _ready() -> void:
 	layer = 60
@@ -125,11 +130,27 @@ func _input(e: InputEvent) -> void:
 				d = e.position - _center
 			_place(_dot, _center + d, radius * 0.42)
 			var v := d / radius
+			# zona muerta + curva: los movimientos pequeños son finos, el borde es velocidad completa
+			var mag := v.length()
+			var adj := 0.0 if mag < dead_zone else pow((mag - dead_zone) / (1.0 - dead_zone), 1.35)
+			_v_joy = v.normalized() * minf(adj, 1.0) if mag > 0.001 else Vector2.ZERO
 			if player:
-				player.move_override = v
-				player.run_override = v.length() > 0.93
+				player.move_override = _v_joy
+				if mag < 0.93:
+					_t_borde = 0.0
+					player.run_override = false
 		elif e.index == _look_id:
 			Aether.look_delta += e.relative
+
+func _process(delta: float) -> void:
+	if _base == null or player == null or _move_id == -1:
+		return
+	if _v_joy.length() > 0.97:
+		_t_borde += delta
+		player.run_override = _t_borde >= run_hold
+	# el punto se pone rojo al correr: se ve claramente que vas haciendo ruido
+	if _dot:
+		_dot.modulate = Color(1.0, 0.35, 0.3) if player.running else Color(1, 1, 1)
 
 func _place(c: Control, p: Vector2, r: float) -> void:
 	c.position = p - Vector2(r, r)
