@@ -1,1 +1,44 @@
-[]
+[
+ {
+  "clave": "s_pila",
+  "uid": "6f6f9f38181e412a9d475f69b9ece73b",
+  "nombre": "08 Household Batteries",
+  "autor": "Peter_Sawyer",
+  "licencia": "by"
+ },
+ {
+  "clave": "s_llaves_coche",
+  "uid": "38166e32286b4749a2af5274ea97506e",
+  "nombre": "Lost Car Keys (TLOU inspired)",
+  "autor": "dcknights",
+  "licencia": "by"
+ },
+ {
+  "clave": "s_bengala",
+  "uid": "3b85d4d0368242f0a0deb15182e434eb",
+  "nombre": "Flare",
+  "autor": "FrodoUndead",
+  "licencia": "by"
+ },
+ {
+  "clave": "s_bengala2",
+  "uid": "6f922fd8297b465b8054ac8a6c839666",
+  "nombre": "Flare",
+  "autor": "lionclaw0612",
+  "licencia": "by"
+ },
+ {
+  "clave": "s_venda",
+  "uid": "86276f80e946430d9fff7d905bf056b1",
+  "nombre": "Bandage",
+  "autor": "gtvorets",
+  "licencia": "by"
+ },
+ {
+  "clave": "s_martillo_clavos",
+  "uid": "a3d7bc18e2004488a1ae4b89e35d4212",
+  "nombre": "Old Hammer (free - photobashed - gameready)",
+  "autor": "FrenchBaguette",
+  "licencia": "by"
+ }
+]
